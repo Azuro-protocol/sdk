@@ -1,5 +1,5 @@
 export type { Game as AzuroGame } from './api/fetchGames'
 export * from './api'
 export * from './helpers/constants'
-export { setSelectedChainId, setWallerProvider } from './contracts/state'
+export { setSelectedChainId, setWallerProvider, setContractAddresses } from './contracts/state'
 export { configure } from './config'

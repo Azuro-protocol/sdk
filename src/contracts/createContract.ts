@@ -1,7 +1,7 @@
 import { Contract } from '@ethersproject/contracts'
 
 import type { ContractsABI, ContractName } from './contracts'
-import { CONTRACTS } from './constants'
+import { CONTRACTS } from './config'
 
 
 const createContract = <Name extends ContractName>(name: Name, provider: any): ContractsABI[Name] => {
