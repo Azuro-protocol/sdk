@@ -7,6 +7,10 @@ export type ContractsABI = {
   'usdt': TestERC20
 }
 
+export type ContractsAddresses = {
+  [Name in ContractName]: string
+}
+
 export type ContractName = keyof ContractsABI
 
 export type ContractData<Symbol extends string> = {
