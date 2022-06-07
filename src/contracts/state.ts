@@ -1,13 +1,13 @@
 import type { Web3Provider } from '@ethersproject/providers'
 
-import type { Contracts } from './contracts'
-
+import type { Contracts, ContractsAddresses } from './contracts'
 
 type State = {
   walletProvider: Web3Provider
   selectedChainId: number
   readContracts: Contracts
   writeContracts: Contracts
+  contractAddresses: ContractsAddresses
 }
 
 const state: State = {
@@ -15,6 +15,11 @@ const state: State = {
   selectedChainId: null,
   readContracts: {} as any,
   writeContracts: {} as any,
+  contractAddresses: {} as ContractsAddresses,
+}
+
+export const setContractAddresses = (contractAddresses: ContractsAddresses) => {
+  state.contractAddresses = contractAddresses;
 }
 
 export const setWallerProvider = (walletProvider: Web3Provider) => {

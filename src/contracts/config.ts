@@ -3,26 +3,34 @@ import CoreABI from './abis/Core.json'
 import LpABI from './abis/Lp.json'
 import AzuroBetABI from './abis/AzuroBet.json'
 import TestERC20ABI from './abis/TestERC20.json'
-
+import state from './state'
 
 export const CONTRACTS: ContractsData = {
   core: {
-    address: '0xEf182ba80c2DA39710Fe0834b5Ac2E8e68820704',
+    get address() {
+      return state.contractAddresses.core;
+    },
     abi: CoreABI,
     decimals: 18,
   },
   lp: {
-    address: '0x03792012947c6AC35C3B65eAd42E9edd9B7eD6c4',
+    get address() {
+      return state.contractAddresses.lp;
+    },
     abi: LpABI,
     decimals: 18,
   },
   bet: {
-    address: '0x4F0Dc3aAD27379E78C0777f66a07c2ba61B66C71',
+    get address() {
+      return state.contractAddresses.bet;
+    },
     abi: AzuroBetABI,
     decimals: 18,
   },
   usdt: {
-    address: '0xf5f125ffFFe359f2Bfe44776B5604eDFa82A0Ff2',
+    get address() {
+      return state.contractAddresses.usdt;
+    },
     abi: TestERC20ABI,
     decimals: 18,
   },
