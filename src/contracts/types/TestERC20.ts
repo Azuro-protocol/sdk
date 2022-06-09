@@ -9,6 +9,7 @@ import {
   CallOverrides,
   ContractTransaction,
   Overrides,
+  PayableOverrides,
   PopulatedTransaction,
   Signer,
   utils,
@@ -31,6 +32,7 @@ export interface TestERC20Interface extends utils.Interface {
     "contestsStartDate()": FunctionFragment;
     "decimals()": FunctionFragment;
     "decreaseAllowance(address,uint256)": FunctionFragment;
+    "deposit()": FunctionFragment;
     "increaseAllowance(address,uint256)": FunctionFragment;
     "mint(address,uint256)": FunctionFragment;
     "name()": FunctionFragment;
@@ -43,7 +45,7 @@ export interface TestERC20Interface extends utils.Interface {
     "transfer(address,uint256)": FunctionFragment;
     "transferFrom(address,address,uint256)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
-    "withdraw()": FunctionFragment;
+    "withdraw(uint256)": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -81,6 +83,7 @@ export interface TestERC20Interface extends utils.Interface {
     functionFragment: "decreaseAllowance",
     values: [string, BigNumberish]
   ): string;
+  encodeFunctionData(functionFragment: "deposit", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "increaseAllowance",
     values: [string, BigNumberish]
@@ -120,7 +123,10 @@ export interface TestERC20Interface extends utils.Interface {
     functionFragment: "transferOwnership",
     values: [string]
   ): string;
-  encodeFunctionData(functionFragment: "withdraw", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "withdraw",
+    values: [BigNumberish]
+  ): string;
 
   decodeFunctionResult(
     functionFragment: "addPrivilegedAccounts",
@@ -148,6 +154,7 @@ export interface TestERC20Interface extends utils.Interface {
     functionFragment: "decreaseAllowance",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "increaseAllowance",
     data: BytesLike
@@ -185,13 +192,17 @@ export interface TestERC20Interface extends utils.Interface {
 
   events: {
     "Approval(address,address,uint256)": EventFragment;
+    "Deposit(address,uint256)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
     "Transfer(address,address,uint256)": EventFragment;
+    "Withdrawal(address,uint256)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "Approval"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Deposit"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Withdrawal"): EventFragment;
 }
 
 export type ApprovalEvent = TypedEvent<
@@ -200,6 +211,13 @@ export type ApprovalEvent = TypedEvent<
 >;
 
 export type ApprovalEventFilter = TypedEventFilter<ApprovalEvent>;
+
+export type DepositEvent = TypedEvent<
+  [string, BigNumber],
+  { dst: string; wad: BigNumber }
+>;
+
+export type DepositEventFilter = TypedEventFilter<DepositEvent>;
 
 export type OwnershipTransferredEvent = TypedEvent<
   [string, string],
@@ -215,6 +233,13 @@ export type TransferEvent = TypedEvent<
 >;
 
 export type TransferEventFilter = TypedEventFilter<TransferEvent>;
+
+export type WithdrawalEvent = TypedEvent<
+  [string, BigNumber],
+  { src: string; wad: BigNumber }
+>;
+
+export type WithdrawalEventFilter = TypedEventFilter<WithdrawalEvent>;
 
 export interface TestERC20 extends BaseContract {
   contractName: "TestERC20";
@@ -292,6 +317,10 @@ export interface TestERC20 extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    deposit(
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     increaseAllowance(
       spender: string,
       addedValue: BigNumberish,
@@ -344,7 +373,12 @@ export interface TestERC20 extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    withdraw(
+    "withdraw(uint256)"(
+      wad: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "withdraw()"(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
@@ -395,6 +429,10 @@ export interface TestERC20 extends BaseContract {
     spender: string,
     subtractedValue: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  deposit(
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   increaseAllowance(
@@ -449,7 +487,12 @@ export interface TestERC20 extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  withdraw(
+  "withdraw(uint256)"(
+    wad: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "withdraw()"(
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -498,6 +541,8 @@ export interface TestERC20 extends BaseContract {
       subtractedValue: BigNumberish,
       overrides?: CallOverrides
     ): Promise<boolean>;
+
+    deposit(overrides?: CallOverrides): Promise<void>;
 
     increaseAllowance(
       spender: string,
@@ -549,7 +594,12 @@ export interface TestERC20 extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    withdraw(overrides?: CallOverrides): Promise<void>;
+    "withdraw(uint256)"(
+      wad: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "withdraw()"(overrides?: CallOverrides): Promise<void>;
   };
 
   filters: {
@@ -563,6 +613,12 @@ export interface TestERC20 extends BaseContract {
       spender?: string | null,
       value?: null
     ): ApprovalEventFilter;
+
+    "Deposit(address,uint256)"(
+      dst?: string | null,
+      wad?: null
+    ): DepositEventFilter;
+    Deposit(dst?: string | null, wad?: null): DepositEventFilter;
 
     "OwnershipTransferred(address,address)"(
       previousOwner?: string | null,
@@ -583,6 +639,12 @@ export interface TestERC20 extends BaseContract {
       to?: string | null,
       value?: null
     ): TransferEventFilter;
+
+    "Withdrawal(address,uint256)"(
+      src?: string | null,
+      wad?: null
+    ): WithdrawalEventFilter;
+    Withdrawal(src?: string | null, wad?: null): WithdrawalEventFilter;
   };
 
   estimateGas: {
@@ -632,6 +694,10 @@ export interface TestERC20 extends BaseContract {
       spender: string,
       subtractedValue: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    deposit(
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     increaseAllowance(
@@ -686,7 +752,12 @@ export interface TestERC20 extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    withdraw(
+    "withdraw(uint256)"(
+      wad: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "withdraw()"(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
   };
@@ -743,6 +814,10 @@ export interface TestERC20 extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
+    deposit(
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     increaseAllowance(
       spender: string,
       addedValue: BigNumberish,
@@ -795,7 +870,12 @@ export interface TestERC20 extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    withdraw(
+    "withdraw(uint256)"(
+      wad: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "withdraw()"(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };

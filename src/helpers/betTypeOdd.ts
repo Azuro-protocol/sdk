@@ -207,5 +207,4 @@ const betTypeOdd: BetTypeOdd = {
   },
 }
 
-
 export default betTypeOdd

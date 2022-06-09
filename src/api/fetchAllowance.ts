@@ -9,5 +9,4 @@ const fetchAllowance = (account: string): Promise<BigNumber> => {
   return usdtContract.allowance(account, CONTRACTS.usdt.address)
 }
 
-
 export default fetchAllowance

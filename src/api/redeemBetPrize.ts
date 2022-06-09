@@ -7,5 +7,4 @@ const redeemBetPrize = (nftId: number) => {
   return lpContract.withdrawPayout(nftId)
 }
 
-
 export default redeemBetPrize

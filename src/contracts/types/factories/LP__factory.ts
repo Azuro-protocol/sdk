@@ -374,6 +374,19 @@ const _abi = [
     anonymous: false,
     inputs: [
       {
+        indexed: false,
+        internalType: "uint128",
+        name: "newReinforcementAbility",
+        type: "uint128",
+      },
+    ],
+    name: "ReinforcementAbilityChanged",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
         indexed: true,
         internalType: "address",
         name: "from",
@@ -422,6 +435,13 @@ const _abi = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "addLiquidityNative",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
     inputs: [
       {
         internalType: "uint128",
@@ -430,13 +450,18 @@ const _abi = [
       },
       {
         internalType: "uint128",
-        name: "profitReserve",
+        name: "finalReserve",
         type: "uint128",
       },
       {
         internalType: "uint48",
         name: "leaf",
         type: "uint48",
+      },
+      {
+        internalType: "address",
+        name: "oracle",
+        type: "address",
       },
     ],
     name: "addReserve",
@@ -536,6 +561,40 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "uint256",
+        name: "conditionId",
+        type: "uint256",
+      },
+      {
+        internalType: "uint64",
+        name: "outcomeId",
+        type: "uint64",
+      },
+      {
+        internalType: "uint64",
+        name: "deadline",
+        type: "uint64",
+      },
+      {
+        internalType: "uint64",
+        name: "minOdds",
+        type: "uint64",
+      },
+    ],
+    name: "betNative",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "address",
         name: "newAzuroBet",
         type: "address",
@@ -594,6 +653,19 @@ const _abi = [
       },
     ],
     name: "changeOracleReward",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint128",
+        name: "newReinforcementAbility",
+        type: "uint128",
+      },
+    ],
+    name: "changeReinforcementAbility",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -665,19 +737,6 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "getFeeMultiplier",
-    outputs: [
-      {
-        internalType: "uint128",
-        name: "feeMultiplier",
-        type: "uint128",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
     name: "getLeaf",
     outputs: [
       {
@@ -722,19 +781,6 @@ const _abi = [
       {
         internalType: "uint128",
         name: "amount",
-        type: "uint128",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "getOracleFee",
-    outputs: [
-      {
-        internalType: "uint128",
-        name: "fee",
         type: "uint128",
       },
     ],
@@ -1051,24 +1097,6 @@ const _abi = [
     inputs: [
       {
         internalType: "address",
-        name: "oracle",
-        type: "address",
-      },
-      {
-        internalType: "uint128",
-        name: "amount",
-        type: "uint128",
-      },
-    ],
-    name: "sendOracleReward",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
         name: "operator",
         type: "address",
       },
@@ -1334,12 +1362,43 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "uint48",
+        name: "depNum",
+        type: "uint48",
+      },
+      {
+        internalType: "uint40",
+        name: "percent",
+        type: "uint40",
+      },
+    ],
+    name: "withdrawLiquidityNative",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "uint256",
         name: "tokenId",
         type: "uint256",
       },
     ],
     name: "withdrawPayout",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "tokenId",
+        type: "uint256",
+      },
+    ],
+    name: "withdrawPayoutNative",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -1375,6 +1434,10 @@ const _abi = [
     ],
     stateMutability: "view",
     type: "function",
+  },
+  {
+    stateMutability: "payable",
+    type: "receive",
   },
 ];
 

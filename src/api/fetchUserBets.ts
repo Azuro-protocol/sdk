@@ -114,5 +114,4 @@ const fetchUserBets = async ({ account }: FetchUserBetsProps) => {
   }
 }
 
-
 export default fetchUserBets

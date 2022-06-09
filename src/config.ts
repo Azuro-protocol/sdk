@@ -14,5 +14,4 @@ export const configure = (_config: Config) => {
   })
 }
 
-
 export default config

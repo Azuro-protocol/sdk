@@ -30,5 +30,4 @@ export const setSelectedChainId = (selectedChainId: number) => {
   state.selectedChainId = selectedChainId
 }
 
-
 export default state

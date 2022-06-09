@@ -7,5 +7,4 @@ const fetchBalance = (account: string) => {
   return usdtContract.balanceOf(account)
 }
 
-
 export default fetchBalance

@@ -1,12 +1,12 @@
 {
   "name": "@azuro-protocol/sdk",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "engines": {
     "node": "=14.17.4",
     "npm": "=6.14.14"
   },
   "azuro": {
-    "contractsVersion": "release-1.6"
+    "contractsVersion": "release-1.8"
   },
   "author": {
     "name": "Pavel Ivanov",

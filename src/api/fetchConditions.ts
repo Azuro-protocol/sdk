@@ -91,5 +91,4 @@ const fetchConditions = async (props?: FetchConditionsProps): Promise<Condition[
   return conditions.filter(Boolean)
 }
 
-
 export default fetchConditions

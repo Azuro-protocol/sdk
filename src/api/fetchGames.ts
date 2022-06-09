@@ -188,5 +188,4 @@ const fetchGames = async (props: FetchGamesProps = {}): Promise<Game[]> => {
   return result.filter(Boolean).sort((a, b) => a.startsAt - b.startsAt)
 }
 
-
 export default fetchGames

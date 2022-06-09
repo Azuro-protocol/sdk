@@ -47,5 +47,4 @@ const fetchGameIpfsData = async (ipfsHash: string): Promise<FormattedIpfsData | 
   }
 }
 
-
 export default fetchGameIpfsData

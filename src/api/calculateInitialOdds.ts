@@ -15,5 +15,4 @@ const calculateInitialOdds = (funds: number[], marginality: number): [ number, n
   calculateOdd(funds[1], marginality),
 ]
 
-
 export default calculateInitialOdds

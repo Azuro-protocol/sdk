@@ -13,5 +13,4 @@ const claimTestTokens = (account: string) => {
   return usdtContract.claim(account)
 }
 
-
 export default claimTestTokens

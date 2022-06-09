@@ -32,5 +32,4 @@ export const placeBet = async (props: PlaceBetProps) => {
   )
 }
 
-
 export default placeBet

@@ -19,5 +19,4 @@ const calculateActualOdds = async ({ conditionId, outcomeId, betAmount }: Calcul
   return parseFloat(odd)
 }
 
-
 export default calculateActualOdds

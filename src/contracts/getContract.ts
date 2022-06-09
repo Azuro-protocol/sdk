@@ -17,5 +17,4 @@ const getContract = <Name extends ContractName>(name: Name, withWalletProvider?:
   return store[name]
 }
 
-
 export default getContract

@@ -9,5 +9,4 @@ const approve = (amount: BigNumber) => {
   return usdtContract.approve(CONTRACTS.usdt.address, amount)
 }
 
-
 export default approve
