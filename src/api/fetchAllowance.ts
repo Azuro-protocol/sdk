@@ -6,7 +6,7 @@ import { CONTRACTS, getContract } from '../contracts'
 const fetchAllowance = (account: string): Promise<BigNumber> => {
   const usdtContract = getContract('usdt')
 
-  return usdtContract.allowance(account, CONTRACTS.usdt.address)
+  return usdtContract.allowance(account, CONTRACTS.lp.address)
 }
 
 export default fetchAllowance
