@@ -145,6 +145,9 @@ export type Game = Omit<GroupGamesResult, 'ipfsHashHex'> & {
 }
 
 const fetchGames = async (props: FetchGamesProps = {}): Promise<Game[]> => {
+  gamesInfo = {}
+  gameBets = {}
+
   const conditions = await fetchConditions(props)
 
   conditions.forEach((condition) => {
