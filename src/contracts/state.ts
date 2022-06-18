@@ -20,10 +20,16 @@ const state: State = {
 
 export const setContractAddresses = (contractAddresses: ContractsAddresses) => {
   state.contractAddresses = contractAddresses;
+
+  state.writeContracts = {} as any;
+  state.readContracts = {} as any;
 }
 
 export const setWallerProvider = (walletProvider: Web3Provider) => {
   state.walletProvider = walletProvider
+
+  state.writeContracts = {} as any;
+  state.readContracts = {} as any;
 }
 
 export const setSelectedChainId = (selectedChainId: number) => {
