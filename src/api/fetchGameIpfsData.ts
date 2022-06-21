@@ -6,6 +6,9 @@ import config from '../config'
 type IpfsData = {
   gameId: number
   sportTypeId: number
+  scopeId: number
+  leagueId: number
+  countryId: number
   entity1Name: string
   entity1Image: string
   entity2Name: string
@@ -21,6 +24,10 @@ export type FormattedIpfsData = {
     name: string
     image: string
   }[]
+  scopeId: number
+  leagueId: number
+  countryId: number
+  sportTypeId: number
 }
 
 const fetchGameIpfsData = async (ipfsHash: string): Promise<FormattedIpfsData | null> => {
@@ -30,7 +37,18 @@ const fetchGameIpfsData = async (ipfsHash: string): Promise<FormattedIpfsData | 
       timeout: 10_000,
     })
 
-    const { entity1Name, entity1Image, entity2Name, entity2Image, titleCountry, titleLeague } = data as IpfsData
+    const {
+      entity1Name,
+      entity1Image,
+      entity2Name,
+      entity2Image,
+      titleCountry,
+      titleLeague,
+      sportTypeId,
+      scopeId,
+      leagueId,
+      countryId,
+    } = data as IpfsData
 
     return {
       country: titleCountry,
@@ -39,6 +57,10 @@ const fetchGameIpfsData = async (ipfsHash: string): Promise<FormattedIpfsData | 
         { name: entity1Name, image: entity1Image },
         { name: entity2Name, image: entity2Image },
       ],
+      scopeId,
+      leagueId,
+      countryId,
+      sportTypeId,
     }
   }
   catch (err) {
