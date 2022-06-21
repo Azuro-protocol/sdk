@@ -25,7 +25,7 @@ export const setContractAddresses = (contractAddresses: ContractsAddresses) => {
   state.readContracts = {} as any;
 }
 
-export const setWallerProvider = (walletProvider: Web3Provider) => {
+export const setWalletProvider = (walletProvider: Web3Provider) => {
   state.walletProvider = walletProvider
 
   state.writeContracts = {} as any;
