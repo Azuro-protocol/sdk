@@ -4,9 +4,9 @@ import { CONTRACTS, getContract } from '../contracts'
 
 
 const fetchAllowance = (account: string): Promise<BigNumber> => {
-  const usdtContract = getContract('usdt')
+  const tokenContract = getContract('token')
 
-  return usdtContract.allowance(account, CONTRACTS.lp.address)
+  return tokenContract.allowance(account, CONTRACTS.lp.address)
 }
 
 export default fetchAllowance

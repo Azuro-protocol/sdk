@@ -2,9 +2,9 @@ import { getContract } from '../contracts'
 
 
 const fetchBalance = (account: string) => {
-  const usdtContract = getContract('usdt')
+  const tokenContract = getContract('token')
 
-  return usdtContract.balanceOf(account)
+  return tokenContract.balanceOf(account)
 }
 
 export default fetchBalance

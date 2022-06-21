@@ -4,7 +4,7 @@ export type ContractsABI = {
   'core': Core
   'lp': LP
   'bet': AzuroBet
-  'usdt': TestERC20
+  'token': TestERC20
 }
 
 export type ContractsAddresses = {

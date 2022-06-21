@@ -1,7 +1,8 @@
 import { parseUnits, formatUnits } from '@ethersproject/units'
 
 import { getContract } from '../contracts'
-import { USDT_DECIMALS, RATE_DECIMALS } from '../helpers/constants'
+import { RATE_DECIMALS } from '../helpers/constants'
+import state from "../contracts/state";
 
 
 type CalculateOddsProps = {
@@ -12,7 +13,7 @@ type CalculateOddsProps = {
 
 // calculate odds based on actual "fundBank" values
 const calculateActualOdds = async ({ conditionId, outcomeId, betAmount }: CalculateOddsProps): Promise<number> => {
-  const rawBetAmount = parseUnits(String(betAmount), USDT_DECIMALS)
+  const rawBetAmount = parseUnits(String(betAmount), state.tokenDecimals)
   const result = await getContract('core').calculateOdds(conditionId, rawBetAmount, outcomeId)
   const odd = formatUnits(result, RATE_DECIMALS)
 

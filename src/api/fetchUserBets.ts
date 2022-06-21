@@ -7,7 +7,8 @@ import type { ConditionGameData } from './fetchConditions'
 import { getContract } from '../contracts'
 import betTypeOdd from '../helpers/betTypeOdd'
 import { ConditionStatus } from '../helpers/enums'
-import { USDT_DECIMALS, RATE_DECIMALS } from '../helpers/constants'
+import { RATE_DECIMALS } from '../helpers/constants'
+import sdkState from "../contracts/state";
 
 
 const fetchBet = async (nftId: number) => {
@@ -36,7 +37,7 @@ const fetchBet = async (nftId: number) => {
     const { marketRegistryId, outcomeRegistryId, paramId } = betTypeOdd[outcomeBetId]
 
     const rate = parseFloat(formatUnits(odds, RATE_DECIMALS))
-    const amount = parseFloat(formatUnits(rawAmount, USDT_DECIMALS))
+    const amount = parseFloat(formatUnits(rawAmount, sdkState.tokenDecimals))
 
     let result
 

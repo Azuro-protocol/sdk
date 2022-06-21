@@ -4,9 +4,9 @@ import { CONTRACTS, getContract } from '../contracts'
 
 
 const approve = (amount: BigNumber) => {
-  const usdtContract = getContract('usdt', true)
+  const tokenContract = getContract('token', true)
 
-  return usdtContract.approve(CONTRACTS.lp.address, amount)
+  return tokenContract.approve(CONTRACTS.lp.address, amount)
 }
 
 export default approve

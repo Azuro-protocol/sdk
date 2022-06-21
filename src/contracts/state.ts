@@ -8,6 +8,7 @@ type State = {
   readContracts: Contracts
   writeContracts: Contracts
   contractAddresses: ContractsAddresses
+  tokenDecimals: number
 }
 
 const state: State = {
@@ -16,6 +17,7 @@ const state: State = {
   readContracts: {} as any,
   writeContracts: {} as any,
   contractAddresses: {} as ContractsAddresses,
+  tokenDecimals: null,
 }
 
 export const setContractAddresses = (contractAddresses: ContractsAddresses) => {
@@ -34,6 +36,10 @@ export const setWalletProvider = (walletProvider: Web3Provider) => {
 
 export const setSelectedChainId = (selectedChainId: number) => {
   state.selectedChainId = selectedChainId
+}
+
+export const setTokenDecimals = (tokenDecimals: number) => {
+  state.tokenDecimals = tokenDecimals;
 }
 
 export default state

@@ -1,4 +1,5 @@
 const { configure, setSelectedChainId, fetchGames } = require('../lib')
+const { setTokenDecimals } = require("../src");
 
 
 configure({
@@ -6,6 +7,7 @@ configure({
   ipfsGateway: 'https://azuro.mypinata.cloud/ipfs/',
 })
 
+setTokenDecimals(18)
 setSelectedChainId(4)
 
 fetchGames()

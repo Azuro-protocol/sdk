@@ -2,15 +2,15 @@ import { getContract } from '../contracts'
 
 
 export const checkTestTokensClaimable = (account: string) => {
-  const usdtContract = getContract('usdt')
+  const tokenContract = getContract('token')
 
-  return usdtContract.availableToClaim(account)
+  return tokenContract.availableToClaim(account)
 }
 
 const claimTestTokens = (account: string) => {
-  const usdtContract = getContract('usdt', true)
+  const tokenContract = getContract('token', true)
 
-  return usdtContract.claim(account)
+  return tokenContract.claim(account)
 }
 
 export default claimTestTokens
