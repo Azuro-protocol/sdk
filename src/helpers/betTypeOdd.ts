@@ -205,6 +205,16 @@ const betTypeOdd: BetTypeOdd = {
     marketRegistryId: 2,
     paramId: 1,
   },
+  41: {
+    outcomeRegistryId: 10009,
+    marketRegistryId: 19,
+    paramId: 1,
+  },
+  42: {
+    outcomeRegistryId: 10010,
+    marketRegistryId: 19,
+    paramId: 1,
+  },
 }
 
 export default betTypeOdd

@@ -109,6 +109,11 @@ const groupOddsByOutcomes = (values: GetOddsByOutcomesProps) => {
   return outcomes.map((outcomeId, index) => {
     const value = odds[index]
 
+    if (!betTypeOdd[outcomeId]) {
+      console.warn(`Unknown outcomeId ${outcomeId}. Please update the Azuro SDK version`)
+      return;
+    }
+
     const { outcomeRegistryId, marketRegistryId, paramId } = betTypeOdd[outcomeId]
 
     const key = `${gameId}-${marketRegistryId}`
