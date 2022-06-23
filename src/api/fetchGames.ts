@@ -1,6 +1,6 @@
 import { utils } from 'ethers'
 
-import fetchGameIpfsData from './fetchGameIpfsData'
+import fetchGameIpfsData, { FormattedIpfsData } from './fetchGameIpfsData'
 import fetchConditions from './fetchConditions'
 import type { FetchConditionsProps, ConditionGameData } from './fetchConditions'
 import betTypeOdd from '../helpers/betTypeOdd'
@@ -140,14 +140,7 @@ const groupOddsByOutcomes = (values: GetOddsByOutcomesProps) => {
 
 type FetchGamesProps = FetchConditionsProps
 
-export type Game = Omit<GroupGamesResult, 'ipfsHashHex'> & {
-  league: string
-  country: string
-  participants: {
-    name: string
-    image: string
-  }[]
-}
+export type Game = Omit<GroupGamesResult, 'ipfsHashHex'> & FormattedIpfsData;
 
 const fetchGames = async (props: FetchGamesProps = {}): Promise<Game[]> => {
   gamesInfo = {}
