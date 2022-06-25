@@ -8,28 +8,28 @@ import state from './state'
 export const CONTRACTS: ContractsData = {
   core: {
     get address() {
-      return state.contractAddresses.core;
+      return state.contractAddresses.core
     },
     abi: CoreABI,
     decimals: 18,
   },
   lp: {
     get address() {
-      return state.contractAddresses.lp;
+      return state.contractAddresses.lp
     },
     abi: LpABI,
     decimals: 18,
   },
   bet: {
     get address() {
-      return state.contractAddresses.bet;
+      return state.contractAddresses.bet
     },
     abi: AzuroBetABI,
     decimals: 18,
   },
   token: {
     get address() {
-      return state.contractAddresses.token;
+      return state.contractAddresses.token
     },
     abi: TestERC20ABI,
     decimals: 18,

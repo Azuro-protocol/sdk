@@ -111,7 +111,7 @@ const groupOddsByOutcomes = (values: GetOddsByOutcomesProps) => {
 
     if (!betTypeOdd[outcomeId]) {
       console.warn(`Unknown outcomeId ${outcomeId}. Please update the Azuro SDK version`)
-      return;
+      return
     }
 
     const { outcomeRegistryId, marketRegistryId, paramId } = betTypeOdd[outcomeId]

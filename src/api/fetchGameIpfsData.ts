@@ -24,7 +24,6 @@ export type FormattedIpfsData = {
     name: string
     image: string
   }[]
-  scopeId: number
   leagueId: number
   countryId: number
   sportTypeId: number
@@ -45,7 +44,6 @@ const fetchGameIpfsData = async (ipfsHash: string): Promise<FormattedIpfsData | 
       titleCountry,
       titleLeague,
       sportTypeId,
-      scopeId,
       leagueId,
       countryId,
     } = data as IpfsData
@@ -57,7 +55,6 @@ const fetchGameIpfsData = async (ipfsHash: string): Promise<FormattedIpfsData | 
         { name: entity1Name, image: entity1Image },
         { name: entity2Name, image: entity2Image },
       ],
-      scopeId,
       leagueId,
       countryId,
       sportTypeId,
