@@ -1,7 +1,7 @@
 import { parseUnits } from '@ethersproject/units'
 
 import { getContract } from '../contracts'
-import state from "../contracts/state";
+import state from '../contracts/state'
 
 
 type PlaceBetProps = {
