@@ -1,0 +1,153 @@
+root: true
+
+env:
+  browser: true
+  es2021: true
+  node: true
+
+parser: "@typescript-eslint/parser"
+
+parserOptions:
+  ecmaFeatures:
+    jsx: true
+  ecmaVersion: 2020
+  sourceType: module
+
+#extends:
+#  - "eslint:recommended"
+#  - "plugin:react/recommended"
+#  - "plugin:@typescript-eslint/recommended"
+
+plugins:
+  - "import"
+  - "@typescript-eslint"
+
+rules:
+
+  # common
+
+  no-trailing-spaces: 1
+  indent:
+    - error
+    - 2
+    - SwitchCase: 1
+  quotes:
+    - error
+    - single
+    - allowTemplateLiterals: true
+  semi:
+    - error
+    - never
+  eqeqeq: 2
+
+  max-len:
+    - error
+    - code: 180
+  linebreak-style:
+    - error
+    - unix
+  no-multiple-empty-lines:
+    - error
+    - max: 2
+      maxEOF: 1
+      maxBOF: 1
+
+  object-curly-spacing:
+    - error
+    - always
+  array-bracket-spacing:
+    - error
+    - always
+
+  comma-dangle:
+    - error
+    - arrays: always-multiline
+      objects: always-multiline
+      imports: always-multiline
+      exports: always-multiline
+      functions: never
+
+  # @typescript-eslint
+
+  "@typescript-eslint/prefer-optional-chain": error
+
+  # "import" plugin
+
+  import/extensions: 0
+  import/no-unresolved: 0
+  import/first: 0
+  import/no-extraneous-dependencies: 0
+  import/newline-after-import:
+    - error
+    - count: 2
+  import/no-dynamic-require: 0
+  import/prefer-default-export: 0
+  import/no-webpack-loader-syntax: 0
+  import/no-named-as-default-member: 1
+#  import/order:
+#    - error
+#    - groups:
+#        - "builtin"
+#        - "external"
+#        - "internal"
+#        - "unknown"
+#        - "parent"
+#        - "sibling"
+#        - "index"
+#        - "object"
+#      pathGroups:
+#        - group: "external"
+#          pattern: "components/*"
+
+
+overrides:
+  - files:
+    - "*.ts"
+    - "*.tsx"
+    rules:
+      no-undef: 0
+      indent: 0
+      "@typescript-eslint/indent":
+        - error
+        - 2
+        - SwitchCase: 1
+  - files:
+      - "**/*.script.js"
+    plugins:
+      - es5
+    rules:
+      no-var: 0
+      one-var: 0
+      vars-on-top: 0
+      block-scoped-var: 1
+      semi: 0
+      prefer-template: 0
+      prefer-destructuring: 0
+      prefer-arrow-callback: 0
+      prefer-rest-params: 0
+
+      space-before-function-paren: 0
+      object-shorthand: 0
+      comma-dangle: 0
+      no-empty: 0
+
+      es5/no-arrow-functions: 2
+      es5/no-binary-and-octal-literals: 2
+      es5/no-block-scoping: 2
+      es5/no-classes: 2
+      es5/no-computed-properties: 2
+      es5/no-default-parameters: 2
+      es5/no-destructuring: 2
+      es5/no-es6-methods: 2
+      es5/no-es6-static-methods: 2
+      es5/no-for-of: 2
+      es5/no-generators: 2
+      es5/no-modules: 2
+      es5/no-object-super: 2
+      es5/no-rest-parameters: 2
+      es5/no-shorthand-properties: 2
+      es5/no-spread: 2
+      es5/no-template-literals: 2
+      es5/no-typeof-symbol: 2
+      es5/no-unicode-code-point-escape: 2
+      es5/no-unicode-regex: 2

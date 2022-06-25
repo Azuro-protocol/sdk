@@ -28,7 +28,7 @@ export const placeBet = async (props: PlaceBetProps) => {
     rawAmount,
     outcomeId,
     deadline,
-    rawMinRate,
+    rawMinRate
   )
 }
 

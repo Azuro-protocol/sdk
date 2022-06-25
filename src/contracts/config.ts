@@ -5,6 +5,7 @@ import AzuroBetABI from './abis/AzuroBet.json'
 import TestERC20ABI from './abis/TestERC20.json'
 import state from './state'
 
+
 export const CONTRACTS: ContractsData = {
   core: {
     get address() {

@@ -2,6 +2,7 @@ import type { Web3Provider } from '@ethersproject/providers'
 
 import type { Contracts, ContractsAddresses } from './contracts'
 
+
 type State = {
   walletProvider: Web3Provider
   selectedChainId: number
