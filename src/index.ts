@@ -4,7 +4,5 @@ export {
   setSelectedChainId,
   setWalletProvider,
   setContractAddresses,
-  setTokenDecimals,
-  setRateDecimals,
 } from './contracts/state'
 export { configure } from './config'

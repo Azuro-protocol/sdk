@@ -23,30 +23,28 @@ const state: State = {
   rateDecimals: null,
 }
 
+const flushState = () => {
+  state.writeContracts = {} as any
+  state.readContracts = {} as any
+
+  state.tokenDecimals = null
+  state.rateDecimals = null
+}
+
 export const setContractAddresses = (contractAddresses: ContractsAddresses) => {
   state.contractAddresses = contractAddresses
 
-  state.writeContracts = {} as any
-  state.readContracts = {} as any
+  flushState()
 }
 
 export const setWalletProvider = (walletProvider: Web3Provider) => {
   state.walletProvider = walletProvider
 
-  state.writeContracts = {} as any
-  state.readContracts = {} as any
+  flushState()
 }
 
 export const setSelectedChainId = (selectedChainId: number) => {
   state.selectedChainId = selectedChainId
-}
-
-export const setTokenDecimals = (tokenDecimals: number) => {
-  state.tokenDecimals = tokenDecimals
-}
-
-export const setRateDecimals = (rateDecimals: number) => {
-  state.rateDecimals = rateDecimals
 }
 
 export default state
