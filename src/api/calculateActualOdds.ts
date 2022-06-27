@@ -1,8 +1,8 @@
 import { parseUnits, formatUnits } from '@ethersproject/units'
 
 import { getContract } from '../contracts'
-import getTokenDecimals from "../contracts/getTokenDecimals";
-import getRateDecimals from "../contracts/getRateDecimals";
+import getTokenDecimals from '../contracts/getTokenDecimals'
+import getRateDecimals from '../contracts/getRateDecimals'
 
 
 type CalculateOddsProps = {
