@@ -1,4 +1,5 @@
-import state from './state'
+import { state } from './index'
+
 
 const getRateDecimals = async (): Promise<number> => {
   if (state.rateDecimals === null) {

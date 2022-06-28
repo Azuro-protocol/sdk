@@ -9,8 +9,8 @@ type State = {
   readContracts: Contracts
   writeContracts: Contracts
   contractAddresses: ContractsAddresses
-  tokenDecimals: number
-  rateDecimals: number
+  tokenDecimals: number | Promise<number>
+  rateDecimals: number | Promise<number>
 }
 
 const state: State = {

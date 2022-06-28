@@ -1,3 +1,6 @@
 export type { Contracts, ContractsABI, ContractName } from './contracts'
 export { default as getContract } from './getContract'
 export { CONTRACTS } from './config'
+export { default as state } from './state'
+export { default as getTokenDecimals } from './getTokenDecimals'
+export { default as getRateDecimals } from './getRateDecimals'

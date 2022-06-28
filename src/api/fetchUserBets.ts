@@ -4,11 +4,9 @@ import { formatUnits } from '@ethersproject/units'
 import fetchGameIpfsData from './fetchGameIpfsData'
 import type { FormattedIpfsData } from './fetchGameIpfsData'
 import type { ConditionGameData } from './fetchConditions'
-import { getContract } from '../contracts'
+import { getContract, getRateDecimals, getTokenDecimals } from '../contracts'
 import betTypeOdd from '../helpers/betTypeOdd'
 import { ConditionStatus } from '../helpers/enums'
-import getRateDecimals from '../contracts/getRateDecimals'
-import getTokenDecimals from '../contracts/getTokenDecimals'
 
 
 const fetchBet = async (nftId: number) => {
