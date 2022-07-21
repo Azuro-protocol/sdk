@@ -116,7 +116,7 @@ const fetchConditions = async (props?: FetchConditionsProps): Promise<Conditions
 
   return {
     conditions: conditions.filter(Boolean),
-    latestBlock: events[events.length - 1].blockNumber,
+    latestBlock: events.length > 0 ? events[events.length - 1].blockNumber : (props?.from || 0),
   }
 }
 
