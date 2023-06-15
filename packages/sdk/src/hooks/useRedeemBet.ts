@@ -31,6 +31,7 @@ export const useRedeemBet = () => {
   }
 
   return {
+    isDisabled: !contracts || !write,
     isLoading,
     data,
     error,
