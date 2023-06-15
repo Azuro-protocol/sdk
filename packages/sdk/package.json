@@ -1,0 +1,11 @@
+{
+  "name": "@azuro-org/sdk",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {},
+  "dependencies": {
+    "@locmod/event-aggregator": "^1.0.3",
+    "viem": "^1.0.7",
+    "wagmi": "^1.2.0"
+  }
+}
