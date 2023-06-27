@@ -1,0 +1,45 @@
+query Bets(
+  $first: Int,
+  $skip: Int,
+  $where: Bet_filter!,
+  $orderBy: Bet_orderBy,
+  $orderDirection: OrderDirection
+) {
+  bets(
+    first: $first,
+    skip: $skip,
+    where: $where,
+    orderBy: $orderBy,
+    orderDirection: $orderDirection,
+    subgraphError: allow
+  ) {
+    id
+    type
+    tokenId: betId
+    amount
+    status
+    payout
+    potentialPayout
+    result
+    isRedeemed
+    odds
+    createdAt: createdBlockTimestamp
+    txHash: createdTxHash
+    core {
+      address
+    }
+    selections {
+      odds
+      result
+      outcome {
+        outcomeId
+        condition {
+          conditionId
+          game {
+            ...MainGameInfo
+          }
+        }
+      }
+    }
+  }
+}

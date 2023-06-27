@@ -1,0 +1,25 @@
+{
+  "name": "@azuro-org/data",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "gql-watch": "graphql-codegen --watch"
+  },
+  "peerDependencies": {
+    "react": ">=18.2.0"
+  },
+  "dependencies": {
+    "@apollo/client": "^3.8.0-beta.3",
+    "@apollo/experimental-nextjs-app-support": "^0.2.1",
+    "graphql": "^16.6.0"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^4.0.1",
+    "@graphql-codegen/client-preset": "^4.0.0",
+    "@graphql-codegen/near-operation-file-preset": "^2.5.0",
+    "@graphql-codegen/typescript-react-apollo": "^3.3.7",
+    "@types/react": "^18.2.12",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.3"
+  }
+}

@@ -1,0 +1,22 @@
+fragment MainGameInfo on Game {
+  id
+  gameId
+  title
+  startsAt
+  sport {
+    slug
+    name
+  }
+  league {
+    slug
+    name
+    country {
+      slug
+      name
+    }
+  }
+  participants {
+    image
+    name
+  }
+}

@@ -1,13 +1,30 @@
 # SDK
 
-
 ## Hooks
 
 ### useContracts
+
+```tsx
+
+```
+
 ### useBetToken
+
+```tsx
+
+```
+
 ### useCalcOdds
+
+```tsx
+
+```
+
 ### useCalcOddsFunction
 
+```tsx
+
+```
 
 ### usePlaceBet
 
@@ -15,6 +32,9 @@ Doesn't contain `minOdds` calculation because it's based on current odds values 
 odds values are updated, if usePlaceBet will contain the logic of calculation when there should be not necessary call for 
 odds values fetching. This should be done only in client app, not in lib itself.
 
+```tsx
+
+```
 
 ### oddsWatcher
 

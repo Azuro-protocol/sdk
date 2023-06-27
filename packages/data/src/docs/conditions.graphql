@@ -1,0 +1,20 @@
+query Conditions(
+  $where: Condition_filter!
+) {
+  conditions(
+    where: $where
+  ) {
+    id
+    conditionId
+    core {
+      address
+      liquidityPool {
+        address
+      }
+    }
+    outcomes {
+      outcomeId
+      odds: currentOdds
+    }
+  }
+}
