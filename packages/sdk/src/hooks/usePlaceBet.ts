@@ -37,7 +37,7 @@ export const usePlaceBet = () => {
     const fixedMinOdds = +parseFloat(String(props.minOdds)).toFixed(ODDS_DECIMALS)
     const rawMinOdds = parseUnits(`${fixedMinOdds}`, ODDS_DECIMALS)
 
-    const deadline = BigInt(props.deadline || Math.floor(Date.now() / 1000) + DEFAULT_DEADLINE)
+    const deadline = BigInt(Math.floor(Date.now() / 1000) + (props.deadline || DEFAULT_DEADLINE))
     const affiliate = props.affiliate
 
     let coreAddress

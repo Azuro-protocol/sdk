@@ -1,5 +1,11 @@
 # Data
 
+## Installation
+
+```
+npm install @azuro-org/data
+```
+
 ## Hooks
 
 Each data hook represents a logic wrapper over standard Apollo's `useQuery` hook. Explore [Apollo's docs](https://www.apollographql.com/docs/react/api/react/hooks#usequery) to understand what data the hooks return.

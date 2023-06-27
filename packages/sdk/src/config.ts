@@ -19,7 +19,7 @@ type ChainData = {
   }
 }
 
-export const chainsData: Record<number, ChainData> = {
+export const chainsData: Record<Chain['id'], ChainData> = {
   [arbitrum.id]: {
     chain: arbitrum,
     addresses: {
