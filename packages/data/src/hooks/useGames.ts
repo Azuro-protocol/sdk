@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
-import { useQuery } from '@apollo/client'
-import { GamesDocument, GamesQueryResult, GamesQueryVariables } from '../docs/games'
-import { Game_Filter, Game_OrderBy, OrderDirection } from '../types'
+import { useQuery, type QueryHookOptions } from '@apollo/client'
+import { GamesDocument, GamesQuery, GamesQueryVariables } from '../docs/games'
+import { Game_OrderBy, OrderDirection } from '../types'
 
 
 const DEFAULT_CACHE_TIME = 3 * 60
@@ -40,31 +40,23 @@ export const useGames = (props?: UseGamesProps) => {
     startsAt_gt = lastUpdateTime
   }
 
-  const options = useMemo(() => {
-    const sport_: Game_Filter['sport_'] = {}
-
-    if (filter?.sportName) {
-      sport_.name_starts_with_nocase = filter.sportName
-    }
-
-    const variables: GamesQueryVariables = {
+  const options = useMemo<QueryHookOptions<GamesQuery, GamesQueryVariables>>(() => ({
+    variables: {
       first: filter?.limit,
       skip: filter?.offset,
       orderBy,
       orderDirection: orderDir,
       withConditions,
       where: {
-        sport_,
+        sport_: {
+          name_starts_with_nocase: filter?.sportName,
+        },
         startsAt_gt,
         hasActiveConditions: true,
       },
-    }
-
-    return {
-      variables,
-      ssr: false,
-    }
-  }, [
+    },
+    ssr: false,
+  }), [
     filter?.limit,
     filter?.offset,
     filter?.sportName,
@@ -74,5 +66,5 @@ export const useGames = (props?: UseGamesProps) => {
     withConditions,
   ])
 
-  return useQuery<GamesQueryResult, GamesQueryVariables>(GamesDocument, options)
+  return useQuery<GamesQuery, GamesQueryVariables>(GamesDocument, options)
 }

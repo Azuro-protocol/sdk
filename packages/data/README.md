@@ -80,7 +80,7 @@ import { useGames, Game_OrderBy, OrderDirection } from '@azuro-org/data'
 
 const { loading, error, data } = useGames()
 
-const games = data?.games
+const games = data?.data.games
 ```
 
 #### Props
@@ -174,7 +174,7 @@ import { useGame } from '@azuro-org/data'
 
 const { loading, error, data } = useGame({ id })
 
-const game = data?.game
+const game = data?.data.game
 ```
 
 - **id**: `{string}, required` - the Subgraph `Game` entity's ID.
@@ -236,7 +236,7 @@ const { loading, error, data } = useConditions({
   gameEntityId: '...',
 })
 
-const conditions = data?.game.conditions
+const conditions = data?.data.game.conditions
 ```
 
 - **gameEntityId**: `{string}, required` - the Subgraph `Game` entity's ID.
@@ -347,7 +347,7 @@ const { loading, error, data } = useBets({
   },
 })
 
-const bets = data?.bets
+const bets = data?.data.bets
 ```
 
 **Note**: 

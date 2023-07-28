@@ -7,9 +7,19 @@ type CalcOddsProps = {
   chainId: number
   conditionId: string | number
   outcomeId: string | number
-  amount?: number
+  amount?: string | number
 }
 
+// /**
+//  * Returns actual odds value for specific outcomeId (on specific condition and chain)
+//  *
+//  * @param props
+//  * @param {number} props.chainId
+//  * @param {string | number} props.conditionId
+//  * @param {string | number} props.outcomeId
+//  * @param {string | number} [props.amount]
+//  * @returns PromiseLike<bigint>
+//  */
 export const calcOdds = (props: CalcOddsProps) => {
   const chainData = chainsData[props.chainId]
 

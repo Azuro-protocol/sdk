@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import { useQuery } from '@apollo/client'
-import { ConditionsDocument, ConditionsQueryResult, ConditionsQueryVariables } from '../docs/conditions'
+import { useQuery, type QueryHookOptions } from '@apollo/client'
+import { ConditionsDocument, ConditionsQuery, ConditionsQueryVariables } from '../docs/conditions'
 
 
 type UseConditionsProps = {
@@ -13,27 +13,20 @@ type UseConditionsProps = {
 export const useConditions = (props: UseConditionsProps) => {
   const { gameEntityId, filter } = props
 
-  const options = useMemo(() => {
-    const variables: ConditionsQueryVariables = {
+  const options = useMemo<QueryHookOptions<ConditionsQuery, ConditionsQueryVariables>>(() => ({
+    variables: {
       where: {
         game_: {
           id: gameEntityId,
         },
+        outcomesIds_contains: filter?.outcomeIds,
       },
-    }
-
-    if (filter?.outcomeIds) {
-      variables.where.outcomesIds_contains = filter.outcomeIds
-    }
-
-    return {
-      variables,
-      ssr: false,
-    }
-  }, [
+    },
+    ssr: false,
+  }), [
     gameEntityId,
     filter?.outcomeIds?.join(',')
   ])
 
-  return useQuery<ConditionsQueryResult, ConditionsQueryVariables>(ConditionsDocument, options)
+  return useQuery<ConditionsQuery, ConditionsQueryVariables>(ConditionsDocument, options)
 }

@@ -6,7 +6,11 @@ const config: CodegenConfig = {
     'src/docs/**/*.graphql',
   ],
   generates: {
-    'src/types.ts': { plugins: ['typescript'] },
+    'src/types.ts': {
+      plugins: [
+        'typescript',
+      ],
+    },
     'src/': {
       preset: 'near-operation-file',
       presetConfig: {

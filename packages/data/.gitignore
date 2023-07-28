@@ -1,3 +1,4 @@
 protocol.schema.graphql
 src/types.ts
 src/docs/**/*.ts
+dist

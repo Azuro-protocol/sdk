@@ -1,4 +1,5 @@
-import React, { useRef } from 'react'
+'use client';
+import { useRef } from 'react'
 import { ApolloClient, ApolloLink, HttpLink, SuspenseCache } from '@apollo/client'
 import { ApolloNextAppProvider, NextSSRInMemoryCache, SSRMultipartLink } from '@apollo/experimental-nextjs-app-support/ssr'
 import { graphqlEndpoints } from '../config'
@@ -31,10 +32,11 @@ const getApolloClient = (chainId: number) => {
 }
 
 type ApolloProviderProps = {
+  children: any
   appChainId: number
 }
 
-export const ApolloProvider = (props: React.PropsWithChildren<ApolloProviderProps>) => {
+export const ApolloProvider = (props: ApolloProviderProps) => {
   const { children, appChainId } = props
 
   const prevAppChainIdRef = useRef<number | undefined>()

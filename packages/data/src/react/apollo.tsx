@@ -1,8 +1,6 @@
 import React, { useMemo, useRef } from 'react'
-import { ApolloProvider as AProvider } from '@apollo/client'
-import { type NormalizedCacheObject } from '@apollo/client/cache'
-import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client/core'
-import { graphqlEndpoints } from './config'
+import { ApolloProvider as AProvider, ApolloClient, HttpLink, InMemoryCache, type NormalizedCacheObject } from '@apollo/client'
+import { graphqlEndpoints } from '../config'
 
 
 const getLink = (chainId: number) => {

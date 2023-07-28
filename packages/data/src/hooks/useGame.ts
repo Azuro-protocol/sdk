@@ -1,27 +1,24 @@
 import { useMemo } from 'react'
-import { useQuery } from '@apollo/client'
-import { GameDocument, GameQueryResult, GameQueryVariables } from '../docs/game'
+import { useQuery, type QueryHookOptions } from '@apollo/client'
+import { GameDocument, GameQuery, GameQueryVariables } from '../docs/game'
 
 
 type UseGameProps = {
-  id: string
+  id: string | undefined
   withConditions?: boolean
 }
 
 export const useGame = (props: UseGameProps) => {
   const { id, withConditions = false } = props
 
-  const options = useMemo(() => {
-    const variables: GameQueryVariables = {
-      id,
+  const options = useMemo<QueryHookOptions<GameQuery, GameQueryVariables>>(() => ({
+    variables: {
+      id: id!,
       withConditions,
-    }
+    },
+    skip: !id,
+    ssr: false,
+  }), [ id ])
 
-    return {
-      variables,
-      ssr: false,
-    }
-  }, [ id ])
-
-  return useQuery<GameQueryResult, GameQueryVariables>(GameDocument, options)
+  return useQuery<GameQuery, GameQueryVariables>(GameDocument, options)
 }
