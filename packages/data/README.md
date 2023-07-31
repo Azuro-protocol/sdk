@@ -6,10 +6,19 @@
 npm install @azuro-org/data
 ```
 
+#### Peer Dependencies
+
+```
+@apollo/client^3.8.0-beta.3 
+@apollo/experimental-nextjs-app-support@^0.2.1
+graphql@^16.6.0
+react@^18.2.0
+```
+
+
 ## Hooks
 
 Each data hook represents a logic wrapper over standard Apollo's `useQuery` hook. Explore [Apollo's docs](https://www.apollographql.com/docs/react/api/react/hooks#usequery) to understand what data the hooks return.
-
 
 ### `useGames`
 

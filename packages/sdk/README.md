@@ -6,6 +6,13 @@
 npm install @azuro-org/sdk
 ```
 
+#### Peer Dependencies
+
+```
+wagmi@^1.3.8
+view^0.3.50
+```
+
 
 ## Utils
 
