@@ -20,11 +20,6 @@ view^0.3.50
 
 ```ts
 import { chainsData } from '@azuro-org/sdk'
-```
-
-#### Usage
-
-```ts
 import { polygon } from 'wagmi'
 
 const { chain, addresses, betToken } = chainsData[polygon.id]
@@ -58,11 +53,7 @@ Helper to calculate the minimum odds value at which the bet can be placed. If th
 
 ```ts
 import { calcMindOdds } from '@azuro-org/sdk'
-```
 
-#### Usage
-
-```ts
 const minOdds = calcMindOdds({ 
   odds: 1.17,
   slippage: 5, // 5% 
@@ -76,11 +67,7 @@ Helper to fetch actual odds value from the contracts.
 
 ```ts
 import { calcOdds } from '@azuro-org/sdk'
-```
 
-#### Usage
-
-```ts
 const odds = await calcOdds({
   chainId: polygon.id,
   conditionId: '486903008559711340',
@@ -94,11 +81,7 @@ const odds = await calcOdds({
 
 ```ts
 import { watchOddsChange } from '@azuro-org/sdk'
-```
 
-#### Usage
-
-```ts
 const unwatch = watchOddsChange({
   chainId: polygon.id,
   conditionIds: [
@@ -128,11 +111,7 @@ unwatch() // to stop watching
 
 ```ts
 import { useContracts } from '@azuro-org/sdk'
-```
 
-#### Usage
-
-```ts
 const contracts = useContracts()
 ```
 
@@ -162,11 +141,7 @@ Hook to get bet token data for current chain.
 
 ```ts
 import { useBetToken } from '@azuro-org/sdk'
-```
 
-#### Usage
-
-```ts
 const betToken = useBetToken()
 ```
 
@@ -186,12 +161,8 @@ const betToken = useBetToken()
 
 ```ts
 import { useCalcOdds } from '@azuro-org/sdk'
-```
 
-#### Usage
-
-```ts
-const odds = useCalcOdds({
+const { isLoading, data, error } = useCalcOdds({
   amount: 10,
   conditionId: '486903008559711340',
   outcomeId: '29',
@@ -207,11 +178,7 @@ odds values fetching. This should be done only in client app, not in lib itself.
 
 ```ts
 import { usePlaceBet } from '@azuro-org/sdk'
-```
 
-#### Usage
-
-```ts
 const { isDisabled, isLoading, data, error, submit } = usePlaceBet()
 
 submit({
