@@ -1,19 +1,22 @@
 {
-  "name": "@azuro-org/data",
-  "version": "0.1.0",
+  "name": "@azuro-org/sdk",
+  "version": "1.0.0",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "gql": "graphql-codegen",
-    "gql-watch": "graphql-codegen --watch",
     "build": "rimraf dist && rollup -c"
   },
   "peerDependencies": {
     "@apollo/client": "^3.8.0-beta.3",
     "@apollo/experimental-nextjs-app-support": "^0.2.1",
     "graphql": "^16.6.0",
-    "react": "^18.2.0"
+    "react": "^18.2.0",
+    "viem": "^0.3.50",
+    "wagmi": "^1.3.9"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^4.0.1",
@@ -21,7 +24,7 @@
     "@graphql-codegen/near-operation-file-preset": "^2.5.0",
     "@graphql-codegen/typescript-react-apollo": "^3.3.7",
     "@rollup/plugin-typescript": "^11.1.2",
-    "@types/react": "^18.2.12",
+    "@types/react": "^18.2.18",
     "rimraf": "^5.0.1",
     "rollup": "^3.25.3",
     "rollup-plugin-preserve-directives": "^0.2.0",

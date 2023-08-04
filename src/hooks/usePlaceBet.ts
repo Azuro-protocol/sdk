@@ -1,4 +1,4 @@
-import { useContractWrite } from 'wagmi'
+import { usePublicClient, useContractWrite, useWaitForTransaction } from 'wagmi'
 import { parseUnits, encodeAbiParameters, parseAbiParameters } from 'viem'
 import { useContracts } from './useContracts'
 import { useBetToken } from './useBetToken'
@@ -11,26 +11,25 @@ type SubmitProps = {
   deadline?: number
   affiliate: `0x${string}`
   selections: {
-    conditionId: string | number
+    conditionId: string | bigint
     outcomeId: string | number
   }[]
 }
 
 export const usePlaceBet = () => {
+  const publicClient = usePublicClient()
   const contracts = useContracts()
   const betToken = useBetToken()
 
-  const { isLoading, data, error, write } = useContractWrite({
+  const tx = useContractWrite({
     address: contracts?.lp.address,
     abi: contracts?.lp.abi,
     functionName: 'bet',
   })
 
-  const submit = async (props: SubmitProps) => {
-    if (!write) {
-      return
-    }
+  const receipt = useWaitForTransaction(tx.data)
 
+  const placeBet = async (props: SubmitProps) => {
     const fixedAmount = +parseFloat(String(props.amount)).toFixed(betToken!.decimals)
     const rawAmount = parseUnits(`${fixedAmount}`, betToken!.decimals)
 
@@ -74,21 +73,27 @@ export const usePlaceBet = () => {
       coreAddress = contracts!.prematchCore.address
     }
 
-    write({
+    const txResult = await tx.writeAsync({
       args: [
         coreAddress,
         rawAmount,
         deadline,
-        { affiliate, data }
+        {
+          affiliate,
+          data,
+        },
       ],
     })
+
+    return publicClient.waitForTransactionReceipt(txResult)
   }
 
   return {
-    isDisabled: !contracts || !write,
-    isLoading,
-    data,
-    error,
-    submit,
+    isDisabled: !contracts,
+    isWaitingApproval: tx.isLoading,
+    isPending: receipt.isLoading,
+    data: tx.data,
+    error: tx.error,
+    placeBet,
   }
 }

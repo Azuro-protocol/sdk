@@ -1,4 +1,11 @@
+/node_modules
+/dist
+
 .idea
 .DS_Store
+*.pem
 
-node_modules/
+protocol.schema.graphql
+src/types.ts
+src/docs/**/*.ts
+

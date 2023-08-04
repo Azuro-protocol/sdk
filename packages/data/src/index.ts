@@ -1,7 +1,0 @@
-export { Game_OrderBy, Bet_OrderBy } from './types'
-export type { GamesDocument, GamesQueryResult, GamesQueryVariables } from './docs/games'
-export type { BetsDocument, BetsQueryResult, BetsQueryVariables } from './docs/bets'
-export { useGame } from './hooks/useGame'
-export { useGames } from './hooks/useGames'
-export { useConditions } from './hooks/useConditions'
-export { useBets } from './hooks/useBets'

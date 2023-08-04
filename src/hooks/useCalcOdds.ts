@@ -6,7 +6,7 @@ import { useContracts } from './useContracts'
 
 type CalcOddsProps = {
   amount: string | number | undefined
-  conditionId: string | number
+  conditionId: string | bigint
   outcomeId: string | number
 }
 
@@ -15,7 +15,11 @@ export const useCalcOdds = (props: CalcOddsProps) => {
 
   const contracts = useContracts()
   const betToken = useBetToken()
-  const rawAmount = amount ? parseUnits(`${+amount}`, betToken!.decimals) : BigInt(1)
+  let rawAmount = BigInt(1)
+
+  if (amount !== undefined) {
+    rawAmount = parseUnits(`${+amount}`, betToken!.decimals)
+  }
 
   return useContractRead({
     address: contracts!.prematchCore.address,

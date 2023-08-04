@@ -1,7 +1,6 @@
 import { type Abi } from 'abitype'
 import { useChainId } from 'wagmi'
-import { chainsData } from '../config'
-import { lpAbi, prematchCoreAbi, prematchComboCoreAbi } from '../abis'
+import { chainsData, lpAbi, prematchCoreAbi, prematchComboCoreAbi } from '../config'
 
 
 type Contract<V extends Abi> = {

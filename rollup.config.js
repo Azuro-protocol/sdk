@@ -1,5 +1,5 @@
-// https://www.misha.wtf/blog/rollup-server-components
 import typescript from '@rollup/plugin-typescript'
+// https://www.misha.wtf/blog/rollup-server-components
 import preserverDirectives from 'rollup-plugin-preserve-directives'
 
 /**
@@ -18,11 +18,11 @@ export default {
     preserveModules: true,
   },
   external: [
-    'react',
-    'react/jsx-runtime',
-    'graphql',
-    '@apollo/client',
-    '@apollo/experimental-nextjs-app-support/ssr',
+    /@apollo/,
+    /graphql/,
+    /react/,
+    /viem/,
+    /wagmi/,
   ],
   plugins: [
     typescript({
