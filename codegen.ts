@@ -2,9 +2,8 @@ import { CodegenConfig } from '@graphql-codegen/cli'
 
 const config: CodegenConfig = {
   schema: 'https://thegraph.azuro.org/subgraphs/name/azuro-protocol/azuro-api-polygon-v2',
-  documents: [
-    'src/docs/**/*.graphql',
-  ],
+  documents: 'src/docs/**/*.graphql',
+  ignoreNoDocuments: true, // for better experience with the watcher
   generates: {
     'src/types.ts': {
       plugins: [
@@ -26,12 +25,6 @@ const config: CodegenConfig = {
       },
     },
   },
-  // generates: {
-  //   './src/gql/': {
-  //     preset: 'client',
-  //   },
-  // },
-  ignoreNoDocuments: true, // for better experience with the watcher
 }
 
 export default config

@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useContractEvent } from 'wagmi'
+import { useChain } from 'chain-context'
 import { oddsWatcher } from '../modules/oddsWatcher'
-import { useChain } from './useChain'
 
 
 export const useOddsWatcher = () => {

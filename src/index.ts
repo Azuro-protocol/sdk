@@ -1,4 +1,5 @@
-export { chainsData } from './config'
+export { chainsData } from 'config'
+export { ChainProvider, useChain } from 'chain-context'
 // docs
 export { Game_OrderBy, Bet_OrderBy } from './types'
 export type { GamesDocument, GamesQuery, GamesQueryResult, GamesQueryVariables } from './docs/games'
@@ -6,12 +7,9 @@ export type { GameDocument, GameQuery, GameQueryResult, GameQueryVariables } fro
 export type { BetsDocument, BetsQuery, BetsQueryResult, BetsQueryVariables } from './docs/bets'
 // utils
 export { calcMindOdds } from './utils/calcMindOdds'
-// contexts
-export { ChainProvider } from './contexts/chain'
 // hooks
 export { useBets } from './hooks/useBets'
 export { useCalcOdds } from './hooks/useCalcOdds'
-export { useChain } from './hooks/useChain'
 export { useConditions } from './hooks/useConditions'
 export { useGame } from './hooks/useGame'
 export { useGames } from './hooks/useGames'

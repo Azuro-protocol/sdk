@@ -7,7 +7,9 @@
   "files": [
     "dist"
   ],
+  "sideEffects": true,
   "scripts": {
+    "gql": "graphql-codegen",
     "build": "rimraf dist && rollup -c"
   },
   "peerDependencies": {

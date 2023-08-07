@@ -1,6 +1,6 @@
 import { useContractRead } from 'wagmi'
 import { parseUnits } from 'viem'
-import { useChain } from './useChain'
+import { useChain } from 'chain-context'
 
 
 type CalcOddsProps = {

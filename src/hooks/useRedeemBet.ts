@@ -1,6 +1,6 @@
 import { useContractWrite, useWaitForTransaction } from 'wagmi'
+import { useChain } from 'chain-context'
 import { usePublicClient } from './usePublicClient'
-import { useChain } from './useChain'
 
 
 type SubmitProps = {
@@ -10,7 +10,7 @@ type SubmitProps = {
 
 export const useRedeemBet = () => {
   const publicClient = usePublicClient()
-  const { contracts, betToken } = useChain()
+  const { contracts } = useChain()
 
   const tx = useContractWrite({
     address: contracts.lp.address,

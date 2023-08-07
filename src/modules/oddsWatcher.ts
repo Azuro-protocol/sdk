@@ -1,4 +1,4 @@
-import { type ChainId } from '../config'
+import { type ChainId } from 'config'
 import { calcOdds } from '../utils/calcOdds'
 
 

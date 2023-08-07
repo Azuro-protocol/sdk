@@ -1,7 +1,9 @@
-import React, { useRef, useState, createContext } from 'react'
+import React, { useRef, useContext, createContext } from 'react'
 import { useNetwork } from 'wagmi'
-import { chainsData, type ChainId, type ChainData } from '../config'
+import { chainsData, type ChainId, type ChainData } from 'config'
 
+
+const availableChainIds = Object.keys(chainsData).map(Number)
 
 export type ChainContextValue = ChainData & {
   walletChainId: number | null
@@ -19,14 +21,17 @@ type Props = {
 export const ChainProvider: React.FC<Props> = (props) => {
   const { children, initialChainId } = props
 
+  const appChainIdRef = useRef<number>(initialChainId)
   const walletNetwork = useNetwork()
-  const [ appChainId, setSelectedChainId ] = useState<ChainId>(initialChainId)
 
   const walletChainId = walletNetwork.chain?.id || null
-  const isRightNetwork = walletChainId === appChainId
 
-  const appChainIdRef = useRef<number | null>(null)
-  appChainIdRef.current = appChainId
+  if (walletChainId && availableChainIds.includes(walletChainId)) {
+    appChainIdRef.current = walletChainId
+  }
+
+  const appChainId = appChainIdRef.current as unknown as ChainId
+  const isRightNetwork = walletChainId === appChainId
 
   const { chain, contracts, betToken } = chainsData[appChainId]
 
@@ -44,4 +49,8 @@ export const ChainProvider: React.FC<Props> = (props) => {
       {children}
     </ChainContext.Provider>
   )
+}
+
+export const useChain = () => {
+  return useContext(ChainContext) as ChainContextValue
 }

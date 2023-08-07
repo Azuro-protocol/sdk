@@ -1,6 +1,7 @@
-import React, { useMemo, useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import { ApolloProvider as AProvider, ApolloClient, HttpLink, InMemoryCache, type NormalizedCacheObject } from '@apollo/client'
-import { graphqlEndpoints } from '../config'
+import { useChain } from 'chain-context'
+import { graphqlEndpoints } from 'config'
 
 
 const getLink = (chainId: number) => {
@@ -22,30 +23,31 @@ const getApolloClient = (chainId: number) => {
   })
 }
 
-type ApolloProviderProps = {
+type Props = {
+  children: any
   initialClient?: ApolloClient<NormalizedCacheObject>
-  initialChainId: number
 }
 
-export const ApolloProvider = (props: React.PropsWithChildren<ApolloProviderProps>) => {
-  const { children, initialClient, initialChainId } = props
+export const ApolloProvider = (props: Props) => {
+  const { children, initialClient } = props
 
-  const prevAppChainIdRef = useRef<number>(initialChainId)
-  const apolloClientRef = useRef<ApolloClient<NormalizedCacheObject>>(initialClient || getApolloClient(initialChainId))
+  const { appChainId } = useChain()
+  const prevAppChainIdRef = useRef<number>(appChainId)
+  const apolloClientRef = useRef<ApolloClient<NormalizedCacheObject>>(initialClient || getApolloClient(appChainId))
 
   // set new link before render for send requests with new one
   useMemo(() => {
-    if (initialChainId !== prevAppChainIdRef.current) {
+    if (appChainId !== prevAppChainIdRef.current) {
       const link = new HttpLink({
-        uri: graphqlEndpoints[initialChainId],
+        uri: graphqlEndpoints[appChainId],
       })
 
       apolloClientRef.current.setLink(link)
       apolloClientRef.current.resetStore()
 
-      prevAppChainIdRef.current = initialChainId
+      prevAppChainIdRef.current = appChainId
     }
-  }, [ initialChainId ])
+  }, [ appChainId ])
 
   return (
     <AProvider client={apolloClientRef.current}>

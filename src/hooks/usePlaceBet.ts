@@ -1,8 +1,8 @@
 import { erc20ABI, useAccount, useContractRead, useContractWrite, useWaitForTransaction } from 'wagmi'
 import { parseUnits, encodeAbiParameters, parseAbiParameters } from 'viem'
-import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256 } from '../config'
+import { useChain } from 'chain-context'
+import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256 } from 'config'
 import { usePublicClient } from './usePublicClient'
-import { useChain } from './useChain'
 
 
 type Props = {
@@ -32,7 +32,7 @@ export const usePlaceBet = (props: Props) => {
       account.address!,
       contracts.proxyFront.address,
     ],
-    enabled: Boolean(account.address),
+    enabled: Boolean(account.address) && !betToken.isNative,
   })
 
   const approveTx = useContractWrite({
@@ -48,7 +48,8 @@ export const usePlaceBet = (props: Props) => {
   const approveReceipt = useWaitForTransaction(approveTx.data)
 
   const isApproveRequired = (
-    allowanceTx.data
+    !betToken.isNative
+    && allowanceTx.data
     && +amount
     && allowanceTx.data < parseUnits(`${+amount}`, 6)
   )
