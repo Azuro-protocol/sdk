@@ -5,7 +5,7 @@ import { chainsData, type ChainId, type ChainData } from '../config'
 
 export type ChainContextValue = ChainData & {
   walletChainId: number | null
-  appChainId: number
+  appChainId: ChainId
   isRightNetwork: boolean
 }
 
