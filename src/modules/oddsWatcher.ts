@@ -1,3 +1,4 @@
+import { type ChainId } from '../config'
 import { calcOdds } from '../utils/calcOdds'
 
 
@@ -29,7 +30,7 @@ const subscribe = (conditionId: bigint, outcomeId: bigint, cb: () => bigint) => 
   }
 }
 
-const trigger = (chainId: number, conditionId: bigint) => {
+const trigger = (chainId: ChainId, conditionId: bigint) => {
   const handlers = subscribers.get(`${conditionId}`) || []
 
   handlers.forEach(async ({ outcomeId, cb }) => {
@@ -50,7 +51,7 @@ const trigger = (chainId: number, conditionId: bigint) => {
   })
 }
 
-const dispatch = (chainId: number, conditionId: bigint) => {
+const dispatch = (chainId: ChainId, conditionId: bigint) => {
   let timer = timers.get(conditionId)
 
   if (timer !== undefined) {

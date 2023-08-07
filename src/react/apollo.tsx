@@ -24,28 +24,28 @@ const getApolloClient = (chainId: number) => {
 
 type ApolloProviderProps = {
   initialClient?: ApolloClient<NormalizedCacheObject>
-  appChainId: number
+  initialChainId: number
 }
 
 export const ApolloProvider = (props: React.PropsWithChildren<ApolloProviderProps>) => {
-  const { children, initialClient, appChainId } = props
+  const { children, initialClient, initialChainId } = props
 
-  const prevAppChainIdRef = useRef<number>(appChainId)
-  const apolloClientRef = useRef<ApolloClient<NormalizedCacheObject>>(initialClient || getApolloClient(appChainId))
+  const prevAppChainIdRef = useRef<number>(initialChainId)
+  const apolloClientRef = useRef<ApolloClient<NormalizedCacheObject>>(initialClient || getApolloClient(initialChainId))
 
   // set new link before render for send requests with new one
   useMemo(() => {
-    if (appChainId !== prevAppChainIdRef.current) {
+    if (initialChainId !== prevAppChainIdRef.current) {
       const link = new HttpLink({
-        uri: graphqlEndpoints[appChainId],
+        uri: graphqlEndpoints[initialChainId],
       })
 
       apolloClientRef.current.setLink(link)
       apolloClientRef.current.resetStore()
 
-      prevAppChainIdRef.current = appChainId
+      prevAppChainIdRef.current = initialChainId
     }
-  }, [ appChainId ])
+  }, [ initialChainId ])
 
   return (
     <AProvider client={apolloClientRef.current}>

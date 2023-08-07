@@ -1,9 +1,9 @@
 import { createPublicClient, http, parseUnits } from 'viem'
-import { chainsData, prematchCoreAbi } from '../config'
+import { chainsData, type ChainId } from '../config'
 
 
 type CalcOddsProps = {
-  chainId: number
+  chainId: ChainId
   conditionId: string | bigint
   outcomeId: string | number | bigint
   amount?: string | number
@@ -12,27 +12,22 @@ type CalcOddsProps = {
 export const calcOdds = (props: CalcOddsProps) => {
   const { chainId, conditionId, outcomeId, amount } = props
 
-  const chainData = chainsData[chainId]
-
-  if (!chainData) {
-    console.error(`Chain with passed ID not supported. Passed: ${chainId}`)
-    return
-  }
+  const { chain, contracts, betToken } = chainsData[chainId]
 
   const publicClient = createPublicClient({
-    chain: chainData.chain,
+    chain,
     transport: http(),
   })
 
   let rawAmount = BigInt(1)
 
   if (amount !== undefined) {
-    rawAmount = parseUnits(`${parseFloat(String(amount))}`, chainData.betToken.decimals)
+    rawAmount = parseUnits(`${parseFloat(String(amount))}`, betToken.decimals)
   }
 
   return publicClient.readContract({
-    address: chainData.addresses.prematchCore,
-    abi: prematchCoreAbi,
+    address: contracts.prematchCore.address,
+    abi: contracts.prematchCore.abi,
     functionName: 'calcOdds',
     args: [
       BigInt(conditionId),

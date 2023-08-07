@@ -20,37 +20,6 @@ wagmi@^1.3.8
 
 ## Utils
 
-### `chainsData`
-
-```ts
-import { chainsData } from '@azuro-org/sdk'
-import { polygon } from 'wagmi'
-
-const { chain, addresses, betToken } = chainsData[polygon.id]
-```
-
-#### Return Value
-
-```ts
-import { type Chain } from 'viem/chains'
-
-{
-  chain: Chain
-  addresses: {
-    lp: `0x${string}`
-    prematchCore: `0x${string}`
-    prematchComboCore: `0x${string}`
-  }
-  betToken: {
-    address?: `0x${string}` | undefined
-    symbol: string
-    decimals: number
-    isNative: boolean
-  }
-}
-```
-
-
 ### `calcMindOdds`
 
 Calculates the minimum odds value at which the bet can be placed. If the current odds value is lower than the specified value, the bet cannot be placed and will be rejected by the contract.
@@ -113,52 +82,41 @@ unwatch() // to stop watching
 
 ## Hooks
 
-### `useContracts`
+### `useChain`
 
 ```ts
-import { useContracts } from '@azuro-org/sdk'
+import { useChain } from '@azuro-org/sdk'
 
-const contracts = useContracts()
+const { chain, contracts, betToken } = useChain()
 ```
 
 #### Return Value
 
 ```ts
+import { type Chain } from 'viem/chains'
+
 {
-  lp: {
-    address: string
-    abi: Abi
-  },
-  prematchCore: {
-    address: string
-    abi: Abi
-  },
-  prematchComboCore: {
-    address: string
-    abi: Abi
-  },
-}
-```
-
-
-### `useBetToken`
-
-Hook to get bet token data for current chain.
-
-```ts
-import { useBetToken } from '@azuro-org/sdk'
-
-const betToken = useBetToken()
-```
-
-#### Return Value
-
-```ts
-{
-  address?: `0x${string}` | undefined
-  symbol: string
-  decimals: number
-  isNative: boolean
+  chain: Chain
+  contracts: {
+    lp: {
+      address: `0x${string}`
+      abi: AbiType
+    }
+    prematchCore: {
+      address: `0x${string}`
+      abi: AbiType
+    }
+    prematchComboCore: {
+      address: `0x${string}`
+      abi: AbiType
+    }
+  }
+  betToken: {
+    address: `0x${string}`
+    symbol: string
+    decimals: number
+    isNative: boolean
+  }
 }
 ```
 
@@ -185,9 +143,13 @@ odds values fetching. This should be done only in client app, not in lib itself.
 ```ts
 import { usePlaceBet } from '@azuro-org/sdk'
 
-const { isDisabled, isLoading, data, error, submit } = usePlaceBet()
-
-submit({
+const { 
+  isAllowanceLoading, 
+  isApproveRequired,
+  submit,
+  approveTx,
+  betTx,
+} = usePlaceBet({
   amount: 10,
   minOdds: 1.5,
   deadline: 60, // 1 min
@@ -199,26 +161,44 @@ submit({
     },
   ],
 })
+
+submit()
+```
+
+#### Hook Props
+
+```ts
+{
+  amount: number
+  minOdds: number
+  deadline?: number
+  affiliate: `0x${string}`
+  selections: {
+    conditionId: string | number
+    outcomeId: string | number
+  }[]
+}
 ```
 
 #### Return Value
 
 ```ts
 {
-  isDisabled: boolean
-  isLoading: boolean
-  data: WriteContractResult | undefined
-  error: Error | null
-  submit: (props: {
-    amount: number
-    minOdds: number
-    deadline?: number
-    affiliate: `0x${string}`
-    selections: {
-      conditionId: string | number
-      outcomeId: string | number
-    }[]
-  }) => void
+  isAllowanceLoading: boolean
+  isApproveRequired: boolean
+  submit: () => Promise<Receipt>
+  approveTx: {
+    isPending: boolean
+    isProcessing: boolean
+    data: WriteContractResult | null
+    error: Error | null
+  }
+  betTx: {
+    isPending: boolean
+    isProcessing: boolean
+    data: WriteContractResult | null
+    error: Error | null
+  }
 }
 ```
 

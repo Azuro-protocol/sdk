@@ -33,30 +33,30 @@ const getApolloClient = (chainId: number) => {
 
 type ApolloProviderProps = {
   children: any
-  appChainId: number
+  initialChainId: number
 }
 
 export const ApolloProvider = (props: ApolloProviderProps) => {
-  const { children, appChainId } = props
+  const { children, initialChainId } = props
 
   const prevAppChainIdRef = useRef<number | undefined>()
   const apolloClientRef = useRef<ApolloClient<any> | undefined>()
 
   const makeClient = () => {
-    if (appChainId !== prevAppChainIdRef.current) {
+    if (initialChainId !== prevAppChainIdRef.current) {
       if (!apolloClientRef.current) {
-        apolloClientRef.current = getApolloClient(appChainId)
+        apolloClientRef.current = getApolloClient(initialChainId)
       }
       else {
         const link = new HttpLink({
-          uri: graphqlEndpoints[appChainId],
+          uri: graphqlEndpoints[initialChainId],
         })
 
         apolloClientRef.current.setLink(link)
         apolloClientRef.current.resetStore()
       }
 
-      prevAppChainIdRef.current = appChainId
+      prevAppChainIdRef.current = initialChainId
     }
 
     return apolloClientRef.current as ApolloClient<any>

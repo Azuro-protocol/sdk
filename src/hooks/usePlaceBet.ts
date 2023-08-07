@@ -1,12 +1,12 @@
-import { usePublicClient, useContractWrite, useWaitForTransaction } from 'wagmi'
+import { erc20ABI, useAccount, useContractRead, useContractWrite, useWaitForTransaction } from 'wagmi'
 import { parseUnits, encodeAbiParameters, parseAbiParameters } from 'viem'
-import { useContracts } from './useContracts'
-import { useBetToken } from './useBetToken'
-import { DEFAULT_DEADLINE, ODDS_DECIMALS } from '../config'
+import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256 } from '../config'
+import { usePublicClient } from './usePublicClient'
+import { useChain } from './useChain'
 
 
-type SubmitProps = {
-  amount: number
+type Props = {
+  amount: string | number
   minOdds: number
   deadline?: number
   affiliate: `0x${string}`
@@ -16,84 +16,144 @@ type SubmitProps = {
   }[]
 }
 
-export const usePlaceBet = () => {
-  const publicClient = usePublicClient()
-  const contracts = useContracts()
-  const betToken = useBetToken()
+export const usePlaceBet = (props: Props) => {
+  const { amount, minOdds, deadline, affiliate, selections } = props
 
-  const tx = useContractWrite({
-    address: contracts?.lp.address,
-    abi: contracts?.lp.abi,
-    functionName: 'bet',
+  const account = useAccount()
+  const publicClient = usePublicClient()
+  const { appChainId, contracts, betToken } = useChain()
+
+  const allowanceTx = useContractRead({
+    chainId: appChainId,
+    address: betToken.address,
+    abi: erc20ABI,
+    functionName: 'allowance',
+    args: [
+      account.address!,
+      contracts.proxyFront.address,
+    ],
+    enabled: Boolean(account.address),
   })
 
-  const receipt = useWaitForTransaction(tx.data)
+  const approveTx = useContractWrite({
+    address: betToken.address,
+    abi: erc20ABI,
+    functionName: 'approve',
+    args: [
+      contracts.proxyFront.address,
+      MAX_UINT_256,
+    ],
+  })
 
-  const placeBet = async (props: SubmitProps) => {
-    const fixedAmount = +parseFloat(String(props.amount)).toFixed(betToken!.decimals)
-    const rawAmount = parseUnits(`${fixedAmount}`, betToken!.decimals)
+  const approveReceipt = useWaitForTransaction(approveTx.data)
 
-    const fixedMinOdds = +parseFloat(String(props.minOdds)).toFixed(ODDS_DECIMALS)
+  const isApproveRequired = (
+    allowanceTx.data
+    && +amount
+    && allowanceTx.data < parseUnits(`${+amount}`, 6)
+  )
+
+  const approve = async () => {
+    const tx = await approveTx.writeAsync()
+    const receipt = await publicClient.waitForTransactionReceipt(tx)
+
+    allowanceTx.refetch()
+  }
+
+  const betTx = useContractWrite({
+    address: contracts.proxyFront.address,
+    abi: contracts.proxyFront.abi,
+    functionName: 'bet',
+    value: BigInt(0),
+  })
+
+  const betReceipt = useWaitForTransaction(betTx.data)
+
+  const placeBet = async () => {
+    const fixedAmount = +parseFloat(String(amount)).toFixed(betToken.decimals)
+    const rawAmount = parseUnits(`${fixedAmount}`, betToken.decimals)
+
+    const fixedMinOdds = +parseFloat(String(minOdds)).toFixed(ODDS_DECIMALS)
     const rawMinOdds = parseUnits(`${fixedMinOdds}`, ODDS_DECIMALS)
+    const rawDeadline = BigInt(Math.floor(Date.now() / 1000) + (deadline || DEFAULT_DEADLINE))
 
-    const deadline = BigInt(Math.floor(Date.now() / 1000) + (props.deadline || DEFAULT_DEADLINE))
-    const affiliate = props.affiliate
+    let coreAddress: `0x${string}`
+    let data: `0x${string}`
 
-    let coreAddress
-    let data
+    if (selections.length > 1) {
+      coreAddress = contracts.prematchComboCore.address
 
-    if (props.selections.length > 1) {
-      const tuple: [ bigint, bigint ][] = props.selections.map(({ conditionId, outcomeId }) => [
+      const tuple: [ bigint, bigint ][] = selections.map(({ conditionId, outcomeId }) => [
         BigInt(conditionId),
         BigInt(outcomeId),
       ])
 
       data = encodeAbiParameters(
-        parseAbiParameters('(uint256, uint64)[], uint64'),
+        parseAbiParameters('(uint256, uint64)[]'),
         [
           tuple,
-          rawMinOdds,
-        ]
+        ],
       )
-
-      coreAddress = contracts!.prematchComboCore.address
     }
     else {
-      const { conditionId, outcomeId } = props.selections[0]!
+      coreAddress = contracts.prematchCore.address
+
+      const { conditionId, outcomeId } = selections[0]!
 
       data = encodeAbiParameters(
-        parseAbiParameters('uint256, uint64, uint64'),
+        parseAbiParameters('uint256, uint64'),
         [
           BigInt(conditionId),
           BigInt(outcomeId),
-          rawMinOdds,
         ]
       )
-
-      coreAddress = contracts!.prematchCore.address
     }
 
-    const txResult = await tx.writeAsync({
+    const tx = await betTx.writeAsync({
       args: [
-        coreAddress,
-        rawAmount,
-        deadline,
-        {
-          affiliate,
-          data,
-        },
+        contracts.lp.address,
+        [
+          {
+            core: coreAddress,
+            amount: rawAmount,
+            expiresAt: rawDeadline,
+            extraData: {
+              affiliate,
+              minOdds: rawMinOdds,
+              data,
+            },
+          },
+        ]
       ],
+      value: betToken.isNative ? rawAmount : BigInt(0),
     })
 
-    return publicClient.waitForTransactionReceipt(txResult)
+    return publicClient.waitForTransactionReceipt(tx)
+  }
+
+  const submit = () => {
+    if (isApproveRequired) {
+      return approve()
+    }
+
+    return placeBet()
   }
 
   return {
-    isDisabled: !contracts,
-    isWaitingApproval: tx.isLoading,
-    isPending: receipt.isLoading,
-    data: tx.data,
-    error: tx.error,
-    placeBet,
+    isAllowanceLoading: allowanceTx.isLoading,
+    isApproveRequired,
+    submit,
+    approveTx: {
+      isPending: approveTx.isLoading,
+      isProcessing: approveReceipt.isLoading,
+      data: approveTx.data,
+      error: approveTx.error,
+    },
+    betTx: {
+      isPending: betTx.isLoading,
+      isProcessing: betReceipt.isLoading,
+      data: betTx.data,
+      error: betTx.error,
+    },
   }
 }

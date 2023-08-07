@@ -1,7 +1,6 @@
 import { useContractRead } from 'wagmi'
 import { parseUnits } from 'viem'
-import { useBetToken } from './useBetToken'
-import { useContracts } from './useContracts'
+import { useChain } from './useChain'
 
 
 type CalcOddsProps = {
@@ -13,8 +12,7 @@ type CalcOddsProps = {
 export const useCalcOdds = (props: CalcOddsProps) => {
   const { amount, conditionId, outcomeId } = props
 
-  const contracts = useContracts()
-  const betToken = useBetToken()
+  const { appChainId, contracts, betToken } = useChain()
   let rawAmount = BigInt(1)
 
   if (amount !== undefined) {
@@ -22,8 +20,9 @@ export const useCalcOdds = (props: CalcOddsProps) => {
   }
 
   return useContractRead({
-    address: contracts!.prematchCore.address,
-    abi: contracts!.prematchCore.abi,
+    chainId: appChainId,
+    address: contracts.prematchCore.address,
+    abi: contracts.prematchCore.abi,
     functionName: 'calcOdds',
     args: [
       BigInt(conditionId),

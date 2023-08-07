@@ -1,35 +1,33 @@
 import { useEffect } from 'react'
-import { useNetwork, useContractEvent } from 'wagmi'
-import { prematchCoreAbi } from '../config'
+import { useContractEvent } from 'wagmi'
 import { oddsWatcher } from '../modules/oddsWatcher'
-import { useChainData } from './useChainData'
+import { useChain } from './useChain'
 
 
 export const useOddsWatcher = () => {
-  const { chain } = useNetwork()
-  const chainData = useChainData()
+  const { appChainId, contracts } = useChain()
 
   const unwatchSingle = useContractEvent({
-    address: chainData?.addresses.prematchCore,
-    abi: prematchCoreAbi,
+    address: contracts.prematchCore.address,
+    abi: contracts.prematchCore.abi,
     eventName: 'NewBet',
     listener(log) {
       // @ts-ignore
       const conditionId = log.args.conditionId!
 
-      oddsWatcher.dispatch(chain!.id, conditionId)
+      oddsWatcher.dispatch(appChainId, conditionId)
     },
   })
 
   const unwatchCombo = useContractEvent({
-    address: chainData?.addresses.prematchCore,
-    abi: prematchCoreAbi,
+    address: contracts.prematchCore.address,
+    abi: contracts.prematchCore.abi,
     eventName: 'OddsChanged',
     listener(log) {
       // @ts-ignore
       const conditionId = log.args.conditionId!
 
-      oddsWatcher.dispatch(chain!.id, conditionId)
+      oddsWatcher.dispatch(appChainId, conditionId)
     },
   })
 
