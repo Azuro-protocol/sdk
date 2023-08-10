@@ -1,0 +1,13 @@
+query Navigation(
+  $where: Game_filter
+  $withGameCount: Boolean!,
+) {
+  sports {
+    id
+    slug
+    name
+    games(where: $where) @include(if: $withGameCount) {
+      id
+    }
+  }
+}

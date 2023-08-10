@@ -2,20 +2,17 @@ import { useMemo } from 'react'
 import { useQuery, type QueryHookOptions } from '@apollo/client'
 import { GamesDocument, GamesQuery, GamesQueryVariables } from '../docs/games'
 import { Game_OrderBy, OrderDirection } from '../types'
+import { getGameStartsAtGtValue } from '../helpers'
 
-
-const DEFAULT_CACHE_TIME = 3 * 60
-let lastUpdateTime: number
 
 type UseGamesProps = {
   filter?: {
     limit?: number
     offset?: number
-    sportName?: string
+    sportSlug?: string
   }
   orderBy?: Game_OrderBy
   orderDir?: OrderDirection
-  cacheTime?: number
   withConditions?: boolean
 }
 
@@ -24,21 +21,10 @@ export const useGames = (props?: UseGamesProps) => {
     filter,
     orderBy = Game_OrderBy.CreatedBlockTimestamp,
     orderDir = OrderDirection.Desc,
-    cacheTime = DEFAULT_CACHE_TIME,
     withConditions = false,
   } = props || {}
 
-  let startsAt_gt: number
-  const dateNow = Math.floor(Date.now() / 1000)
-
-  // if first render or current time is greater the previous saved more than 1 minute
-  if (!lastUpdateTime || dateNow - lastUpdateTime > cacheTime) {
-    startsAt_gt = dateNow
-    lastUpdateTime = dateNow
-  }
-  else {
-    startsAt_gt = lastUpdateTime
-  }
+  const startsAt_gt = getGameStartsAtGtValue()
 
   const options = useMemo<QueryHookOptions<GamesQuery, GamesQueryVariables>>(() => {
     const variables: GamesQueryVariables = {
@@ -59,9 +45,9 @@ export const useGames = (props?: UseGamesProps) => {
       variables.first = filter.offset
     }
 
-    if (filter?.sportName) {
+    if (filter?.sportSlug) {
       variables.where.sport_ = {
-        name_starts_with_nocase: filter.sportName,
+        slug_starts_with_nocase: filter.sportSlug,
       }
     }
 
@@ -72,7 +58,7 @@ export const useGames = (props?: UseGamesProps) => {
   }, [
     filter?.limit,
     filter?.offset,
-    filter?.sportName,
+    filter?.sportSlug,
     orderBy,
     orderDir,
     startsAt_gt,

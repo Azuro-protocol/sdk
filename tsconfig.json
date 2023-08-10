@@ -21,12 +21,7 @@
     "strict": true,
     "strictNullChecks": true,
     "target": "es2021",
-    "types": ["node"],
-    "paths": {
-      "gql": [ "./src/gql/index.ts" ],
-      "config": [ "./src/config.ts" ],
-      "chain-context": [ "./src/chainContext.tsx" ]
-    }
+    "types": ["node"]
   },
   "exclude": [
     "**/node_modules/**",

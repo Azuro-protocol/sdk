@@ -1,11 +1,11 @@
 import { useEffect } from 'react'
 import { useContractEvent } from 'wagmi'
-import { useChain } from 'chain-context'
+import { useChain } from '../contexts/chain'
 import { oddsWatcher } from '../modules/oddsWatcher'
 
 
 export const useOddsWatcher = () => {
-  const { appChainId, contracts } = useChain()
+  const { appChain, contracts } = useChain()
 
   const unwatchSingle = useContractEvent({
     address: contracts.prematchCore.address,
@@ -15,7 +15,7 @@ export const useOddsWatcher = () => {
       // @ts-ignore
       const conditionId = log.args.conditionId!
 
-      oddsWatcher.dispatch(appChainId, conditionId)
+      oddsWatcher.dispatch(appChain.id, conditionId)
     },
   })
 
@@ -27,7 +27,7 @@ export const useOddsWatcher = () => {
       // @ts-ignore
       const conditionId = log.args.conditionId!
 
-      oddsWatcher.dispatch(appChainId, conditionId)
+      oddsWatcher.dispatch(appChain.id, conditionId)
     },
   })
 

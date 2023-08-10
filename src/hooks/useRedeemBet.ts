@@ -1,5 +1,5 @@
 import { useContractWrite, useWaitForTransaction } from 'wagmi'
-import { useChain } from 'chain-context'
+import { useChain } from '../contexts/chain'
 import { usePublicClient } from './usePublicClient'
 
 
@@ -12,32 +12,35 @@ export const useRedeemBet = () => {
   const publicClient = usePublicClient()
   const { contracts } = useChain()
 
-  const tx = useContractWrite({
+  const redeemTx = useContractWrite({
     address: contracts.lp.address,
     abi: contracts.lp.abi,
     functionName: 'withdrawPayout',
   })
 
-  const receipt = useWaitForTransaction(tx.data)
+  const receipt = useWaitForTransaction(redeemTx.data)
 
   const submit = async (props: SubmitProps) => {
     const { tokenId, coreAddress } = props
 
-    const txResult = await tx.writeAsync({
+    const tx = await redeemTx.writeAsync({
       args: [
         coreAddress,
         BigInt(tokenId),
       ],
     })
 
-    return publicClient.waitForTransactionReceipt(txResult)
+    return publicClient.waitForTransactionReceipt({
+      hash: tx.hash,
+      confirmations: 12,
+    })
   }
 
   return {
-    isPending: tx.isLoading,
+    isPending: redeemTx.isLoading,
     isProcessing: receipt.isLoading,
-    data: tx.data,
-    error: tx.error,
+    data: redeemTx.data,
+    error: redeemTx.error,
     submit,
   }
 }

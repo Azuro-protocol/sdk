@@ -1,7 +1,8 @@
+import { useRef } from 'react'
 import { erc20ABI, useAccount, useContractRead, useContractWrite, useWaitForTransaction } from 'wagmi'
 import { parseUnits, encodeAbiParameters, parseAbiParameters } from 'viem'
-import { useChain } from 'chain-context'
-import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256 } from 'config'
+import { useChain } from '../contexts/chain'
+import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256 } from '../config'
 import { usePublicClient } from './usePublicClient'
 
 
@@ -21,10 +22,10 @@ export const usePlaceBet = (props: Props) => {
 
   const account = useAccount()
   const publicClient = usePublicClient()
-  const { appChainId, contracts, betToken } = useChain()
+  const { appChain, contracts, betToken } = useChain()
 
   const allowanceTx = useContractRead({
-    chainId: appChainId,
+    chainId: appChain.id,
     address: betToken.address,
     abi: erc20ABI,
     functionName: 'allowance',
@@ -34,6 +35,15 @@ export const usePlaceBet = (props: Props) => {
     ],
     enabled: Boolean(account.address) && !betToken.isNative,
   })
+
+  const allowanceRef = useRef<bigint | undefined>()
+
+  if (
+    allowanceRef.current === undefined
+    && allowanceTx.data !== undefined
+  ) {
+    allowanceRef.current = allowanceTx.data
+  }
 
   const approveTx = useContractWrite({
     address: betToken.address,
@@ -47,16 +57,20 @@ export const usePlaceBet = (props: Props) => {
 
   const approveReceipt = useWaitForTransaction(approveTx.data)
 
-  const isApproveRequired = (
+  const isApproveRequired = Boolean(
     !betToken.isNative
-    && allowanceTx.data
+    && allowanceTx.data !== undefined
     && +amount
-    && allowanceTx.data < parseUnits(`${+amount}`, 6)
+    && allowanceTx.data < parseUnits(`${+amount}`, betToken.decimals)
   )
 
   const approve = async () => {
     const tx = await approveTx.writeAsync()
-    const receipt = await publicClient.waitForTransactionReceipt(tx)
+
+    const receipt = await publicClient.waitForTransactionReceipt({
+      hash: tx.hash,
+      confirmations: 12,
+    })
 
     allowanceTx.refetch()
   }
@@ -129,7 +143,10 @@ export const usePlaceBet = (props: Props) => {
       value: betToken.isNative ? rawAmount : BigInt(0),
     })
 
-    return publicClient.waitForTransactionReceipt(tx)
+    return publicClient.waitForTransactionReceipt({
+      hash: tx.hash,
+      confirmations: 12,
+    })
   }
 
   const submit = () => {

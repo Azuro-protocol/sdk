@@ -1,4 +1,4 @@
-import { ODDS_DECIMALS } from 'config'
+import { ODDS_DECIMALS } from '../config'
 
 
 type CalcMindOddsProps = {

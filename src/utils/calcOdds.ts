@@ -1,5 +1,5 @@
 import { createPublicClient, http, parseUnits } from 'viem'
-import { chainsData, type ChainId } from 'config'
+import { chainsData, type ChainId } from '../config'
 
 
 type CalcOddsProps = {

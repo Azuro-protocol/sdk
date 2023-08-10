@@ -17,13 +17,14 @@ export default {
     // preserveModules: true,
     manualChunks: {
       'config': [ 'src/config.ts' ],
-      'chainContext': [ 'src/chainContext.tsx' ],
+      'chainContext': [ 'src/contexts/chain.tsx' ],
     },
     chunkFileNames: '[name].js',
     compact: true,
   },
   external: [
     /@apollo/,
+    /@azuro-org/,
     /graphql/,
     /react/,
     /viem/,

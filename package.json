@@ -1,6 +1,6 @@
 {
   "name": "@azuro-org/sdk",
-  "version": "0.0.14",
+  "version": "0.0.29",
   "author": "Azuro",
   "type": "module",
   "main": "dist/index.js",
@@ -24,6 +24,7 @@
   "peerDependencies": {
     "@apollo/client": "^3.8.0-beta.7",
     "@apollo/experimental-nextjs-app-support": "^0.4.1",
+    "@azuro-org/dictionaries": "^3.0.4",
     "graphql": "^16.6.0",
     "react": "^18.2.0",
     "viem": "^1.5.3",

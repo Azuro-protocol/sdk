@@ -1,10 +1,14 @@
 import { arbitrum, polygon, gnosis, polygonMumbai, type Chain } from 'viem/chains'
 import { parseUnits } from 'viem'
 
-
+export const DEFAULT_CACHE_TIME = 3 * 60
 export const MAX_UINT_256 = parseUnits('340282366920938463463', 0)
 export const DEFAULT_DEADLINE = 300 // 5 min
 export const ODDS_DECIMALS = 12
+
+export const configRef = {
+  gamesCacheTime: DEFAULT_CACHE_TIME,
+}
 
 const getGraphqlEndpoint = (network: string) => `https://thegraph.azuro.org/subgraphs/name/azuro-protocol/azuro-api-${network}-v3`
 
@@ -73,7 +77,7 @@ type BetToken = {
 }
 
 export type ChainData = {
-  chain: Chain
+  chain: Omit<Chain, 'id'> & { id: ChainId }
   contracts: Contracts
   betToken: BetToken
 }

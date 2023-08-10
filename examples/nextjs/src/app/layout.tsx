@@ -1,5 +1,6 @@
+import '@rainbow-me/rainbowkit/styles.css'
 import './globals.css'
-import { Providers } from '@/components'
+import { Providers, Header } from '@/components'
 
 
 export default function RootLayout(props: { children: React.ReactNode }) {
@@ -9,7 +10,10 @@ export default function RootLayout(props: { children: React.ReactNode }) {
     <html lang="en">
       <body>
         <Providers>
-          {children}
+          <Header />
+          <main className="container pt-5 pb-10">
+            {children}
+          </main>
         </Providers>
       </body>
     </html>

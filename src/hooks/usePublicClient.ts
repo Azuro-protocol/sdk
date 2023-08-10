@@ -1,15 +1,15 @@
 import { useMemo } from 'react'
 import { type PublicClient, createPublicClient, http } from 'viem'
-import { useChain } from 'chain-context'
+import { useChain } from '../contexts/chain'
 
 
 export const usePublicClient = (): PublicClient => {
-  const { appChainId, chain } = useChain()
+  const { appChain } = useChain()
 
   return useMemo(() => {
     return createPublicClient({
-      chain,
+      chain: appChain,
       transport: http(),
     })
-  }, [ appChainId ])
+  }, [ appChain.id ])
 }

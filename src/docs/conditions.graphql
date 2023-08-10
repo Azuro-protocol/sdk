@@ -6,15 +6,16 @@ query Conditions(
   ) {
     id
     conditionId
+    status
+    outcomes {
+      outcomeId
+      odds: currentOdds
+    }
     core {
       address
       liquidityPool {
         address
       }
-    }
-    outcomes {
-      outcomeId
-      odds: currentOdds
     }
   }
 }

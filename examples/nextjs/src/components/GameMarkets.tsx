@@ -1,18 +1,19 @@
 'use client'
 import { useState } from 'react'
-import { type GameQuery } from '@azuro-org/sdk'
+import { type GameMarkets } from '@azuro-org/sdk'
+import { PlaceBetModal } from '@/components'
+
 
 type Props = {
-  game: GameQuery['game']
-  markets: any
+  markets: GameMarkets
 }
 
 export function GameMarkets(props: Props) {
-  const { game, markets } = props
+  const { markets } = props
 
   const [ selectedOutcome, setSelectedOutcome ] = useState(null)
 
-  const handleOutcomeClick = (outcome) => {
+  const handleOutcomeClick = (outcome: any) => {
     setSelectedOutcome(outcome)
   }
 
@@ -24,23 +25,23 @@ export function GameMarkets(props: Props) {
     <>
       <div className="max-w-[600px] mx-auto mt-12 space-y-6">
         {
-          markets.map(({ marketName, outcomes: row }) => (
-            <div key={marketName} className="">
-              <div className="mb-2 font-semibold">{marketName}</div>
+          markets.map(({ name, description, selections: row }) => (
+            <div key={name} className="">
+              <div className="mb-2 text-lg font-semibold">{name}</div>
               <div className="space-y-1">
                 {
                   row.map((outcomes, index) => (
                     <div key={index} className="flex justify-between">
-                      <div className="flex gap-1 w-full">
+                      <div className="flex gap-2 w-full">
                         {
                           outcomes.map((outcome) => (
                             <div
                               key={outcome.selectionName}
-                              className="flex justify-between py-2 px-3 bg-gray-200 rounded-md cursor-pointer hover:bg-gray-300 transition"
+                              className="flex justify-between p-5 bg-zinc-50 hover:bg-zinc-100 transition rounded-2xl cursor-pointer"
                               style={{ width: `calc(100% / ${outcomes.length})` }}
                               onClick={() => handleOutcomeClick(outcome)}
                             >
-                              <span className="text-gray-500">{outcome.selectionName}</span>
+                              <span className="text-zinc-500">{outcome.selectionName}</span>
                               <span className="font-medium">{parseFloat(outcome.odds).toFixed(2)}</span>
                             </div>
                           ))
@@ -57,7 +58,6 @@ export function GameMarkets(props: Props) {
       {
         Boolean(selectedOutcome) && (
           <PlaceBetModal
-            game={game}
             outcome={selectedOutcome}
             closeModal={handleModalClose}
           />

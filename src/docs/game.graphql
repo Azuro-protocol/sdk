@@ -1,11 +1,9 @@
 query Game(
-  $id: ID!,
-  $withConditions: Boolean!
+  $id: ID!
 ) {
   game(
     id: $id
   ) {
     ...MainGameInfo
-    ...Conditions @include(if: $withConditions)
   }
 }
