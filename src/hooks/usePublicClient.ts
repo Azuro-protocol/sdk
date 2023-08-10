@@ -3,10 +3,10 @@ import { type PublicClient, createPublicClient, http } from 'viem'
 import { useChain } from 'chain-context'
 
 
-export const usePublicClient = () => {
+export const usePublicClient = (): PublicClient => {
   const { appChainId, chain } = useChain()
 
-  return useMemo<PublicClient>(() => {
+  return useMemo(() => {
     return createPublicClient({
       chain,
       transport: http(),

@@ -40,23 +40,36 @@ export const useGames = (props?: UseGamesProps) => {
     startsAt_gt = lastUpdateTime
   }
 
-  const options = useMemo<QueryHookOptions<GamesQuery, GamesQueryVariables>>(() => ({
-    variables: {
-      first: filter?.limit,
-      skip: filter?.offset,
+  const options = useMemo<QueryHookOptions<GamesQuery, GamesQueryVariables>>(() => {
+    const variables: GamesQueryVariables = {
       orderBy,
       orderDirection: orderDir,
-      withConditions,
+      // withConditions,
       where: {
-        sport_: {
-          name_starts_with_nocase: filter?.sportName,
-        },
         startsAt_gt,
         hasActiveConditions: true,
       },
-    },
-    ssr: false,
-  }), [
+    }
+
+    if (filter?.limit) {
+      variables.first = filter.limit
+    }
+
+    if (filter?.offset) {
+      variables.first = filter.offset
+    }
+
+    if (filter?.sportName) {
+      variables.where.sport_ = {
+        name_starts_with_nocase: filter.sportName,
+      }
+    }
+
+    return {
+      variables,
+      ssr: false,
+    }
+  }, [
     filter?.limit,
     filter?.offset,
     filter?.sportName,

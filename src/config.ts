@@ -81,10 +81,10 @@ export type ChainData = {
 const gnosisData: ChainData = {
   chain: gnosis,
   contracts: setupContracts({
-    lp: '0x7043E4e1c4045424858ECBCED80989FeAfC11B36',
-    prematchCore: '0x3B182e9FbF50398A412d17D7969561E3BfcC4fA4',
-    prematchComboCore: '0xbb13f8981cefd19ddc5338f0f1e11de45e8a11ca',
-    proxyFront: '0x0',
+    lp: '0x4e5BBE3e1f559C8010b516C603B619a932de3DF4',
+    prematchCore: '0x6f60d66e853A769391B105d21C410AD035512Cc2',
+    prematchComboCore: '0x1dD7BA44c23a621BBfD6c4322DA6E1CA81C17700',
+    proxyFront: '0x135a1256a8b48643DD0823fE189ADD1c2a012DBa',
   }),
   betToken: {
     address: undefined,

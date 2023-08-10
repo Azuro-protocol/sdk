@@ -1,7 +1,7 @@
 'use client';
 import { useRef } from 'react'
-import { ApolloClient, ApolloLink, HttpLink, SuspenseCache } from '@apollo/client'
-import { ApolloNextAppProvider, NextSSRInMemoryCache, SSRMultipartLink } from '@apollo/experimental-nextjs-app-support/ssr'
+import { ApolloLink, HttpLink } from '@apollo/client'
+import { ApolloNextAppProvider, NextSSRInMemoryCache, NextSSRApolloClient, SSRMultipartLink } from '@apollo/experimental-nextjs-app-support/ssr'
 import { useChain } from 'chain-context'
 import { graphqlEndpoints } from 'config'
 
@@ -26,7 +26,7 @@ const getApolloClient = (chainId: number) => {
     ])
   }
 
-  return new ApolloClient({
+  return new NextSSRApolloClient({
     cache: new NextSSRInMemoryCache(),
     link,
   })
@@ -37,7 +37,7 @@ export const ApolloProvider = (props: { children: any }) => {
 
   const { appChainId } = useChain()
   const prevAppChainIdRef = useRef<number | undefined>()
-  const apolloClientRef = useRef<ApolloClient<any> | undefined>()
+  const apolloClientRef = useRef<NextSSRApolloClient<any> | undefined>()
 
   const makeClient = () => {
     if (appChainId !== prevAppChainIdRef.current) {
@@ -56,18 +56,11 @@ export const ApolloProvider = (props: { children: any }) => {
       prevAppChainIdRef.current = appChainId
     }
 
-    return apolloClientRef.current as ApolloClient<any>
-  }
-
-  const makeSuspenseCache = () => {
-    return new SuspenseCache()
+    return apolloClientRef.current as NextSSRApolloClient<any>
   }
 
   return (
-    <ApolloNextAppProvider
-      makeClient={makeClient}
-      makeSuspenseCache={makeSuspenseCache}
-    >
+    <ApolloNextAppProvider makeClient={makeClient}>
       {children}
     </ApolloNextAppProvider>
   )

@@ -13,17 +13,24 @@ type UseConditionsProps = {
 export const useConditions = (props: UseConditionsProps) => {
   const { gameEntityId, filter } = props
 
-  const options = useMemo<QueryHookOptions<ConditionsQuery, ConditionsQueryVariables>>(() => ({
-    variables: {
+  const options = useMemo<QueryHookOptions<ConditionsQuery, ConditionsQueryVariables>>(() => {
+    const variables: ConditionsQueryVariables = {
       where: {
         game_: {
           id: gameEntityId,
         },
-        outcomesIds_contains: filter?.outcomeIds,
       },
-    },
-    ssr: false,
-  }), [
+    }
+
+    if (filter?.outcomeIds) {
+      variables.where.outcomesIds_contains = filter.outcomeIds
+    }
+
+    return {
+      variables,
+      ssr: false,
+    }
+  }, [
     gameEntityId,
     filter?.outcomeIds?.join(',')
   ])
