@@ -2,12 +2,13 @@ import dayjs from 'dayjs'
 import { type GameQuery } from '@azuro-org/sdk'
 import { ParticipantLogo } from '@/components'
 
+
 type Props = {
   game: GameQuery['game']
 }
 
 export function GameInfo(props: Props) {
-  const { title, sport, league, participants, startsAt } = props.game!
+  const { sport, league, participants, startsAt } = props.game!
 
   return (
     <div className="flex flex-col items-center pt-6 pb-8 bg-zinc-50 rounded-[40px]">

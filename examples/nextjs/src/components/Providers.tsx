@@ -10,8 +10,8 @@ import { publicProvider } from 'wagmi/providers/public'
 
 
 const rpcUrls: Record<number, string> = {
-  [mainnet.id]: 'https://rpc.ankr.com/mainnet',
-  [polygonMumbai.id]: 'https://rpc-mumbai.maticvigil.com',
+  [mainnet.id]: 'https://rpc.ankr.com/eth',
+  [polygonMumbai.id]: 'https://rpc.ankr.com/polygon_mumbai',
 }
 
 const { chains, publicClient } = configureChains(

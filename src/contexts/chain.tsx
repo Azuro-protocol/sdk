@@ -3,8 +3,6 @@ import { type Chain, useNetwork } from 'wagmi'
 import { chainsData, type ChainId, type ChainData } from '../config'
 
 
-const availableChainIds = Object.keys(chainsData).map(Number)
-
 export type ChainContextValue = Omit<ChainData, 'chain'> & {
   appChain: Omit<Chain, 'id'> & { id: ChainId }
   walletChain: Chain | undefined
@@ -22,8 +20,9 @@ export const ChainProvider: React.FC<Props> = (props) => {
   const { children, initialChainId } = props
 
   const appChainIdRef = useRef<number>(initialChainId)
-  const { chain: walletChain } = useNetwork()
+  const { chain: walletChain, chains } = useNetwork()
 
+  const availableChainIds = chains.map(({ id }) => id)
   const walletChainId = walletChain?.id || null
 
   if (walletChainId && availableChainIds.includes(walletChainId)) {

@@ -7,9 +7,12 @@ import Link, { LinkProps } from 'next/link'
 type ActiveLinkProps = LinkProps & {
   className?: string
   activeClassName: string
+  regex?: string
 }
 
-export const ActiveLink: React.FC<React.PropsWithChildren<ActiveLinkProps>> = ({ children, activeClassName, className, ...props }) => {
+export const ActiveLink: React.FC<React.PropsWithChildren<ActiveLinkProps>> = (props) => {
+  const { children, className, activeClassName, regex, ...rest } = props
+
   const pathname = usePathname()
   const [ computedClassName, setComputedClassName ] = useState(className)
 
@@ -17,15 +20,16 @@ export const ActiveLink: React.FC<React.PropsWithChildren<ActiveLinkProps>> = ({
     // Dynamic route will be matched via props.as
     // Static route will be matched via props.href
     const linkPathname = new URL(
-      (props.as || props.href) as string,
+      (rest.as || rest.href) as string,
       location.href
     ).pathname
 
     // Using URL().pathname to get rid of query and hash
     const activePathname = new URL(pathname, location.href).pathname
+    const isMatch = regex ? new RegExp(regex).test(activePathname) : activePathname === linkPathname
 
     const newClassName =
-      linkPathname === activePathname
+      isMatch
         ? `${className} ${activeClassName}`.trim()
         : className
 
@@ -34,15 +38,15 @@ export const ActiveLink: React.FC<React.PropsWithChildren<ActiveLinkProps>> = ({
     }
   }, [
     pathname,
-    props.as,
-    props.href,
+    rest.as,
+    rest.href,
     activeClassName,
     className,
     computedClassName,
   ])
 
   return (
-    <Link className={computedClassName} {...props}>
+    <Link className={computedClassName} {...rest}>
       {children}
     </Link>
   )

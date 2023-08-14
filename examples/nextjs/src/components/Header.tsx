@@ -11,8 +11,9 @@ export function Header() {
       <div className="flex ml-10">
         <ActiveLink
           className="text-zinc-500 hover:text-black transition"
-          activeClassName="text-black font-semibold"
+          activeClassName="!text-black font-semibold !cursor-default"
           href="/events/top"
+          regex="^\/events\/[^/]+?$"
         >
           Events
         </ActiveLink>

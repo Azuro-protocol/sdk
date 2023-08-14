@@ -19,7 +19,7 @@ export function SportsNavigation() {
           <ActiveLink
             className="py-2 px-4 bg-zinc-100 whitespace-nowrap rounded-full"
             activeClassName="!bg-purple-200"
-            href={`/events/top`}
+            href="/events/top"
           >
             Top
           </ActiveLink>

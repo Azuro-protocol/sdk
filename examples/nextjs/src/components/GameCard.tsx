@@ -2,6 +2,7 @@ import { GamesQuery } from '@azuro-org/sdk'
 import Link from 'next/link'
 import dayjs from 'dayjs'
 
+
 type Props = {
   game: GamesQuery['games'][0]
 }

@@ -2,10 +2,12 @@
 import { useParams } from 'next/navigation'
 import { useGame, useGameMarkets } from '@azuro-org/sdk'
 import { GameInfo, GameMarkets } from '@/components'
+import { type Chain, useNetwork } from 'wagmi'
 
 
 const Info = () => {
   const params = useParams()
+  const { chains } = useNetwork()
 
   const { loading, data } = useGame({
     id: params.id as string,

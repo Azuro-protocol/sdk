@@ -30,10 +30,7 @@ export const useRedeemBet = () => {
       ],
     })
 
-    return publicClient.waitForTransactionReceipt({
-      hash: tx.hash,
-      confirmations: 12,
-    })
+    return publicClient.waitForTransactionReceipt(tx)
   }
 
   return {

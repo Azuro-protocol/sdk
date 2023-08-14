@@ -21,6 +21,7 @@ export const useSportsNavigation = (props: UseNavigationProps = {}) => {
     if (withGameCount) {
       variables.where = {
         startsAt_gt,
+        hasActiveConditions: true,
       }
     }
 
