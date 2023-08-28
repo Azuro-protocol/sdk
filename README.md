@@ -128,9 +128,15 @@ import { useCalcOdds } from '@azuro-org/sdk'
 
 const { isLoading, data, error } = useCalcOdds({
   amount: 10,
-  conditionId: '486903008559711340',
-  outcomeId: '29',
+  selections: [
+    {
+      conditionId: '486903008559711340',
+      outcomeId: '29',
+    },  
+  ],
 })
+
+const { conditionsOdds, totalOdds } = data
 ```
 
 
@@ -143,9 +149,12 @@ odds values fetching. This should be done only in client app, not in lib itself.
 ```ts
 import { usePlaceBet } from '@azuro-org/sdk'
 
-const { 
-  isAllowanceLoading, 
+const {
+  isAllowanceLoading,
   isApproveRequired,
+  isOddsLoading,
+  conditionsOdds,
+  totalOdds,
   submit,
   approveTx,
   betTx,
@@ -201,9 +210,6 @@ submit()
   }
 }
 ```
-
-
-
 
 
 

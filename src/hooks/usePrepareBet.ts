@@ -1,14 +1,15 @@
 import { useEffect } from 'react'
 import { erc20ABI, useAccount, useContractRead, useContractWrite, useWaitForTransaction } from 'wagmi'
-import { parseUnits, encodeAbiParameters, parseAbiParameters } from 'viem'
+import { parseUnits, formatUnits, encodeAbiParameters, parseAbiParameters } from 'viem'
 import { useChain } from '../contexts/chain'
 import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256 } from '../config'
 import { usePublicClient } from './usePublicClient'
+import { useCalcOdds } from './useCalcOdds'
 
 
 type Props = {
   amount: string | number
-  minOdds: number
+  slippage: number
   deadline?: number
   affiliate: `0x${string}`
   selections: {
@@ -19,8 +20,8 @@ type Props = {
   onError?(err: Error | null): void
 }
 
-export const usePlaceBet = (props: Props) => {
-  const { amount, minOdds, deadline, affiliate, selections, onSuccess, onError } = props
+export const usePrepareBet = (props: Props) => {
+  const { amount, slippage, deadline, affiliate, selections, onSuccess, onError } = props
 
   const account = useAccount()
   const publicClient = usePublicClient()
@@ -63,6 +64,17 @@ export const usePlaceBet = (props: Props) => {
     allowanceTx.refetch()
   }
 
+  const { isLoading: isOddsLoading, data: oddsData } = useCalcOdds({
+    selections,
+    amount,
+  })
+
+  const conditionsOdds = oddsData.conditionsOdds?.map((rawOdds) => {
+    return +formatUnits(rawOdds, ODDS_DECIMALS)
+  })
+
+  const totalOdds = oddsData.totalOdds ? +formatUnits(oddsData.totalOdds, ODDS_DECIMALS) : undefined
+
   const betTx = useContractWrite({
     address: contracts.proxyFront.address,
     abi: contracts.proxyFront.abi,
@@ -85,9 +97,14 @@ export const usePlaceBet = (props: Props) => {
   }, [ betReceipt.isError ])
 
   const placeBet = async () => {
+    if (!totalOdds) {
+      return
+    }
+
     const fixedAmount = +parseFloat(String(amount)).toFixed(betToken.decimals)
     const rawAmount = parseUnits(`${fixedAmount}`, betToken.decimals)
 
+    const minOdds = 1 + (totalOdds - 1) * (100 - slippage) / 100
     const fixedMinOdds = +parseFloat(String(minOdds)).toFixed(ODDS_DECIMALS)
     const rawMinOdds = parseUnits(`${fixedMinOdds}`, ODDS_DECIMALS)
     const rawDeadline = BigInt(Math.floor(Date.now() / 1000) + (deadline || DEFAULT_DEADLINE))
@@ -157,6 +174,9 @@ export const usePlaceBet = (props: Props) => {
   return {
     isAllowanceLoading: allowanceTx.isLoading,
     isApproveRequired,
+    isOddsLoading,
+    conditionsOdds,
+    totalOdds,
     submit,
     approveTx: {
       isPending: approveTx.isLoading,

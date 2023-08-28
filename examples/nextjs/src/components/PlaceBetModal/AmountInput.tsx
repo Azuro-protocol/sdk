@@ -18,7 +18,17 @@ export const AmountInput: React.FC<Props> = (props) => {
       <div className="flex items-center justify-between">
         <span className="text-md text-zinc-400">Wallet balance</span>
         <span className="text-md font-semibold">
-          {isBalanceFetching ? 'Loading...' : balance?.toFixed(2)} {betToken.symbol}
+          {
+            isBalanceFetching ? (
+              <>Loading...</>
+            ) : (
+              balance !== undefined ? (
+                <>{balance?.toFixed(2)} {betToken.symbol}</>
+              ) : (
+                <>-</>
+              )
+            )
+          }
         </span>
       </div>
       <div className="flex items-center justify-between">

@@ -14,7 +14,16 @@ const nextConfig = {
     )
 
     return config
-  }
+  },
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/events/top',
+        permanent: false,
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig

@@ -4,20 +4,17 @@ import { ChainProvider } from '@azuro-org/sdk'
 import { ApolloProvider } from '@azuro-org/sdk/nextjs/apollo'
 import { RainbowKitProvider, getDefaultWallets } from '@rainbow-me/rainbowkit'
 import { WagmiConfig, configureChains, createConfig } from 'wagmi'
-import { mainnet, polygonMumbai } from 'viem/chains'
+import { polygonMumbai } from 'viem/chains'
 import { jsonRpcProvider } from 'wagmi/providers/jsonRpc'
 import { publicProvider } from 'wagmi/providers/public'
 
 
 const rpcUrls: Record<number, string> = {
-  [mainnet.id]: 'https://rpc.ankr.com/eth',
   [polygonMumbai.id]: 'https://rpc.ankr.com/polygon_mumbai',
 }
 
 const { chains, publicClient } = configureChains(
-  // we need mainnet here because walletconnect will not connect if wallet has no required chain in network list -
-  // we can request adding a chain to a wallet only after connection, so we must connect to mainnet :(
-  [ mainnet, polygonMumbai ],
+  [ polygonMumbai ],
   [
     jsonRpcProvider({
       rpc: (chain) => ({
@@ -30,7 +27,7 @@ const { chains, publicClient } = configureChains(
 
 const { connectors } = getDefaultWallets({
   appName: 'Azuro',
-  projectId: '2f82a1608c73932cfc64ff51aa38a87b',
+  projectId: '2f82a1608c73932cfc64ff51aa38a87b', // get your own project ID - https://cloud.walletconnect.com/sign-in
   chains,
 })
 

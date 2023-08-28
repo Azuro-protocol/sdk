@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { createPublicClient, http, parseUnits } from 'viem'
 import { chainsData, type ChainId } from '../config'
 
@@ -14,10 +15,12 @@ export const calcOdds = (props: CalcOddsProps) => {
 
   const { chain, contracts, betToken } = chainsData[chainId]
 
-  const publicClient = createPublicClient({
-    chain,
-    transport: http(),
-  })
+  const publicClient = useMemo(() => {
+    return createPublicClient({
+      chain,
+      transport: http(),
+    })
+  }, [ chainId ])
 
   let rawAmount = BigInt(1)
 

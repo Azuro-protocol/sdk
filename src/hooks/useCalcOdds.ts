@@ -5,12 +5,14 @@ import { useChain } from '../contexts/chain'
 
 type CalcOddsProps = {
   amount: string | number | undefined
-  conditionId: string | bigint
-  outcomeId: string | number
+  selections: {
+    conditionId: string | bigint
+    outcomeId: string | number
+  }[]
 }
 
 export const useCalcOdds = (props: CalcOddsProps) => {
-  const { amount, conditionId, outcomeId } = props
+  const { amount, selections } = props
 
   const { appChain, contracts, betToken } = useChain()
   let rawAmount = BigInt(1)
@@ -19,15 +21,44 @@ export const useCalcOdds = (props: CalcOddsProps) => {
     rawAmount = parseUnits(`${+amount}`, betToken!.decimals)
   }
 
-  return useContractRead({
+  const isSingle = selections.length === 1
+
+  const rawSelections = selections.map(({ conditionId, outcomeId }) => ({
+    conditionId: BigInt(conditionId),
+    outcomeId: BigInt(outcomeId),
+  }))
+
+  const single = useContractRead({
     chainId: appChain.id,
     address: contracts.prematchCore.address,
     abi: contracts.prematchCore.abi,
     functionName: 'calcOdds',
     args: [
-      BigInt(conditionId),
+      rawSelections[0]!.conditionId,
       rawAmount,
-      BigInt(outcomeId),
+      rawSelections[0]!.outcomeId,
     ],
+    enabled: Boolean(rawSelections.length === 1),
   })
+
+  const combo = useContractRead({
+    chainId: appChain.id,
+    address: contracts.prematchComboCore.address,
+    abi: contracts.prematchComboCore.abi,
+    functionName: 'calcOdds',
+    args: [
+      rawSelections,
+      rawAmount,
+    ],
+    enabled: Boolean(rawSelections.length > 1),
+  })
+
+  return {
+    isLoading: single.isLoading || combo.isLoading,
+    data: {
+      conditionsOdds: isSingle ? (single.data ? [ single.data ] : undefined) : combo.data?.[0],
+      totalOdds: isSingle ? single.data : combo.data?.[1],
+    },
+    error: single.error || combo.error,
+  }
 }

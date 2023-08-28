@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import { CheckBadgeIcon } from '@heroicons/react/24/solid'
-import { useGame } from '@azuro-org/sdk'
+import { useGame, usePrepareBet } from '@azuro-org/sdk'
 import { getMarketName } from '@azuro-org/dictionaries'
 import { GameInfo } from '@/components'
 import { AmountInput } from './AmountInput'
@@ -22,7 +22,32 @@ export function PlaceBetModal(props: Props) {
   const [ amount, setAmount ] = useState('')
   const [ isSuccess, setSuccess ] = useState(false)
 
+  const {
+    isOddsLoading,
+    totalOdds,
+    isAllowanceLoading,
+    isApproveRequired,
+    submit,
+    approveTx,
+    betTx,
+  } = usePrepareBet({
+    amount,
+    slippage: 5,
+    affiliate: '0x0000000000000000000000000000000000000000', // your affiliate address
+    selections: [
+      {
+        conditionId: outcome.conditionId,
+        outcomeId: outcome.outcomeId,
+      },
+    ],
+    onSuccess: () => {
+      setSuccess(true)
+    },
+  })
+
   const marketName = getMarketName({ outcomeId: outcome.outcomeId })
+  const isPending = approveTx.isPending || betTx.isPending
+  const isProcessing = approveTx.isProcessing  || betTx.isProcessing
 
   return (
     <div
@@ -30,7 +55,7 @@ export function PlaceBetModal(props: Props) {
       onClick={closeModal}
     >
       <div
-        className="w-[480px] bg-white overflow-hidden rounded-[40px] shadow-2xl"
+        className="w-[480px] bg-white max-h-[calc(100vh-40px)] overflow-y-auto no-scrollbar rounded-[40px] shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
         {
@@ -49,7 +74,9 @@ export function PlaceBetModal(props: Props) {
                   <span className="text-zinc-400">Selection</span>
                   <span className="text-right font-semibold">{outcome.selectionName}</span>
                   <span className="text-zinc-400">Odds</span>
-                  <span className="text-right font-semibold">{outcome.odds}</span>
+                  <span className="text-right font-semibold">
+                    {isOddsLoading ? 'Loading...' : totalOdds?.toFixed(3)}
+                  </span>
                 </div>
                 <AmountInput
                   amount={amount}
@@ -57,11 +84,11 @@ export function PlaceBetModal(props: Props) {
                 />
                 <SubmitButton
                   amount={amount}
-                  outcome={outcome}
-                  onSuccess={() => {
-                    console.log(333)
-                    setSuccess(true)
-                  }}
+                  isAllowanceLoading={isAllowanceLoading}
+                  isApproveRequired={isApproveRequired}
+                  isPending={isPending}
+                  isProcessing={isProcessing}
+                  onClick={submit}
                 />
               </div>
             </>

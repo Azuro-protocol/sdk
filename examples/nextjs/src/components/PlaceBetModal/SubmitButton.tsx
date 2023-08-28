@@ -1,43 +1,24 @@
 import React from 'react'
 import { useAccount } from 'wagmi'
-import { useChain, useBetTokenBalance, usePlaceBet } from '@azuro-org/sdk'
+import { useChain, useBetTokenBalance } from '@azuro-org/sdk'
 import cx from 'clsx'
 
 
 type Props = {
   amount: string
-  outcome: {
-    conditionId: string
-    outcomeId: string
-  }
-  onSuccess(): void
+  isAllowanceLoading: boolean
+  isApproveRequired: boolean
+  isPending: boolean
+  isProcessing: boolean
+  onClick(): void
 }
 
 export const SubmitButton: React.FC<Props> = (props) => {
-  const { amount, outcome, onSuccess } = props
+  const { amount, isAllowanceLoading, isApproveRequired, isPending, isProcessing, onClick } = props
 
   const account = useAccount()
   const { appChain, isRightNetwork } = useChain()
   const { loading: isBalanceFetching, balance } = useBetTokenBalance()
-
-  const {
-    isAllowanceLoading,
-    isApproveRequired,
-    submit,
-    approveTx,
-    betTx,
-  } = usePlaceBet({
-    amount,
-    minOdds: 1.5, // TODO slippage - added on 8/10/23 by pavelivanov
-    affiliate: '0x0000000000000000000000000000000000000000', // your affiliate address
-    selections: [
-      {
-        conditionId: outcome.conditionId,
-        outcomeId: outcome.outcomeId,
-      },
-    ],
-    onSuccess,
-  })
 
   if (!account.address) {
     return (
@@ -54,8 +35,7 @@ export const SubmitButton: React.FC<Props> = (props) => {
       </div>
     )
   }
-  const isPending = approveTx.isPending || betTx.isPending
-  const isProcessing = approveTx.isProcessing  || betTx.isProcessing
+
   const isEnoughBalance = Boolean(+amount && balance && +balance > +amount)
 
   const isDisabled = (
@@ -97,7 +77,7 @@ export const SubmitButton: React.FC<Props> = (props) => {
           'bg-zinc-300 cursor-not-allowed': isDisabled,
         })}
         disabled={isDisabled}
-        onClick={submit}
+        onClick={onClick}
       >
         {title}
       </button>
