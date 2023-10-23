@@ -12,8 +12,6 @@ export function SportsNavigation() {
     return <div>Loading...</div>
   }
 
-  console.log(888, data?.sports)
-
   return (
     <div className="w-full mb-8 overflow-hidden">
       <div className="w-full overflow-x-auto no-scrollbar">

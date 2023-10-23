@@ -31,6 +31,8 @@ export const useOddsWatcher = () => {
     },
   })
 
+  // TODO add "ConditionPause" watcher - added on 10/23/23 by pavelivanov
+
   useEffect(() => {
 
     return () => {

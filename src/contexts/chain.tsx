@@ -34,6 +34,7 @@ export const ChainProvider: React.FC<Props> = (props) => {
 
   const { chain, contracts, betToken } = chainsData[appChainId]
 
+  // TODO add "setChain" logic - added on 10/23/23 by pavelivanov
   const context: ChainContextValue = {
     appChain: chain,
     walletChain,

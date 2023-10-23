@@ -27,7 +27,7 @@ const getApolloClient = (chainId: number) => {
   }
 
   return new NextSSRApolloClient({
-    cache: new NextSSRInMemoryCache(),
+    cache: new NextSSRInMemoryCache(), // TODO add typePolicies (and cache to not fetch game on game again) - added on 10/23/23 by pavelivanov
     link,
   })
 }

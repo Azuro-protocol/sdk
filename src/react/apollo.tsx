@@ -12,7 +12,7 @@ const getLink = (chainId: number) => {
 
 const getApolloClient = (chainId: number) => {
   const link = getLink(chainId)
-  const cache = new InMemoryCache()
+  const cache = new InMemoryCache() // TODO add typePolicies (and cache to not fetch game on game again) - added on 10/23/23 by pavelivanov
 
   return new ApolloClient({
     link,

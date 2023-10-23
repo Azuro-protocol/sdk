@@ -495,7 +495,7 @@ To accommodate additional arguments within your GraphQL query, the optimal appro
 
 ```ts
 import { useQuery } from '@apollo/client'
-import type { BetsDocument, BetsQueryResult, BetsQueryVariables } from '@azuro-org/data'
+import { BetsDocument, BetsQueryResult, BetsQueryVariables } from '@azuro-org/sdk'
 
 const options = {
   // your options

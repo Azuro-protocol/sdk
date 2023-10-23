@@ -42,7 +42,7 @@ export const useGames = (props?: UseGamesProps) => {
     }
 
     if (filter?.offset) {
-      variables.first = filter.offset
+      variables.skip = filter.offset
     }
 
     if (filter?.sportSlug) {
