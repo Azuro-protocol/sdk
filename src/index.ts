@@ -1,4 +1,4 @@
-export { chainsData } from './config'
+export { chainsData, type ChainId } from './config'
 export { ChainProvider, useChain } from './contexts/chain'
 // docs
 export { Game_OrderBy, Bet_OrderBy } from './types'
@@ -23,4 +23,3 @@ export { useSportsNavigation } from './hooks/useSportsNavigation'
 export { useOddsWatcher } from './hooks/useOddsWatcher'
 export { usePrepareBet } from './hooks/usePrepareBet'
 export { useRedeemBet } from './hooks/useRedeemBet'
-export { useWatchOddsChange } from './hooks/useWatchOddsChange'
