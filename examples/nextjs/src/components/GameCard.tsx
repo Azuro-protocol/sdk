@@ -8,12 +8,12 @@ type Props = {
 }
 
 export function GameCard(props: Props) {
-  const { id, sport, league, participants, startsAt } = props.game
+  const { gameId, sport, league, participants, startsAt } = props.game
 
   return (
     <Link
       className="p-4 bg-zinc-50 rounded-3xl hover:bg-zinc-100 transition"
-      href={`/events/${sport.slug}/${id}`}
+      href={`/events/${sport.slug}/${gameId}`}
     >
       <div className="flex justify-between text-sm">
         <span>{sport.name}</span>
