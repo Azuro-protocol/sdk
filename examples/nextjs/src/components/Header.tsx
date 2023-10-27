@@ -20,7 +20,7 @@ export function Header() {
       </div>
       <div className="ml-auto flex items-center">
         <SelectAppChain />
-        <ConnectButton />
+        <ConnectButton chainStatus="none" />
       </div>
     </header>
   )
