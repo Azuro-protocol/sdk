@@ -3,8 +3,5 @@ query Game(
 ) {
   games(where: {gameId: $gameId}) {
     ...MainGameInfo
-    liquidityPool {
-      address
-    }
   }
 }
