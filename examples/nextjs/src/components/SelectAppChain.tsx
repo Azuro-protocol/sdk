@@ -10,7 +10,7 @@ export function SelectAppChain() {
   }
 
   return (
-    <select className='mr-4 cursor-pointer' defaultValue={polygonMumbai.id} value={appChain.id} onChange={handleChange}>
+    <select className='mr-4 cursor-pointer' value={appChain.id} onChange={handleChange}>
       <option value={polygonMumbai.id}>{polygonMumbai.name}</option>
       <option value={arbitrumGoerli.id}>{arbitrumGoerli.name}</option>
     </select>
