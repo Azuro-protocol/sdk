@@ -4,17 +4,18 @@ import { ChainProvider } from '@azuro-org/sdk'
 import { ApolloProvider } from '@azuro-org/sdk/nextjs/apollo'
 import { RainbowKitProvider, getDefaultWallets } from '@rainbow-me/rainbowkit'
 import { WagmiConfig, configureChains, createConfig } from 'wagmi'
-import { polygonMumbai } from 'viem/chains'
+import { polygonMumbai, arbitrumGoerli } from 'viem/chains'
 import { jsonRpcProvider } from 'wagmi/providers/jsonRpc'
 import { publicProvider } from 'wagmi/providers/public'
 
 
 const rpcUrls: Record<number, string> = {
   [polygonMumbai.id]: 'https://rpc.ankr.com/polygon_mumbai',
+  [arbitrumGoerli.id]: 'https://arbitrum-goerli.publicnode.com',
 }
 
 const { chains, publicClient } = configureChains(
-  [ polygonMumbai ],
+  [ polygonMumbai, arbitrumGoerli ],
   [
     jsonRpcProvider({
       rpc: (chain) => ({
