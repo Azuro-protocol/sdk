@@ -1,19 +1,23 @@
 import { useMemo } from 'react'
 import { useQuery, type QueryHookOptions } from '@apollo/client'
 import { ConditionsDocument, ConditionsQuery, ConditionsQueryVariables } from '../docs/conditions'
+import { useChain } from 'src/contexts/chain'
 
 
 type UseConditionsProps = {
-  gameEntityId: string
+  gameId: string
   filter?: {
     outcomeIds?: string[]
   }
 }
 
 export const useConditions = (props: UseConditionsProps) => {
-  const { gameEntityId, filter } = props
+  const { gameId, filter } = props
+  const { contracts } = useChain()
 
   const options = useMemo<QueryHookOptions<ConditionsQuery, ConditionsQueryVariables>>(() => {
+    const gameEntityId = `${contracts.lp.address.toLowerCase()}_${gameId}`
+
     const variables: ConditionsQueryVariables = {
       where: {
         game_: {
@@ -31,7 +35,8 @@ export const useConditions = (props: UseConditionsProps) => {
       ssr: false,
     }
   }, [
-    gameEntityId,
+    gameId,
+    contracts,
     filter?.outcomeIds?.join(',')
   ])
 
