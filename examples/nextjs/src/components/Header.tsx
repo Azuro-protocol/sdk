@@ -1,6 +1,6 @@
 import React from 'react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { ActiveLink } from '@/components'
+import { ActiveLink, SelectAppChain } from '@/components'
 
 
 export function Header() {
@@ -18,8 +18,9 @@ export function Header() {
           Events
         </ActiveLink>
       </div>
-      <div className="ml-auto">
-        <ConnectButton />
+      <div className="ml-auto flex items-center">
+        <SelectAppChain />
+        <ConnectButton chainStatus="none" />
       </div>
     </header>
   )

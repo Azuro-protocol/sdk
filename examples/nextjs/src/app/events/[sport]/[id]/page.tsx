@@ -8,7 +8,7 @@ const Info = () => {
   const params = useParams()
 
   const { loading, data } = useGame({
-    id: params.id as string,
+    gameId: params.id as string,
   })
 
   if (loading) {
@@ -21,14 +21,14 @@ const Info = () => {
     )
   }
 
-  return <GameInfo game={data?.game} />
+  return <GameInfo game={data} />
 }
 
 const Markets = () => {
   const params = useParams()
 
   const { loading, markets } = useGameMarkets({
-    gameEntityId: params.id as string,
+    gameId: params.id as string,
   })
 
   if (loading) {

@@ -4,19 +4,24 @@ import { GameDocument, GameQuery, GameQueryVariables } from '../docs/game'
 
 
 type UseGameProps = {
-  id: string
+  gameId: string
 }
 
 export const useGame = (props: UseGameProps) => {
-  const { id } = props
+  const { gameId } = props
 
   const options = useMemo<QueryHookOptions<GameQuery, GameQueryVariables>>(() => ({
     variables: {
-      id: id!,
+      gameId: gameId!,
     },
-    skip: !id,
+    skip: !gameId,
     ssr: false,
-  }), [ id ])
+  }), [ gameId ])
 
-  return useQuery<GameQuery, GameQueryVariables>(GameDocument, options)
+  const { data, ...rest } = useQuery<GameQuery, GameQueryVariables>(GameDocument, options)
+
+  return {
+    ...rest,
+    data: data?.games?.[0],
+  }
 }

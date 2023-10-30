@@ -1,9 +1,7 @@
 query Game(
-  $id: ID!
+  $gameId: BigInt!
 ) {
-  game(
-    id: $id
-  ) {
+  games(where: {gameId: $gameId}) {
     ...MainGameInfo
   }
 }

@@ -153,17 +153,17 @@ const groupMarkets = (conditions: ConditionsQuery['conditions']): GameMarkets =>
 }
 
 type Props = {
-  gameEntityId: string
+  gameId: string
   filter?: {
     outcomeIds?: string[]
   }
 }
 
 export const useGameMarkets = (props: Props) => {
-  const { gameEntityId, filter } = props
+  const { gameId, filter } = props
 
   const { loading, data, error } = useConditions({
-    gameEntityId,
+    gameId,
     filter,
   })
 

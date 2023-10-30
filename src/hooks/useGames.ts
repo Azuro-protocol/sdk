@@ -30,7 +30,6 @@ export const useGames = (props?: UseGamesProps) => {
     const variables: GamesQueryVariables = {
       orderBy,
       orderDirection: orderDir,
-      // withConditions,
       where: {
         startsAt_gt,
         hasActiveConditions: true,

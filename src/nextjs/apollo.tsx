@@ -1,5 +1,5 @@
 'use client';
-import { useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import { ApolloLink, HttpLink } from '@apollo/client'
 import { ApolloNextAppProvider, NextSSRInMemoryCache, NextSSRApolloClient, SSRMultipartLink } from '@apollo/experimental-nextjs-app-support/ssr'
 import { useChain } from '../contexts/chain'
@@ -39,22 +39,22 @@ export const ApolloProvider = (props: { children: any }) => {
   const prevAppChainIdRef = useRef<number | undefined>()
   const apolloClientRef = useRef<NextSSRApolloClient<any> | undefined>()
 
-  const makeClient = () => {
-    if (appChain.id !== prevAppChainIdRef.current) {
-      if (!apolloClientRef.current) {
-        apolloClientRef.current = getApolloClient(appChain.id)
-      }
-      else {
-        const link = new HttpLink({
-          uri: graphqlEndpoints[appChain.id],
-        })
+  // set new link before render for send requests with new one
+  useMemo(() => {
+    if (appChain.id !== prevAppChainIdRef.current && apolloClientRef.current) {
+      const link = new HttpLink({
+        uri: graphqlEndpoints[appChain.id],
+      })
 
-        apolloClientRef.current.setLink(link)
-        apolloClientRef.current.resetStore()
-      }
+      apolloClientRef.current.setLink(link)
+      apolloClientRef.current.resetStore()
 
       prevAppChainIdRef.current = appChain.id
     }
+  }, [ appChain.id ])
+
+  const makeClient = () => {
+    apolloClientRef.current = getApolloClient(appChain.id)
 
     return apolloClientRef.current as NextSSRApolloClient<any>
   }
