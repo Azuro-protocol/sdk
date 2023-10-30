@@ -33,23 +33,6 @@ const minOdds = calcMindOdds({
 })
 ```
 
-
-### `calcOdds`
-
-Returns actual odds value for specific outcomeId (on specific condition and chain)
-
-```ts
-import { calcOdds } from '@azuro-org/sdk'
-
-const odds = await calcOdds({
-  chainId: polygon.id,
-  conditionId: '486903008559711340',
-  outcomeId: '29',
-  amount: 10, // 10 USDT
-})
-```
-
-
 ### `watchOddsChange`
 
 Watches for odds change

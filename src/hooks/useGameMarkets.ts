@@ -2,22 +2,24 @@ import { useMemo } from 'react'
 import { dictionaries, getMarketKey, getMarketName, getMarketDescription, getSelectionName } from '@azuro-org/dictionaries'
 import { type ConditionsQuery } from '../docs/conditions'
 import { useConditions } from './useConditions'
+import { ConditionStatus } from 'src/types'
 
 
-type Condition = {
+export type Condition = {
   conditionId: string
 }
 
-type Outcome = {
+export type Outcome = {
   conditionId: string
   outcomeId: string
   selectionName: string
   odds: string
   lpAddress: string
   coreAddress: string
+  status: ConditionStatus
 }
 
-type Market = {
+export type Market = {
   name: string
   description: string
   selections: Outcome[][]
@@ -46,7 +48,7 @@ const groupMarkets = (conditions: ConditionsQuery['conditions']): GameMarkets =>
   const selectionsByMarkets: SelectionsByMarkets = {}
   const result: SelectionRowsByMarket = {}
 
-  conditions.forEach(({ conditionId, outcomes, core }) => {
+  conditions.forEach(({ conditionId, outcomes, core, status }) => {
     outcomes.forEach(({ outcomeId, odds }) => {
       const marketKey = getMarketKey(outcomeId)
       const marketName = getMarketName({ outcomeId })
@@ -60,6 +62,7 @@ const groupMarkets = (conditions: ConditionsQuery['conditions']): GameMarkets =>
         outcomeId,
         selectionName,
         odds,
+        status,
       }
 
       if (!selectionsByMarkets[marketKey]) {

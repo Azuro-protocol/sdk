@@ -1,18 +1,20 @@
-type Cb = () => void
+import { ConditionStatus } from '../types';
+
+
+type Cb = (status: ConditionStatus) => void
 
 type Handler = {
-  outcomeId: string
   cb: Cb
 }
 
 const timers = new Map<string, number>()
 const subscribers = new Map<string, Handler[]>()
 
-const subscribe = (conditionId: string, outcomeId: string, cb: Cb) => {
+const subscribe = (conditionId: string, cb: Cb) => {
   const key = conditionId
   const handlers = subscribers.get(key) || []
 
-  handlers.push({ outcomeId, cb })
+  handlers.push({ cb })
   subscribers.set(key, handlers)
 
   return function unsubscribe() {
@@ -28,15 +30,15 @@ const subscribe = (conditionId: string, outcomeId: string, cb: Cb) => {
   }
 }
 
-const trigger = async (conditionId: string) => {
+const trigger = (conditionId: string, status: ConditionStatus) => {
   const handlers = subscribers.get(conditionId) || []
 
   handlers.forEach(({ cb }) => {
-    cb()
+    cb(status)
   })
 }
 
-const dispatch = (conditionId: string) => {
+const dispatch = (conditionId: string, status: ConditionStatus) => {
   let timer = timers.get(conditionId)
 
   if (timer !== undefined) {
@@ -45,13 +47,13 @@ const dispatch = (conditionId: string) => {
 
   timer = +setTimeout(() => {
     timers.delete(conditionId)
-    trigger(conditionId)
+    trigger(conditionId, status)
   }, 200)
 
   timers.set(conditionId, timer)
 }
 
-export const oddsWatcher = {
+export const conditionStatusWatcher = {
   subscribe,
   dispatch,
 }

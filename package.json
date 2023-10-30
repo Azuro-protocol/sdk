@@ -1,6 +1,6 @@
 {
   "name": "@azuro-org/sdk",
-  "version": "0.0.42",
+  "version": "0.0.43",
   "author": "Azuro",
   "type": "module",
   "main": "dist/index.js",
@@ -18,7 +18,7 @@
   "sideEffects": true,
   "scripts": {
     "gql": "graphql-codegen",
-    "build": "rimraf dist && rollup -c",
+    "build": "npm run gql && rimraf dist && rollup -c",
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
