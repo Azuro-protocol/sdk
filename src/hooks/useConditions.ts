@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useQuery, type QueryHookOptions } from '@apollo/client'
 import { ConditionsDocument, ConditionsQuery, ConditionsQueryVariables } from '../docs/conditions'
-import { useChain } from 'src/contexts/chain'
+import { useChain } from '../contexts/chain'
 
 
 type UseConditionsProps = {
