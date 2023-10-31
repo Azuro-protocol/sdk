@@ -7,7 +7,7 @@ type Handler = {
   cb: Cb
 }
 
-const timers = new Map<string, number>()
+const timers = new Map<string, NodeJS.Timeout>()
 const subscribers = new Map<string, Handler[]>()
 
 const subscribe = (conditionId: string, cb: Cb) => {
@@ -45,7 +45,7 @@ const dispatch = (conditionId: string, status: ConditionStatus) => {
     clearTimeout(timer)
   }
 
-  timer = +setTimeout(() => {
+  timer = setTimeout(() => {
     timers.delete(conditionId)
     trigger(conditionId, status)
   }, 200)
