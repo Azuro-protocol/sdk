@@ -76,9 +76,9 @@ export function BetCard(props: Props) {
       </div>
       {
         outcomes.map((outcome) => {
-          const { odds, name, game, selectionName, isWin, isLose, game: { status: gameStatus, gameId, participants, startsAt } } = outcome
+          const { odds, name, game, selectionName, isWin, isLose, game: { status: gameStatus, gameId, participants, startsAt, sport: { slug: sportSlug } } } = outcome
 
-          const { league: { name: leagueName, slug: leagueSlug, country: { name: countryName }} } = game
+          const { league: { name: leagueName, country: { name: countryName }} } = game
 
           const className = cx("mt-4 p-4 rounded-md", {
             'bg-zinc-200': !isWin && !isLose,
@@ -96,7 +96,7 @@ export function BetCard(props: Props) {
                 <p>{GameStatusText[getGameStatus({ graphGameStatus: gameStatus, startDate: startsAt * 1000 })]}</p>
               </div>
               <div className="flex items-center">
-                <Link href={`/events/${leagueSlug}/${gameId}`} className="flex items-center mr-4">
+                <Link href={`/events/${sportSlug}/${gameId}`} className="flex items-center mr-4">
                     {
                       participants.map(({ image, name }) => (
                         <div key={name} className="flex items-center ml-2 first-of-type:ml-0">
