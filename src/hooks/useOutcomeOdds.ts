@@ -7,8 +7,8 @@ import {useChain} from '../contexts/chain';
 
 
 type Props = {
-  conditionId: string
-  outcomeId: string
+  conditionId: string | bigint
+  outcomeId: string | bigint
   initialOdds?: string
 }
 
@@ -20,7 +20,7 @@ export const useOutcomeOdds = ({ conditionId, outcomeId, initialOdds }: Props) =
 
 
   useEffect(() => {
-    const unsubscribe = oddsWatcher.subscribe(conditionId, outcomeId, async () => {
+    const unsubscribe = oddsWatcher.subscribe(`${conditionId}`, `${outcomeId}`, async () => {
       const rawOdds = await publicClient.readContract({
         address: contracts.prematchCore.address,
         abi: contracts.prematchCore.abi,
@@ -37,7 +37,7 @@ export const useOutcomeOdds = ({ conditionId, outcomeId, initialOdds }: Props) =
     return () => {
       unsubscribe()
     }
-  }, [])
+  }, [ publicClient ])
 
   return odds
 }

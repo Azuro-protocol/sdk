@@ -4,7 +4,7 @@ import { conditionStatusWatcher } from '../modules/conditionStatusWatcher';
 
 
 type Props = {
-  conditionId: string
+  conditionId: string | bigint
   initialStatus?: ConditionStatus
 }
 
@@ -13,7 +13,7 @@ export const useConditionStatus = ({ conditionId, initialStatus }: Props) => {
 
 
   useEffect(() => {
-    const unsubscribe = conditionStatusWatcher.subscribe(conditionId, (newStatus: ConditionStatus) => {
+    const unsubscribe = conditionStatusWatcher.subscribe(`${conditionId}`, (newStatus: ConditionStatus) => {
       setStatus(newStatus)
     })
 

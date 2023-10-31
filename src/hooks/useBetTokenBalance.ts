@@ -4,11 +4,11 @@ import { useChain } from '../contexts/chain'
 
 export const useBetTokenBalance = () => {
   const { appChain, betToken } = useChain()
-  const account = useAccount()
+  const { address } = useAccount()
 
   const { isLoading, data, error } = useBalance({
     chainId: appChain.id,
-    address: account.address,
+    address,
     token: betToken.address,
     enabled: !betToken.isNative,
   })

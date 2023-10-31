@@ -4,7 +4,7 @@ import { GameDocument, GameQuery, GameQueryVariables } from '../docs/game'
 
 
 type UseGameProps = {
-  gameId: string
+  gameId: string | bigint
 }
 
 export const useGame = (props: UseGameProps) => {

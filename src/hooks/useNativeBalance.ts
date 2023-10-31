@@ -4,11 +4,11 @@ import { useChain } from '../contexts/chain'
 
 export const useNativeBalance = () => {
   const { appChain } = useChain()
-  const account = useAccount()
+  const { address } = useAccount()
 
   const { isLoading, data, error } = useBalance({
     chainId: appChain.id,
-    address: account.address,
+    address,
   })
 
   return {

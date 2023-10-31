@@ -1,7 +1,7 @@
 export { chainsData, type ChainId } from './config'
 export { ChainProvider, useChain } from './contexts/chain'
 // docs
-export { Game_OrderBy, Bet_OrderBy, ConditionStatus } from './types'
+export { Game_OrderBy, Bet_OrderBy, ConditionStatus, OrderDirection } from './types'
 export type { GamesDocument, GamesQuery, GamesQueryResult, GamesQueryVariables } from './docs/games'
 export type { GameDocument, GameQuery, GameQueryResult, GameQueryVariables } from './docs/game'
 export type { BetsDocument, BetsQuery, BetsQueryResult, BetsQueryVariables } from './docs/bets'
@@ -11,7 +11,7 @@ export type { NavigationDocument, NavigationQuery, NavigationQueryResult, Naviga
 export { calcMindOdds } from './utils/calcMindOdds'
 export { setGamesCacheTime } from './utils/setGamesCacheTime'
 // hooks
-export { useBets } from './hooks/useBets'
+export { useBets, type UseBetsProps } from './hooks/useBets'
 export { useBetTokenBalance } from './hooks/useBetTokenBalance'
 export { useCalcOdds } from './hooks/useCalcOdds'
 export { useConditions } from './hooks/useConditions'
