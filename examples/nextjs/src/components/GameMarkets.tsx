@@ -1,14 +1,14 @@
 'use client'
 import { useState } from 'react'
 import { type GameMarkets } from '@azuro-org/sdk'
-import { PlaceBetModal } from '@/components'
+import { PlaceBetModal, OutcomeButton } from '@/components'
 
 
-type Props = {
+type GameMarketsProps = {
   markets: GameMarkets
 }
 
-export function GameMarkets(props: Props) {
+export function GameMarkets(props: GameMarketsProps) {
   const { markets } = props
 
   const [ selectedOutcome, setSelectedOutcome ] = useState(null)
@@ -35,15 +35,11 @@ export function GameMarkets(props: Props) {
                       <div className="flex gap-2 w-full">
                         {
                           outcomes.map((outcome) => (
-                            <div
-                              key={outcome.selectionName}
-                              className="flex justify-between p-5 bg-zinc-50 hover:bg-zinc-100 transition rounded-2xl cursor-pointer"
-                              style={{ width: `calc(100% / ${outcomes.length})` }}
-                              onClick={() => handleOutcomeClick(outcome)}
-                            >
-                              <span className="text-zinc-500">{outcome.selectionName}</span>
-                              <span className="font-medium">{parseFloat(outcome.odds).toFixed(2)}</span>
-                            </div>
+                            <OutcomeButton 
+                              key={outcome.selectionName} 
+                              outcome={outcome} 
+                              onClick={() => handleOutcomeClick(outcome)} 
+                            />
                           ))
                         }
                       </div>

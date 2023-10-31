@@ -11,11 +11,12 @@ export const useOddsWatcher = () => {
     address: contracts.prematchCore.address,
     abi: contracts.prematchCore.abi,
     eventName: 'NewBet',
-    listener(log) {
-      // @ts-ignore
+    chainId: appChain.id,
+    listener(logs) {
+      const log = logs[0]!
       const conditionId = log.args.conditionId!
 
-      oddsWatcher.dispatch(appChain.id, conditionId)
+      oddsWatcher.dispatch(conditionId.toString())
     },
   })
 
@@ -23,15 +24,14 @@ export const useOddsWatcher = () => {
     address: contracts.prematchCore.address,
     abi: contracts.prematchCore.abi,
     eventName: 'OddsChanged',
-    listener(log) {
-      // @ts-ignore
+    chainId: appChain.id,
+    listener(logs) {
+      const log = logs[0]!
       const conditionId = log.args.conditionId!
 
-      oddsWatcher.dispatch(appChain.id, conditionId)
+      oddsWatcher.dispatch(conditionId.toString())
     },
   })
-
-  // TODO add "ConditionPause" watcher - added on 10/23/23 by pavelivanov
 
   useEffect(() => {
 
@@ -39,5 +39,5 @@ export const useOddsWatcher = () => {
       unwatchSingle?.()
       unwatchCombo?.()
     }
-  }, [ unwatchSingle, unwatchCombo ])
+  }, [ unwatchSingle, unwatchCombo, appChain.id ])
 }

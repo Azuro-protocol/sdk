@@ -1,6 +1,6 @@
 import '@rainbow-me/rainbowkit/styles.css'
 import './globals.css'
-import { Providers, Header } from '@/components'
+import { Providers, Header, Watchers } from '@/components'
 
 
 export default function RootLayout(props: { children: React.ReactNode }) {
@@ -14,6 +14,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           <main className="container pt-5 pb-10">
             {children}
           </main>
+          <Watchers />
         </Providers>
       </body>
     </html>
