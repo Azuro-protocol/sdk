@@ -80,7 +80,8 @@ export function BetCard(props: Props) {
 
           const { league: { name: leagueName, slug: leagueSlug, country: { name: countryName }} } = game
 
-          const className = cx("mt-4 p-4 bg-zinc-200 rounded-md", {
+          const className = cx("mt-4 p-4 rounded-md", {
+            'bg-zinc-200': !isWin && !isLose,
             'bg-green-100': isWin,
             'bg-red-100': isLose,
           })
