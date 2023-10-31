@@ -18,15 +18,20 @@ query Bets(
     tokenId: betId
     amount
     status
-    payout
     potentialPayout
+    payout # don't account canceled sub-bets after resolve of express
     result
     isRedeemed
+    isRedeemable
     odds
+    settledOdds # don't account canceled sub-bets after resolve of express
     createdAt: createdBlockTimestamp
     txHash: createdTxHash
     core {
       address
+      liquidityPool {
+        address
+      }
     }
     selections {
       odds
@@ -35,11 +40,16 @@ query Bets(
         outcomeId
         condition {
           conditionId
+          status
           game {
             ...MainGameInfo
           }
         }
       }
+    }
+    freebet {
+      freebetId
+      contractAddress: freebetContractAddress
     }
   }
 }
