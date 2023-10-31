@@ -8,7 +8,7 @@ import { ConditionStatus } from 'src/types'
 export const useConditionStatusWatcher = () => {
   const { appChain, contracts } = useChain()
 
-  const unwatchSingle = useContractEvent({
+  const unwatchConditionStopped = useContractEvent({
     address: contracts.prematchCore.address,
     abi: contracts.prematchCore.abi,
     eventName: 'ConditionStopped',
@@ -27,7 +27,7 @@ export const useConditionStatusWatcher = () => {
   useEffect(() => {
 
     return () => {
-      unwatchSingle?.()
+      unwatchConditionStopped?.()
     }
-  }, [ unwatchSingle, contracts ])
+  }, [ unwatchConditionStopped, contracts ])
 }
