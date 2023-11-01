@@ -20,12 +20,13 @@ export enum GameStatus {
 
 type Props = {
   graphGameStatus: GraphGameStatus,
-  startDate: number
+  startsAt: number
 }
 
 export const getGameStatus = (props: Props): GameStatus => {
-  const { graphGameStatus, startDate } = props
+  const { graphGameStatus, startsAt } = props
 
+  const startDate = startsAt * 1000
   const isStarted = startDate < Date.now()
 
   if (graphGameStatus === GraphGameStatus.Canceled) {

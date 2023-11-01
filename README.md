@@ -33,35 +33,75 @@ const minOdds = calcMindOdds({
 })
 ```
 
-### `watchOddsChange`
+### `getGameStatus`
 
-Watches for odds change
+Returns detailed game status based on game's status from graph and start date
 
 ```ts
-import { watchOddsChange } from '@azuro-org/sdk'
+import { getGameStatus } from '@azuro-org/sdk'
 
-const unwatch = watchOddsChange({
-  chainId: polygon.id,
-  conditionIds: [
-    '486903008559711340',
-    '486903008123712788',
-  ],
-  batch: true,
-  onLogs: (logs) => {
-    console.log(logs)
-  },
+const { status, startsAt } = game // game's data from graph
+
+const gameStatus = getGameStatus({ 
+  graphGameStatus: status,
+  startsAt,
 })
-
-unwatch() // to stop watching
 ```
 
 #### Props
 
-- `chainId: number`
-- `conditionIds: string[]`
-- `batch: boolean` - https://viem.sh/docs/clients/transports/http.html#batch-json-rpc
-- `onLogs: (logs: Log[]) => void`
+- `graphGameStatus: GameStatus` // game's status from graph
+- `startsAt: number`
 
+#### Return Value
+
+```ts
+enum GameStatus {
+  Preparing,
+  Live,
+  PendingResolution,
+  Resolved,
+  Canceled,
+  Paused,
+}
+```
+
+### `getBetStatus`
+
+Returns detailed bet status based on bet's status from graph and result and games in a bet
+
+```ts
+import { getBetStatus, type Bet } from '@azuro-org/sdk'
+
+const { games, status, isWin, isLose } = bet as Bet // bet's data
+
+const betStatus = getBetStatus({
+  graphGameStatus: status,
+  games,
+  win: isWin,
+  lose: isLose,
+})
+```
+
+#### Props
+
+- `graphGameStatus: BetStatus` // bet's status from graph
+- `games: GameQuery['games'][]`
+- `win: boolean`
+- `lose: boolean`
+
+#### Return Value
+
+```ts
+enum BetStatus {
+  Accepted,
+  Live,
+  PendingResolution,
+  Canceled,
+  Won,
+  Lost,
+}
+```
 
 ## Hooks
 
@@ -70,7 +110,7 @@ unwatch() // to stop watching
 ```ts
 import { useChain } from '@azuro-org/sdk'
 
-const { chain, contracts, betToken } = useChain()
+const { appChain, walletChain, contracts, betToken, isRightNetwork, setAppChainId } = useChain()
 ```
 
 #### Return Value
@@ -79,7 +119,8 @@ const { chain, contracts, betToken } = useChain()
 import { type Chain } from 'viem/chains'
 
 {
-  chain: Chain
+  appChain: Chain
+  walletChain: Chain
   contracts: {
     lp: {
       address: `0x${string}`
@@ -100,9 +141,29 @@ import { type Chain } from 'viem/chains'
     decimals: number
     isNative: boolean
   }
+  isRightNetwork: boolean
+  setAppChainId: (chainId: ChainId) => void
 }
 ```
 
+### `useBetTokenBalance` and `useNativeBalance`
+returns balance based on appChain
+
+```ts
+import { useCalcOdds } from '@azuro-org/sdk'
+
+const { isLoading, data, error } = useCalcOdds({
+  amount: 10,
+  selections: [
+    {
+      conditionId: '486903008559711340',
+      outcomeId: '29',
+    },  
+  ],
+})
+
+const { conditionsOdds, totalOdds } = data
+```
 
 ### `useCalcOdds`
 
@@ -122,37 +183,30 @@ const { isLoading, data, error } = useCalcOdds({
 const { conditionsOdds, totalOdds } = data
 ```
 
-
 ### `usePlaceBet`
 
-Doesn't contain `minOdds` calculation because it's based on current odds values and slippage. We should be sure that 
-odds values are updated, if usePlaceBet will contain the logic of calculation when there should be not necessary call for 
-odds values fetching. This should be done only in client app, not in lib itself.
-
 ```ts
-import { usePlaceBet } from '@azuro-org/sdk'
+import { usePrepareBet } from '@azuro-org/sdk'
 
 const {
-  isAllowanceLoading,
-  isApproveRequired,
-  isOddsLoading,
-  conditionsOdds,
-  totalOdds,
-  submit,
-  approveTx,
-  betTx,
-} = usePlaceBet({
-  amount: 10,
-  minOdds: 1.5,
-  deadline: 60, // 1 min
-  affiliate: '0x...', // your (affiliate) wallet address
-  selections: [
-    {
-      conditionId: '486903008559711340',
-      outcomeId: '29',
-    },
-  ],
-})
+    totalOdds,
+    approveTx,
+    betTx,
+    submit,
+    isApproveRequired,
+    isOddsLoading,
+    isAllowanceLoading,
+  } = usePrepareBet({
+    amount: '10', // 10 USDT
+    slippage: 5, // 5%
+    affiliate: '0x0000000000000000000000000000000000000000', // your affiliate address
+    selections: [
+      {
+        conditionId: outcome.conditionId,
+        outcomeId: outcome.outcomeId,
+      },
+    ],
+  })
 
 submit()
 ```
@@ -161,14 +215,16 @@ submit()
 
 ```ts
 {
-  amount: number
-  minOdds: number
-  deadline?: number
-  affiliate: `0x${string}`
+  amount: string
+  slippage: number
+  affiliate: Address
   selections: {
-    conditionId: string | number
-    outcomeId: string | number
+    conditionId: string | bigint
+    outcomeId: string | bigint
   }[]
+  deadline?: number
+  onSuccess?(receipt: TransactionReceipt): void
+  onError?(err?: Error): void
 }
 ```
 
@@ -178,6 +234,9 @@ submit()
 {
   isAllowanceLoading: boolean
   isApproveRequired: boolean
+  isOddsLoading: boolean
+  conditionsOdds: number[]
+  totalOdds: number
   submit: () => Promise<Receipt>
   approveTx: {
     isPending: boolean
@@ -197,8 +256,7 @@ submit()
 
 
 
-
-## Hooks
+## Data Hooks
 
 Each data hook represents a logic wrapper over standard Apollo's `useQuery` hook. Explore [Apollo's docs](https://www.apollographql.com/docs/react/api/react/hooks#usequery) to understand what data the hooks return.
 
