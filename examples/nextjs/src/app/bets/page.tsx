@@ -1,6 +1,6 @@
 'use client'
 import { useBets, OrderDirection } from '@azuro-org/sdk'
-import { useAccount, Address } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { BetCard } from '@/components';
 
 const useData = () => {
@@ -8,7 +8,7 @@ const useData = () => {
 
   const props = {
     filter: {
-      bettor: address as Address,
+      bettor: address!,
     },
     orderDir: OrderDirection.Desc,
   }
