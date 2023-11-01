@@ -35,6 +35,8 @@ const minOdds = calcMindOdds({
 })
 ```
 
+---
+
 ### `getGameStatus`
 
 Returns detailed game status based on game's status from graph and start date
@@ -69,6 +71,8 @@ enum GameStatus {
   Paused,
 }
 ```
+
+---
 
 ### `getBetStatus`
 
@@ -155,6 +159,8 @@ import { type Chain } from 'viem/chains'
 }
 ```
 
+---
+
 ### `useBetTokenBalance` and `useNativeBalance`
 returns balance based on appChain
 
@@ -166,6 +172,8 @@ import { useBetTokenBalance } from '@azuro-org/sdk'
 const { loading, balance, rawBalance, error } = useBetTokenBalance()
 const { loading, balance, rawBalance, error } = useNativeBalance()
 ```
+
+---
 
 ### `useCalcOdds`
 
@@ -188,6 +196,8 @@ const { isLoading, data, error } = useCalcOdds({
 
 const { conditionsOdds, totalOdds } = data
 ```
+
+---
 
 ### `usePlaceBet`
 
@@ -474,26 +484,26 @@ import { useGame } from '@azuro-org/data'
 
 const { loading, error, data } = useGame(props)
 
-const game = data?.game
+const game = data
 ```
 
 #### Props
 
-- **id**: `{string}, required` - the Subgraph `Game` entity's ID.
+- **gameId**: `{string | bigint}, required` - the Subgraph `Game` gameId.
 - **withConditions**: `{boolean}, optional, default: false` - if `true` the `conditions` will be added to query result.
 
 #### Note
 
-`id` property is not same as `gameId`. Each game fetched using `useGames` hook contains the entity ID:
+`gameId` property is not same as `id`. Each game fetched using `useGames` hook contains the gameId:
 
 ```ts
 const { loading, error, data } = useGames()
 
-const firstGameID = data?.games[0]?.id
+const firstGameID = data?.games[0]?.gameId
 ```
 
 ```ts
-const { loading, error, data } = useGame({ id: firstGameID })
+const { loading, error, data } = useGame({ gameId: firstGameID })
 ```
 
 <details>
@@ -503,7 +513,7 @@ const { loading, error, data } = useGame({ id: firstGameID })
 useGame(props: Props): QueryResult<Data>
 
 type Props = {
-  id: string
+  gameId: string | bigint
   withConditions?: boolean
 }
 
@@ -564,7 +574,7 @@ const conditions = data?.game.conditions
 
 #### Props
 
-- **gameEntityId**: `{string}, required` - the Subgraph `Game` entity's ID.
+- **gameId**: `{string | bigint}, required` - the Subgraph `Game` gameId.
 - **filter.outcomeIds**: `{string[]}, optional` - returns only conditions which contains the passed outcome ids.
 
 <details>
@@ -574,7 +584,7 @@ const conditions = data?.game.conditions
 useConditions(props: Props): QueryResult<Data>
 
 type Props = {
-  gameEntityId: string
+  gameId: string | bigint
   filter?: {
     outcomeIds?: string[]
   }
@@ -612,7 +622,7 @@ import { useBets } from '@azuro-org/data'
 
 const { loading, error, data } = useBets(props)
 
-const bets = data?.bets
+const bets = data
 ```
 
 #### Note
@@ -650,86 +660,115 @@ useBets(props: Props): QueryResult<Data>
 
 type Props = {
   filter: {
+    bettor: string
     limit?: number
     offset?: number
-    bettor: string
   }
   orderBy?: Bet_OrderBy
   orderDir?: OrderDirection
 }
 
-enum BetType {
-  Express = 'Express',
-  Ordinar = 'Ordinar'
-}
 
-enum BetStatus {
-  Accepted = 'Accepted',
-  Canceled = 'Canceled',
-  Resolved = 'Resolved'
-}
-
-enum BetResult {
-  Lost = 'Lost',
-  Won = 'Won'
-}
-
-enum SelectionResult {
-  Lost = 'Lost',
-  Won = 'Won'
-}
-
-type Data = { 
-  bets: Array<{ 
+export type BetOutcome = {
+  selectionName: string
+  outcomeId: string
+  odds: number
+  name: string
+  game: {
     id: string
-    type: BetType
-    amount: any
-    status: BetStatus
-    payout?: any | null
-    potentialPayout: any
-    result?: BetResult | null
-    isRedeemed: boolean
-    odds: any
-    tokenId: any
-    createdAt: any
-    txHash: string
-    core: {
-      address: string 
+    gameId: any
+    title?: string | null
+    startsAt: any
+    sport: {
+      slug: string
+      name: string 
     }
-    selections: Array<{
-      odds: any
-      result?: SelectionResult | null
-      outcome: {
-        outcomeId: any
-        condition: {
-          conditionId: any
-          game: {
-            id: string
-            gameId: any
-            title?: string | null
-            startsAt: any
-            sport: {
-              slug: string
-              name: string 
-            }
-            league: {
-              slug: string
-              name: string
-              country: {
-                slug: string
-                name: string 
-              } 
-            }
-            participants: Array<{
-              image?: string | null
-              name: string 
-            }> 
-          } 
-        } 
+    league: {
+      slug: string
+      name: string
+      country: {
+        slug: string
+        name: string 
       } 
+    }
+    participants: Array<{
+      image?: string | null
+      name: string 
     }> 
-  }> 
+  } 
+  isWin: boolean | null
+  isLose: boolean | null
+  isCanceled: boolean
+}
+
+export type Bet = {
+  tokenId: string
+  freebetId: string | null
+  freebetContractAddress?: Address
+  totalOdds: number
+  coreAddress: Address
+  lpAddress: Address
+  outcomes: BetOutcome[]
+  txHash: string
+  status: BetStatus
+  amount: string
+  possibleWin: number
+  payout: number
+  createdAt: number
+  isWin: boolean
+  isLose: boolean
+  isRedeemable: boolean
+  isRedeemed: boolean
+  isCanceled: boolean
 }
 ```
 </details>
 
+---
+
+### `useBetsCache`
+
+Using for update existing bet cache or add new bet to cache
+
+#### Usage
+
+Update bet after redeem
+
+```ts
+const { submit } = useRedeemBet()
+const { updateBetCache } = useBetsCache()
+
+const handleRedeem = async () => {
+  try {
+    await submit({ tokenId, coreAddress })
+    updateBetCache({
+      coreAddress,
+      tokenId,
+    }, {
+      isRedeemed: true,
+      isRedeemable: false,
+    })
+  } catch {}
+}
+```
+
+Add new bet to cache
+
+```ts
+const { addBet } = useBetsCache()
+const { submit } = usePrepareBet({
+  amount,
+  slippage: 5,
+  affiliate: '0x0000000000000000000000000000000000000000',
+  selections,
+  onSuccess: (receipt: TransactionReceipt) => {
+    addBet({
+      receipt,
+      bet: {
+        amount,
+        outcomes: selections
+      }
+    })
+  },
+})
+```

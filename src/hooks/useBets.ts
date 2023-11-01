@@ -64,7 +64,7 @@ export const useBets = (props: UseBetsProps) => {
       orderBy,
       orderDirection: orderDir,
       where: {
-        actor: filter.bettor.toLowerCase(),
+        actor: filter.bettor?.toLowerCase(),
       },
     }
 
