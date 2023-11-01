@@ -34,7 +34,7 @@ export const usePrepareBet = (props: Props) => {
       account.address!,
       contracts.proxyFront.address,
     ],
-    enabled: Boolean(account.address) && !betToken.isNative,
+    enabled: Boolean(account.address),
   })
 
   const approveTx = useContractWrite({
@@ -50,8 +50,7 @@ export const usePrepareBet = (props: Props) => {
   const approveReceipt = useWaitForTransaction(approveTx.data)
 
   const isApproveRequired = Boolean(
-    !betToken.isNative
-    && allowanceTx.data !== undefined
+    allowanceTx.data !== undefined
     && +amount
     && allowanceTx.data < parseUnits(amount, betToken.decimals)
   )
@@ -144,7 +143,6 @@ export const usePrepareBet = (props: Props) => {
             },
           ]
         ],
-        value: betToken.isNative ? rawAmount : BigInt(0),
       })
   
       const receipt = await publicClient.waitForTransactionReceipt(tx)

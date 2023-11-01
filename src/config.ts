@@ -74,7 +74,6 @@ type BetToken = {
   address?: `0x${string}` | undefined
   symbol: string
   decimals: number
-  isNative: boolean
 }
 
 export type ChainData = {
@@ -92,10 +91,9 @@ const gnosisData: ChainData = {
     proxyFront: '0x135a1256a8b48643DD0823fE189ADD1c2a012DBa',
   }),
   betToken: {
-    address: undefined,
-    symbol: 'XDAI',
+    address: '0xe91d153e0b41518a2ce8dd3d7944fa863463a97d',
+    symbol: 'WXDAI',
     decimals: 18,
-    isNative: true,
   }
 }
 
@@ -111,7 +109,6 @@ const polygonData: ChainData = {
     address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
     symbol: 'USDT',
     decimals: 6,
-    isNative: false,
   },
 }
 
@@ -127,7 +124,6 @@ const arbitrumData: ChainData = {
     address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
     symbol: 'USDT',
     decimals: 6,
-    isNative: false,
   },
 }
 
@@ -143,7 +139,6 @@ const polygonMumbaiData: ChainData = {
     address: '0xe656De3EC9eFf1B851e0b39AFFaa1478353885a4',
     symbol: 'USDT',
     decimals: 6,
-    isNative: false,
   },
 }
 
@@ -159,7 +154,6 @@ const arbitrumGoerliData: ChainData = {
     address: '0x600d18607e2805f4c669381f28fdcd1d5074b4b4',
     symbol: 'USDT',
     decimals: 6,
-    isNative: false,
   },
 }
 

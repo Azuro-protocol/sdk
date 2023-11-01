@@ -98,7 +98,6 @@ import { type Chain } from 'viem/chains'
     address: `0x${string}`
     symbol: string
     decimals: number
-    isNative: boolean
   }
 }
 ```
