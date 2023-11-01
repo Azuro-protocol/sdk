@@ -24,6 +24,8 @@ wagmi@^1.3.8
 
 Calculates the minimum odds value at which the bet can be placed. If the current odds value is lower than the specified value, the bet cannot be placed and will be rejected by the contract.
 
+#### Usage
+
 ```ts
 import { calcMindOdds } from '@azuro-org/sdk'
 
@@ -36,6 +38,8 @@ const minOdds = calcMindOdds({
 ### `getGameStatus`
 
 Returns detailed game status based on game's status from graph and start date
+
+#### Usage
 
 ```ts
 import { getGameStatus } from '@azuro-org/sdk'
@@ -69,6 +73,8 @@ enum GameStatus {
 ### `getBetStatus`
 
 Returns detailed bet status based on bet's status from graph and result and games in a bet
+
+#### Usage
 
 ```ts
 import { getBetStatus, type Bet } from '@azuro-org/sdk'
@@ -106,6 +112,10 @@ enum BetStatus {
 ## Hooks
 
 ### `useChain`
+
+Context for storing and providing application chain
+
+#### Usage
 
 ```ts
 import { useChain } from '@azuro-org/sdk'
@@ -148,23 +158,20 @@ import { type Chain } from 'viem/chains'
 ### `useBetTokenBalance` and `useNativeBalance`
 returns balance based on appChain
 
+#### Usage
+
 ```ts
-import { useCalcOdds } from '@azuro-org/sdk'
+import { useBetTokenBalance } from '@azuro-org/sdk'
 
-const { isLoading, data, error } = useCalcOdds({
-  amount: 10,
-  selections: [
-    {
-      conditionId: '486903008559711340',
-      outcomeId: '29',
-    },  
-  ],
-})
-
-const { conditionsOdds, totalOdds } = data
+const { loading, balance, rawBalance, error } = useBetTokenBalance()
+const { loading, balance, rawBalance, error } = useNativeBalance()
 ```
 
 ### `useCalcOdds`
+
+Used for calculating odds for bet with provided selections
+
+#### Usage
 
 ```ts
 import { useCalcOdds } from '@azuro-org/sdk'
@@ -188,24 +195,24 @@ const { conditionsOdds, totalOdds } = data
 import { usePrepareBet } from '@azuro-org/sdk'
 
 const {
-    totalOdds,
-    approveTx,
-    betTx,
-    submit,
-    isApproveRequired,
-    isOddsLoading,
-    isAllowanceLoading,
-  } = usePrepareBet({
-    amount: '10', // 10 USDT
-    slippage: 5, // 5%
-    affiliate: '0x0000000000000000000000000000000000000000', // your affiliate address
-    selections: [
-      {
-        conditionId: outcome.conditionId,
-        outcomeId: outcome.outcomeId,
-      },
-    ],
-  })
+  totalOdds,
+  approveTx,
+  betTx,
+  submit,
+  isApproveRequired,
+  isOddsLoading,
+  isAllowanceLoading,
+} = usePrepareBet({
+  amount: '10', // 10 USDT
+  slippage: 5, // 5%
+  affiliate: '0x0000000000000000000000000000000000000000', // your affiliate address
+  selections: [
+    {
+      conditionId: outcome.conditionId,
+      outcomeId: outcome.outcomeId,
+    },
+  ],
+})
 
 submit()
 ```
@@ -252,7 +259,98 @@ submit()
 }
 ```
 
+## Watch and Subscribe Hooks
 
+### `useConditionStatusWatcher` and `useConditionStatus`
+
+Used for watch condition's status changes and subscribe to them
+
+#### Usage
+
+Initialize watcher in the root of your app
+
+```ts
+import { useConditionStatusWatcher } from '@azuro-org/sdk'
+
+export function Watchers() {
+  useConditionStatusWatcher()
+
+  return null
+}
+```
+
+Subscribe to changes in your outcome
+
+```ts
+const status = useConditionStatus({
+  conditionId: outcome.conditionId,
+  initialStatus: outcome.status,
+})
+
+const isDisabled = status !== ConditionStatus.Created
+```
+
+#### useConditionStatus Props
+
+```ts
+{
+  conditionId: string | bigint
+  initialStatus?: ConditionStatus
+}
+```
+
+#### useConditionStatus Return Value
+
+```ts
+enum ConditionStatus {
+  Created = 'Created',
+  Paused = 'Paused',
+}
+```
+
+### `useOddsWatcher` and `useOutcomeOdds`
+
+Used for watch odds's changes and subscribe to them
+
+#### Usage
+
+Initialize watcher in the root of your app
+
+```ts
+import { useOddsWatcher } from '@azuro-org/sdk'
+
+export function Watchers() {
+  useOddsWatcher()
+
+  return null
+}
+```
+
+Subscribe to changes in your outcome
+
+```ts
+const odds = useOutcomeOdds({
+  conditionId: outcome.conditionId,
+  outcomeId: outcome.outcomeId,
+  initialOdds: outcome.odds,
+})
+```
+
+#### useOutcomeOdds Props
+
+```ts
+{
+  conditionId: string | bigint
+  outcomeId: string | bigint
+  initialOdds?: string
+}
+```
+
+#### useConditionStatus Return Value
+
+```ts
+odds: string
+```
 
 
 ## Data Hooks
