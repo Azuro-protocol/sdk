@@ -101,9 +101,11 @@ export function BetCard(props: Props) {
                       participants.map(({ image, name }) => (
                         <div key={name} className="flex items-center ml-2 first-of-type:ml-0">
                           <div className="flex items-center justify-center w-8 h-8 mr-2 border border-zinc-300 rounded-full">
-                            Boolean(image) && (
-                              <img className="w-4 h-4" src={image!} alt="" />
-                            )
+                            {
+                              Boolean(image) && (
+                                <img className="w-4 h-4" src={image!} alt="" />
+                              )
+                            }
                           </div>
                           <span className="text-md">{name}</span>
                         </div>
