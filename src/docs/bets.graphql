@@ -13,43 +13,6 @@ query Bets(
     orderDirection: $orderDirection,
     subgraphError: allow
   ) {
-    id
-    type
-    tokenId: betId
-    amount
-    status
-    potentialPayout
-    payout # don't account canceled sub-bets after resolve of express
-    result
-    isRedeemed
-    isRedeemable
-    odds
-    settledOdds # don't account canceled sub-bets after resolve of express
-    createdAt: createdBlockTimestamp
-    txHash: createdTxHash
-    core {
-      address
-      liquidityPool {
-        address
-      }
-    }
-    selections {
-      odds
-      result
-      outcome {
-        outcomeId
-        condition {
-          conditionId
-          status
-          game {
-            ...MainGameInfo
-          }
-        }
-      }
-    }
-    freebet {
-      freebetId
-      contractAddress: freebetContractAddress
-    }
+    ...Bet
   }
 }
