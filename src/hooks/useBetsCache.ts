@@ -112,7 +112,7 @@ export const useBetsCache = () => {
       fields: {
         bets: (bets) => {
           // https://github.com/Azuro-protocol/azuro-api-subgraph/blob/main/src/utils/schema.ts
-          const betEntityId = `${core.address}_${tokenId}`
+          const betEntityId = `${core.address.toLowerCase()}_${tokenId}`
   
           const data: BetFragment = {
             __typename: 'Bet',
