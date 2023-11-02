@@ -16,8 +16,6 @@ type UpdateBetProps = {
 
 type NewBetProps = {
   bet: {
-    coreAddress: Address
-    lpAddress: Address
     amount: string
     outcomes: {
       odds: string | bigint
@@ -58,7 +56,7 @@ export const useBetsCache = () => {
     for (let index = 0; index < outcomes.length; index++) {
       const { odds, outcomeId, conditionId, gameId } = outcomes[index]!
 
-      const gameEntityId = `${bet.lpAddress.toLowerCase()}_${gameId}`
+      const gameEntityId = `${contracts.lp.address.toLowerCase()}_${gameId}`
   
       const game = cache.readFragment<MainGameInfoFragment>({
         id: cache.identify({ __typename: 'Game', id: gameEntityId }),
@@ -99,8 +97,8 @@ export const useBetsCache = () => {
 
     const isExpress = outcomes.length > 1
 
-    const abi = isExpress ? contracts.prematchComboCore.abi : contracts.prematchCore.abi
-    const receiptArgs = getEventArgsFromTxReceipt({ receipt, eventName: 'NewBet', abi })
+    const core = isExpress ? contracts.prematchComboCore : contracts.prematchCore
+    const receiptArgs = getEventArgsFromTxReceipt({ receipt, eventName: 'NewBet', abi: core.abi })
 
     const tokenId = (isExpress ? receiptArgs?.betId : receiptArgs?.tokenId)?.toString()
     const rawOdds = isExpress ? receiptArgs?.bet.odds : receiptArgs?.odds
@@ -114,16 +112,16 @@ export const useBetsCache = () => {
       fields: {
         bets: (bets) => {
           // https://github.com/Azuro-protocol/azuro-api-subgraph/blob/main/src/utils/schema.ts
-          const betEntityId = `${bet.coreAddress}_${tokenId}`
+          const betEntityId = `${core.address.toLowerCase()}_${tokenId}`
   
           const data: BetFragment = {
             __typename: 'Bet',
             id: betEntityId,
             tokenId: tokenId,
             core: {
-              address: bet.coreAddress,
+              address: core.address,
               liquidityPool: {
-                address: bet.lpAddress,
+                address: contracts.lp.address,
               },
             },
             status: BetStatus.Accepted,

@@ -24,7 +24,7 @@ const getExpressIsPendingResolution = (games: Game[]) => {
   const lastGames = games.filter(({ startsAt }) => startsAt === lastStartDate)
 
   return lastGames.some(({ status, startsAt }) => {
-    return getGameStatus({ graphGameStatus: status, startDate: startsAt * 1000 }) === GameStatus.PendingResolution
+    return getGameStatus({ graphGameStatus: status, startsAt }) === GameStatus.PendingResolution
   })
 }
 
@@ -52,7 +52,7 @@ export const getBetStatus = (props: Props): BetStatus => {
 
   const isExpress = games.length > 1
 
-  const gameStatus = getGameStatus({ graphGameStatus: games[0]!.status, startDate: games[0]!.startsAt * 1000 })
+  const gameStatus = getGameStatus({ graphGameStatus: games[0]!.status, startsAt: games[0]!.startsAt })
 
   const isPendingResolution = isExpress
     ? getExpressIsPendingResolution(games)

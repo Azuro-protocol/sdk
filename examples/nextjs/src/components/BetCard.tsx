@@ -107,7 +107,7 @@ export function BetCard(props: Props) {
                   <p className='mr-4'>{dayjs(+startsAt * 1000).format('DD.MM.YYYY, hh:mm A')}</p>
                   <p>{`${countryName}: ${leagueName}`}</p>
                 </div>
-                <p>{GameStatusText[getGameStatus({ graphGameStatus: gameStatus, startDate: startsAt * 1000 })]}</p>
+                <p>{GameStatusText[getGameStatus({ graphGameStatus: gameStatus, startsAt })]}</p>
               </div>
               <div className="flex items-center">
                 <Link href={`/events/${sportSlug}/${gameId}`} className="flex items-center mr-4">

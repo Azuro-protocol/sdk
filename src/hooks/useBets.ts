@@ -63,7 +63,7 @@ export const useBets = (props: UseBetsProps) => {
       orderBy,
       orderDirection: orderDir,
       where: {
-        actor: filter.bettor.toLowerCase(),
+        actor: filter.bettor?.toLowerCase(),
       },
     }
 
@@ -111,10 +111,9 @@ export const useBets = (props: UseBetsProps) => {
         .map((selection) => {
           const { odds, result, outcome: { outcomeId, condition: { status: conditionStatus, game } } } = selection
 
-          const startDate = +game.startsAt * 1000
           const gameStatus = getGameStatus({
             graphGameStatus: game.status,
-            startDate,
+            startsAt: game.startsAt,
           })
 
           const isWin = result ? result === SelectionResult.Won : null

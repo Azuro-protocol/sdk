@@ -46,8 +46,6 @@ export function PlaceBetModal(props: Props) {
       addBet({
         receipt,
         bet: {
-          coreAddress: outcome.coreAddress as Address,
-          lpAddress: outcome.lpAddress as Address,
           amount,
           outcomes: [ {
             ...outcome,
