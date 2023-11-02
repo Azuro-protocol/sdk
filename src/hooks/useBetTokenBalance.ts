@@ -10,7 +10,6 @@ export const useBetTokenBalance = () => {
     chainId: appChain.id,
     address,
     token: betToken.address,
-    enabled: !betToken.isNative,
   })
 
   return {

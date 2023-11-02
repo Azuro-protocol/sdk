@@ -27,7 +27,7 @@ const Info = () => {
 const Markets = () => {
   const params = useParams()
 
-  const { loading, markets } = useGameMarkets({
+  const { loading, data } = useGameMarkets({
     gameId: params.id as string,
   })
 
@@ -35,7 +35,7 @@ const Markets = () => {
     return <div>Loading...</div>
   }
 
-  return <GameMarkets markets={markets!} />
+  return <GameMarkets markets={data!} />
 }
 
 export default function Game() {

@@ -3,6 +3,7 @@ fragment MainGameInfo on Game {
   gameId
   title
   startsAt
+  status
   sport {
     slug
     name

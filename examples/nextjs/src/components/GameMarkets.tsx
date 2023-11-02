@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { type GameMarkets } from '@azuro-org/sdk'
+import { type GameMarkets, Outcome } from '@azuro-org/sdk'
 import { PlaceBetModal, OutcomeButton } from '@/components'
 
 
@@ -11,14 +11,14 @@ type GameMarketsProps = {
 export function GameMarkets(props: GameMarketsProps) {
   const { markets } = props
 
-  const [ selectedOutcome, setSelectedOutcome ] = useState(null)
+  const [ selectedOutcome, setSelectedOutcome ] = useState<Outcome>()
 
   const handleOutcomeClick = (outcome: any) => {
     setSelectedOutcome(outcome)
   }
 
   const handleModalClose = () => {
-    setSelectedOutcome(null)
+    setSelectedOutcome(undefined)
   }
 
   return (
@@ -54,7 +54,7 @@ export function GameMarkets(props: GameMarketsProps) {
       {
         Boolean(selectedOutcome) && (
           <PlaceBetModal
-            outcome={selectedOutcome}
+            outcome={selectedOutcome!}
             closeModal={handleModalClose}
           />
         )

@@ -187,7 +187,7 @@ export const useGameMarkets = (props: Props) => {
 
   return {
     loading,
-    markets,
+    data: markets,
     error,
   }
 }

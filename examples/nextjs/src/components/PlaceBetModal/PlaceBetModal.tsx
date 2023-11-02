@@ -2,15 +2,16 @@
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import { CheckBadgeIcon } from '@heroicons/react/24/solid'
-import { useGame, usePrepareBet } from '@azuro-org/sdk'
+import { useGame, usePrepareBet, useBetsCache, Outcome } from '@azuro-org/sdk'
 import { getMarketName } from '@azuro-org/dictionaries'
 import { GameInfo } from '@/components'
 import { AmountInput } from './AmountInput'
 import { SubmitButton } from './SubmitButton'
+import { Address, TransactionReceipt } from 'viem';
 
 
 type Props = {
-  outcome: any
+  outcome: Outcome
   closeModal: any
 }
 
@@ -22,6 +23,7 @@ export function PlaceBetModal(props: Props) {
   const [ amount, setAmount ] = useState('')
   const [ isSuccess, setSuccess ] = useState(false)
 
+  const { addBet } = useBetsCache()
   const {
     isOddsLoading,
     totalOdds,
@@ -40,7 +42,17 @@ export function PlaceBetModal(props: Props) {
         outcomeId: outcome.outcomeId,
       },
     ],
-    onSuccess: () => {
+    onSuccess: (receipt: TransactionReceipt) => {
+      addBet({
+        receipt,
+        bet: {
+          amount,
+          outcomes: [ {
+            ...outcome,
+            gameId: params.id,
+          } ]
+        }
+      })
       setSuccess(true)
     },
   })

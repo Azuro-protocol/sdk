@@ -13,33 +13,6 @@ query Bets(
     orderDirection: $orderDirection,
     subgraphError: allow
   ) {
-    id
-    type
-    tokenId: betId
-    amount
-    status
-    payout
-    potentialPayout
-    result
-    isRedeemed
-    odds
-    createdAt: createdBlockTimestamp
-    txHash: createdTxHash
-    core {
-      address
-    }
-    selections {
-      odds
-      result
-      outcome {
-        outcomeId
-        condition {
-          conditionId
-          game {
-            ...MainGameInfo
-          }
-        }
-      }
-    }
+    ...Bet
   }
 }

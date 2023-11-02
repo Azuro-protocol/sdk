@@ -24,6 +24,8 @@ wagmi@^1.3.8
 
 Calculates the minimum odds value at which the bet can be placed. If the current odds value is lower than the specified value, the bet cannot be placed and will be rejected by the contract.
 
+#### Usage
+
 ```ts
 import { calcMindOdds } from '@azuro-org/sdk'
 
@@ -33,44 +35,96 @@ const minOdds = calcMindOdds({
 })
 ```
 
-### `watchOddsChange`
+---
 
-Watches for odds change
+### `getGameStatus`
+
+Returns detailed game status based on game's status from graph and start date
+
+#### Usage
 
 ```ts
-import { watchOddsChange } from '@azuro-org/sdk'
+import { getGameStatus } from '@azuro-org/sdk'
 
-const unwatch = watchOddsChange({
-  chainId: polygon.id,
-  conditionIds: [
-    '486903008559711340',
-    '486903008123712788',
-  ],
-  batch: true,
-  onLogs: (logs) => {
-    console.log(logs)
-  },
+const { status, startsAt } = game // game's data from graph
+
+const gameStatus = getGameStatus({ 
+  graphGameStatus: status,
+  startsAt,
 })
-
-unwatch() // to stop watching
 ```
 
 #### Props
 
-- `chainId: number`
-- `conditionIds: string[]`
-- `batch: boolean` - https://viem.sh/docs/clients/transports/http.html#batch-json-rpc
-- `onLogs: (logs: Log[]) => void`
+- `graphGameStatus: GameStatus` // game's status from graph
+- `startsAt: number`
 
+#### Return Value
+
+```ts
+enum GameStatus {
+  Preparing,
+  Live,
+  PendingResolution,
+  Resolved,
+  Canceled,
+  Paused,
+}
+```
+
+---
+
+### `getBetStatus`
+
+Returns detailed bet status based on bet's status from graph and result and games in a bet
+
+#### Usage
+
+```ts
+import { getBetStatus, type Bet } from '@azuro-org/sdk'
+
+const { games, status, isWin, isLose } = bet as Bet // bet's data
+
+const betStatus = getBetStatus({
+  graphGameStatus: status,
+  games,
+  win: isWin,
+  lose: isLose,
+})
+```
+
+#### Props
+
+- `graphGameStatus: BetStatus` // bet's status from graph
+- `games: GameQuery['games'][]`
+- `win: boolean`
+- `lose: boolean`
+
+#### Return Value
+
+```ts
+enum BetStatus {
+  Accepted,
+  Live,
+  PendingResolution,
+  Canceled,
+  Won,
+  Lost,
+}
+```
 
 ## Hooks
 
 ### `useChain`
 
+Context for storing and providing application chain
+
+#### Usage
+
 ```ts
 import { useChain } from '@azuro-org/sdk'
 
-const { chain, contracts, betToken } = useChain()
+const { appChain, walletChain, contracts, betToken, isRightNetwork, setAppChainId } = useChain()
 ```
 
 #### Return Value
@@ -79,7 +133,8 @@ const { chain, contracts, betToken } = useChain()
 import { type Chain } from 'viem/chains'
 
 {
-  chain: Chain
+  appChain: Chain
+  walletChain: Chain
   contracts: {
     lp: {
       address: `0x${string}`
@@ -98,13 +153,33 @@ import { type Chain } from 'viem/chains'
     address: `0x${string}`
     symbol: string
     decimals: number
-    isNative: boolean
   }
+  isRightNetwork: boolean
+  setAppChainId: (chainId: ChainId) => void
 }
 ```
 
+---
+
+### `useBetTokenBalance` and `useNativeBalance`
+returns balance based on appChain
+
+#### Usage
+
+```ts
+import { useBetTokenBalance } from '@azuro-org/sdk'
+
+const { loading, balance, rawBalance, error } = useBetTokenBalance()
+const { loading, balance, rawBalance, error } = useNativeBalance()
+```
+
+---
 
 ### `useCalcOdds`
+
+Used for calculating odds for bet with provided selections
+
+#### Usage
 
 ```ts
 import { useCalcOdds } from '@azuro-org/sdk'
@@ -122,34 +197,29 @@ const { isLoading, data, error } = useCalcOdds({
 const { conditionsOdds, totalOdds } = data
 ```
 
+---
 
 ### `usePlaceBet`
 
-Doesn't contain `minOdds` calculation because it's based on current odds values and slippage. We should be sure that 
-odds values are updated, if usePlaceBet will contain the logic of calculation when there should be not necessary call for 
-odds values fetching. This should be done only in client app, not in lib itself.
-
 ```ts
-import { usePlaceBet } from '@azuro-org/sdk'
+import { usePrepareBet } from '@azuro-org/sdk'
 
 const {
-  isAllowanceLoading,
-  isApproveRequired,
-  isOddsLoading,
-  conditionsOdds,
   totalOdds,
-  submit,
   approveTx,
   betTx,
-} = usePlaceBet({
-  amount: 10,
-  minOdds: 1.5,
-  deadline: 60, // 1 min
-  affiliate: '0x...', // your (affiliate) wallet address
+  submit,
+  isApproveRequired,
+  isOddsLoading,
+  isAllowanceLoading,
+} = usePrepareBet({
+  amount: '10', // 10 USDT
+  slippage: 5, // 5%
+  affiliate: '0x0000000000000000000000000000000000000000', // your affiliate address
   selections: [
     {
-      conditionId: '486903008559711340',
-      outcomeId: '29',
+      conditionId: outcome.conditionId,
+      outcomeId: outcome.outcomeId,
     },
   ],
 })
@@ -161,14 +231,16 @@ submit()
 
 ```ts
 {
-  amount: number
-  minOdds: number
-  deadline?: number
-  affiliate: `0x${string}`
+  amount: string
+  slippage: number
+  affiliate: Address
   selections: {
-    conditionId: string | number
-    outcomeId: string | number
+    conditionId: string | bigint
+    outcomeId: string | bigint
   }[]
+  deadline?: number
+  onSuccess?(receipt: TransactionReceipt): void
+  onError?(err?: Error): void
 }
 ```
 
@@ -178,6 +250,9 @@ submit()
 {
   isAllowanceLoading: boolean
   isApproveRequired: boolean
+  isOddsLoading: boolean
+  conditionsOdds: number[]
+  totalOdds: number
   submit: () => Promise<Receipt>
   approveTx: {
     isPending: boolean
@@ -194,11 +269,107 @@ submit()
 }
 ```
 
+## Watch and Subscribe Hooks
+
+### `useConditionStatusWatcher` and `useConditionStatus`
+
+Used for watch condition's status changes and subscribe to them
+
+#### Usage
+
+Initialize watcher in the root of your app
+
+```ts
+import { useConditionStatusWatcher } from '@azuro-org/sdk'
+
+export function Watchers() {
+  useConditionStatusWatcher()
+
+  return null
+}
+```
+
+Subscribe to changes in your outcome
+
+```ts
+const status = useConditionStatus({
+  conditionId: outcome.conditionId,
+  initialStatus: outcome.status,
+})
+
+const isDisabled = status !== ConditionStatus.Created
+```
+
+#### useConditionStatus Props
+
+```ts
+{
+  conditionId: string | bigint
+  initialStatus?: ConditionStatus
+}
+```
+
+#### useConditionStatus Return Value
+
+Returns condition status (defaults to `ConditionStatus.Created`).
+Value may be changed to `ConditionStatus.Paused` or `ConditionStatus.Created` by event from contract.
+
+```ts
+// Auto-generated from graphql:
+enum ConditionStatus {
+  Canceled = 'Canceled',
+  Created = 'Created',
+  Paused = 'Paused',
+  Resolved = 'Resolved'
+}
+```
+
+### `useOddsWatcher` and `useOutcomeOdds`
+
+Used for watch odds's changes and subscribe to them
+
+#### Usage
+
+Initialize watcher in the root of your app
+
+```ts
+import { useOddsWatcher } from '@azuro-org/sdk'
+
+export function Watchers() {
+  useOddsWatcher()
+
+  return null
+}
+```
+
+Subscribe to changes in your outcome
+
+```ts
+const odds = useOutcomeOdds({
+  conditionId: outcome.conditionId,
+  outcomeId: outcome.outcomeId,
+  initialOdds: outcome.odds,
+})
+```
+
+#### useOutcomeOdds Props
+
+```ts
+{
+  conditionId: string | bigint
+  outcomeId: string | bigint
+  initialOdds?: string
+}
+```
+
+#### useOutcomeOdds Return Value
+
+```ts
+odds: string
+```
 
 
-
-
-## Hooks
+## Data Hooks
 
 Each data hook represents a logic wrapper over standard Apollo's `useQuery` hook. Explore [Apollo's docs](https://www.apollographql.com/docs/react/api/react/hooks#usequery) to understand what data the hooks return.
 
@@ -319,26 +490,26 @@ import { useGame } from '@azuro-org/data'
 
 const { loading, error, data } = useGame(props)
 
-const game = data?.game
+const game = data
 ```
 
 #### Props
 
-- **id**: `{string}, required` - the Subgraph `Game` entity's ID.
+- **gameId**: `{string | bigint}, required` - the Subgraph `Game` gameId.
 - **withConditions**: `{boolean}, optional, default: false` - if `true` the `conditions` will be added to query result.
 
 #### Note
 
-`id` property is not same as `gameId`. Each game fetched using `useGames` hook contains the entity ID:
+`gameId` property is not same as `id`. Each game fetched using `useGames` hook contains the gameId:
 
 ```ts
 const { loading, error, data } = useGames()
 
-const firstGameID = data?.games[0]?.id
+const firstGameID = data?.games[0]?.gameId
 ```
 
 ```ts
-const { loading, error, data } = useGame({ id: firstGameID })
+const { loading, error, data } = useGame({ gameId: firstGameID })
 ```
 
 <details>
@@ -348,7 +519,7 @@ const { loading, error, data } = useGame({ id: firstGameID })
 useGame(props: Props): QueryResult<Data>
 
 type Props = {
-  id: string
+  gameId: string | bigint
   withConditions?: boolean
 }
 
@@ -409,7 +580,7 @@ const conditions = data?.game.conditions
 
 #### Props
 
-- **gameEntityId**: `{string}, required` - the Subgraph `Game` entity's ID.
+- **gameId**: `{string | bigint}, required` - the Subgraph `Game` gameId.
 - **filter.outcomeIds**: `{string[]}, optional` - returns only conditions which contains the passed outcome ids.
 
 <details>
@@ -419,7 +590,7 @@ const conditions = data?.game.conditions
 useConditions(props: Props): QueryResult<Data>
 
 type Props = {
-  gameEntityId: string
+  gameId: string | bigint
   filter?: {
     outcomeIds?: string[]
   }
@@ -457,7 +628,7 @@ import { useBets } from '@azuro-org/data'
 
 const { loading, error, data } = useBets(props)
 
-const bets = data?.bets
+const bets = data
 ```
 
 #### Note
@@ -495,86 +666,115 @@ useBets(props: Props): QueryResult<Data>
 
 type Props = {
   filter: {
+    bettor: string
     limit?: number
     offset?: number
-    bettor: string
   }
   orderBy?: Bet_OrderBy
   orderDir?: OrderDirection
 }
 
-enum BetType {
-  Express = 'Express',
-  Ordinar = 'Ordinar'
-}
 
-enum BetStatus {
-  Accepted = 'Accepted',
-  Canceled = 'Canceled',
-  Resolved = 'Resolved'
-}
-
-enum BetResult {
-  Lost = 'Lost',
-  Won = 'Won'
-}
-
-enum SelectionResult {
-  Lost = 'Lost',
-  Won = 'Won'
-}
-
-type Data = { 
-  bets: Array<{ 
+export type BetOutcome = {
+  selectionName: string
+  outcomeId: string
+  odds: number
+  name: string
+  game: {
     id: string
-    type: BetType
-    amount: any
-    status: BetStatus
-    payout?: any | null
-    potentialPayout: any
-    result?: BetResult | null
-    isRedeemed: boolean
-    odds: any
-    tokenId: any
-    createdAt: any
-    txHash: string
-    core: {
-      address: string 
+    gameId: any
+    title?: string | null
+    startsAt: any
+    sport: {
+      slug: string
+      name: string 
     }
-    selections: Array<{
-      odds: any
-      result?: SelectionResult | null
-      outcome: {
-        outcomeId: any
-        condition: {
-          conditionId: any
-          game: {
-            id: string
-            gameId: any
-            title?: string | null
-            startsAt: any
-            sport: {
-              slug: string
-              name: string 
-            }
-            league: {
-              slug: string
-              name: string
-              country: {
-                slug: string
-                name: string 
-              } 
-            }
-            participants: Array<{
-              image?: string | null
-              name: string 
-            }> 
-          } 
-        } 
+    league: {
+      slug: string
+      name: string
+      country: {
+        slug: string
+        name: string 
       } 
+    }
+    participants: Array<{
+      image?: string | null
+      name: string 
     }> 
-  }> 
+  } 
+  isWin: boolean | null
+  isLose: boolean | null
+  isCanceled: boolean
+}
+
+export type Bet = {
+  tokenId: string
+  freebetId: string | null
+  freebetContractAddress?: Address
+  totalOdds: number
+  coreAddress: Address
+  lpAddress: Address
+  outcomes: BetOutcome[]
+  txHash: string
+  status: BetStatus
+  amount: string
+  possibleWin: number
+  payout: number
+  createdAt: number
+  isWin: boolean
+  isLose: boolean
+  isRedeemable: boolean
+  isRedeemed: boolean
+  isCanceled: boolean
 }
 ```
 </details>
 
+---
+
+### `useBetsCache`
+
+Using for update existing bet cache or add new bet to cache
+
+#### Usage
+
+Update bet after redeem
+
+```ts
+const { submit } = useRedeemBet()
+const { updateBetCache } = useBetsCache()
+
+const handleRedeem = async () => {
+  try {
+    await submit({ tokenId, coreAddress })
+    updateBetCache({
+      coreAddress,
+      tokenId,
+    }, {
+      isRedeemed: true,
+      isRedeemable: false,
+    })
+  } catch {}
+}
+```
+
+Add new bet to cache
+
+```ts
+const { addBet } = useBetsCache()
+const { submit } = usePrepareBet({
+  amount,
+  slippage: 5,
+  affiliate: '0x0000000000000000000000000000000000000000',
+  selections,
+  onSuccess: (receipt: TransactionReceipt) => {
+    addBet({
+      receipt,
+      bet: {
+        amount,
+        outcomes: selections
+      }
+    })
+  },
+})
+```
