@@ -5,7 +5,7 @@ import { useChain } from '../contexts/chain'
 
 
 type UseConditionsProps = {
-  gameId: string
+  gameId: string | bigint
   filter?: {
     outcomeIds?: string[]
   }

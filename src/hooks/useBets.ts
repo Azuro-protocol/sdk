@@ -1,14 +1,15 @@
 import { useMemo } from 'react'
 import { useQuery } from '@apollo/client'
+import { type Address } from 'wagmi';
 import { BetsDocument, BetsQueryResult, BetsQueryVariables } from '../docs/bets'
 import { Bet_OrderBy, OrderDirection } from '../types'
 
 
-type UseBetsProps = {
+export type UseBetsProps = {
   filter: {
+    bettor: Address
     limit?: number
     offset?: number
-    bettor: string
   }
   orderBy?: Bet_OrderBy
   orderDir?: OrderDirection

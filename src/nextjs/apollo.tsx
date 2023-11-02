@@ -56,7 +56,7 @@ export const ApolloProvider = (props: { children: any }) => {
   const makeClient = () => {
     apolloClientRef.current = getApolloClient(appChain.id)
 
-    return apolloClientRef.current as NextSSRApolloClient<any>
+    return apolloClientRef.current
   }
 
   return (

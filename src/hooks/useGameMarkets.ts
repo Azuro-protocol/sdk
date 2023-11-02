@@ -156,7 +156,7 @@ const groupMarkets = (conditions: ConditionsQuery['conditions']): GameMarkets =>
 }
 
 type Props = {
-  gameId: string
+  gameId: string | bigint
   filter?: {
     outcomeIds?: string[]
   }

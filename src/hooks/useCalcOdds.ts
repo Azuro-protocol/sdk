@@ -4,11 +4,11 @@ import { useChain } from '../contexts/chain'
 
 
 type CalcOddsProps = {
-  amount: string | number | undefined
   selections: {
     conditionId: string | bigint
-    outcomeId: string | number
+    outcomeId: string | bigint
   }[]
+  amount?: string
 }
 
 export const useCalcOdds = (props: CalcOddsProps) => {
@@ -18,7 +18,7 @@ export const useCalcOdds = (props: CalcOddsProps) => {
   let rawAmount = BigInt(1)
 
   if (amount !== undefined) {
-    rawAmount = parseUnits(`${+amount}`, betToken!.decimals)
+    rawAmount = parseUnits(amount, betToken!.decimals)
   }
 
   const isSingle = selections.length === 1

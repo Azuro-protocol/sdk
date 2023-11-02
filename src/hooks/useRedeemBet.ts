@@ -1,11 +1,10 @@
-import { useContractWrite, useWaitForTransaction } from 'wagmi'
+import { useContractWrite, useWaitForTransaction, usePublicClient, Address } from 'wagmi'
 import { useChain } from '../contexts/chain'
-import { usePublicClient } from './usePublicClient'
 
 
 type SubmitProps = {
-  tokenId: string
-  coreAddress: `0x${string}`
+  tokenId: string | bigint
+  coreAddress: Address
 }
 
 export const useRedeemBet = () => {

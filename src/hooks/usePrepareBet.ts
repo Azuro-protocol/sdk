@@ -1,21 +1,20 @@
 import { useEffect } from 'react'
-import { erc20ABI, useAccount, useContractRead, useContractWrite, useWaitForTransaction } from 'wagmi'
+import { erc20ABI, useAccount, useContractRead, useContractWrite, useWaitForTransaction, usePublicClient, type Address } from 'wagmi'
 import { parseUnits, formatUnits, encodeAbiParameters, parseAbiParameters } from 'viem'
 import { useChain } from '../contexts/chain'
 import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256 } from '../config'
-import { usePublicClient } from './usePublicClient'
 import { useCalcOdds } from './useCalcOdds'
 
 
 type Props = {
-  amount: string | number
+  amount: string
   slippage: number
-  deadline?: number
-  affiliate: `0x${string}`
+  affiliate: Address
   selections: {
     conditionId: string | bigint
-    outcomeId: string | number
+    outcomeId: string | bigint
   }[]
+  deadline?: number
   onSuccess?(): void
   onError?(err: Error | null): void
 }
@@ -55,7 +54,7 @@ export const usePrepareBet = (props: Props) => {
     !betToken.isNative
     && allowanceTx.data !== undefined
     && +amount
-    && allowanceTx.data < parseUnits(`${+amount}`, betToken.decimals)
+    && allowanceTx.data < parseUnits(amount, betToken.decimals)
   )
 
   const approve = async () => {
