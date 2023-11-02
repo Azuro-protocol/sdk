@@ -1,6 +1,5 @@
-import { useEffect } from 'react'
 import { erc20ABI, useAccount, useContractRead, useContractWrite, useWaitForTransaction, usePublicClient, type Address } from 'wagmi'
-import { parseUnits, formatUnits, encodeAbiParameters, parseAbiParameters } from 'viem'
+import { parseUnits, formatUnits, encodeAbiParameters, parseAbiParameters, TransactionReceipt } from 'viem'
 import { useChain } from '../contexts/chain'
 import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256 } from '../config'
 import { useCalcOdds } from './useCalcOdds'
@@ -15,8 +14,8 @@ type Props = {
     outcomeId: string | bigint
   }[]
   deadline?: number
-  onSuccess?(): void
-  onError?(err: Error | null): void
+  onSuccess?(receipt: TransactionReceipt): void
+  onError?(err?: Error): void
 }
 
 export const usePrepareBet = (props: Props) => {
@@ -35,7 +34,7 @@ export const usePrepareBet = (props: Props) => {
       account.address!,
       contracts.proxyFront.address,
     ],
-    enabled: Boolean(account.address) && !betToken.isNative,
+    enabled: Boolean(account.address),
   })
 
   const approveTx = useContractWrite({
@@ -51,8 +50,7 @@ export const usePrepareBet = (props: Props) => {
   const approveReceipt = useWaitForTransaction(approveTx.data)
 
   const isApproveRequired = Boolean(
-    !betToken.isNative
-    && allowanceTx.data !== undefined
+    allowanceTx.data !== undefined
     && +amount
     && allowanceTx.data < parseUnits(amount, betToken.decimals)
   )
@@ -82,18 +80,6 @@ export const usePrepareBet = (props: Props) => {
   })
 
   const betReceipt = useWaitForTransaction(betTx.data)
-
-  useEffect(() => {
-    if (betReceipt.isSuccess && onSuccess) {
-      onSuccess()
-    }
-  }, [ betReceipt.isSuccess ])
-
-  useEffect(() => {
-    if (betReceipt.isError && onError) {
-      onError(betReceipt.error)
-    }
-  }, [ betReceipt.isError ])
 
   const placeBet = async () => {
     if (!totalOdds) {
@@ -140,26 +126,35 @@ export const usePrepareBet = (props: Props) => {
       )
     }
 
-    const tx = await betTx.writeAsync({
-      args: [
-        contracts.lp.address,
-        [
-          {
-            core: coreAddress,
-            amount: rawAmount,
-            expiresAt: rawDeadline,
-            extraData: {
-              affiliate,
-              minOdds: rawMinOdds,
-              data,
+    try {
+      const tx = await betTx.writeAsync({
+        args: [
+          contracts.lp.address,
+          [
+            {
+              core: coreAddress,
+              amount: rawAmount,
+              expiresAt: rawDeadline,
+              extraData: {
+                affiliate,
+                minOdds: rawMinOdds,
+                data,
+              },
             },
-          },
-        ]
-      ],
-      value: betToken.isNative ? rawAmount : BigInt(0),
-    })
+          ]
+        ],
+      })
+  
+      const receipt = await publicClient.waitForTransactionReceipt(tx)
 
-    await publicClient.waitForTransactionReceipt(tx)
+      if (onSuccess) {
+        onSuccess(receipt)
+      }
+    } catch (err) {
+      if (onError) {
+        onError(err as any)
+      }
+    }
   }
 
   const submit = () => {
