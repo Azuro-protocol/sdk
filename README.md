@@ -311,10 +311,16 @@ const isDisabled = status !== ConditionStatus.Created
 
 #### useConditionStatus Return Value
 
+Returns condition status (defaults to `ConditionStatus.Created`).
+Value may be changed to `ConditionStatus.Paused` or `ConditionStatus.Created` by event from contract.
+
 ```ts
+// Auto-generated from graphql:
 enum ConditionStatus {
+  Canceled = 'Canceled',
   Created = 'Created',
   Paused = 'Paused',
+  Resolved = 'Resolved'
 }
 ```
 
