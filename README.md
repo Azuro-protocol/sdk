@@ -356,7 +356,7 @@ const odds = useOutcomeOdds({
 }
 ```
 
-#### useConditionStatus Return Value
+#### useOutcomeOdds Return Value
 
 ```ts
 odds: string
