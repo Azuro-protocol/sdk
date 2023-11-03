@@ -7,6 +7,7 @@ import { TransactionReceipt, formatUnits } from 'viem';
 import { getEventArgsFromTxReceipt } from '../helpers';
 import { useChain } from '../contexts/chain';
 import { ODDS_DECIMALS } from '../config';
+import { Selection } from '../global';
 
 
 type UpdateBetProps = {
@@ -17,12 +18,10 @@ type UpdateBetProps = {
 type NewBetProps = {
   bet: {
     amount: string
-    outcomes: {
+    outcomes: Array<{
       odds: string | bigint
-      conditionId: string | bigint
-      outcomeId: string | bigint
       gameId: string | bigint
-    }[]
+    } & Selection>
     freebetId?: string | bigint
     freebetContractAddress?: Address
   }
