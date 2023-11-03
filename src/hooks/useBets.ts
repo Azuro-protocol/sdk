@@ -12,7 +12,7 @@ import { Selection } from '../global';
 export type BetOutcome = {
   selectionName: string
   odds: number
-  name: string
+  marketName: string
   game: GameQuery['games'][0]
   isWin: boolean | null
   isLose: boolean | null
@@ -132,7 +132,7 @@ export const useBets = (props: UseBetsProps) => {
             outcomeId,
             conditionId,
             odds: +odds,
-            name: marketName,
+            marketName,
             game,
             isWin,
             isLose,
