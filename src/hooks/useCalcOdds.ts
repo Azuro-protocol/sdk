@@ -52,11 +52,11 @@ export const useCalcOdds = (props: CalcOddsProps) => {
   })
 
   return {
-    isLoading: single.isLoading || combo.isLoading,
     data: {
       conditionsOdds: isSingle ? (single.data ? [ single.data ] : undefined) : combo.data?.[0],
       totalOdds: isSingle ? single.data : combo.data?.[1],
     },
+    loading: single.isLoading || combo.isLoading,
     error: single.error || combo.error,
   }
 }

@@ -59,7 +59,7 @@ export const usePrepareBet = (props: Props) => {
     allowanceTx.refetch()
   }
 
-  const { isLoading: isOddsLoading, data: oddsData } = useCalcOdds({
+  const { loading: isOddsLoading, data: oddsData } = useCalcOdds({
     selections,
     amount,
   })
