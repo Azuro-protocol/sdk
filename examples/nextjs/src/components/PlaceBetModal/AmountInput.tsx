@@ -23,7 +23,7 @@ export const AmountInput: React.FC<Props> = (props) => {
               <>Loading...</>
             ) : (
               balance !== undefined ? (
-                <>{balance?.toFixed(2)} {betToken.symbol}</>
+                <>{(+balance).toFixed(2)} {betToken.symbol}</>
               ) : (
                 <>-</>
               )

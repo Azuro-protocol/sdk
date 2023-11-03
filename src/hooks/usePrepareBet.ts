@@ -3,16 +3,14 @@ import { parseUnits, formatUnits, encodeAbiParameters, parseAbiParameters, Trans
 import { useChain } from '../contexts/chain'
 import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256 } from '../config'
 import { useCalcOdds } from './useCalcOdds'
+import { Selection } from '../global';
 
 
 type Props = {
   amount: string
   slippage: number
   affiliate: Address
-  selections: {
-    conditionId: string | bigint
-    outcomeId: string | bigint
-  }[]
+  selections: Selection[]
   deadline?: number
   onSuccess?(receipt: TransactionReceipt): void
   onError?(err?: Error): void

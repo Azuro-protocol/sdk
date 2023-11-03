@@ -1,13 +1,11 @@
 import { useContractRead } from 'wagmi'
 import { parseUnits } from 'viem'
 import { useChain } from '../contexts/chain'
+import { Selection } from '../global';
 
 
 type CalcOddsProps = {
-  selections: {
-    conditionId: string | bigint
-    outcomeId: string | bigint
-  }[]
+  selections: Selection[]
   amount?: string
 }
 
