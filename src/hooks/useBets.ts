@@ -6,18 +6,18 @@ import { BetsDocument, BetsQuery, BetsQueryVariables } from '../docs/bets'
 import { GameQuery } from '../docs/game'
 import { Bet_OrderBy, OrderDirection, BetResult, BetStatus, SelectionResult, ConditionStatus } from '../types'
 import { getGameStatus, GameStatus } from '../utils/getGameStatus'
+import { Selection } from '../global';
 
 
 export type BetOutcome = {
   selectionName: string
-  outcomeId: string
   odds: number
-  name: string
+  marketName: string
   game: GameQuery['games'][0]
   isWin: boolean | null
   isLose: boolean | null
   isCanceled: boolean
-}
+} & Selection
 
 export type Bet = {
   tokenId: string
@@ -110,7 +110,7 @@ export const useBets = (props: UseBetsProps) => {
 
       const outcomes: BetOutcome[] = selections
         .map((selection) => {
-          const { odds, result, outcome: { outcomeId, condition: { status: conditionStatus, game } } } = selection
+          const { odds, result, outcome: { outcomeId, condition: { conditionId, status: conditionStatus, game } } } = selection
 
           const gameStatus = getGameStatus({
             graphGameStatus: game.status,
@@ -130,8 +130,9 @@ export const useBets = (props: UseBetsProps) => {
           return {
             selectionName,
             outcomeId,
+            conditionId,
             odds: +odds,
-            name: marketName,
+            marketName,
             game,
             isWin,
             isLose,

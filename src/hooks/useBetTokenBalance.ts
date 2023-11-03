@@ -15,7 +15,7 @@ export const useBetTokenBalance = () => {
   return {
     loading: isLoading,
     rawBalance: data?.value,
-    balance: data?.formatted ? parseFloat(data?.formatted) : null,
+    balance: data?.formatted,
     error,
   }
 }

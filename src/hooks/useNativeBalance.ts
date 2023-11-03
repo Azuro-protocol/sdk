@@ -12,9 +12,9 @@ export const useNativeBalance = () => {
   })
 
   return {
-    isFetching: isLoading,
+    loading: isLoading,
     rawBalance: data?.value,
-    balance: data?.formatted ? parseFloat(data?.formatted) : null,
+    balance: data?.formatted,
     error,
   }
 }

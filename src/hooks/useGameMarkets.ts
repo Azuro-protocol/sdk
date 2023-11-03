@@ -3,59 +3,60 @@ import { dictionaries, getMarketKey, getMarketName, getMarketDescription, getSel
 import { type ConditionsQuery } from '../docs/conditions'
 import { useConditions } from './useConditions'
 import { ConditionStatus } from 'src/types'
+import { Selection } from '../global';
 
 
 export type Condition = {
-  conditionId: string
+  conditionId: string | bigint
 }
 
-export type Outcome = {
-  conditionId: string
-  outcomeId: string
+export type MarketOutcome = {
   selectionName: string
   odds: string
   lpAddress: string
   coreAddress: string
   status: ConditionStatus
-}
+  gameId: string | bigint
+} & Selection
 
 export type Market = {
   name: string
   description: string
-  selections: Outcome[][]
+  outcomeRows: MarketOutcome[][]
 }
 
 const groupDataByConditionId = <T extends Condition>(data: T[]): Record<string, T[]> => {
   return data.reduce<Record<string, T[]>>((acc, item) => {
     const { conditionId } = item
+    const key = String(conditionId)
 
-    if (!acc[conditionId]) {
-      acc[conditionId] = []
+    if (!acc[key]) {
+      acc[key] = []
     }
 
-    acc[conditionId]!.push(item)
+    acc[key]!.push(item)
 
     return acc
   }, {})
 }
 
-type SelectionsByMarkets = Record<string, Outcome[]>
-type SelectionRowsByMarket = Record<string, Market>
+type OutcomesByMarkets = Record<string, MarketOutcome[]>
+type OutcomeRowsByMarket = Record<string, Market>
 
 export type GameMarkets = Market[]
 
-const groupMarkets = (conditions: ConditionsQuery['conditions']): GameMarkets => {
-  const selectionsByMarkets: SelectionsByMarkets = {}
-  const result: SelectionRowsByMarket = {}
+const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string | bigint): GameMarkets => {
+  const outcomesByMarkets: OutcomesByMarkets = {}
+  const result: OutcomeRowsByMarket = {}
 
-  conditions.forEach(({ conditionId, outcomes, core, status }) => {
-    outcomes.forEach(({ outcomeId, odds }) => {
+  conditions.forEach(({ conditionId, outcomes: rawOutcomes, core, status }) => {
+    rawOutcomes.forEach(({ outcomeId, odds }) => {
       const marketKey = getMarketKey(outcomeId)
       const marketName = getMarketName({ outcomeId })
       const marketDescription = getMarketDescription({ outcomeId })
       const selectionName = getSelectionName({ outcomeId, withPoint: true })
 
-      const selection: Outcome = {
+      const outcome: MarketOutcome = {
         coreAddress: core.address,
         lpAddress: core.liquidityPool.address,
         conditionId,
@@ -63,19 +64,20 @@ const groupMarkets = (conditions: ConditionsQuery['conditions']): GameMarkets =>
         selectionName,
         odds,
         status,
+        gameId,
       }
 
-      if (!selectionsByMarkets[marketKey]) {
-        selectionsByMarkets[marketKey] = []
+      if (!outcomesByMarkets[marketKey]) {
+        outcomesByMarkets[marketKey] = []
 
         result[marketKey] = {
           name: marketName,
           description: marketDescription,
-          selections: [],
+          outcomeRows: [],
         }
       }
 
-      selectionsByMarkets[marketKey]!.push(selection)
+      outcomesByMarkets[marketKey]!.push(outcome)
     })
   })
 
@@ -83,10 +85,10 @@ const groupMarkets = (conditions: ConditionsQuery['conditions']): GameMarkets =>
   const marketsWithDifferentConditionIds = [ '1', '2' ]
 
   // sort by outcomeId and group by conditionId
-  Object.keys(selectionsByMarkets).forEach((marketKey) => {
+  Object.keys(outcomesByMarkets).forEach((marketKey) => {
     const marketId = marketKey.split('-')[0]!
     // get the conditions related to the market
-    const selections = selectionsByMarkets[marketKey]!
+    const outcomes = outcomesByMarkets[marketKey]!
 
     const validSelectionsByMarketId: Record<string, number[]> = {
       '1': [ 1, 2, 3 ],
@@ -96,8 +98,8 @@ const groupMarkets = (conditions: ConditionsQuery['conditions']): GameMarkets =>
     const validSelections = validSelectionsByMarketId[marketId]
 
     if (validSelections?.length) {
-      const outcomesSelections = selections.map((outcome) => (
-        dictionaries.outcomes[outcome.outcomeId]!.selectionId
+      const outcomesSelections = outcomes.map((outcome) => (
+        dictionaries.outcomes[String(outcome.outcomeId)]!.selectionId
       ))
 
       const isValid = validSelections.every(selection => outcomesSelections.includes(selection))
@@ -108,17 +110,17 @@ const groupMarkets = (conditions: ConditionsQuery['conditions']): GameMarkets =>
     }
 
     // sort the conditions by selectionId
-    selections.sort((a, b) => {
-      const { outcomes } = dictionaries
-      const left = outcomes[a.outcomeId]!.selectionId
-      const right = outcomes[b.outcomeId]!.selectionId
+    outcomes.sort((a, b) => {
+      const { outcomes: dictionaryOutcomes } = dictionaries
+      const left = dictionaryOutcomes[String(a.outcomeId)]!.selectionId
+      const right = dictionaryOutcomes[String(b.outcomeId)]!.selectionId
 
       return left - right
     })
 
     // these markets have few outcomes and not requires additional actions
     if (marketsWithDifferentConditionIds.includes(marketId)) {
-      result[marketKey]!.selections = [ selections ]
+      result[marketKey]!.outcomeRows = [ outcomes ]
     }
       // others need to be grouped by conditionId to allow draw outcomes in rows in UI, e.g.
       //
@@ -127,10 +129,10 @@ const groupMarkets = (conditions: ConditionsQuery['conditions']): GameMarkets =>
       // Over (1.5)   Under (1.5)
     //
     else {
-      const conditionsByConditionId = groupDataByConditionId<Outcome>(selections)
+      const conditionsByConditionId = groupDataByConditionId<MarketOutcome>(outcomes)
 
-      result[marketKey]!.selections = Object.values(conditionsByConditionId).sort((a, b) => {
-        const { points, outcomes } = dictionaries
+      result[marketKey]!.outcomeRows = Object.values(conditionsByConditionId).sort((a, b) => {
+        const { points, outcomes: dictionaryOutcomes } = dictionaries
         /*
           we should always sort by param in first outcome
 
@@ -142,8 +144,8 @@ const groupMarkets = (conditions: ConditionsQuery['conditions']): GameMarkets =>
           Over (1.5)   Under (1.5)
           Over (2.5)   Under (2.5)
         */
-        const aPointId = outcomes[a[0]!.outcomeId]!.pointsId!
-        const bPointId = outcomes[b[0]!.outcomeId]!.pointsId!
+        const aPointId = dictionaryOutcomes[String(a[0]!.outcomeId)]!.pointsId!
+        const bPointId = dictionaryOutcomes[String(b[0]!.outcomeId)]!.pointsId!
         const aFirstOutcome = +points[aPointId]!
         const bFirstOutcome = +points[bPointId]!
 
@@ -182,7 +184,7 @@ export const useGameMarkets = (props: Props) => {
       return null
     }
 
-    return groupMarkets(data?.conditions)
+    return groupMarkets(data?.conditions, gameId)
   }, [ conditionIds ])
 
   return {

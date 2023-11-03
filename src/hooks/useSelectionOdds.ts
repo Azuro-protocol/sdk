@@ -4,15 +4,16 @@ import {formatUnits} from 'viem';
 import { ODDS_DECIMALS } from '../config'
 import { usePublicClient } from 'wagmi'
 import {useChain} from '../contexts/chain';
+import { Selection } from '../global';
 
 
 type Props = {
-  conditionId: string | bigint
-  outcomeId: string | bigint
+  selection: Selection
   initialOdds?: string
 }
 
-export const useOutcomeOdds = ({ conditionId, outcomeId, initialOdds }: Props) => {
+export const useSelectionOdds = ({ selection, initialOdds }: Props) => {
+  const { conditionId, outcomeId } = selection
   const { contracts } = useChain()
   const publicClient = usePublicClient()
 

@@ -90,7 +90,7 @@ export function BetCard(props: Props) {
       </div>
       {
         outcomes.map((outcome) => {
-          const { odds, name, game, selectionName, isWin, isLose, game: { status: gameStatus, gameId, participants, startsAt, sport: { slug: sportSlug } } } = outcome
+          const { odds, marketName, game, selectionName, isWin, isLose, game: { status: gameStatus, gameId, participants, startsAt, sport: { slug: sportSlug } } } = outcome
 
           const { league: { name: leagueName, country: { name: countryName }} } = game
 
@@ -130,7 +130,7 @@ export function BetCard(props: Props) {
               <div className="grid md:grid-cols-3 md:gap-16">
                 <div>
                   <p>Market</p>
-                  <p>{ name }</p>
+                  <p>{ marketName }</p>
                 </div>
                 <div>
                   <p>Outcome</p>

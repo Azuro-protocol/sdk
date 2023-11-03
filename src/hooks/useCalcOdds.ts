@@ -1,13 +1,11 @@
 import { useContractRead } from 'wagmi'
 import { parseUnits } from 'viem'
 import { useChain } from '../contexts/chain'
+import { Selection } from '../global';
 
 
 type CalcOddsProps = {
-  selections: {
-    conditionId: string | bigint
-    outcomeId: string | bigint
-  }[]
+  selections: Selection[]
   amount?: string
 }
 
@@ -54,11 +52,11 @@ export const useCalcOdds = (props: CalcOddsProps) => {
   })
 
   return {
-    isLoading: single.isLoading || combo.isLoading,
     data: {
       conditionsOdds: isSingle ? (single.data ? [ single.data ] : undefined) : combo.data?.[0],
       totalOdds: isSingle ? single.data : combo.data?.[1],
     },
+    loading: single.isLoading || combo.isLoading,
     error: single.error || combo.error,
   }
 }
