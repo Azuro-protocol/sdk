@@ -19,20 +19,20 @@ export enum GameStatus {
 }
 
 type Props = {
-  graphGameStatus: GraphGameStatus,
+  graphStatus: GraphGameStatus,
   startsAt: number
 }
 
 export const getGameStatus = (props: Props): GameStatus => {
-  const { graphGameStatus, startsAt } = props
+  const { graphStatus, startsAt } = props
 
   const startDate = startsAt * 1000
   const isStarted = startDate < Date.now()
 
-  if (graphGameStatus === GraphGameStatus.Canceled) {
+  if (graphStatus === GraphGameStatus.Canceled) {
     return GameStatus.Canceled
   }
-  else if (graphGameStatus === GraphGameStatus.Resolved) {
+  else if (graphStatus === GraphGameStatus.Resolved) {
     return GameStatus.Resolved
   }
   else if (isPendingResolution(startDate)) {
@@ -41,7 +41,7 @@ export const getGameStatus = (props: Props): GameStatus => {
   else if (isStarted) {
     return GameStatus.Live
   }
-  else if (graphGameStatus === GraphGameStatus.Paused) {
+  else if (graphStatus === GraphGameStatus.Paused) {
     return GameStatus.Paused
   }
 

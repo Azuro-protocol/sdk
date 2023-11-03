@@ -113,7 +113,7 @@ export const useBets = (props: UseBetsProps) => {
           const { odds, result, outcome: { outcomeId, condition: { conditionId, status: conditionStatus, game } } } = selection
 
           const gameStatus = getGameStatus({
-            graphGameStatus: game.status,
+            graphStatus: game.status,
             startsAt: game.startsAt,
           })
 
