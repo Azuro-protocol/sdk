@@ -12,7 +12,7 @@ type Props = {
   initialOdds?: string
 }
 
-export const useOutcomeOdds = ({ selection, initialOdds }: Props) => {
+export const useSelectionOdds = ({ selection, initialOdds }: Props) => {
   const { conditionId, outcomeId } = selection
   const { contracts } = useChain()
   const publicClient = usePublicClient()
