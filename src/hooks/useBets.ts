@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useQuery } from '@apollo/client'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 import { type Address } from 'wagmi'
 import { BetsDocument, BetsQuery, BetsQueryVariables } from '../docs/bets'
