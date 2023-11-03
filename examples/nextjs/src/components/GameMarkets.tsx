@@ -25,12 +25,12 @@ export function GameMarkets(props: GameMarketsProps) {
     <>
       <div className="max-w-[600px] mx-auto mt-12 space-y-6">
         {
-          markets.map(({ name, description, outcomes: row }) => (
+          markets.map(({ name, description, outcomeRows }) => (
             <div key={name} className="">
               <div className="mb-2 text-lg font-semibold">{name}</div>
               <div className="space-y-1">
                 {
-                  row.map((outcomes, index) => (
+                  outcomeRows.map((outcomes, index) => (
                     <div key={index} className="flex justify-between">
                       <div className="flex gap-2 w-full">
                         {

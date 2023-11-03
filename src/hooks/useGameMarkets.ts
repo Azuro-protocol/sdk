@@ -22,7 +22,7 @@ export type MarketOutcome = {
 export type Market = {
   name: string
   description: string
-  outcomes: MarketOutcome[][]
+  outcomeRows: MarketOutcome[][]
 }
 
 const groupDataByConditionId = <T extends Condition>(data: T[]): Record<string, T[]> => {
@@ -73,7 +73,7 @@ const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string 
         result[marketKey] = {
           name: marketName,
           description: marketDescription,
-          outcomes: [],
+          outcomeRows: [],
         }
       }
 
@@ -120,7 +120,7 @@ const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string 
 
     // these markets have few outcomes and not requires additional actions
     if (marketsWithDifferentConditionIds.includes(marketId)) {
-      result[marketKey]!.outcomes = [ outcomes ]
+      result[marketKey]!.outcomeRows = [ outcomes ]
     }
       // others need to be grouped by conditionId to allow draw outcomes in rows in UI, e.g.
       //
@@ -131,7 +131,7 @@ const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string 
     else {
       const conditionsByConditionId = groupDataByConditionId<MarketOutcome>(outcomes)
 
-      result[marketKey]!.outcomes = Object.values(conditionsByConditionId).sort((a, b) => {
+      result[marketKey]!.outcomeRows = Object.values(conditionsByConditionId).sort((a, b) => {
         const { points, outcomes: dictionaryOutcomes } = dictionaries
         /*
           we should always sort by param in first outcome
