@@ -16,6 +16,7 @@ export type MarketOutcome = {
   lpAddress: string
   coreAddress: string
   status: ConditionStatus
+  gameId: string | bigint
 } & Selection
 
 export type Market = {
@@ -44,7 +45,7 @@ type OutcomeRowsByMarket = Record<string, Market>
 
 export type GameMarkets = Market[]
 
-const groupMarkets = (conditions: ConditionsQuery['conditions']): GameMarkets => {
+const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string | bigint): GameMarkets => {
   const outcomesByMarkets: OutcomesByMarkets = {}
   const result: OutcomeRowsByMarket = {}
 
@@ -63,6 +64,7 @@ const groupMarkets = (conditions: ConditionsQuery['conditions']): GameMarkets =>
         selectionName,
         odds,
         status,
+        gameId,
       }
 
       if (!outcomesByMarkets[marketKey]) {
@@ -182,7 +184,7 @@ export const useGameMarkets = (props: Props) => {
       return null
     }
 
-    return groupMarkets(data?.conditions)
+    return groupMarkets(data?.conditions, gameId)
   }, [ conditionIds ])
 
   return {

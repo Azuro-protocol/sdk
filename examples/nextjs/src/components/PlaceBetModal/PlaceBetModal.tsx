@@ -42,10 +42,7 @@ export function PlaceBetModal(props: Props) {
         receipt,
         bet: {
           amount,
-          outcomes: [ {
-            ...outcome,
-            gameId: params.id,
-          } ]
+          outcomes: [ outcome ]
         }
       })
       setSuccess(true)

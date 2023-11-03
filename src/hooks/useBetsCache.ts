@@ -15,13 +15,15 @@ type UpdateBetProps = {
   tokenId: string
 }
 
+type BetCacheOutcome = {
+  odds: string | bigint
+  gameId: string | bigint
+} & Selection
+
 type NewBetProps = {
   bet: {
     amount: string
-    outcomes: Array<{
-      odds: string | bigint
-      gameId: string | bigint
-    } & Selection>
+    outcomes: BetCacheOutcome[]
     freebetId?: string | bigint
     freebetContractAddress?: Address
   }
