@@ -28,12 +28,12 @@ export default function Bets() {
   }
 
   return (
-    <>
+    <div>
       {
         data.map(bet => (
-          <BetCard key={bet.tokenId} bet={bet} />
+          <BetCard key={`${bet.createdAt}-${bet.tokenId}`} bet={bet} />
         ))
       }
-    </>
+    </div>
   )
 }

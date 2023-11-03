@@ -101,7 +101,7 @@ export function BetCard(props: Props) {
           })
 
           return (
-            <div className={className}>
+            <div key={gameId} className={className}>
               <div className="flex items-center justify-between flex-wrap">
                 <div className="flex items-center flex-wrap">
                   <p className='mr-4'>{dayjs(+startsAt * 1000).format('DD.MM.YYYY, hh:mm A')}</p>
