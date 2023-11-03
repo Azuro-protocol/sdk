@@ -1,7 +1,9 @@
-import { useContractRead } from 'wagmi'
+import { useContractRead, usePublicClient } from 'wagmi'
 import { parseUnits } from 'viem'
 import { useChain } from '../contexts/chain'
+import { oddsWatcher } from '../modules/oddsWatcher';
 import { Selection } from '../global';
+import { useEffect } from 'react';
 
 
 type CalcOddsProps = {
@@ -12,14 +14,15 @@ type CalcOddsProps = {
 export const useCalcOdds = (props: CalcOddsProps) => {
   const { amount, selections } = props
 
+  const publicClient = usePublicClient()
   const { appChain, contracts, betToken } = useChain()
+
   let rawAmount = BigInt(1)
+  const isSingle = selections.length === 1
 
   if (amount !== undefined) {
     rawAmount = parseUnits(amount, betToken!.decimals)
   }
-
-  const isSingle = selections.length === 1
 
   const rawSelections = selections.map(({ conditionId, outcomeId }) => ({
     conditionId: BigInt(conditionId),
@@ -50,6 +53,30 @@ export const useCalcOdds = (props: CalcOddsProps) => {
     ],
     enabled: Boolean(rawSelections.length > 1),
   })
+
+  useEffect(() => {
+    if (!selections.length) {
+      return
+    }
+
+    const unsubscribeList = selections.map(({ conditionId, outcomeId }) => {
+      const unsubscribe = oddsWatcher.subscribe(`${conditionId}`, `${outcomeId}`, () => {
+        if (isSingle) {
+          single.refetch()
+        } else {
+          combo.refetch()
+        }
+      })
+  
+      return unsubscribe
+    })
+
+    return () => {
+      unsubscribeList.forEach((unsubscribe) => {
+        unsubscribe()
+      })
+    }
+  }, [ selections, publicClient ])
 
   return {
     data: {

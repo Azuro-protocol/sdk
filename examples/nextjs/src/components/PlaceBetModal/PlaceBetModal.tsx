@@ -79,7 +79,13 @@ export function PlaceBetModal(props: Props) {
                   <span className="text-right font-semibold">{outcome.selectionName}</span>
                   <span className="text-zinc-400">Odds</span>
                   <span className="text-right font-semibold">
-                    {isOddsLoading ? 'Loading...' : totalOdds?.toFixed(3)}
+                    {isOddsLoading ? 'Loading...' : (
+                      totalOdds !== undefined ? (
+                        <>{(+totalOdds).toFixed(3)}</>
+                      ) : (
+                        <>-</>
+                      )
+                    )}
                   </span>
                 </div>
                 <AmountInput

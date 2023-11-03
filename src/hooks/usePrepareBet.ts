@@ -65,10 +65,10 @@ export const usePrepareBet = (props: Props) => {
   })
 
   const conditionsOdds = oddsData.conditionsOdds?.map((rawOdds) => {
-    return +formatUnits(rawOdds, ODDS_DECIMALS)
+    return formatUnits(rawOdds, ODDS_DECIMALS)
   })
 
-  const totalOdds = oddsData.totalOdds ? +formatUnits(oddsData.totalOdds, ODDS_DECIMALS) : undefined
+  const totalOdds = oddsData.totalOdds ? formatUnits(oddsData.totalOdds, ODDS_DECIMALS) : undefined
 
   const betTx = useContractWrite({
     address: contracts.proxyFront.address,
@@ -87,7 +87,7 @@ export const usePrepareBet = (props: Props) => {
     const fixedAmount = +parseFloat(String(amount)).toFixed(betToken.decimals)
     const rawAmount = parseUnits(`${fixedAmount}`, betToken.decimals)
 
-    const minOdds = 1 + (totalOdds - 1) * (100 - slippage) / 100
+    const minOdds = 1 + (+totalOdds - 1) * (100 - slippage) / 100
     const fixedMinOdds = +parseFloat(String(minOdds)).toFixed(ODDS_DECIMALS)
     const rawMinOdds = parseUnits(`${fixedMinOdds}`, ODDS_DECIMALS)
     const rawDeadline = BigInt(Math.floor(Date.now() / 1000) + (deadline || DEFAULT_DEADLINE))
