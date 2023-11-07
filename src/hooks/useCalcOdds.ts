@@ -80,7 +80,7 @@ export const useCalcOdds = (props: CalcOddsProps) => {
 
   return {
     data: {
-      conditionsOdds: isSingle ? (single.data ? [ single.data ] : undefined) : combo.data?.[0],
+      selectionsOdds: isSingle ? (single.data ? [ single.data ] : undefined) : combo.data?.[0],
       totalOdds: isSingle ? single.data : combo.data?.[1],
     },
     loading: single.isLoading || combo.isLoading,

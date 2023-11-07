@@ -64,7 +64,7 @@ export const usePrepareBet = (props: Props) => {
     amount,
   })
 
-  const conditionsOdds = oddsData.conditionsOdds?.map((rawOdds) => {
+  const selectionsOdds = oddsData.selectionsOdds?.map((rawOdds) => {
     return formatUnits(rawOdds, ODDS_DECIMALS)
   })
 
@@ -167,7 +167,7 @@ export const usePrepareBet = (props: Props) => {
     isAllowanceLoading: allowanceTx.isLoading,
     isApproveRequired,
     isOddsLoading,
-    conditionsOdds,
+    selectionsOdds,
     totalOdds,
     submit,
     approveTx: {
