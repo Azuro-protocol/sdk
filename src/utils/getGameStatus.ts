@@ -32,16 +32,20 @@ export const getGameStatus = (props: Props): GameStatus => {
   if (graphStatus === GraphGameStatus.Canceled) {
     return GameStatus.Canceled
   }
-  else if (graphStatus === GraphGameStatus.Resolved) {
+  
+  if (graphStatus === GraphGameStatus.Resolved) {
     return GameStatus.Resolved
   }
-  else if (isPendingResolution(startDate)) {
+  
+  if (isPendingResolution(startDate)) {
     return GameStatus.PendingResolution
   }
-  else if (isStarted) {
+  
+  if (isStarted) {
     return GameStatus.Live
   }
-  else if (graphStatus === GraphGameStatus.Paused) {
+  
+  if (graphStatus === GraphGameStatus.Paused) {
     return GameStatus.Paused
   }
 

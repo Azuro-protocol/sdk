@@ -6,9 +6,8 @@ export enum BetStatus {
   Accepted,
   Live,
   PendingResolution,
+  Resolved,
   Canceled,
-  Won,
-  Lost,
 }
 
 type Game = Pick<Bet['outcomes'][0]['game'], 'status' | 'startsAt'>
@@ -31,23 +30,17 @@ const getExpressIsPendingResolution = (games: Game[]) => {
 type Props = {
   games: Game[]
   graphStatus: GraphBetStatus
-  win: boolean
-  lose: boolean
 }
 
 export const getBetStatus = (props: Props): BetStatus => {
-  const { games, graphStatus, win, lose } = props
+  const { games, graphStatus } = props
 
   if (graphStatus === GraphBetStatus.Canceled) {
     return BetStatus.Canceled
   }
 
-  if (win) {
-    return BetStatus.Won
-  }
-
-  if (lose) {
-    return BetStatus.Lost
+  if (graphStatus === GraphBetStatus.Resolved) {
+    return BetStatus.Resolved
   }
 
   const isExpress = games.length > 1

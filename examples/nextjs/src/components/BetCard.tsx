@@ -10,9 +10,8 @@ const BetStatusText = {
   [BetStatus.Accepted]: 'Accepted',
   [BetStatus.Canceled]: 'Canceled',
   [BetStatus.Live]: 'Live',
-  [BetStatus.Lost]: 'Lost',
   [BetStatus.PendingResolution]: 'Pending resolution',
-  [BetStatus.Won]: 'Won',
+  [BetStatus.Resolved]: 'Resolved',
 }
 
 const GameStatusText = {
@@ -43,8 +42,6 @@ export function BetCard(props: Props) {
     return getBetStatus({
       graphStatus: graphBetStatus,
       games: outcomes.map(({ game }) => game),
-      win: isWin,
-      lose: isLose,
     })
   }, [])
 
