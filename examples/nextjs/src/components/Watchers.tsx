@@ -1,9 +1,8 @@
 'use client'
-import { useOddsWatcher, useConditionStatusWatcher } from '@azuro-org/sdk'
+import { useWatchers } from '@azuro-org/sdk'
 
 export function Watchers() {
-  useOddsWatcher()
-  useConditionStatusWatcher()
+  useWatchers()
 
   return null
 }
