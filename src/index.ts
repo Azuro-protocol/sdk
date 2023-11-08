@@ -28,7 +28,7 @@ export { useConditionStatusWatcher } from './hooks/useConditionStatusWatcher'
 export { usePrepareBet } from './hooks/usePrepareBet'
 export { useRedeemBet } from './hooks/useRedeemBet'
 export { useBetsCache } from './hooks/useBetsCache'
-export { useSelection } from './hooks/useSelection'
+export { useOutcome } from './hooks/useOutcome'
 // modules
 export { oddsWatcher } from './modules/oddsWatcher'
 export { conditionStatusWatcher } from './modules/conditionStatusWatcher'

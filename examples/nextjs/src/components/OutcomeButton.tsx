@@ -1,5 +1,5 @@
 'use client'
-import { type MarketOutcome, useSelection } from '@azuro-org/sdk'
+import { type MarketOutcome, useOutcome } from '@azuro-org/sdk'
 
 type OutcomeProps = {
   className?: string
@@ -10,7 +10,7 @@ type OutcomeProps = {
 export function OutcomeButton(props: OutcomeProps) {
   const { className, outcome, onClick } = props
 
-  const { odds, isLocked } = useSelection({
+  const { odds, isLocked } = useOutcome({
     selection: outcome,
     initialOdds: outcome.odds,
     initialStatus: outcome.status,

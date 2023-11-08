@@ -15,7 +15,7 @@ type Props = {
   initialStatus?: ConditionStatus
 }
 
-export const useSelection = ({ selection, initialOdds, initialStatus }: Props) => {
+export const useOutcome = ({ selection, initialOdds, initialStatus }: Props) => {
   const { conditionId, outcomeId } = selection
   const { contracts } = useChain()
   const publicClient = usePublicClient()
