@@ -5,20 +5,25 @@ import { ODDS_DECIMALS } from '../config'
 import { usePublicClient } from 'wagmi'
 import {useChain} from '../contexts/chain';
 import { Selection } from '../global';
+import { ConditionStatus } from '../types';
+import { conditionStatusWatcher } from '../modules/conditionStatusWatcher';
 
 
 type Props = {
   selection: Selection
   initialOdds?: string
+  initialStatus?: ConditionStatus
 }
 
-export const useSelectionOdds = ({ selection, initialOdds }: Props) => {
+export const useSelection = ({ selection, initialOdds, initialStatus }: Props) => {
   const { conditionId, outcomeId } = selection
   const { contracts } = useChain()
   const publicClient = usePublicClient()
 
   const [ odds, setOdds ] = useState(initialOdds || '0')
+  const [ status, setStatus ] = useState(initialStatus || ConditionStatus.Created)
 
+  const isLocked = status !== ConditionStatus.Created
 
   useEffect(() => {
     const unsubscribe = oddsWatcher.subscribe(`${conditionId}`, `${outcomeId}`, async () => {
@@ -32,6 +37,7 @@ export const useSelectionOdds = ({ selection, initialOdds }: Props) => {
           BigInt(outcomeId)
         ],
       })
+
       setOdds(formatUnits(rawOdds, ODDS_DECIMALS))
     })
 
@@ -40,5 +46,18 @@ export const useSelectionOdds = ({ selection, initialOdds }: Props) => {
     }
   }, [ publicClient ])
 
-  return odds
+  useEffect(() => {
+    const unsubscribe = conditionStatusWatcher.subscribe(`${conditionId}`, (newStatus: ConditionStatus) => {
+      setStatus(newStatus)
+    })
+
+    return () => {
+      unsubscribe()
+    }
+  }, [])
+
+  return {
+    odds,
+    isLocked
+  }
 }
