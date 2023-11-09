@@ -1,5 +1,6 @@
 import { BetFragmentDoc, type BetFragment } from '../docs/fragments/bet'
 import { MainGameInfoFragmentDoc, type MainGameInfoFragment } from '../docs/fragments/mainGameInfo'
+import { ConditionFragmentDoc, type ConditionFragment } from '../docs/fragments/condition'
 import { ConditionStatus, BetStatus } from '../types';
 import { useApolloClient } from '@apollo/client'
 import { Address } from 'wagmi';
@@ -12,18 +13,14 @@ import { Selection } from '../global';
 
 type UpdateBetProps = {
   coreAddress: Address
-  tokenId: string
+  tokenId: string | bigint
 }
-
-type BetCacheOutcome = {
-  odds: string | bigint
-  gameId: string | bigint
-} & Selection
 
 type NewBetProps = {
   bet: {
     amount: string
-    outcomes: BetCacheOutcome[]
+    selections: Selection[]
+    selectionsOdds: Array<string | bigint>
     freebetId?: string | bigint
     freebetContractAddress?: Address
   }
@@ -50,13 +47,25 @@ export const useBetsCache = () => {
 
   const addBet = (props: NewBetProps) => {
     const { bet, receipt } = props
-    const { amount, outcomes } = bet
-  
-    const selections: BetFragment['selections'] = []
-  
-    for (let index = 0; index < outcomes.length; index++) {
-      const { odds, outcomeId, conditionId, gameId } = outcomes[index]!
+    const { amount, selections, selectionsOdds } = bet
 
+    const isExpress = selections.length > 1
+
+    const core = isExpress ? contracts.prematchComboCore : contracts.prematchCore
+  
+    const selectionFragments: BetFragment['selections'] = []
+  
+    for (let index = 0; index < selections.length; index++) {
+      const { outcomeId, conditionId } = selections[index]!
+
+      const conditionEntityId = `${core.address.toLowerCase()}_${conditionId}`
+      const condition = cache.readFragment<ConditionFragment>({
+        id: cache.identify({ __typename: 'Condition', id: conditionEntityId }),
+        fragment: ConditionFragmentDoc,
+        fragmentName: 'Condition',
+      })
+
+      const gameId = condition?.game.gameId
       const gameEntityId = `${contracts.lp.address.toLowerCase()}_${gameId}`
   
       const game = cache.readFragment<MainGameInfoFragment>({
@@ -77,9 +86,9 @@ export const useBetsCache = () => {
         break
       }
   
-      const selection: BetFragment['selections'][number] = {
+      const selectionFragment: BetFragment['selections'][number] = {
         __typename: 'Selection',
-        odds: String(odds),
+        odds: String(selectionsOdds[index]),
         result: null,
         outcome: {
           __typename: 'Outcome',
@@ -93,12 +102,9 @@ export const useBetsCache = () => {
         },
       } as const
   
-      selections.push(selection)
+      selectionFragments.push(selectionFragment)
     }
 
-    const isExpress = outcomes.length > 1
-
-    const core = isExpress ? contracts.prematchComboCore : contracts.prematchCore
     const receiptArgs = getEventArgsFromTxReceipt({ receipt, eventName: 'NewBet', abi: core.abi })
 
     const tokenId = (isExpress ? receiptArgs?.betId : receiptArgs?.tokenId)?.toString()
@@ -140,7 +146,7 @@ export const useBetsCache = () => {
             } : null,
             result: null,
             txHash: receipt.transactionHash,
-            selections,
+            selections: selectionFragments,
           }
   
           const newBet = cache.writeFragment<BetFragment>({

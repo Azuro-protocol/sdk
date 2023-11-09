@@ -1,0 +1,18 @@
+fragment Condition on Condition {
+  id
+  conditionId
+  status
+  outcomes {
+    outcomeId
+    odds: currentOdds
+  }
+  core {
+    address
+    liquidityPool {
+      address
+    }
+  }
+  game {
+    gameId
+  }
+}

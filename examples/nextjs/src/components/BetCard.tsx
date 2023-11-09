@@ -1,5 +1,5 @@
 'use client'
-import { type Bet, getBetStatus, getGameStatus, BetStatus, GameStatus, useChain, useRedeemBet, useBetsCache } from '@azuro-org/sdk'
+import { type Bet, getBetStatus, getGameStatus, BetStatus, GameStatus, useChain, useRedeemBet } from '@azuro-org/sdk'
 import dayjs from 'dayjs'
 import Link from 'next/link'
 import { useMemo } from 'react'
@@ -36,7 +36,6 @@ export function BetCard(props: Props) {
 
   const { betToken } = useChain()
   const { submit, isPending, isProcessing } = useRedeemBet()
-  const { updateBetCache } = useBetsCache()
 
   const betStatus = useMemo(() => {
     return getBetStatus({
@@ -69,13 +68,6 @@ export function BetCard(props: Props) {
   const handleRedeem = async () => {
     try {
       await submit({ tokenId, coreAddress })
-      updateBetCache({
-        coreAddress,
-        tokenId,
-      }, {
-        isRedeemed: true,
-        isRedeemable: false,
-      })
     } catch {}
   }
 

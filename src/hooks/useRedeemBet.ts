@@ -1,5 +1,6 @@
 import { useContractWrite, useWaitForTransaction, usePublicClient, Address } from 'wagmi'
 import { useChain } from '../contexts/chain'
+import { useBetsCache } from './useBetsCache';
 
 
 type SubmitProps = {
@@ -10,6 +11,7 @@ type SubmitProps = {
 export const useRedeemBet = () => {
   const publicClient = usePublicClient()
   const { contracts } = useChain()
+  const { updateBetCache } = useBetsCache()
 
   const redeemTx = useContractWrite({
     address: contracts.lp.address,
@@ -29,7 +31,17 @@ export const useRedeemBet = () => {
       ],
     })
 
-    return publicClient.waitForTransactionReceipt(tx)
+    const receipt = await publicClient.waitForTransactionReceipt(tx)
+
+    updateBetCache({
+      coreAddress,
+      tokenId,
+    }, {
+      isRedeemed: true,
+      isRedeemable: false,
+    })
+
+    return receipt
   }
 
   return {

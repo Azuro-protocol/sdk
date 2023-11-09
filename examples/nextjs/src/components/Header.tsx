@@ -1,9 +1,21 @@
 'use client'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { ActiveLink, SelectAppChain } from '@/components'
+import { useConfig } from 'wagmi';
 
 export function Header() {
+  const config = useConfig()
+
+  useEffect(() => {
+    ;(async () => {
+      try {
+        await config.autoConnect()
+      }
+      catch {}
+    })()
+  }, [])
+
   return (
     <header className="container flex items-center py-3.5 border-b border-zinc-200">
       <div className="text-xl font-semibold">Azuro Betting</div>

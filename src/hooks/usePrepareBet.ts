@@ -4,6 +4,7 @@ import { useChain } from '../contexts/chain'
 import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256 } from '../config'
 import { useCalcOdds } from './useCalcOdds'
 import { Selection } from '../global';
+import { useBetsCache } from './useBetsCache';
 
 
 type Props = {
@@ -22,6 +23,7 @@ export const usePrepareBet = (props: Props) => {
   const account = useAccount()
   const publicClient = usePublicClient()
   const { appChain, contracts, betToken } = useChain()
+  const { addBet } = useBetsCache()
 
   const allowanceTx = useContractRead({
     chainId: appChain.id,
@@ -144,6 +146,15 @@ export const usePrepareBet = (props: Props) => {
       })
   
       const receipt = await publicClient.waitForTransactionReceipt(tx)
+
+      addBet({
+        receipt,
+        bet: {
+          amount: `${fixedAmount}`,
+          selections,
+          selectionsOdds: selectionsOdds!,
+        }
+      })
 
       if (onSuccess) {
         onSuccess(receipt)
