@@ -85,13 +85,13 @@ export type ChainData = {
 const gnosisData: ChainData = {
   chain: gnosis,
   contracts: setupContracts({
-    lp: '0x4e5BBE3e1f559C8010b516C603B619a932de3DF4',
-    prematchCore: '0x6f60d66e853A769391B105d21C410AD035512Cc2',
-    prematchComboCore: '0x1dD7BA44c23a621BBfD6c4322DA6E1CA81C17700',
-    proxyFront: '0x135a1256a8b48643DD0823fE189ADD1c2a012DBa',
+    lp: '0x204e7371Ade792c5C006fb52711c50a7efC843ed',
+    prematchCore: '0x7f3F3f19c4e4015fd9Db2f22e653c766154091EF',
+    prematchComboCore: '0xDbC3BE2DDB53e1a288F7b7a4d020F8056D3b0F7C',
+    proxyFront: '0xaAAc47Bb9B16bcF89FdB54B1326327a223458d6d',
   }),
   betToken: {
-    address: '0xe91d153e0b41518a2ce8dd3d7944fa863463a97d',
+    address: '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d',
     symbol: 'WXDAI',
     decimals: 18,
   }
@@ -101,12 +101,12 @@ const polygonData: ChainData = {
   chain: polygon,
   contracts: setupContracts({
     lp: '0x7043E4e1c4045424858ECBCED80989FeAfC11B36',
-    prematchCore: '0x3B182e9FbF50398A412d17D7969561E3BfcC4fA4',
-    prematchComboCore: '0xbb13f8981cefd19ddc5338f0f1e11de45e8a11ca',
-    proxyFront: '0x0',
+    prematchCore: '0xA40F8D69D412b79b49EAbdD5cf1b5706395bfCf7',
+    prematchComboCore: '0x92a4e8Bc6B92a2e1ced411f41013B5FE6BE07613',
+    proxyFront: '0x200BD65A3189930634af857C72281abE63C3da5e',
   }),
   betToken: {
-    address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
+    address: '0xc2132d05d31c914a87c6611c10748aeb04b58e8f',
     symbol: 'USDT',
     decimals: 6,
   },
@@ -116,9 +116,9 @@ const arbitrumData: ChainData = {
   chain: arbitrum,
   contracts: setupContracts({
     lp: '0x20513ba6A4717c67e14291331BC99dd2aCE90038',
-    prematchCore: '0x7a75cfb4D5394e213D80AA683056eF796Ccc6693',
-    prematchComboCore: '0x11470095252A6FE41C8ee6F7628ffB9298a1051C',
-    proxyFront: '0x0',
+    prematchCore: '0x23724eB8663c1a7fF529313B97142918D9fd9a1a',
+    prematchComboCore: '0x526f1F20e2E5D6bf0E13c551f6Cc400261fB9D75',
+    proxyFront: '0x8eC5B99270DB359D57f2B7b46cE97aB4598591Fb',
   }),
   betToken: {
     address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
