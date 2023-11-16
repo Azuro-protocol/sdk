@@ -42,7 +42,7 @@ export function Providers(props: { children: React.ReactNode }) {
 
   return (
     <WagmiConfig config={wagmiConfig}>
-      <RainbowKitProvider initialChain={polygonMumbai} chains={chains}>
+      <RainbowKitProvider chains={chains}>
         <ChainProvider initialChainId={polygonMumbai.id}>
           <ApolloProvider>
             {children}
