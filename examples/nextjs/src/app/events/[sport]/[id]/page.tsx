@@ -35,6 +35,10 @@ const Markets = () => {
     return <div>Loading...</div>
   }
 
+  if (!data) {
+    return null
+  }
+
   return <GameMarkets markets={data!} />
 }
 

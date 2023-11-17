@@ -51,6 +51,13 @@ const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string 
 
   conditions.forEach(({ conditionId, outcomes: rawOutcomes, core, status }) => {
     rawOutcomes.forEach(({ outcomeId, odds }) => {
+      const betTypeOdd = dictionaries.outcomes[outcomeId]
+
+      if (!betTypeOdd) {
+        console.warn(`betTypeOdd not found for "outcomeId: ${outcomeId}"`)
+
+        return
+      }
       const marketKey = getMarketKey(outcomeId)
       const marketName = getMarketName({ outcomeId })
       const marketDescription = getMarketDescription({ outcomeId })
@@ -180,11 +187,11 @@ export const useGameMarkets = (props: Props) => {
       return undefined
     }
 
-    if (!data.conditions) {
+    if (!data?.conditions?.length) {
       return null
     }
 
-    return groupMarkets(data?.conditions, gameId)
+    return groupMarkets(data.conditions, gameId)
   }, [ conditionIds ])
 
   return {
