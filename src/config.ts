@@ -15,7 +15,7 @@ const getGraphqlEndpoint = (network: string) => `https://thegraph.azuro.org/subg
 export const graphqlEndpoints: Record<number, string> = {
   [gnosis.id]: getGraphqlEndpoint('gnosis'),
   [polygon.id]: getGraphqlEndpoint('polygon'),
-  [arbitrum.id]: getGraphqlEndpoint('arbitrum'),
+  [arbitrum.id]: getGraphqlEndpoint('arbitrum-one'),
   [polygonMumbai.id]: getGraphqlEndpoint('mumbai-dev'),
   [arbitrumGoerli.id]: getGraphqlEndpoint('arbitrum-goerli-dev'),
 }
