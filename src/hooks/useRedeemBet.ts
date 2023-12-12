@@ -1,11 +1,12 @@
 import { useContractWrite, useWaitForTransaction, usePublicClient, Address } from 'wagmi'
+import { WriteContractResult } from '@wagmi/core';
 import { useChain } from '../contexts/chain'
 import { useBetsCache } from './useBetsCache';
+import { Bet } from './useBets';
 
 
 type SubmitProps = {
-  tokenId: string | bigint
-  coreAddress: Address
+  bets: Array<Pick<Bet, 'tokenId' | 'coreAddress'>>
 }
 
 export const useRedeemBet = () => {
@@ -19,36 +20,62 @@ export const useRedeemBet = () => {
     functionName: 'withdrawPayout',
   })
 
+  const batchRedeemTx = useContractWrite({
+    address: contracts.proxyFront.address,
+    abi: contracts.proxyFront.abi,
+    functionName: 'withdrawPayouts',
+  })
+
   const receipt = useWaitForTransaction(redeemTx.data)
+  const batchReceipt = useWaitForTransaction(batchRedeemTx.data)
 
   const submit = async (props: SubmitProps) => {
-    const { tokenId, coreAddress } = props
+    const { bets } = props
+    const isBatch = bets.length > 1
 
-    const tx = await redeemTx.writeAsync({
-      args: [
-        coreAddress,
-        BigInt(tokenId),
-      ],
-    })
+    let tx: WriteContractResult
+
+    if (isBatch) {
+      const betsData = bets.map(({tokenId, coreAddress}) => ({
+        core: coreAddress as Address,
+        tokenId: BigInt(tokenId),
+        isNative: false,
+      }))
+
+      tx = await batchRedeemTx.writeAsync({
+        args: [ betsData ],
+      })
+    } else {
+      const { tokenId, coreAddress } = bets[0]!
+
+      tx = await redeemTx.writeAsync({
+        args: [
+          coreAddress,
+          BigInt(tokenId),
+        ],
+      })
+    }
 
     const receipt = await publicClient.waitForTransactionReceipt(tx)
 
-    updateBetCache({
-      coreAddress,
-      tokenId,
-    }, {
-      isRedeemed: true,
-      isRedeemable: false,
+    bets.forEach(({tokenId, coreAddress}) => {
+      updateBetCache({
+        coreAddress,
+        tokenId,
+      }, {
+        isRedeemed: true,
+        isRedeemable: false,
+      })
     })
 
     return receipt
   }
 
   return {
-    isPending: redeemTx.isLoading,
-    isProcessing: receipt.isLoading,
-    data: redeemTx.data,
-    error: redeemTx.error,
+    isPending: redeemTx.isLoading || batchRedeemTx.isLoading,
+    isProcessing: receipt.isLoading || batchReceipt.isLoading,
+    data: redeemTx.data || batchReceipt.data,
+    error: redeemTx.error || batchReceipt.error,
     submit,
   }
 }
