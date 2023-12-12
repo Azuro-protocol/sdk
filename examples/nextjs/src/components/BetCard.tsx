@@ -28,11 +28,12 @@ type Props = {
 }
 
 export function BetCard(props: Props) {
+  const { bet } = props
   const { 
-    tokenId, createdAt, status: graphBetStatus, amount, outcomes, 
-    payout, possibleWin, coreAddress, freebetId, 
+    createdAt, status: graphBetStatus, amount, outcomes, 
+    payout, possibleWin, freebetId, 
     isWin, isLose, isCanceled, isRedeemed 
-  } = props.bet
+  } = bet
 
   const { betToken } = useChain()
   const { submit, isPending, isProcessing } = useRedeemBet()
@@ -67,7 +68,7 @@ export function BetCard(props: Props) {
 
   const handleRedeem = async () => {
     try {
-      await submit({ tokenId, coreAddress })
+      await submit({ bets: [ bet ] })
     } catch {}
   }
 
