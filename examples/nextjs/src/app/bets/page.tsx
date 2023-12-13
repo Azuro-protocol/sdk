@@ -1,7 +1,7 @@
 'use client'
 import { useBets, OrderDirection } from '@azuro-org/sdk'
 import { useAccount } from 'wagmi';
-import { BetCard } from '@/components';
+import { BetCard, RedeemAll } from '@/components';
 
 const useData = () => {
   const { address } = useAccount()
@@ -29,6 +29,7 @@ export default function Bets() {
 
   return (
     <div>
+      <RedeemAll bets={data} />
       {
         data.map(bet => (
           <BetCard key={`${bet.createdAt}-${bet.tokenId}`} bet={bet} />
