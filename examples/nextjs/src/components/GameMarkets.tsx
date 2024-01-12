@@ -35,10 +35,10 @@ export function GameMarkets(props: GameMarketsProps) {
                       <div className="flex gap-2 w-full">
                         {
                           outcomes.map((outcome) => (
-                            <OutcomeButton 
-                              key={outcome.selectionName} 
-                              outcome={outcome} 
-                              onClick={() => handleOutcomeClick(outcome)} 
+                            <OutcomeButton
+                              key={outcome.selectionName}
+                              outcome={outcome}
+                              onClick={() => handleOutcomeClick(outcome)}
                             />
                           ))
                         }

@@ -14,5 +14,8 @@ fragment Condition on Condition {
   }
   game {
     gameId
+    sport {
+      sportId
+    }
   }
 }

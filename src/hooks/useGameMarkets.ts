@@ -20,6 +20,7 @@ export type MarketOutcome = {
 } & Selection
 
 export type Market = {
+  marketKey: string
   name: string
   description: string
   outcomeRows: MarketOutcome[][]
@@ -48,6 +49,7 @@ export type GameMarkets = Market[]
 const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string | bigint): GameMarkets => {
   const outcomesByMarkets: OutcomesByMarkets = {}
   const result: OutcomeRowsByMarket = {}
+  const sportId = conditions?.[0]?.game.sport.sportId
 
   conditions.forEach(({ conditionId, outcomes: rawOutcomes, core, status }) => {
     rawOutcomes.forEach(({ outcomeId, odds }) => {
@@ -79,6 +81,7 @@ const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string 
 
         result[marketKey] = {
           name: marketName,
+          marketKey,
           description: marketDescription,
           outcomeRows: [],
         }
@@ -161,7 +164,31 @@ const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string 
     }
   })
 
-  return Object.values(result)
+  let markets = Object.values(result)
+  const orderedMarketKeys = dictionaries.marketOrders[sportId]
+
+  if (!orderedMarketKeys) {
+    return markets
+  }
+
+  return markets.sort((a, b) => {
+    const prevMarketIndex = orderedMarketKeys.indexOf(a.marketKey)
+    const nextMarketIndex = orderedMarketKeys.indexOf(b.marketKey)
+
+    if (prevMarketIndex >= 0 && nextMarketIndex >= 0) {
+      return prevMarketIndex - nextMarketIndex
+    }
+
+    if (prevMarketIndex < 0 && nextMarketIndex >= 0) {
+      return 1
+    }
+
+    if (prevMarketIndex >= 0 && nextMarketIndex < 0) {
+      return -1
+    }
+
+    return 0
+  })
 }
 
 type Props = {
