@@ -20,9 +20,7 @@ export const useConditions = (props: UseConditionsProps) => {
 
     const variables: ConditionsQueryVariables = {
       where: {
-        game_: {
-          id: gameEntityId,
-        },
+        game: gameEntityId,
       },
     }
 
