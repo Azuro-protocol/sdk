@@ -10,6 +10,7 @@ export type { ConditionsDocument, ConditionsQuery, ConditionsQueryResult, Condit
 export type { NavigationDocument, NavigationQuery, NavigationQueryResult, NavigationQueryVariables } from './docs/navigation'
 // utils
 export { calcMindOdds } from './utils/calcMindOdds'
+export { calcLiveOdds } from './utils/calcLiveOdds'
 export { setGamesCacheTime } from './utils/setGamesCacheTime'
 export { getGameStatus, GameStatus } from './utils/getGameStatus';
 export { getBetStatus, BetStatus } from './utils/getBetStatus';
