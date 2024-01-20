@@ -2,10 +2,11 @@ import { useMemo } from 'react'
 import { useQuery } from '@apollo/client'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 import { type Address } from 'wagmi'
-import { BetsDocument, BetsQuery, BetsQueryVariables } from '../docs/bets'
-import { GameQuery } from '../docs/game'
-import { Bet_OrderBy, OrderDirection, BetResult, BetStatus, SelectionResult, ConditionStatus } from '../types'
+import { BetsDocument, BetsQuery, BetsQueryVariables } from '../docs/prematch/bets'
+import { GameQuery } from '../docs/prematch/game'
+import { Bet_OrderBy, OrderDirection, BetResult, BetStatus, SelectionResult, ConditionStatus } from '../docs/prematch/types'
 import { getGameStatus, GameStatus } from '../utils/getGameStatus'
+import { useApolloClients } from '../contexts/apollo';
 import { Selection } from '../global';
 
 
@@ -21,7 +22,7 @@ export type BetOutcome = {
 
 export type Bet = {
   tokenId: string
-  freebetId: string | null
+  freebetId?: string
   freebetContractAddress?: Address
   totalOdds: number
   coreAddress: Address
@@ -31,7 +32,7 @@ export type Bet = {
   status: BetStatus
   amount: string
   possibleWin: number
-  payout: number
+  payout: number | null
   createdAt: number
   isWin: boolean
   isLose: boolean
@@ -57,6 +58,8 @@ export const useBets = (props: UseBetsProps) => {
     orderDir = OrderDirection.Asc,
   } = props
 
+  const { prematchClient } = useApolloClients()
+
   const options = useMemo(() => {
     const variables: BetsQueryVariables = {
       first: filter.limit,
@@ -71,6 +74,7 @@ export const useBets = (props: UseBetsProps) => {
     return {
       variables,
       ssr: false,
+      client: prematchClient!,
       skip: !filter.bettor,
     }
   }, [
@@ -103,7 +107,7 @@ export const useBets = (props: UseBetsProps) => {
       const isFreebet = Boolean(freebet)
       const freebetId = freebet?.freebetId
       const freebetContractAddress = freebet?.contractAddress
-      const payout = isRedeemable && isWin ? _payout : null
+      const payout = isRedeemable && isWin ? +_payout! : null
       const betDiff = isFreebet ? amount : 0 // for freebet we must exclude bonus value from possible win
       const totalOdds = settledOdds ? +settledOdds : +odds
       const possibleWin = +amount * totalOdds - +betDiff
@@ -114,7 +118,8 @@ export const useBets = (props: UseBetsProps) => {
 
           const gameStatus = getGameStatus({
             graphStatus: game.status,
-            startsAt: game.startsAt,
+            startsAt: +game.startsAt,
+            isGameInLive: false,
           })
 
           const isWin = result ? result === SelectionResult.Won : null
@@ -151,7 +156,7 @@ export const useBets = (props: UseBetsProps) => {
         amount,
         possibleWin,
         payout,
-        createdAt,
+        createdAt: +createdAt,
         isWin,
         isLose,
         isRedeemable,

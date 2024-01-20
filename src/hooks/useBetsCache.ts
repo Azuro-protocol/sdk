@@ -1,8 +1,8 @@
-import { BetFragmentDoc, type BetFragment } from '../docs/fragments/bet'
-import { MainGameInfoFragmentDoc, type MainGameInfoFragment } from '../docs/fragments/mainGameInfo'
-import { ConditionFragmentDoc, type ConditionFragment } from '../docs/fragments/condition'
-import { ConditionStatus, BetStatus } from '../types';
-import { useApolloClient } from '@apollo/client'
+import { BetFragmentDoc, type BetFragment } from '../docs/prematch/fragments/bet'
+import { MainGameInfoFragmentDoc, type MainGameInfoFragment } from '../docs/prematch/fragments/mainGameInfo'
+import { ConditionFragmentDoc, type ConditionFragment } from '../docs/prematch/fragments/condition'
+import { ConditionStatus, BetStatus } from '../docs/prematch/types';
+import { useApolloClients } from '../contexts/apollo';
 import { Address } from 'wagmi';
 import { TransactionReceipt, formatUnits } from 'viem';
 import { getEventArgsFromTxReceipt } from '../helpers';
@@ -28,8 +28,8 @@ type NewBetProps = {
 }
 
 export const useBetsCache = () => {
-  const client = useApolloClient()
-  const { cache } = client
+  const {prematchClient: client} = useApolloClients()
+  const { cache } = client!
   const { contracts } = useChain()
 
   const updateBetCache = ({ coreAddress, tokenId }: UpdateBetProps, values: Partial<BetFragment>) => {
@@ -56,7 +56,8 @@ export const useBetsCache = () => {
     const selectionFragments: BetFragment['selections'] = []
   
     for (let index = 0; index < selections.length; index++) {
-      const { outcomeId, conditionId } = selections[index]!
+      const { outcomeId, conditionId: _conditionId } = selections[index]!
+      const conditionId = String(_conditionId)
 
       const conditionEntityId = `${core.address.toLowerCase()}_${conditionId}`
       const condition = cache.readFragment<ConditionFragment>({
@@ -78,7 +79,7 @@ export const useBetsCache = () => {
       // let's try to invalidate query and hope on update from the server
       if (!game) {
         setTimeout(() => {
-          client.refetchQueries({
+          client!.refetchQueries({
             include: [ 'Bets' ],
           })
         }, 1500)
@@ -110,9 +111,9 @@ export const useBetsCache = () => {
     const tokenId = (isExpress ? receiptArgs?.betId : receiptArgs?.tokenId)?.toString()
     const rawOdds = isExpress ? receiptArgs?.bet.odds : receiptArgs?.odds
 
-    const finalOdds = +formatUnits(rawOdds, ODDS_DECIMALS)
+    const finalOdds = formatUnits(rawOdds, ODDS_DECIMALS)
 
-    const potentialPayout = +amount * finalOdds
+    const potentialPayout = String(+amount * +finalOdds)
 
     cache.modify({
       id: cache.identify({ __typename: 'Query' }),
@@ -141,7 +142,7 @@ export const useBetsCache = () => {
             isRedeemed: false,
             isRedeemable: false,
             freebet: bet.freebetContractAddress ? {
-              freebetId: bet.freebetId,
+              freebetId: String(bet.freebetId),
               contractAddress: bet.freebetContractAddress,
             } : null,
             result: null,

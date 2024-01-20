@@ -1,7 +1,7 @@
 import { debounce } from './debounce'
 import { type ApolloClient } from '@apollo/client'
-import { type ConditionsBatchQuery, ConditionsBatchDocument } from '../docs/conditionsBatch'
-import { ConditionStatus } from '../types'
+import { type ConditionsBatchQuery, ConditionsBatchDocument } from '../docs/prematch/conditionsBatch'
+import { ConditionStatus } from '../docs/prematch/types'
 
 
 type OutcomeData = {

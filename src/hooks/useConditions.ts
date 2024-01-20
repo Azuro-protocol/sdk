@@ -1,26 +1,39 @@
 import { useMemo } from 'react'
-import { useQuery, type QueryHookOptions } from '@apollo/client'
-import { ConditionsDocument, ConditionsQuery, ConditionsQueryVariables } from '../docs/conditions'
-import { useChain } from '../contexts/chain'
+import { useQuery } from '@apollo/client'
+import { 
+  ConditionsDocument as PrematchConditionsDocument, 
+  ConditionsQuery as PrematchConditionsQuery, 
+  ConditionsQueryVariables as PrematchConditionsQueryVariables 
+} from '../docs/prematch/conditions'
+import { 
+  ConditionsDocument as LiveConditionsDocument, 
+  ConditionsQuery as LiveConditionsQuery, 
+  ConditionsQueryVariables as LiveConditionsQueryVariables 
+} from '../docs/live/conditions'
+import { useApolloClients } from '../contexts/apollo';
 
+
+export type ConditionsQuery = PrematchConditionsQuery | LiveConditionsQuery
 
 type UseConditionsProps = {
   gameId: string | bigint
+  isLive: boolean
+  livePollInterval?: number
   filter?: {
     outcomeIds?: string[]
   }
 }
 
 export const useConditions = (props: UseConditionsProps) => {
-  const { gameId, filter } = props
-  const { contracts } = useChain()
+  const { gameId, isLive, livePollInterval, filter } = props
+  const { prematchClient, liveClient } = useApolloClients()
 
-  const options = useMemo<QueryHookOptions<ConditionsQuery, ConditionsQueryVariables>>(() => {
-    const gameEntityId = `${contracts.lp.address.toLowerCase()}_${gameId}`
-
-    const variables: ConditionsQueryVariables = {
+  const variables = useMemo<PrematchConditionsQueryVariables>(() => {
+    const vars: PrematchConditionsQueryVariables = {
       where: {
-        game: gameEntityId,
+        game_: {
+          gameId
+        },
       },
     }
 
@@ -28,15 +41,36 @@ export const useConditions = (props: UseConditionsProps) => {
       variables.where.outcomesIds_contains = filter.outcomeIds
     }
 
-    return {
-      variables,
-      ssr: false,
-    }
-  }, [
-    gameId,
-    contracts,
-    filter?.outcomeIds?.join(',')
-  ])
+    return vars
+  }, [ gameId, filter?.outcomeIds?.join(',') ])
 
-  return useQuery<ConditionsQuery, ConditionsQueryVariables>(ConditionsDocument, options)
+  const { 
+    data: prematchData, 
+    loading: isPrematchLoading, 
+    error: prematchError 
+  } = useQuery<PrematchConditionsQuery, PrematchConditionsQueryVariables>(PrematchConditionsDocument, {
+    variables,
+    ssr: false,
+    client: prematchClient!,
+    skip: isLive
+  })
+  const {
+    data: liveData, 
+    loading: isLiveLoading, 
+    error: liveError
+  } = useQuery<LiveConditionsQuery, LiveConditionsQueryVariables>(LiveConditionsDocument, {
+    variables,
+    ssr: false,
+    client: liveClient!,
+    skip: !isLive,
+    pollInterval: livePollInterval
+  })
+
+  const data = (isLive ? liveData : prematchData) || {} as ConditionsQuery
+
+  return {
+    data,
+    loading: isPrematchLoading || isLiveLoading,
+    error: prematchError || liveError,
+  }
 }

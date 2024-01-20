@@ -1,7 +1,9 @@
 import { useMemo } from 'react'
 import { useQuery, type QueryHookOptions } from '@apollo/client'
-import { GamesDocument, GamesQuery, GamesQueryVariables } from '../docs/games'
-import { Game_OrderBy, OrderDirection } from '../types'
+import { GamesDocument, GamesQuery, GamesQueryVariables } from '../docs/prematch/games'
+import { useApolloClients } from '../contexts/apollo';
+import { useLive } from '../contexts/live';
+import { Game_OrderBy, OrderDirection } from '../docs/prematch/types'
 import { getGameStartsAtGtValue } from '../helpers'
 
 
@@ -24,6 +26,9 @@ export const useGames = (props?: UseGamesProps) => {
     withConditions = false,
   } = props || {}
 
+  const { prematchClient, liveClient } = useApolloClients()
+  const { isLive } = useLive()
+
   const startsAt_gt = getGameStartsAtGtValue()
 
   const options = useMemo<QueryHookOptions<GamesQuery, GamesQueryVariables>>(() => {
@@ -31,9 +36,15 @@ export const useGames = (props?: UseGamesProps) => {
       orderBy,
       orderDirection: orderDir,
       where: {
-        startsAt_gt,
         hasActiveConditions: true,
       },
+    }
+
+    if (isLive) {
+      variables.where.startsAt_lt = startsAt_gt
+    }
+    else {
+      variables.where.startsAt_gt = startsAt_gt
     }
 
     if (filter?.limit) {
@@ -53,6 +64,7 @@ export const useGames = (props?: UseGamesProps) => {
     return {
       variables,
       ssr: false,
+      client: isLive ? liveClient! : prematchClient!,
     }
   }, [
     filter?.limit,
@@ -62,6 +74,7 @@ export const useGames = (props?: UseGamesProps) => {
     orderDir,
     startsAt_gt,
     withConditions,
+    isLive,
   ])
 
   return useQuery<GamesQuery, GamesQueryVariables>(GamesDocument, options)

@@ -3,7 +3,7 @@ import { useContractEvent } from 'wagmi'
 import { useChain } from '../contexts/chain'
 import { oddsWatcher } from '../modules/oddsWatcher'
 import { conditionStatusWatcher } from '../modules/conditionStatusWatcher'
-import { ConditionStatus } from 'src/types'
+import { ConditionStatus } from '../docs/prematch/types'
 
 
 export const useWatchers = () => {

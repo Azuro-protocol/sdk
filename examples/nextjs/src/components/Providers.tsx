@@ -1,7 +1,6 @@
 'use client'
 import React from 'react'
-import { ChainProvider } from '@azuro-org/sdk'
-import { ApolloProvider } from '@azuro-org/sdk/nextjs/apollo'
+import { ChainId, ChainProvider, LiveProvider, ApolloProvider, SocketProvider } from '@azuro-org/sdk'
 import { RainbowKitProvider, getDefaultWallets } from '@rainbow-me/rainbowkit'
 import { WagmiConfig, configureChains, createConfig } from 'wagmi'
 import { polygonMumbai, arbitrumGoerli } from 'viem/chains'
@@ -37,16 +36,28 @@ const wagmiConfig = createConfig({
   publicClient,
 })
 
-export function Providers(props: { children: React.ReactNode }) {
-  const { children } = props
+type ProvidersProps = {
+  children: React.ReactNode
+  initialChainId?: string
+  initialLiveState?: boolean
+}
+
+export function Providers(props: ProvidersProps) {
+  const { children, initialChainId, initialLiveState } = props
+
+  const chainId = initialChainId && rpcUrls[+initialChainId] ? +initialChainId as ChainId : polygonMumbai.id
 
   return (
     <WagmiConfig config={wagmiConfig}>
       <RainbowKitProvider chains={chains}>
-        <ChainProvider initialChainId={polygonMumbai.id}>
-          <ApolloProvider>
-            {children}
-          </ApolloProvider>
+        <ChainProvider initialChainId={chainId}>
+          <LiveProvider initialState={initialLiveState}>
+            <ApolloProvider>
+              <SocketProvider>
+                {children}
+              </SocketProvider>
+            </ApolloProvider>
+          </LiveProvider>
         </ChainProvider>
       </RainbowKitProvider>
     </WagmiConfig>

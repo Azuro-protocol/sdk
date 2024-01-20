@@ -1,4 +1,6 @@
-type Cb = () => void
+import { type OddsChangedData } from '../contexts/socket';
+
+type Cb = (oddsData?: OddsChangedData) => void
 
 type Handler = {
   outcomeId: string
@@ -28,15 +30,15 @@ const subscribe = (conditionId: string, outcomeId: string, cb: Cb) => {
   }
 }
 
-const trigger = async (conditionId: string) => {
+const trigger = async (conditionId: string, oddsData?: OddsChangedData) => {
   const handlers = subscribers.get(conditionId) || []
 
   handlers.forEach(({ cb }) => {
-    cb()
+    cb(oddsData)
   })
 }
 
-const dispatch = (conditionId: string) => {
+const dispatch = (conditionId: string, oddsData?: OddsChangedData) => {
   let timer = timers.get(conditionId)
 
   if (timer !== undefined) {
@@ -45,7 +47,7 @@ const dispatch = (conditionId: string) => {
 
   timer = setTimeout(() => {
     timers.delete(conditionId)
-    trigger(conditionId)
+    trigger(conditionId, oddsData)
   }, 200)
 
   timers.set(conditionId, timer)

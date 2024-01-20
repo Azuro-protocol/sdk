@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect } from 'react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { ActiveLink, SelectAppChain } from '@/components'
+import { ActiveLink, SelectAppChain, LiveSwitcher } from '@/components'
 import { useConfig } from 'wagmi';
 
 export function Header() {
@@ -38,6 +38,7 @@ export function Header() {
         </ActiveLink>
       </div>
       <div className="ml-auto flex items-center">
+        <LiveSwitcher />
         <SelectAppChain />
         <ConnectButton chainStatus="none" />
       </div>

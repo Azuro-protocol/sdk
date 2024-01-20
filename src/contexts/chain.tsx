@@ -1,5 +1,6 @@
 import React, { useState, useContext, createContext } from 'react'
 import { type Chain, useNetwork } from 'wagmi'
+import { setCookie } from 'cookies-next'
 import { chainsData, type ChainId, type ChainData } from '../config'
 
 
@@ -11,6 +12,10 @@ export type ChainContextValue = Omit<ChainData, 'chain'> & {
 }
 
 const ChainContext = createContext<ChainContextValue | null>(null)
+
+export const useChain = () => {
+  return useContext(ChainContext) as ChainContextValue
+}
 
 type Props = {
   children: React.ReactNode
@@ -29,13 +34,19 @@ export const ChainProvider: React.FC<Props> = (props) => {
 
   const { chain, contracts, betToken } = chainsData[appChainId]
 
+  const handleChangeChain = (chainId: ChainId) => {
+    setCookie('appChainId', chainId)
+
+    setAppChainId(chainId)
+  }
+
   const context: ChainContextValue = {
     appChain: chain,
     walletChain,
     contracts,
     betToken,
     isRightNetwork,
-    setAppChainId,
+    setAppChainId: handleChangeChain,
   }
 
   return (
@@ -43,8 +54,4 @@ export const ChainProvider: React.FC<Props> = (props) => {
       {children}
     </ChainContext.Provider>
   )
-}
-
-export const useChain = () => {
-  return useContext(ChainContext) as ChainContextValue
 }

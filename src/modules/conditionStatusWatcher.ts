@@ -1,4 +1,4 @@
-import { ConditionStatus } from '../types';
+import { ConditionStatus } from '../docs/prematch/types';
 
 
 type Cb = (status: ConditionStatus) => void

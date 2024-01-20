@@ -19,7 +19,7 @@ const GameStatusText = {
   [GameStatus.Live]: 'Live',
   [GameStatus.Paused]: 'Paused',
   [GameStatus.PendingResolution]: 'Pending resolution',
-  [GameStatus.Preparing]: 'Preparing',
+  [GameStatus.Created]: 'Preparing',
   [GameStatus.Resolved]: 'Resolved',
 }
 
@@ -42,6 +42,7 @@ export function BetCard(props: Props) {
     return getBetStatus({
       graphStatus: graphBetStatus,
       games: outcomes.map(({ game }) => game),
+      isLiveBet: false,
     })
   }, [])
 
@@ -97,7 +98,7 @@ export function BetCard(props: Props) {
                   <p className='mr-4'>{dayjs(+startsAt * 1000).format('DD.MM.YYYY, hh:mm A')}</p>
                   <p>{`${countryName}: ${leagueName}`}</p>
                 </div>
-                <p>{GameStatusText[getGameStatus({ graphStatus: gameStatus, startsAt })]}</p>
+                <p>{GameStatusText[getGameStatus({ graphStatus: gameStatus, startsAt, isGameInLive: false })]}</p>
               </div>
               <div className="flex items-center">
                 <Link href={`/events/${sportSlug}/${gameId}`} className="flex items-center mr-4">

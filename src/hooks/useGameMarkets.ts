@@ -1,9 +1,16 @@
 import { useMemo } from 'react'
 import { dictionaries, getMarketKey, getMarketName, getMarketDescription, getSelectionName } from '@azuro-org/dictionaries'
-import { type ConditionsQuery } from '../docs/conditions'
+import { type ConditionsQuery } from './useConditions'
 import { useConditions } from './useConditions'
-import { ConditionStatus } from 'src/types'
+import {
+  type ConditionsQuery as PrematchConditionsQuery,
+} from '../docs/prematch/conditions'
+import { ConditionStatus } from '../docs/prematch/types'
 import { Selection } from '../global';
+import { liveCoreAddress } from '../config';
+import { GameStatus } from '../utils/getGameStatus'
+import { Address } from 'viem'
+import { useChain } from 'src/contexts/chain'
 
 
 export type Condition = {
@@ -46,13 +53,19 @@ type OutcomeRowsByMarket = Record<string, Market>
 
 export type GameMarkets = Market[]
 
-const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string | bigint): GameMarkets => {
+const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string | bigint, 
+lpAddress: Address): GameMarkets => {
   const outcomesByMarkets: OutcomesByMarkets = {}
   const result: OutcomeRowsByMarket = {}
-  const sportId = conditions?.[0]?.game.sport.sportId
+  const sportId = conditions[0]!.game.sport.sportId
 
-  conditions.forEach(({ conditionId, outcomes: rawOutcomes, core, status }) => {
-    rawOutcomes.forEach(({ outcomeId, odds }) => {
+  conditions.forEach((condition) => {
+    const { conditionId, outcomes: rawOutcomes, status } = condition
+    const coreAddress = (condition as PrematchConditionsQuery['conditions'][0]).core?.address || liveCoreAddress
+
+    rawOutcomes.forEach((rawOutcome) => {
+      const { outcomeId } = rawOutcome
+      const odds = (rawOutcome as PrematchConditionsQuery['conditions'][0]['outcomes'][0]).odds
       const betTypeOdd = dictionaries.outcomes[outcomeId]
 
       if (!betTypeOdd) {
@@ -66,8 +79,8 @@ const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string 
       const selectionName = getSelectionName({ outcomeId, withPoint: true })
 
       const outcome: MarketOutcome = {
-        coreAddress: core.address,
-        lpAddress: core.liquidityPool.address,
+        coreAddress: coreAddress,
+        lpAddress: lpAddress,
         conditionId,
         outcomeId,
         selectionName,
@@ -165,7 +178,7 @@ const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string 
   })
 
   let markets = Object.values(result)
-  const orderedMarketKeys = dictionaries.marketOrders[sportId]
+  const orderedMarketKeys = dictionaries.marketOrders?.[sportId]
 
   if (!orderedMarketKeys) {
     return markets
@@ -193,21 +206,24 @@ const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string 
 
 type Props = {
   gameId: string | bigint
+  gameStatus: GameStatus
   filter?: {
     outcomeIds?: string[]
   }
 }
 
 export const useGameMarkets = (props: Props) => {
-  const { gameId, filter } = props
+  const { gameId, gameStatus, filter } = props
 
+  const { contracts } = useChain()
   const { loading, data, error } = useConditions({
     gameId,
     filter,
+    isLive: gameStatus === GameStatus.Live,
   })
 
   // generate unique key for memo deps
-  const conditionIds = data?.conditions.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('')
+  const conditionIds = data?.conditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('')
 
   const markets = useMemo(() => {
     if (!data) {
@@ -218,7 +234,7 @@ export const useGameMarkets = (props: Props) => {
       return null
     }
 
-    return groupMarkets(data.conditions, gameId)
+    return groupMarkets(data.conditions, gameId, contracts.lp.address)
   }, [ conditionIds ])
 
   return {
