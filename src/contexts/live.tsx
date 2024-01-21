@@ -1,6 +1,6 @@
 import React, { useContext, createContext, useState, useMemo } from 'react'
 import { setCookie } from 'cookies-next'
-import { cookies } from '../config'
+import { cookieKeys } from '../config'
 import { useChain } from './chain'
 import { polygonMumbai } from 'viem/chains'
 
@@ -30,12 +30,12 @@ export const LiveProvider: React.FC<Props> = (props) => {
   useMemo(() => {
     if (appChain.id !== polygonMumbai.id && isLive) {
       setLive(false)
-      setCookie(cookies.live, false)
+      setCookie(cookieKeys.live, false)
     }
   }, [ appChain ])
 
   const handleChangeLive = (value: boolean) => {
-    setCookie(cookies.live, value)
+    setCookie(cookieKeys.live, value)
 
     if (value && appChain.id !== polygonMumbai.id) {
       setAppChainId(polygonMumbai.id)

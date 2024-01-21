@@ -17,7 +17,7 @@ export function GameCard(props: Props) {
     >
       <div className="flex justify-between text-sm">
         <span>{sport.name}</span>
-        <span>{dayjs(startsAt * 1000).format('DD MMM HH:mm')}</span>
+        <span>{dayjs(+startsAt * 1000).format('DD MMM HH:mm')}</span>
       </div>
       <div className="mt-2 text-sm text-zinc-400">
         {league.country.name} &middot; {league.name}

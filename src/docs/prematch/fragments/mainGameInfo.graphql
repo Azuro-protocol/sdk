@@ -5,6 +5,7 @@ fragment MainGameInfo on Game {
   startsAt
   status
   sport {
+    sportId
     slug
     name
   }

@@ -1,7 +1,7 @@
 import React, { useState, useContext, createContext } from 'react'
 import { type Chain, useNetwork } from 'wagmi'
 import { setCookie } from 'cookies-next'
-import { chainsData, type ChainId, type ChainData } from '../config'
+import { chainsData, type ChainId, type ChainData, cookieKeys } from '../config'
 
 
 export type ChainContextValue = Omit<ChainData, 'chain'> & {
@@ -35,7 +35,7 @@ export const ChainProvider: React.FC<Props> = (props) => {
   const { chain, contracts, betToken } = chainsData[appChainId]
 
   const handleChangeChain = (chainId: ChainId) => {
-    setCookie('appChainId', chainId)
+    setCookie(cookieKeys.appChainId, chainId)
 
     setAppChainId(chainId)
   }

@@ -1,10 +1,11 @@
-export { chainsData, type ChainId, cookies } from './config'
+export { chainsData, type ChainId, cookieKeys } from './config'
 export { type Selection } from './global'
 // contexts
 export * from './contexts/chain'
 export * from './contexts/live'
 export * from './contexts/apollo'
 export * from './contexts/socket'
+export * from './contexts/betslip'
 // docs
 export { Game_OrderBy, Bet_OrderBy, ConditionStatus, OrderDirection } from './docs/prematch/types'
 export type { GamesDocument, GamesQuery, GamesQueryResult, GamesQueryVariables } from './docs/prematch/games'

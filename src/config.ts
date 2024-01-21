@@ -170,9 +170,13 @@ export const chainsData = {
 
 export const liveCoreAddress = "0x2276b77B2C6ea24e1677F40A821D07907f5Dbba0"
 
-export const cookies = {
+export const cookieKeys = {
   appChainId: 'appChainId',
   live: 'live',
 } as const
+
+export const localStorageKeys = {
+  betslipItems: 'betslipItems'
+}
 
 export type ChainId = keyof typeof chainsData

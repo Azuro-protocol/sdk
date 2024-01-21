@@ -32,7 +32,7 @@ export const useOutcome = ({ selection, initialOdds, initialStatus }: Props) => 
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useSocket()
   const publicClient = usePublicClient()
 
-  const isLive = coreAddress.toLowerCase() === liveCoreAddress
+  const isLive = coreAddress.toLowerCase() === liveCoreAddress.toLowerCase()
 
   const [ odds, setOdds ] = useState(initialOdds || '0')
   const [ isOddsFetching, setOddsFetching ] = useState(!initialOdds)

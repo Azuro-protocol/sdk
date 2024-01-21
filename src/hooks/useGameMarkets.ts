@@ -24,6 +24,7 @@ export type MarketOutcome = {
   coreAddress: string
   status: ConditionStatus
   gameId: string | bigint
+  isExpressForbidden: boolean
 } & Selection
 
 export type Market = {
@@ -62,6 +63,7 @@ lpAddress: Address): GameMarkets => {
   conditions.forEach((condition) => {
     const { conditionId, outcomes: rawOutcomes, status } = condition
     const coreAddress = (condition as PrematchConditionsQuery['conditions'][0]).core?.address || liveCoreAddress
+    const isExpressForbidden = (condition as PrematchConditionsQuery['conditions'][0]).isExpressForbidden ?? true
 
     rawOutcomes.forEach((rawOutcome) => {
       const { outcomeId } = rawOutcome
@@ -87,6 +89,7 @@ lpAddress: Address): GameMarkets => {
         odds,
         status,
         gameId,
+        isExpressForbidden,
       }
 
       if (!outcomesByMarkets[marketKey]) {

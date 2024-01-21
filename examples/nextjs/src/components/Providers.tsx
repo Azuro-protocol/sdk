@@ -1,11 +1,13 @@
 'use client'
 import React from 'react'
-import { ChainId, ChainProvider, LiveProvider, ApolloProvider, SocketProvider } from '@azuro-org/sdk'
+import { ChainId, ChainProvider, LiveProvider, ApolloProvider, SocketProvider, BetslipProvider as AzuroBetslipProvider } from '@azuro-org/sdk'
 import { RainbowKitProvider, getDefaultWallets } from '@rainbow-me/rainbowkit'
 import { WagmiConfig, configureChains, createConfig } from 'wagmi'
 import { polygonMumbai, arbitrumGoerli } from 'viem/chains'
 import { jsonRpcProvider } from 'wagmi/providers/jsonRpc'
 import { publicProvider } from 'wagmi/providers/public'
+
+import { BetslipProvider } from '@/context/betslip';
 
 
 const rpcUrls: Record<number, string> = {
@@ -54,7 +56,11 @@ export function Providers(props: ProvidersProps) {
           <LiveProvider initialState={initialLiveState}>
             <ApolloProvider>
               <SocketProvider>
-                {children}
+                <AzuroBetslipProvider>
+                  <BetslipProvider>
+                    {children}
+                  </BetslipProvider>
+                </AzuroBetslipProvider>
               </SocketProvider>
             </ApolloProvider>
           </LiveProvider>

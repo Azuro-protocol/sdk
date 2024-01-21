@@ -2,6 +2,7 @@ fragment Condition on Condition {
   id
   conditionId
   status
+  isExpressForbidden
   outcomes {
     outcomeId
     odds: currentOdds
