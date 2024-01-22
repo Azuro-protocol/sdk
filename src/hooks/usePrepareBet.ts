@@ -1,8 +1,7 @@
 import { erc20ABI, useAccount, useContractRead, useContractWrite, useWaitForTransaction, usePublicClient, type Address } from 'wagmi'
-import { parseUnits, formatUnits, encodeAbiParameters, parseAbiParameters, TransactionReceipt } from 'viem'
+import { parseUnits, encodeAbiParameters, parseAbiParameters, TransactionReceipt } from 'viem'
 import { useChain } from '../contexts/chain'
 import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256 } from '../config'
-import { useCalcOdds } from './useCalcOdds'
 import { Selection } from '../global';
 import { useBetsCache } from './useBetsCache';
 
@@ -12,13 +11,15 @@ type Props = {
   slippage: number
   affiliate: Address
   selections: Selection[]
+  selectionsOdds: Record<string, number>
+  totalOdds: number
   deadline?: number
   onSuccess?(receipt: TransactionReceipt): void
   onError?(err?: Error): void
 }
 
 export const usePrepareBet = (props: Props) => {
-  const { amount, slippage, deadline, affiliate, selections, onSuccess, onError } = props
+  const { amount, slippage, deadline, affiliate, selections, selectionsOdds, totalOdds, onSuccess, onError } = props
 
   const account = useAccount()
   const publicClient = usePublicClient()
@@ -60,17 +61,6 @@ export const usePrepareBet = (props: Props) => {
     await publicClient.waitForTransactionReceipt(tx)
     allowanceTx.refetch()
   }
-
-  const { loading: isOddsLoading, data: oddsData } = useCalcOdds({
-    selections,
-    amount,
-  })
-
-  const selectionsOdds = oddsData.selectionsOdds?.map((rawOdds) => {
-    return formatUnits(rawOdds, ODDS_DECIMALS)
-  })
-
-  const totalOdds = oddsData.totalOdds ? formatUnits(oddsData.totalOdds, ODDS_DECIMALS) : undefined
 
   const betTx = useContractWrite({
     address: contracts.proxyFront.address,
@@ -177,8 +167,6 @@ export const usePrepareBet = (props: Props) => {
   return {
     isAllowanceLoading: allowanceTx.isLoading,
     isApproveRequired,
-    isOddsLoading,
-    selectionsOdds,
     totalOdds,
     submit,
     approveTx: {

@@ -1,74 +1,169 @@
-import { useContractRead, usePublicClient } from 'wagmi'
-import { parseUnits } from 'viem'
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
+import { liveCoreAddress } from '../config'
 import { useChain } from '../contexts/chain'
-import { oddsWatcher } from '../modules/oddsWatcher';
-import { Selection } from '../global';
-import { useEffect } from 'react';
+import { useSocket, OddsChangedData } from '../contexts/socket'
+import { batchSocketSubscribe, batchSocketUnsubscribe } from '../helpers'
+import { type Selection } from '../global';
+import { calcLiveOdds, calcPrematchOdds } from '../utils/calcOdds';
+import useIsMounted from '../hooks/useIsMounted';
+import { parseUnits } from 'viem'
+import { oddsWatcher } from 'src/modules/oddsWatcher'
+import { debounce } from 'src/helpers/debounce'
 
 
 type CalcOddsProps = {
   selections: Selection[]
-  amount?: string
+  amount: string
 }
 
-export const useCalcOdds = (props: CalcOddsProps) => {
-  const { amount, selections } = props
+export const useCalcOdds = ({ selections, amount }: CalcOddsProps) => {
+  const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useSocket()
+  const { betToken, appChain, contracts } = useChain()
+  const isMounted = useIsMounted()
 
-  const publicClient = usePublicClient()
-  const { appChain, contracts, betToken } = useChain()
+  const { liveItems, prematchItems } = useMemo<{ liveItems: Selection[], prematchItems: Selection[] }>(() => {
+    return selections.reduce((acc, item) => {
+      if (item.coreAddress.toLocaleLowerCase() === liveCoreAddress.toLocaleLowerCase()) {
+        acc.liveItems.push(item)
+      }
+      else {
+        acc.prematchItems.push(item)
+      }
 
-  let rawAmount = BigInt(1)
-  const isSingle = selections.length === 1
+      return acc
+    }, {
+      liveItems: [],
+      prematchItems: [],
+    } as { liveItems: Selection[], prematchItems: Selection[] })
+  }, [ selections ])
 
-  if (amount !== undefined) {
-    rawAmount = parseUnits(amount, betToken!.decimals)
-  }
+  const [ odds, setOdds ] = useState<Record<string, number>>({})
+  const [ totalOdds, setTotalOdds ] = useState<number>(1)
+  const [ isPrematchOddsFetching, setPrematchOddsFetching ] = useState(Boolean(prematchItems.length))
 
-  const rawSelections = selections.map(({ conditionId, outcomeId }) => ({
-    conditionId: BigInt(conditionId),
-    outcomeId: BigInt(outcomeId),
-  }))
+  const oddsDataRef = useRef<Record<string, OddsChangedData>>({})
+  const betAmountRef = useRef<string>('')
+  betAmountRef.current = amount
 
-  const single = useContractRead({
-    chainId: appChain.id,
-    address: contracts.prematchCore.address,
-    abi: contracts.prematchCore.abi,
-    functionName: 'calcOdds',
-    args: [
-      rawSelections[0]!.conditionId,
-      rawAmount,
-      rawSelections[0]!.outcomeId,
-    ],
-    enabled: Boolean(rawSelections.length === 1),
-  })
+  const liveKey = liveItems.map(({ conditionId }) => conditionId).join('-')
 
-  const combo = useContractRead({
-    chainId: appChain.id,
-    address: contracts.prematchComboCore.address,
-    abi: contracts.prematchComboCore.abi,
-    functionName: 'calcOdds',
-    args: [
-      rawSelections,
-      rawAmount,
-    ],
-    enabled: Boolean(rawSelections.length > 1),
-  })
+  const isLiveOddsFetching = useMemo(() => {
+    return !liveItems.every(({ conditionId, outcomeId }) => Boolean(odds[`${conditionId}-${outcomeId}`]))
+  }, [ liveKey, odds ])
 
-  useEffect(() => {
-    if (!selections.length) {
+  const fetchPrematchOdds = async () => {
+    if (!prematchItems.length) {
       return
     }
 
+    try {
+      const rawAmount = parseUnits(betAmountRef.current || '0', betToken.decimals)
+
+      const prematchOdds = await calcPrematchOdds({
+        expressAddress: contracts.prematchComboCore.address,
+        rawAmount,
+        items: prematchItems,
+        chainId: appChain.id,
+      })
+
+      if (isMounted()) {
+        setOdds(odds => {
+          const newOdds = { ...odds, ...prematchOdds }
+          const newTotalOdds = Object.keys(newOdds).reduce((acc, key) => acc * +newOdds[key]!, 1)
+
+          setTotalOdds(newTotalOdds)
+
+          return newOdds
+        })
+        setPrematchOddsFetching(false)
+      }
+    }
+    catch (err) {
+      if (isMounted()) {
+        setPrematchOddsFetching(false)
+      }
+    }
+  }
+
+  const fetchLiveOdds = (items: Selection[], newOddsData?: OddsChangedData) => {
+    if (!items.length) {
+      return
+    }
+
+    if (newOddsData) {
+      oddsDataRef.current[newOddsData.conditionId] = newOddsData
+    }
+
+    const liveOdds = items.reduce((acc, item) => {
+      const { conditionId, outcomeId } = item
+      const oddsData = oddsDataRef.current[conditionId]
+
+      if (!oddsData) {
+        return acc
+      }
+
+      acc[`${conditionId}-${outcomeId}`] = calcLiveOdds({ selection: item, betAmount: betAmountRef.current, oddsData })
+
+      return acc
+    }, {} as Record<string, number>)
+
+    setOdds(odds => {
+      const newOdds = { ...odds, ...liveOdds }
+      const newTotalOdds = Object.keys(newOdds).reduce((acc, key) => acc * +newOdds[key]!, 1)
+
+      setTotalOdds(newTotalOdds)
+
+      return newOdds
+    })
+  }
+
+  const fetchOdds = useCallback(debounce(() => {
+    setOdds({})
+    setTotalOdds(1)
+    setPrematchOddsFetching(Boolean(prematchItems.length))
+
+    fetchPrematchOdds()
+    fetchLiveOdds(liveItems)
+  }, 100), [ selections ])
+
+  useEffect(() => {
+    if (!isSocketReady || !liveItems.length) {
+      return
+    }
+
+    liveItems.forEach(({ conditionId }) => {
+      batchSocketSubscribe(conditionId, subscribeToUpdates)
+    })
+
+    return () => {
+      liveItems.forEach(({ conditionId }) => {
+        batchSocketUnsubscribe(conditionId, unsubscribeToUpdates)
+      })
+    }
+  }, [ liveKey, isSocketReady ])
+
+  useEffect(() => {
+    fetchOdds()
+  }, [ amount ])
+
+  useEffect(() => {
+    if (!selections?.length) {
+      return
+    }
+
+    fetchOdds()
+
     const unsubscribeList = selections.map(({ conditionId, outcomeId }) => {
-      const unsubscribe = oddsWatcher.subscribe(`${conditionId}`, `${outcomeId}`, () => {
-        if (isSingle) {
-          single.refetch()
-        } else {
-          combo.refetch()
+      return oddsWatcher.subscribe(`${conditionId}`, `${outcomeId}`, (oddsData?: OddsChangedData) => {
+        if (oddsData) {
+          const item = liveItems.find(item => item.conditionId === oddsData.conditionId)
+          fetchLiveOdds([ item! ], oddsData)
+        }
+        else {
+          setPrematchOddsFetching(true)
+          fetchPrematchOdds()
         }
       })
-  
-      return unsubscribe
     })
 
     return () => {
@@ -76,14 +171,11 @@ export const useCalcOdds = (props: CalcOddsProps) => {
         unsubscribe()
       })
     }
-  }, [ selections, publicClient ])
+  }, [ prematchItems, liveItems ])
 
   return {
-    data: {
-      selectionsOdds: isSingle ? (single.data ? [ single.data ] : undefined) : combo.data?.[0],
-      totalOdds: isSingle ? single.data : combo.data?.[1],
-    },
-    loading: single.isLoading || combo.isLoading,
-    error: single.error || combo.error,
+    odds,
+    totalOdds,
+    loading: isPrematchOddsFetching || isLiveOddsFetching,
   }
 }

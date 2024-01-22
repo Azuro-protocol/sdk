@@ -11,9 +11,7 @@ const subscribe = debounce((subscribeToUpdates: SocketContextValue['subscribeToU
   subscribeToUpdates(conditionEntityIds)
 }, 50)
 
-const batchSocketSubscribe = (conditionEntityId: string, subscribeToUpdates: SocketContextValue['subscribeToUpdates']) => {
+export const batchSocketSubscribe = (conditionEntityId: string, subscribeToUpdates: SocketContextValue['subscribeToUpdates']) => {
   subscribe(subscribeToUpdates)
   idsWaitList.add(conditionEntityId)
 }
-
-export default batchSocketSubscribe

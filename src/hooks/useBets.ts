@@ -136,6 +136,7 @@ export const useBets = (props: UseBetsProps) => {
             selectionName,
             outcomeId,
             conditionId,
+            coreAddress,
             odds: +odds,
             marketName,
             game,

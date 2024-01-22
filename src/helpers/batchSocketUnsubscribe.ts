@@ -12,9 +12,7 @@ const unsubscribe = debounce(async (unsubscribeToUpdates: SocketContextValue['un
   unsubscribeToUpdates(conditionEntityIds)
 }, 50)
 
-const batchSocketUnsubscribe = (conditionEntityId: string, unsubscribeToUpdates: SocketContextValue['unsubscribeToUpdates']) => {
+export const batchSocketUnsubscribe = (conditionEntityId: string, unsubscribeToUpdates: SocketContextValue['unsubscribeToUpdates']) => {
   unsubscribe(unsubscribeToUpdates)
   idsWaitList.add(conditionEntityId)
 }
-
-export default batchSocketUnsubscribe

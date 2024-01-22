@@ -4,6 +4,7 @@ import { MainGameInfoFragmentDoc, type MainGameInfoFragment } from '../docs/prem
 import { liveCoreAddress, localStorageKeys } from '../config'
 import { ApolloCache, NormalizedCacheObject } from '@apollo/client'
 import { useChain } from './chain'
+import { useCalcOdds } from '../hooks/useCalcOdds';
 
 
 type Game = {
@@ -48,6 +49,10 @@ export type BaseBetslipContextValue = {
 }
 
 export type DetailedBetslipContextValue = {
+  amount: string
+  odds: Record<string, number>
+  totalOdds: number
+  setAmount: (value: string) => void
   isStatusesFetching: boolean
   isOddsFetching: boolean
 }
@@ -72,8 +77,9 @@ export const BetslipProvider: React.FC<Props> = (props) => {
   const { prematchClient, liveClient } = useApolloClients()
   const { appChain } = useChain()
   const [ items, setItems ] = useState<BetslipItem[]>([])
+  const [ amount, setAmount ] = useState('')
+  const { odds, totalOdds, loading: isOddsFetching } = useCalcOdds({ amount, selections: items })
   const [ isStatusesFetching, setStatusesFetching ] = useState(false)
-  const [ isOddsFetching, setOddsFetching ] = useState(false)
 
   const addItem = useCallback((itemProps: ItemProps) => {
     const { gameId, coreAddress, lpAddress, ...data } = itemProps
@@ -204,9 +210,16 @@ export const BetslipProvider: React.FC<Props> = (props) => {
   ])
 
   const detailedValue = useMemo(() => ({
+    amount,
+    odds,
+    totalOdds,
+    setAmount,
     isStatusesFetching,
     isOddsFetching,
   }), [
+    amount,
+    odds,
+    totalOdds,
     isStatusesFetching,
     isOddsFetching
   ])

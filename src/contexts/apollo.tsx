@@ -87,6 +87,7 @@ export const ApolloProvider = (props: Props) => {
       const prematchLink = getPrematchLink(appChain.id)
 
       prematchClient!.setLink(prematchLink)
+      prematchClient!.resetStore()
 
       prevAppChainIdRef.current = appChain.id
     }

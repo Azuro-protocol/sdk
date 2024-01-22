@@ -20,7 +20,7 @@ type NewBetProps = {
   bet: {
     amount: string
     selections: Selection[]
-    selectionsOdds: Array<string | bigint>
+    selectionsOdds: Record<string, number>
     freebetId?: string | bigint
     freebetContractAddress?: Address
   }
@@ -89,7 +89,7 @@ export const useBetsCache = () => {
   
       const selectionFragment: BetFragment['selections'][number] = {
         __typename: 'Selection',
-        odds: String(selectionsOdds[index]),
+        odds: String(selectionsOdds[`${conditionId}-${outcomeId}`]),
         result: null,
         outcome: {
           __typename: 'Outcome',
