@@ -1,6 +1,6 @@
 'use client'
 import React from 'react';
-import { ConditionStatus, useBaseBetslip, useBetTokenBalance, useChain, useDetailedBetslip, usePrepareBet } from '@azuro-org/sdk';
+import { ConditionStatus, useBaseBetslip, useBetTokenBalance, useChain, useDetailedBetslip, usePrepareBet, BetslipDisableReason } from '@azuro-org/sdk';
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries';
 import { useAccount } from 'wagmi'
 import dayjs from 'dayjs';
@@ -54,12 +54,19 @@ type SubmitButtonProps = {
   onClick(): void
 }
 
+const errorPerDisableReason = {
+  [BetslipDisableReason.ComboWithForbiddenItem]: 'One or more conditions can\'t be used in combo',
+  [BetslipDisableReason.ComboWithLive]: 'Live outcome can\'t be used in combo',
+  [BetslipDisableReason.ConditionStatus]: 'One or more outcomes have been removed or suspended. Review your betslip and remove them.',
+  [BetslipDisableReason.PrematchConditionInStartedGame]: 'Game has started',
+}
+
 export const SubmitButton: React.FC<SubmitButtonProps> = (props) => {
   const { isAllowanceLoading, isApproveRequired, isPending, isProcessing, onClick } = props
 
   const account = useAccount()
   const { appChain, isRightNetwork } = useChain()
-  const { amount, statuses, isStatusesFetching, isOddsFetching } = useDetailedBetslip()
+  const { amount, disableReason, isStatusesFetching, isOddsFetching, isBetAllowed } = useDetailedBetslip()
   const { loading: isBalanceFetching, balance } = useBetTokenBalance()
 
   if (!account.address) {
@@ -78,8 +85,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = (props) => {
     )
   }
 
-  const isEnoughBalance = Boolean(+amount && balance && +balance > +amount)
-  const isConditionsInCreatedStatus = Object.values(statuses).every(status => status === ConditionStatus.Created)
+  const isEnoughBalance = isBalanceFetching || !Boolean(+amount) ? true : Boolean(+balance! > +amount)
 
   const isLoading = (
     isOddsFetching
@@ -92,8 +98,8 @@ export const SubmitButton: React.FC<SubmitButtonProps> = (props) => {
 
   const isDisabled = (
     isLoading
+    || !isBetAllowed
     || !isEnoughBalance
-    || !isConditionsInCreatedStatus
     || !+amount
   )
 
@@ -118,9 +124,16 @@ export const SubmitButton: React.FC<SubmitButtonProps> = (props) => {
   return (
     <div className="mt-6">
       {
-        Boolean(+amount && !isEnoughBalance) && (
+        !isEnoughBalance && (
           <div className="mb-1 text-red-500 text-center font-semibold">
             Not enough balance.
+          </div>
+        )
+      }
+      {
+        Boolean(disableReason) && (
+          <div className="mb-1 text-red-500 text-center font-semibold">
+            {errorPerDisableReason[disableReason!]}
           </div>
         )
       }
@@ -232,7 +245,7 @@ function Content() {
                       </div>
                       {
                         isLock && (
-                          <div className="text-orange-200 text-center">Condition removed or suspended</div>
+                          <div className="text-orange-200 text-center">Outcome removed or suspended</div>
                         )
                       }
                     </div>

@@ -9,6 +9,13 @@ import { useConditionsStatuses } from '../hooks/useConditionsStatuses';
 import { ConditionStatus } from 'src/docs/live/types'
 
 
+export enum BetslipDisableReason {
+  ConditionStatus = 'ConditionStatus',
+  ComboWithLive = 'ComboWithLive',
+  ComboWithForbiddenItem = 'ComboWithForbiddenItem',
+  PrematchConditionInStartedGame = 'PrematchConditionInStartedGame',
+}
+
 type Game = {
   gameId: string
   countryName: string
@@ -55,9 +62,11 @@ export type DetailedBetslipContextValue = {
   odds: Record<string, number>
   totalOdds: number
   statuses: Record<string, ConditionStatus>
+  disableReason: BetslipDisableReason | undefined
   setAmount: (value: string) => void
   isStatusesFetching: boolean
   isOddsFetching: boolean
+  isBetAllowed: boolean
 }
 
 export const BaseBetslipContext = createContext<BaseBetslipContextValue | null>(null)
@@ -83,6 +92,50 @@ export const BetslipProvider: React.FC<Props> = (props) => {
   const [ amount, setAmount ] = useState('')
   const { odds, totalOdds, loading: isOddsFetching } = useCalcOdds({ amount, selections: items })
   const { statuses, loading: isStatusesFetching } = useConditionsStatuses({ selections: items })
+
+  const isCombo = items.length > 1
+
+  const isLiveBet = useMemo(() => {
+    return items.some(({ coreAddress }) => coreAddress === liveCoreAddress)
+  }, [ items ])
+
+  const isConditionsInCreatedStatus = useMemo(() => {
+    return Object.values(statuses).every(status => status === ConditionStatus.Created)
+  }, [ statuses ])
+
+  const isComboAllowed = useMemo(() => {
+    return !isCombo || !isLiveBet && items.every(({ isExpressForbidden }) => !isExpressForbidden)
+  }, [ items ])
+
+  const isPrematchBetAllowed = useMemo(() => {
+    return items.every(({ coreAddress, game: { startsAt } }) => {
+      if (coreAddress === liveCoreAddress) {
+        return true
+      }
+
+      return startsAt * 1000 > Date.now()
+    })
+  }, [ items ])
+
+  const isBetAllowed = isConditionsInCreatedStatus && isComboAllowed && isPrematchBetAllowed
+
+  let disableReason: BetslipDisableReason | undefined = undefined
+
+  if (!isConditionsInCreatedStatus) {
+    disableReason = BetslipDisableReason.ConditionStatus
+  }
+
+  if (isCombo && !isComboAllowed) {
+    if (isLiveBet) {
+      disableReason = BetslipDisableReason.ComboWithLive
+    } else {
+      disableReason = BetslipDisableReason.ComboWithForbiddenItem
+    }
+  }
+
+  if (!isPrematchBetAllowed) {
+    disableReason = BetslipDisableReason.PrematchConditionInStartedGame
+  }
 
   const addItem = useCallback((itemProps: ItemProps) => {
     const { gameId, coreAddress, lpAddress } = itemProps
@@ -179,7 +232,6 @@ export const BetslipProvider: React.FC<Props> = (props) => {
   }, [])
 
   const prevChainId = useRef(appChain.id)
-
   useEffect(() => {
     if (prevChainId.current !== appChain.id) {
       clear()
@@ -215,16 +267,21 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     odds,
     totalOdds,
     statuses,
+    disableReason,
     setAmount,
     isStatusesFetching,
     isOddsFetching,
+    isBetAllowed,
   }), [
     amount,
     odds,
     totalOdds,
     statuses,
+    disableReason,
+    setAmount,
     isStatusesFetching,
-    isOddsFetching
+    isOddsFetching,
+    isBetAllowed,
   ])
 
   return (
