@@ -51,6 +51,16 @@ export const useCalcOdds = ({ selections, amount }: CalcOddsProps) => {
     return !liveItems.every(({ conditionId, outcomeId }) => Boolean(odds[`${conditionId}-${outcomeId}`]))
   }, [ liveKey, odds ])
 
+  const maxBet = useMemo<number | undefined>(() => {
+    if (!liveItems.length || liveItems.length > 1) {
+      return undefined
+    }
+
+    const { conditionId, outcomeId } = liveItems[0]!
+
+    return oddsDataRef.current?.[conditionId]?.outcomes?.[outcomeId]?.maxBet
+  }, [ liveKey, odds ]) // we need odds in deps because we update oddsDataRef with odds
+
   const fetchPrematchOdds = async () => {
     if (!prematchItems.length) {
       return
@@ -176,6 +186,7 @@ export const useCalcOdds = ({ selections, amount }: CalcOddsProps) => {
   return {
     odds,
     totalOdds,
+    maxBet,
     loading: isPrematchOddsFetching || isLiveOddsFetching,
   }
 }

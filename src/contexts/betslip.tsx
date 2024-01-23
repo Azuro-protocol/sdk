@@ -5,6 +5,8 @@ import { liveCoreAddress, localStorageKeys } from '../config'
 import { ApolloCache, NormalizedCacheObject } from '@apollo/client'
 import { useChain } from './chain'
 import { useCalcOdds } from '../hooks/useCalcOdds';
+import { useConditionsStatuses } from '../hooks/useConditionsStatuses';
+import { ConditionStatus } from 'src/docs/live/types'
 
 
 type Game = {
@@ -52,6 +54,7 @@ export type DetailedBetslipContextValue = {
   amount: string
   odds: Record<string, number>
   totalOdds: number
+  statuses: Record<string, ConditionStatus>
   setAmount: (value: string) => void
   isStatusesFetching: boolean
   isOddsFetching: boolean
@@ -79,7 +82,7 @@ export const BetslipProvider: React.FC<Props> = (props) => {
   const [ items, setItems ] = useState<BetslipItem[]>([])
   const [ amount, setAmount ] = useState('')
   const { odds, totalOdds, loading: isOddsFetching } = useCalcOdds({ amount, selections: items })
-  const [ isStatusesFetching, setStatusesFetching ] = useState(false)
+  const { statuses, loading: isStatusesFetching } = useConditionsStatuses({ selections: items })
 
   const addItem = useCallback((itemProps: ItemProps) => {
     const { gameId, coreAddress, lpAddress, ...data } = itemProps
@@ -140,7 +143,6 @@ export const BetslipProvider: React.FC<Props> = (props) => {
       }
     } as BetslipItem
 
-    setStatusesFetching(true)
     setItems(items => {
       let newItems: BetslipItem[]
       const replaceIndex = items.findIndex(({ game: { gameId } }) => gameId === item.game.gameId)
@@ -166,7 +168,6 @@ export const BetslipProvider: React.FC<Props> = (props) => {
       const newItems = items.filter((item) => item.game.gameId !== gameId)
 
       localStorage.setItem(localStorageKeys.betslipItems, JSON.stringify(newItems))
-      setStatusesFetching(Boolean(newItems.length))
 
       return newItems
     })
@@ -213,6 +214,7 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     amount,
     odds,
     totalOdds,
+    statuses,
     setAmount,
     isStatusesFetching,
     isOddsFetching,
@@ -220,6 +222,7 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     amount,
     odds,
     totalOdds,
+    statuses,
     isStatusesFetching,
     isOddsFetching
   ])

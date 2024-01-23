@@ -1,6 +1,6 @@
 'use client'
 import React from 'react';
-import { useBaseBetslip, useBetTokenBalance, useChain, useDetailedBetslip } from '@azuro-org/sdk';
+import { ConditionStatus, useBaseBetslip, useBetTokenBalance, useChain, useDetailedBetslip } from '@azuro-org/sdk';
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries';
 import dayjs from 'dayjs';
 
@@ -46,7 +46,7 @@ function AmountInput() {
 
 function Content() {
   const { items, clear, removeItem } = useBaseBetslip()
-  const { odds, totalOdds, isOddsFetching } = useDetailedBetslip()
+  const { odds, totalOdds, statuses, isStatusesFetching, isOddsFetching } = useDetailedBetslip()
 
 
   return (
@@ -69,6 +69,8 @@ function Content() {
 
                   const marketName = getMarketName({ outcomeId })
                   const selection = getSelectionName({ outcomeId, withPoint: true })
+
+                  const isLock = !isStatusesFetching && statuses[conditionId] !== ConditionStatus.Created
 
                   return (
                     <div key={gameId} className="bg-zinc-50 p-2 rounded-md mt-2 first-of-type:mt-0">
@@ -114,6 +116,11 @@ function Content() {
                           )
                         }
                       </div>
+                      {
+                        isLock && (
+                          <div className="text-orange-200 text-center">Condition removed or suspended</div>
+                        )
+                      }
                     </div>
                   )
                 })

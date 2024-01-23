@@ -39,7 +39,7 @@ export function OutcomeButton(props: OutcomeProps) {
       isExpressForbidden: outcome.isExpressForbidden,
     }
     if (isActive) {
-      removeItem(item)
+      removeItem(String(outcome.gameId))
     } else {
       addItem(item)
     }

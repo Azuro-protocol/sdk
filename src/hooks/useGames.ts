@@ -3,7 +3,7 @@ import { useQuery, type QueryHookOptions } from '@apollo/client'
 import { GamesDocument, GamesQuery, GamesQueryVariables } from '../docs/prematch/games'
 import { useApolloClients } from '../contexts/apollo';
 import { useLive } from '../contexts/live';
-import { Game_OrderBy, OrderDirection } from '../docs/prematch/types'
+import { GameStatus, Game_OrderBy, OrderDirection } from '../docs/prematch/types'
 import { getGameStartsAtGtValue } from '../helpers'
 
 
@@ -37,6 +37,7 @@ export const useGames = (props?: UseGamesProps) => {
       orderDirection: orderDir,
       where: {
         hasActiveConditions: true,
+        status_in: [ GameStatus.Created, GameStatus.Paused ],
       },
     }
 

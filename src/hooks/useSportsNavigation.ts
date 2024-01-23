@@ -4,6 +4,7 @@ import { NavigationDocument, NavigationQuery, NavigationQueryVariables } from '.
 import { useApolloClients } from '../contexts/apollo';
 import { useLive } from '../contexts/live';
 import { getGameStartsAtGtValue } from '../helpers'
+import { GameStatus } from 'src/docs/prematch/types';
 
 
 type UseNavigationProps = {
@@ -23,6 +24,7 @@ export const useSportsNavigation = (props: UseNavigationProps = {}) => {
       withGameCount,
       where: {
         hasActiveConditions: true,
+        status_in: [ GameStatus.Created, GameStatus.Paused ],
       }
     }
 
