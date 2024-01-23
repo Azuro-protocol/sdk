@@ -38,7 +38,7 @@ export const useConditions = (props: UseConditionsProps) => {
     }
 
     if (filter?.outcomeIds) {
-      variables.where.outcomesIds_contains = filter.outcomeIds
+      vars.where.outcomesIds_contains = filter.outcomeIds
     }
 
     return vars

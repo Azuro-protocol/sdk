@@ -64,6 +64,8 @@ export const useConditionsStatuses = ({ selections }: ConditionsStatusesProps) =
       return
     }
 
+    setStatuses({})
+
     const unsubscribeList = selections.map(({ conditionId }) => {
       return conditionStatusWatcher.subscribe(conditionId, (newStatus) => {
         setStatuses(statuses => ({
@@ -91,7 +93,7 @@ export const useConditionsStatuses = ({ selections }: ConditionsStatusesProps) =
       const { data: { conditions } } = await prematchClient!.query<ConditionsQuery>({
         query: ConditionsDocument,
         variables: {
-          conditionFilter: {
+          where: {
             conditionId_in: prematchItems.map(({ conditionId }) => conditionId),
           },
         },
@@ -104,6 +106,7 @@ export const useConditionsStatuses = ({ selections }: ConditionsStatusesProps) =
         return acc
       }, {} as Record<string, ConditionStatus>)
 
+      setPrematchStatusesFetching(false)
       setStatuses(statuses => ({
         ...statuses,
         ...prematchStatuses,

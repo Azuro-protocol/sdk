@@ -1,8 +1,10 @@
 'use client'
 import React from 'react';
-import { ConditionStatus, useBaseBetslip, useBetTokenBalance, useChain, useDetailedBetslip } from '@azuro-org/sdk';
+import { ConditionStatus, useBaseBetslip, useBetTokenBalance, useChain, useDetailedBetslip, usePrepareBet } from '@azuro-org/sdk';
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries';
+import { useAccount } from 'wagmi'
 import dayjs from 'dayjs';
+import cx from 'clsx'
 
 import { useBetslip } from '@/context/betslip';
 
@@ -44,10 +46,122 @@ function AmountInput() {
   )
 }
 
+type SubmitButtonProps = {
+  isAllowanceLoading: boolean
+  isApproveRequired: boolean
+  isPending: boolean
+  isProcessing: boolean
+  onClick(): void
+}
+
+export const SubmitButton: React.FC<SubmitButtonProps> = (props) => {
+  const { isAllowanceLoading, isApproveRequired, isPending, isProcessing, onClick } = props
+
+  const account = useAccount()
+  const { appChain, isRightNetwork } = useChain()
+  const { amount, statuses, isStatusesFetching, isOddsFetching } = useDetailedBetslip()
+  const { loading: isBalanceFetching, balance } = useBetTokenBalance()
+
+  if (!account.address) {
+    return (
+      <div className="mt-6 py-3.5 text-center bg-red-200 rounded-2xl">
+        Connect your wallet
+      </div>
+    )
+  }
+
+  if (!isRightNetwork) {
+    return (
+      <div className="mt-6 py-3.5 text-center bg-red-200 rounded-2xl">
+        Switch network to <b>{appChain.name}</b> in your wallet
+      </div>
+    )
+  }
+
+  const isEnoughBalance = Boolean(+amount && balance && +balance > +amount)
+  const isConditionsInCreatedStatus = Object.values(statuses).every(status => status === ConditionStatus.Created)
+
+  const isLoading = (
+    isOddsFetching
+    || isBalanceFetching
+    || isStatusesFetching
+    || isAllowanceLoading
+    || isPending
+    || isProcessing
+  )
+
+  const isDisabled = (
+    isLoading
+    || !isEnoughBalance
+    || !isConditionsInCreatedStatus
+    || !+amount
+  )
+
+  let title
+
+  if (isPending) {
+    title = 'Waiting for approval'
+  }
+  else if (isProcessing) {
+    title = 'Processing...'
+  }
+  else if (isApproveRequired) {
+    title = 'Approve'
+  }
+  else if (isLoading) {
+    title = 'Loading...'
+  }
+  else {
+    title = 'Place Bet'
+  }
+
+  return (
+    <div className="mt-6">
+      {
+        Boolean(+amount && !isEnoughBalance) && (
+          <div className="mb-1 text-red-500 text-center font-semibold">
+            Not enough balance.
+          </div>
+        )
+      }
+      <button
+        className={cx('w-full py-3.5 text-white font-semibold text-center rounded-xl', {
+          'bg-blue-500 hover:bg-blue-600 transition shadow-md': !isDisabled,
+          'bg-zinc-300 cursor-not-allowed': isDisabled,
+        })}
+        disabled={isDisabled}
+        onClick={onClick}
+      >
+        {title}
+      </button>
+    </div>
+  )
+}
+
+
 function Content() {
   const { items, clear, removeItem } = useBaseBetslip()
-  const { odds, totalOdds, statuses, isStatusesFetching, isOddsFetching } = useDetailedBetslip()
+  const { amount, odds, totalOdds, statuses, isStatusesFetching, isOddsFetching } = useDetailedBetslip()
+  const {
+    isAllowanceLoading,
+    isApproveRequired,
+    submit,
+    approveTx,
+    betTx,
+  } = usePrepareBet({
+    amount,
+    slippage: 5,
+    affiliate: '0x0000000000000000000000000000000000000000', // your affiliate address
+    selections: items,
+    selectionsOdds: odds,
+    totalOdds,
+    onSuccess: () => {
+      clear()
+    },
+  })
 
+  const isPending = approveTx.isPending || betTx.isPending
+  const isProcessing = approveTx.isProcessing  || betTx.isProcessing
 
   return (
     <div className="bg-zinc-100 p-4 mb-4 rounded-md w-full max-h-[90vh] overflow-hidden">
@@ -139,6 +253,13 @@ function Content() {
               </span>
             </div>
             <AmountInput />
+            <SubmitButton
+              isAllowanceLoading={isAllowanceLoading}
+              isApproveRequired={isApproveRequired}
+              isPending={isPending}
+              isProcessing={isProcessing}
+              onClick={submit}
+            />
           </>
         ) : (
           <div>Empty</div>

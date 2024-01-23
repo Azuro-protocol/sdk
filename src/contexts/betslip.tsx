@@ -85,7 +85,7 @@ export const BetslipProvider: React.FC<Props> = (props) => {
   const { statuses, loading: isStatusesFetching } = useConditionsStatuses({ selections: items })
 
   const addItem = useCallback((itemProps: ItemProps) => {
-    const { gameId, coreAddress, lpAddress, ...data } = itemProps
+    const { gameId, coreAddress, lpAddress } = itemProps
 
     let game: MainGameInfoFragment | null
     let cache: ApolloCache<NormalizedCacheObject>

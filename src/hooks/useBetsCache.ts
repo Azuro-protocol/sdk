@@ -84,7 +84,7 @@ export const useBetsCache = () => {
           })
         }, 1500)
   
-        break
+        return
       }
   
       const selectionFragment: BetFragment['selections'][number] = {
