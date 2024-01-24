@@ -163,8 +163,8 @@ function Content() {
     betTx,
   } = usePrepareBet({
     amount,
-    slippage: 5,
-    affiliate: '0x0000000000000000000000000000000000000000', // your affiliate address
+    slippage: 10,
+    affiliate: '0x68E0C1dBF926cDa7A65ef2722e046746EB0f816f', // your affiliate address
     selections: items,
     selectionsOdds: odds,
     totalOdds,
@@ -261,6 +261,18 @@ function Content() {
                     <>Loading...</>
                   ) : (
                     <>{ totalOdds }</>
+                  )
+                }
+              </span>
+            </div>
+            <div className="flex items-center justify-between mt-4">
+              <span className="text-md text-zinc-400">Possible win</span>
+              <span className="text-md font-semibold">
+                {
+                  isOddsFetching ? (
+                    <>Loading...</>
+                  ) : (
+                    <>{ totalOdds * +amount }</>
                   )
                 }
               </span>

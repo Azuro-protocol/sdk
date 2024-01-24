@@ -28,7 +28,7 @@ type NewBetProps = {
 }
 
 export const useBetsCache = () => {
-  const {prematchClient: client} = useApolloClients()
+  const { prematchClient: client } = useApolloClients()
   const { cache } = client!
   const { contracts } = useChain()
 

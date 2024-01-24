@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import { ChainId, ChainProvider, LiveProvider, ApolloProvider, SocketProvider, BetslipProvider as AzuroBetslipProvider } from '@azuro-org/sdk'
+import { ChainId, AzuroSDKProvider } from '@azuro-org/sdk'
 import { RainbowKitProvider, getDefaultWallets } from '@rainbow-me/rainbowkit'
 import { WagmiConfig, configureChains, createConfig } from 'wagmi'
 import { polygonMumbai, arbitrumGoerli } from 'viem/chains'
@@ -52,19 +52,11 @@ export function Providers(props: ProvidersProps) {
   return (
     <WagmiConfig config={wagmiConfig}>
       <RainbowKitProvider chains={chains}>
-        <ChainProvider initialChainId={chainId}>
-          <LiveProvider initialState={initialLiveState}>
-            <ApolloProvider>
-              <SocketProvider>
-                <AzuroBetslipProvider>
-                  <BetslipProvider>
-                    {children}
-                  </BetslipProvider>
-                </AzuroBetslipProvider>
-              </SocketProvider>
-            </ApolloProvider>
-          </LiveProvider>
-        </ChainProvider>
+        <AzuroSDKProvider initialChainId={chainId} initialLiveState={initialLiveState}>
+          <BetslipProvider>
+            {children}
+          </BetslipProvider>
+          </AzuroSDKProvider>
       </RainbowKitProvider>
     </WagmiConfig>
   )

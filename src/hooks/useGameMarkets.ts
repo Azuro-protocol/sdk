@@ -223,6 +223,7 @@ export const useGameMarkets = (props: Props) => {
     gameId,
     filter,
     isLive: gameStatus === GameStatus.Live,
+    livePollInterval: 2000,
   })
 
   // generate unique key for memo deps

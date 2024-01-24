@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { liveCoreAddress } from '../config'
 import { useChain } from '../contexts/chain'
 import { useSocket, OddsChangedData } from '../contexts/socket'
-import { batchSocketSubscribe, batchSocketUnsubscribe } from '../helpers'
+import { batchSocketSubscribe, batchSocketUnsubscribe, formatToFixed } from '../helpers'
 import { type Selection } from '../global';
 import { calcLiveOdds, calcPrematchOdds } from '../utils/calcOdds';
 import useIsMounted from '../hooks/useIsMounted';
@@ -79,7 +79,7 @@ export const useCalcOdds = ({ selections, amount }: CalcOddsProps) => {
       if (isMounted()) {
         setOdds(odds => {
           const newOdds = { ...odds, ...prematchOdds }
-          const newTotalOdds = Object.keys(newOdds).reduce((acc, key) => acc * +newOdds[key]!, 1)
+          const newTotalOdds = formatToFixed(Object.keys(newOdds).reduce((acc, key) => acc * +newOdds[key]!, 1), 3)
 
           setTotalOdds(newTotalOdds)
 
@@ -119,7 +119,7 @@ export const useCalcOdds = ({ selections, amount }: CalcOddsProps) => {
 
     setOdds(odds => {
       const newOdds = { ...odds, ...liveOdds }
-      const newTotalOdds = Object.keys(newOdds).reduce((acc, key) => acc * +newOdds[key]!, 1)
+      const newTotalOdds = formatToFixed(Object.keys(newOdds).reduce((acc, key) => acc * +newOdds[key]!, 1), 3)
 
       setTotalOdds(newTotalOdds)
 

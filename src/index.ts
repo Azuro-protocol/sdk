@@ -1,5 +1,6 @@
 export { chainsData, type ChainId, cookieKeys } from './config'
 export { type Selection } from './global'
+export { default as AzuroSDKProvider } from './AzuroSDKProvider'
 // contexts
 export * from './contexts/chain'
 export * from './contexts/live'

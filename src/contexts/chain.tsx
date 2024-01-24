@@ -17,12 +17,12 @@ export const useChain = () => {
   return useContext(ChainContext) as ChainContextValue
 }
 
-type Props = {
+export type ChainProviderProps = {
   children: React.ReactNode
   initialChainId: ChainId
 }
 
-export const ChainProvider: React.FC<Props> = (props) => {
+export const ChainProvider: React.FC<ChainProviderProps> = (props) => {
   const { children, initialChainId } = props
 
   const [ appChainId, setAppChainId ] = useState<ChainId>(initialChainId)

@@ -16,16 +16,16 @@ export const useLive = () => {
   return useContext(LiveContext) as LiveContextValue
 }
 
-type Props = {
+export type LiveProviderProps = {
   children: React.ReactNode
-  initialState?: boolean
+  initialLiveState?: boolean
 }
 
-export const LiveProvider: React.FC<Props> = (props) => {
-  const { children, initialState } = props
+export const LiveProvider: React.FC<LiveProviderProps> = (props) => {
+  const { children, initialLiveState } = props
 
   const { appChain, setAppChainId } = useChain()
-  const [ isLive, setLive ] = useState(appChain.id === polygonMumbai.id && Boolean(initialState))
+  const [ isLive, setLive ] = useState(appChain.id === polygonMumbai.id && Boolean(initialLiveState))
 
   useMemo(() => {
     if (appChain.id !== polygonMumbai.id && isLive) {

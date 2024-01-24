@@ -1,5 +1,5 @@
-import { arbitrum, arbitrumGoerli, polygon, gnosis, polygonMumbai, type Chain } from 'viem/chains'
-import { parseUnits } from 'viem'
+import { polygon, gnosis, polygonMumbai, type Chain } from 'viem/chains'
+import { parseUnits, Address } from 'viem'
 
 export const DEFAULT_CACHE_TIME = 3 * 60
 export const MAX_UINT_256 = parseUnits('340282366920938463463', 0)
@@ -15,9 +15,7 @@ const getGraphqlEndpoint = (network: string) => `https://thegraph.azuro.org/subg
 export const graphqlEndpoints: Record<number, string> = {
   [gnosis.id]: getGraphqlEndpoint('gnosis'),
   [polygon.id]: getGraphqlEndpoint('polygon'),
-  [arbitrum.id]: getGraphqlEndpoint('arbitrum-one'),
   [polygonMumbai.id]: getGraphqlEndpoint('mumbai-dev'),
-  [arbitrumGoerli.id]: getGraphqlEndpoint('arbitrum-goerli-dev'),
 }
 
 export const graphqlLiveEndpoint = 'https://thegraph.azuro.org/subgraphs/name/azuro-protocol/azuro-api-live-data-feed-dev'
@@ -29,52 +27,66 @@ export const prematchComboCoreAbi = [{"inputs":[],"name":"AlreadyPaid","type":"e
 export const proxyFrontAbi = [{"inputs":[],"name":"IncorrectValue","type":"error"},{"inputs":[{"internalType":"enum SafeCast.Type","name":"to","type":"uint8"}],"name":"SafeCastError","type":"error"},{"inputs":[{"internalType":"address","name":"lp","type":"address"},{"internalType":"bytes","name":"data","type":"bytes"}],"name":"addLiquidityNative","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"address","name":"lp","type":"address"},{"components":[{"internalType":"address","name":"core","type":"address"},{"internalType":"uint128","name":"amount","type":"uint128"},{"internalType":"uint64","name":"expiresAt","type":"uint64"},{"components":[{"internalType":"address","name":"affiliate","type":"address"},{"internalType":"uint64","name":"minOdds","type":"uint64"},{"internalType":"bytes","name":"data","type":"bytes"}],"internalType":"struct IBet.BetData","name":"extraData","type":"tuple"}],"internalType":"struct IProxyFront.BetData[]","name":"data","type":"tuple[]"}],"name":"bet","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"address","name":"lp","type":"address"},{"internalType":"uint48","name":"depositId","type":"uint48"},{"internalType":"uint40","name":"percent","type":"uint40"}],"name":"withdrawLiquidityNative","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"components":[{"internalType":"address","name":"core","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"},{"internalType":"bool","name":"isNative","type":"bool"}],"internalType":"struct IProxyFront.WithdrawPayoutData[]","name":"data","type":"tuple[]"}],"name":"withdrawPayouts","outputs":[],"stateMutability":"nonpayable","type":"function"},{"stateMutability":"payable","type":"receive"}] as const
 
 type SetupContractsProps = {
-  lp: `0x${string}`
-  prematchCore: `0x${string}`
-  prematchComboCore: `0x${string}`
-  proxyFront: `0x${string}`
+  lp: Address
+  prematchCore: Address
+  prematchComboCore: Address
+  proxyFront: Address
+  liveRelayer?: Address
 }
 
-const setupContracts = ({ lp, prematchCore, prematchComboCore, proxyFront }: SetupContractsProps): Contracts => ({
-  lp: {
-    address: lp,
-    abi: lpAbi,
-  },
-  prematchCore: {
-    address: prematchCore,
-    abi: prematchCoreAbi,
-  },
-  prematchComboCore: {
-    address: prematchComboCore,
-    abi: prematchComboCoreAbi,
-  },
-  proxyFront: {
-    address: proxyFront,
-    abi: proxyFrontAbi,
-  },
-})
+const setupContracts = ({ lp, prematchCore, prematchComboCore, proxyFront, liveRelayer }: SetupContractsProps): Contracts => {
+  const contracts: Contracts = {
+    lp: {
+      address: lp,
+      abi: lpAbi,
+    },
+    prematchCore: {
+      address: prematchCore,
+      abi: prematchCoreAbi,
+    },
+    prematchComboCore: {
+      address: prematchComboCore,
+      abi: prematchComboCoreAbi,
+    },
+    proxyFront: {
+      address: proxyFront,
+      abi: proxyFrontAbi,
+    },
+  }
+
+  if (liveRelayer) {
+    contracts.liveRelayer = {
+      address: liveRelayer,
+    }
+  }
+  
+  return contracts
+}
 
 type Contracts = {
   lp: {
-    address: `0x${string}`
+    address: Address
     abi: typeof lpAbi
   }
   prematchCore: {
-    address: `0x${string}`
+    address: Address
     abi: typeof prematchCoreAbi
   }
   prematchComboCore: {
-    address: `0x${string}`
+    address: Address
     abi: typeof prematchComboCoreAbi
   }
   proxyFront: {
-    address: `0x${string}`
+    address: Address
     abi: typeof proxyFrontAbi
+  }
+  liveRelayer?: {
+    address: Address
   }
 }
 
 type BetToken = {
-  address?: `0x${string}` | undefined
+  address?: Address | undefined
   symbol: string
   decimals: number
 }
@@ -115,21 +127,6 @@ const polygonData: ChainData = {
   },
 }
 
-const arbitrumData: ChainData = {
-  chain: arbitrum,
-  contracts: setupContracts({
-    lp: '0x20513ba6A4717c67e14291331BC99dd2aCE90038',
-    prematchCore: '0x23724eB8663c1a7fF529313B97142918D9fd9a1a',
-    prematchComboCore: '0x526f1F20e2E5D6bf0E13c551f6Cc400261fB9D75',
-    proxyFront: '0x8eC5B99270DB359D57f2B7b46cE97aB4598591Fb',
-  }),
-  betToken: {
-    address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
-    symbol: 'USDT',
-    decimals: 6,
-  },
-}
-
 const polygonMumbaiData: ChainData = {
   chain: polygonMumbai,
   contracts: setupContracts({
@@ -137,6 +134,7 @@ const polygonMumbaiData: ChainData = {
     prematchCore: '0x8ea11e2aefab381e87b644e018ae1f78aa338851',
     prematchComboCore: '0xc0a46fc9952e4b804960a91ece75f89952a2c205',
     proxyFront: '0xa43328ABd99ae605A87661E7fC84a0e509DE6BD0',
+    liveRelayer: '0x1e15376522EfcbfD5032A6497a111495CE49c2FA',
   }),
   betToken: {
     address: '0xe656De3EC9eFf1B851e0b39AFFaa1478353885a4',
@@ -145,30 +143,21 @@ const polygonMumbaiData: ChainData = {
   },
 }
 
-const arbitrumGoerliData: ChainData = {
-  chain: arbitrumGoerli,
-  contracts: setupContracts({
-    lp: '0x482e419711E63d0E49CbDC696858Ef1E4764771e',
-    prematchCore: '0xFCEAe5DD2dF799399df5472aE783B6fE2F8fB382',
-    prematchComboCore: '0x169A0c9A10D722476c1ccB1155ed454460da2A43',
-    proxyFront: '0x4eDedEab8ecB17cB569a1aCEe4D60a49AECabB10',
-  }),
-  betToken: {
-    address: '0x600d18607e2805f4c669381f28fdcd1d5074b4b4',
-    symbol: 'USDT',
-    decimals: 6,
-  },
-}
-
 export const chainsData = {
   [gnosis.id]: gnosisData,
   [polygon.id]: polygonData,
-  [arbitrum.id]: arbitrumData,
   [polygonMumbai.id]: polygonMumbaiData,
-  [arbitrumGoerli.id]: arbitrumGoerliData,
 } as const
 
 export const liveCoreAddress = "0x2276b77B2C6ea24e1677F40A821D07907f5Dbba0"
+
+export const getApiUrl = (chainId: ChainId) => {
+  if ([ polygonMumbai.id ].includes(chainId as any)) {
+    return 'https://dev-api.azuro.org/api/v1/public'
+  }
+
+  return 'https://api.azuro.org/api/v1/public'
+}
 
 export const cookieKeys = {
   appChainId: 'appChainId',
