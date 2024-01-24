@@ -1,14 +1,16 @@
+import type { Address } from 'wagmi'
+import type { TransactionReceipt } from 'viem'
+import { formatUnits } from 'viem'
+
 import { BetFragmentDoc, type BetFragment } from '../docs/prematch/fragments/bet'
 import { MainGameInfoFragmentDoc, type MainGameInfoFragment } from '../docs/prematch/fragments/mainGameInfo'
 import { ConditionFragmentDoc, type ConditionFragment } from '../docs/prematch/fragments/condition'
-import { ConditionStatus, BetStatus } from '../docs/prematch/types';
-import { useApolloClients } from '../contexts/apollo';
-import { Address } from 'wagmi';
-import { TransactionReceipt, formatUnits } from 'viem';
-import { getEventArgsFromTxReceipt } from '../helpers';
-import { useChain } from '../contexts/chain';
-import { ODDS_DECIMALS } from '../config';
-import { Selection } from '../global';
+import { ConditionStatus, BetStatus } from '../docs/prematch/types'
+import { useApolloClients } from '../contexts/apollo'
+import { getEventArgsFromTxReceipt } from '../helpers'
+import { useChain } from '../contexts/chain'
+import { ODDS_DECIMALS } from '../config'
+import type { Selection } from '../global'
 
 
 type UpdateBetProps = {
@@ -34,7 +36,7 @@ export const useBetsCache = () => {
 
   const updateBetCache = ({ coreAddress, tokenId }: UpdateBetProps, values: Partial<BetFragment>) => {
     const betEntityId = `${coreAddress}_${tokenId}`
-  
+
     cache.updateFragment<BetFragment>({
       id: cache.identify({ __typename: 'Bet', id: betEntityId }),
       fragment: BetFragmentDoc,
@@ -52,9 +54,9 @@ export const useBetsCache = () => {
     const isExpress = selections.length > 1
 
     const core = isExpress ? contracts.prematchComboCore : contracts.prematchCore
-  
+
     const selectionFragments: BetFragment['selections'] = []
-  
+
     for (let index = 0; index < selections.length; index++) {
       const { outcomeId, conditionId: _conditionId } = selections[index]!
       const conditionId = String(_conditionId)
@@ -68,7 +70,7 @@ export const useBetsCache = () => {
 
       const gameId = condition?.game.gameId
       const gameEntityId = `${contracts.lp.address.toLowerCase()}_${gameId}`
-  
+
       const game = cache.readFragment<MainGameInfoFragment>({
         id: cache.identify({ __typename: 'Game', id: gameEntityId }),
         fragment: MainGameInfoFragmentDoc,
@@ -83,10 +85,10 @@ export const useBetsCache = () => {
             include: [ 'Bets' ],
           })
         }, 1500)
-  
+
         return
       }
-  
+
       const selectionFragment: BetFragment['selections'][number] = {
         __typename: 'Selection',
         odds: String(selectionsOdds[`${conditionId}-${outcomeId}`]),
@@ -102,7 +104,7 @@ export const useBetsCache = () => {
           },
         },
       } as const
-  
+
       selectionFragments.push(selectionFragment)
     }
 
@@ -121,7 +123,7 @@ export const useBetsCache = () => {
         bets: (bets) => {
           // https://github.com/Azuro-protocol/azuro-api-subgraph/blob/main/src/utils/schema.ts
           const betEntityId = `${core.address.toLowerCase()}_${tokenId}`
-  
+
           const data: BetFragment = {
             __typename: 'Bet',
             id: betEntityId,
@@ -149,16 +151,16 @@ export const useBetsCache = () => {
             txHash: receipt.transactionHash,
             selections: selectionFragments,
           }
-  
+
           const newBet = cache.writeFragment<BetFragment>({
             fragment: BetFragmentDoc,
             fragmentName: 'Bet',
             data,
           })
-  
+
           return [ newBet, ...bets ]
-        }
-      }
+        },
+      },
     })
   }
 

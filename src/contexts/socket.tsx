@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
+
 import { socketApiUrl } from '../config'
-import { ConditionStatus } from 'src/docs/prematch/types'
+import type { ConditionStatus } from '../docs/prematch/types'
 import { conditionStatusWatcher } from '../modules/conditionStatusWatcher'
 import { oddsWatcher } from '../modules/oddsWatcher'
 
@@ -44,8 +45,8 @@ export const useSocket = () => {
 }
 
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [socket, setSocket] = useState<WebSocket>()
-  const [isSocketReady, setSocketReady] = useState(false)
+  const [ socket, setSocket ] = useState<WebSocket>()
+  const [ isSocketReady, setSocketReady ] = useState(false)
   const subscribers = useRef<Record<string, number>>({})
 
   const subscribeToUpdates = (conditionIds: string[]) => {

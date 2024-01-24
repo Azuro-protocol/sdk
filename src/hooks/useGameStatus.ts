@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
+
 import { getGameStatus, type GameStatus } from '../utils/getGameStatus'
-import { GameStatus as LiveGameStatus } from '../docs/live/types'
-import { GameStatus as PrematchGameStatus } from '../docs/prematch/types'
+import type { GameStatus as LiveGameStatus } from '../docs/live/types'
+import type { GameStatus as PrematchGameStatus } from '../docs/prematch/types'
 
 
 enum LiveGameState {

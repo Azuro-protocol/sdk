@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useState } from "react"
-import { liveCoreAddress } from "../config"
-import { Selection } from '../global';
-import { useSocket } from "src/contexts/socket";
-import { batchSocketSubscribe, batchSocketUnsubscribe } from "src/helpers";
-import { useApolloClients } from "src/contexts/apollo";
+import { useEffect, useMemo, useState } from 'react'
+
+import { liveCoreAddress } from '../config'
+import type { Selection } from '../global'
+import { useSocket } from '../contexts/socket'
+import { batchSocketSubscribe, batchSocketUnsubscribe } from '../helpers'
+import { useApolloClients } from '../contexts/apollo'
 import { type ConditionsQuery, ConditionsDocument } from '../docs/prematch/conditions'
-import { conditionStatusWatcher } from "src/modules/conditionStatusWatcher";
-import { ConditionStatus } from "src/docs/prematch/types";
+import { conditionStatusWatcher } from '../modules/conditionStatusWatcher'
+import type { ConditionStatus } from '../docs/prematch/types'
 
 
 type ConditionsStatusesProps = {
@@ -116,6 +117,6 @@ export const useConditionsStatuses = ({ selections }: ConditionsStatusesProps) =
 
   return {
     statuses,
-    loading: isPrematchStatusesFetching || isLiveStatusesFetching
+    loading: isPrematchStatusesFetching || isLiveStatusesFetching,
   }
 }

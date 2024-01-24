@@ -1,16 +1,21 @@
 import { useMemo } from 'react'
 import { useQuery } from '@apollo/client'
-import { 
-  ConditionsDocument as PrematchConditionsDocument, 
-  ConditionsQuery as PrematchConditionsQuery, 
-  ConditionsQueryVariables as PrematchConditionsQueryVariables 
+
+import type {
+  ConditionsQuery as PrematchConditionsQuery,
+  ConditionsQueryVariables as PrematchConditionsQueryVariables,
 } from '../docs/prematch/conditions'
-import { 
-  ConditionsDocument as LiveConditionsDocument, 
-  ConditionsQuery as LiveConditionsQuery, 
-  ConditionsQueryVariables as LiveConditionsQueryVariables 
+import {
+  ConditionsDocument as PrematchConditionsDocument,
+} from '../docs/prematch/conditions'
+import type {
+  ConditionsQuery as LiveConditionsQuery,
+  ConditionsQueryVariables as LiveConditionsQueryVariables,
 } from '../docs/live/conditions'
-import { useApolloClients } from '../contexts/apollo';
+import {
+  ConditionsDocument as LiveConditionsDocument,
+} from '../docs/live/conditions'
+import { useApolloClients } from '../contexts/apollo'
 
 
 export type ConditionsQuery = PrematchConditionsQuery | LiveConditionsQuery
@@ -32,7 +37,7 @@ export const useConditions = (props: UseConditionsProps) => {
     const vars: PrematchConditionsQueryVariables = {
       where: {
         game_: {
-          gameId
+          gameId,
         },
       },
     }
@@ -44,26 +49,26 @@ export const useConditions = (props: UseConditionsProps) => {
     return vars
   }, [ gameId, filter?.outcomeIds?.join(',') ])
 
-  const { 
-    data: prematchData, 
-    loading: isPrematchLoading, 
-    error: prematchError 
+  const {
+    data: prematchData,
+    loading: isPrematchLoading,
+    error: prematchError,
   } = useQuery<PrematchConditionsQuery, PrematchConditionsQueryVariables>(PrematchConditionsDocument, {
     variables,
     ssr: false,
     client: prematchClient!,
-    skip: isLive
+    skip: isLive,
   })
   const {
-    data: liveData, 
-    loading: isLiveLoading, 
-    error: liveError
+    data: liveData,
+    loading: isLiveLoading,
+    error: liveError,
   } = useQuery<LiveConditionsQuery, LiveConditionsQueryVariables>(LiveConditionsDocument, {
     variables,
     ssr: false,
     client: liveClient!,
     skip: !isLive,
-    pollInterval: livePollInterval
+    pollInterval: livePollInterval,
   })
 
   const data = (isLive ? liveData : prematchData) || {} as ConditionsQuery

@@ -1,8 +1,10 @@
-import { useContractWrite, useWaitForTransaction, usePublicClient, Address } from 'wagmi'
-import { WriteContractResult } from '@wagmi/core';
+import type { Address } from 'wagmi'
+import { useContractWrite, useWaitForTransaction, usePublicClient } from 'wagmi'
+import type { WriteContractResult } from '@wagmi/core'
+
 import { useChain } from '../contexts/chain'
-import { useBetsCache } from './useBetsCache';
-import { Bet } from './useBets';
+import { useBetsCache } from './useBetsCache'
+import type { Bet } from './useBets'
 
 
 type SubmitProps = {
@@ -36,7 +38,7 @@ export const useRedeemBet = () => {
     let tx: WriteContractResult
 
     if (isBatch) {
-      const betsData = bets.map(({tokenId, coreAddress}) => ({
+      const betsData = bets.map(({ tokenId, coreAddress }) => ({
         core: coreAddress as Address,
         tokenId: BigInt(tokenId),
         isNative: false,
@@ -45,7 +47,8 @@ export const useRedeemBet = () => {
       tx = await batchRedeemTx.writeAsync({
         args: [ betsData ],
       })
-    } else {
+    }
+    else {
       const { tokenId, coreAddress } = bets[0]!
 
       tx = await redeemTx.writeAsync({
@@ -58,7 +61,7 @@ export const useRedeemBet = () => {
 
     const receipt = await publicClient.waitForTransactionReceipt(tx)
 
-    bets.forEach(({tokenId, coreAddress}) => {
+    bets.forEach(({ tokenId, coreAddress }) => {
       updateBetCache({
         coreAddress,
         tokenId,

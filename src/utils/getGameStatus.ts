@@ -1,4 +1,4 @@
-import { GameStatus as GraphGameStatus } from '../docs/live/types';
+import { GameStatus as GraphGameStatus } from '../docs/live/types'
 
 
 const getIsPendingResolution = (startDate: number): boolean => {

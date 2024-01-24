@@ -1,7 +1,9 @@
 import { createContext, useContext, useMemo, useRef } from 'react'
 import { ApolloClient, HttpLink, InMemoryCache, type NormalizedCacheObject } from '@apollo/client'
+
 import { useChain } from '../contexts/chain'
 import { graphqlEndpoints, graphqlLiveEndpoint } from '../config'
+
 
 const getPrematchLink = (chainId: number) => {
   return new HttpLink({
@@ -46,7 +48,7 @@ export const getApolloClients = (chainId: number): ApolloClients => {
   if (typeof window === 'undefined') {
     return {
       prematchClient: getPrematchApolloClient(chainId),
-      liveClient: getLiveApolloClient()
+      liveClient: getLiveApolloClient(),
     }
   }
 

@@ -1,7 +1,9 @@
 import { useMemo } from 'react'
 import { useQuery } from '@apollo/client'
-import { GameDocument, GameQuery, GameQueryVariables } from '../docs/prematch/game'
-import { useApolloClients } from '../contexts/apollo';
+
+import type { GameQuery, GameQueryVariables } from '../docs/prematch/game'
+import { GameDocument } from '../docs/prematch/game'
+import { useApolloClients } from '../contexts/apollo'
 
 
 type UseGameProps = {

@@ -1,6 +1,7 @@
 import { GameStatus, getGameStatus } from './getGameStatus'
-import { type Bet } from '../hooks/useBets';
-import { BetStatus as GraphBetStatus } from '../docs/prematch/types';
+import { type Bet } from '../hooks/useBets'
+import { BetStatus as GraphBetStatus } from '../docs/prematch/types'
+
 
 export enum BetStatus {
   Accepted,

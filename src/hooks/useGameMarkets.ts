@@ -1,16 +1,17 @@
 import { useMemo } from 'react'
 import { dictionaries, getMarketKey, getMarketName, getMarketDescription, getSelectionName } from '@azuro-org/dictionaries'
+import type { Address } from 'viem'
+
 import { type ConditionsQuery } from './useConditions'
 import { useConditions } from './useConditions'
 import {
   type ConditionsQuery as PrematchConditionsQuery,
 } from '../docs/prematch/conditions'
-import { ConditionStatus } from '../docs/prematch/types'
-import { Selection } from '../global';
-import { liveCoreAddress } from '../config';
+import type { ConditionStatus } from '../docs/prematch/types'
+import type { Selection } from '../global'
+import { liveCoreAddress } from '../config'
 import { GameStatus } from '../utils/getGameStatus'
-import { Address } from 'viem'
-import { useChain } from 'src/contexts/chain'
+import { useChain } from '../contexts/chain'
 
 
 export type Condition = {
@@ -54,8 +55,8 @@ type OutcomeRowsByMarket = Record<string, Market>
 
 export type GameMarkets = Market[]
 
-const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string | bigint, 
-lpAddress: Address): GameMarkets => {
+const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string | bigint,
+  lpAddress: Address): GameMarkets => {
   const outcomesByMarkets: OutcomesByMarkets = {}
   const result: OutcomeRowsByMarket = {}
   const sportId = conditions[0]!.game.sport.sportId
@@ -148,11 +149,11 @@ lpAddress: Address): GameMarkets => {
     if (marketsWithDifferentConditionIds.includes(marketId)) {
       result[marketKey]!.outcomeRows = [ outcomes ]
     }
-      // others need to be grouped by conditionId to allow draw outcomes in rows in UI, e.g.
-      //
-      // Team 1 - Total Goals:
-      // Over (0.5)   Under (0.5)
-      // Over (1.5)   Under (1.5)
+    // others need to be grouped by conditionId to allow draw outcomes in rows in UI, e.g.
+    //
+    // Team 1 - Total Goals:
+    // Over (0.5)   Under (0.5)
+    // Over (1.5)   Under (1.5)
     //
     else {
       const conditionsByConditionId = groupDataByConditionId<MarketOutcome>(outcomes)

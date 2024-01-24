@@ -1,8 +1,10 @@
 import { useMemo } from 'react'
 import { useQuery, type QueryHookOptions } from '@apollo/client'
-import { GamesDocument, GamesQuery, GamesQueryVariables } from '../docs/prematch/games'
-import { useApolloClients } from '../contexts/apollo';
-import { useLive } from '../contexts/live';
+
+import type { GamesQuery, GamesQueryVariables } from '../docs/prematch/games'
+import { GamesDocument } from '../docs/prematch/games'
+import { useApolloClients } from '../contexts/apollo'
+import { useLive } from '../contexts/live'
 import { GameStatus, Game_OrderBy, OrderDirection } from '../docs/prematch/types'
 import { getGameStartsAtGtValue } from '../helpers'
 

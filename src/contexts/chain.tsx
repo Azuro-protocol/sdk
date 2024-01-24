@@ -1,6 +1,7 @@
-import React, { useState, useContext, createContext } from 'react'
+import React, { useState, useContext, createContext, useEffect } from 'react'
 import { type Chain, useNetwork } from 'wagmi'
 import { setCookie } from 'cookies-next'
+
 import { chainsData, type ChainId, type ChainData, cookieKeys } from '../config'
 
 

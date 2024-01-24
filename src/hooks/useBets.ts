@@ -2,12 +2,14 @@ import { useMemo } from 'react'
 import { useQuery } from '@apollo/client'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 import { type Address } from 'wagmi'
-import { BetsDocument, BetsQuery, BetsQueryVariables } from '../docs/prematch/bets'
-import { GameQuery } from '../docs/prematch/game'
+
+import type { BetsQuery, BetsQueryVariables } from '../docs/prematch/bets'
+import { BetsDocument } from '../docs/prematch/bets'
+import type { GameQuery } from '../docs/prematch/game'
 import { Bet_OrderBy, OrderDirection, BetResult, BetStatus, SelectionResult, ConditionStatus } from '../docs/prematch/types'
 import { getGameStatus, GameStatus } from '../utils/getGameStatus'
-import { useApolloClients } from '../contexts/apollo';
-import { Selection } from '../global';
+import { useApolloClients } from '../contexts/apollo'
+import type { Selection } from '../global'
 
 
 export type BetOutcome = {
@@ -172,7 +174,7 @@ export const useBets = (props: UseBetsProps) => {
     })
   }, [ data ])
 
-  return { 
+  return {
     loading,
     data: bets,
     error,

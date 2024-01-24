@@ -1,4 +1,5 @@
-import { Selection } from '../global';
+import type { Selection } from '../global'
+
 
 type SocketData = {
   id: string

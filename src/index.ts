@@ -18,8 +18,8 @@ export type { NavigationDocument, NavigationQuery, NavigationQueryResult, Naviga
 export { calcMindOdds } from './utils/calcMindOdds'
 export { calcLiveOdds } from './utils/calcLiveOdds'
 export { setGamesCacheTime } from './utils/setGamesCacheTime'
-export { getGameStatus, GameStatus } from './utils/getGameStatus';
-export { getBetStatus, BetStatus } from './utils/getBetStatus';
+export { getGameStatus, GameStatus } from './utils/getGameStatus'
+export { getBetStatus, BetStatus } from './utils/getBetStatus'
 // hooks
 export { useBets, type UseBetsProps, type Bet, type BetOutcome } from './hooks/useBets'
 export { useBetTokenBalance } from './hooks/useBetTokenBalance'

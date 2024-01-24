@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react'
-import { oddsWatcher } from '../modules/oddsWatcher';
-import {formatUnits} from 'viem';
-import { ODDS_DECIMALS, liveCoreAddress } from '../config'
+import { formatUnits } from 'viem'
 import { usePublicClient } from 'wagmi'
-import {useChain} from '../contexts/chain';
-import { useApolloClients } from '../contexts/apollo';
-import { useSocket, type OddsChangedData } from '../contexts/socket';
-import { Selection } from '../global';
-import { ConditionStatus } from '../docs/prematch/types';
-import { conditionStatusWatcher } from '../modules/conditionStatusWatcher';
-import { batchFetchOutcome } from '../helpers/batchFetchOutcome';
-import { batchSocketSubscribe, batchSocketUnsubscribe } from '../helpers';
+
+import { oddsWatcher } from '../modules/oddsWatcher'
+import { ODDS_DECIMALS, liveCoreAddress } from '../config'
+import { useChain } from '../contexts/chain'
+import { useApolloClients } from '../contexts/apollo'
+import { useSocket, type OddsChangedData } from '../contexts/socket'
+import type { Selection } from '../global'
+import { ConditionStatus } from '../docs/prematch/types'
+import { conditionStatusWatcher } from '../modules/conditionStatusWatcher'
+import { batchFetchOutcome } from '../helpers/batchFetchOutcome'
+import { batchSocketSubscribe, batchSocketUnsubscribe } from '../helpers'
 
 
 type Outcome = {
@@ -65,12 +66,13 @@ export const useOutcome = ({ selection, initialOdds, initialStatus }: Props) => 
           args: [
             BigInt(conditionId),
             BigInt(1),
-            BigInt(outcomeId)
+            BigInt(outcomeId),
           ],
         })
 
         odds = formatUnits(rawOdds, ODDS_DECIMALS)
-      } else {
+      }
+      else {
         setOddsFetching(false)
       }
 

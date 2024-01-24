@@ -1,4 +1,5 @@
-import { decodeEventLog, TransactionReceipt, Hex, DecodeEventLogReturnType } from 'viem'
+import type { TransactionReceipt, Hex, DecodeEventLogReturnType } from 'viem'
+import { decodeEventLog } from 'viem'
 
 
 type Props = {

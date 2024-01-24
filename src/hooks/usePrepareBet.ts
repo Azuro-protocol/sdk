@@ -1,10 +1,12 @@
 import { erc20ABI, useAccount, useContractRead, useContractWrite, useWaitForTransaction, usePublicClient, type Address } from 'wagmi'
-import { parseUnits, encodeAbiParameters, parseAbiParameters, TransactionReceipt, Hex, keccak256, toBytes, createWalletClient, custom } from 'viem'
+import type { TransactionReceipt, Hex } from 'viem'
+import { parseUnits, encodeAbiParameters, parseAbiParameters, keccak256, toBytes, createWalletClient, custom } from 'viem'
 import axios from 'axios'
+
 import { useChain } from '../contexts/chain'
 import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256, liveCoreAddress, getApiUrl } from '../config'
-import { Selection } from '../global';
-import { useBetsCache } from './useBetsCache';
+import type { Selection } from '../global'
+import { useBetsCache } from './useBetsCache'
 
 
 const Live_BET_GAS = 0.01
@@ -160,7 +162,7 @@ export const usePrepareBet = (props: Props) => {
           account: account.address,
           transport: custom((window as any).ethereum),
         })
-        
+
         signature = await walletClient.signMessage({
           account: account.address!,
           message: {
@@ -177,15 +179,15 @@ export const usePrepareBet = (props: Props) => {
 
         const apiUrl = getApiUrl(appChain.id)
 
-        const { 
-          data: { id: orderId, state: newOrderState, errorMessage } 
+        const {
+          data: { id: orderId, state: newOrderState, errorMessage },
         } = await axios.post<LiveCreateOrderResponse>(`${apiUrl}/orders`, signedBet)
 
         if (newOrderState === LiveOrderState.Created) {
           txHash = await new Promise<Hex>((res, rej) => {
             const interval = setInterval(async () => {
-              const { 
-                data: { state, txHash, price, betId: tokenId } 
+              const {
+                data: { state, txHash, price, betId: tokenId },
               } = await axios.get<LiveGetOrderResponse>(`${apiUrl}/orders/${orderId}`)
 
               if (state === LiveOrderState.Rejected) {
@@ -229,30 +231,31 @@ export const usePrepareBet = (props: Props) => {
         else {
           throw Error(errorMessage)
         }
-      } else {
+      }
+      else {
         let coreAddress: Address
         let data: Address
-  
+
         if (selections.length > 1) {
           coreAddress = contracts.prematchComboCore.address
-  
+
           const tuple: [ bigint, bigint ][] = selections.map(({ conditionId, outcomeId }) => [
             BigInt(conditionId),
             BigInt(outcomeId),
           ])
-  
+
           data = encodeAbiParameters(
             parseAbiParameters('(uint256, uint64)[]'),
             [
               tuple,
-            ],
+            ]
           )
         }
         else {
           coreAddress = contracts.prematchCore.address
-  
+
           const { conditionId, outcomeId } = selections[0]!
-  
+
           data = encodeAbiParameters(
             parseAbiParameters('uint256, uint64'),
             [
@@ -261,7 +264,7 @@ export const usePrepareBet = (props: Props) => {
             ]
           )
         }
-  
+
         const tx = await betTx.writeAsync({
           args: [
             contracts.lp.address,
@@ -276,17 +279,17 @@ export const usePrepareBet = (props: Props) => {
                   data,
                 },
               },
-            ]
+            ],
           ],
         })
-  
+
         txHash = tx.hash
       }
-  
+
       const receipt = await publicClient.waitForTransactionReceipt({
-        hash: txHash!
+        hash: txHash!,
       })
-      
+
       allowanceTx.refetch()
 
       if (!isLiveBet) {
@@ -296,14 +299,15 @@ export const usePrepareBet = (props: Props) => {
             amount: `${fixedAmount}`,
             selections,
             selectionsOdds: selectionsOdds!,
-          }
+          },
         })
       }
 
       if (onSuccess) {
         onSuccess(receipt)
       }
-    } catch (err) {
+    }
+    catch (err) {
       if (onError) {
         onError(err as any)
       }

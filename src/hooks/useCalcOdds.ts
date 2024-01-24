@@ -1,14 +1,16 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
+import { parseUnits } from 'viem'
+
 import { liveCoreAddress } from '../config'
 import { useChain } from '../contexts/chain'
-import { useSocket, OddsChangedData } from '../contexts/socket'
+import type { OddsChangedData } from '../contexts/socket'
+import { useSocket } from '../contexts/socket'
 import { batchSocketSubscribe, batchSocketUnsubscribe, formatToFixed } from '../helpers'
-import { type Selection } from '../global';
-import { calcLiveOdds, calcPrematchOdds } from '../utils/calcOdds';
-import useIsMounted from '../hooks/useIsMounted';
-import { parseUnits } from 'viem'
-import { oddsWatcher } from 'src/modules/oddsWatcher'
-import { debounce } from 'src/helpers/debounce'
+import { type Selection } from '../global'
+import { calcLiveOdds, calcPrematchOdds } from '../utils/calcOdds'
+import useIsMounted from '../hooks/useIsMounted'
+import { oddsWatcher } from '../modules/oddsWatcher'
+import { debounce } from '../helpers/debounce'
 
 
 type CalcOddsProps = {

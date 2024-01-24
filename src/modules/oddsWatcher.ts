@@ -1,4 +1,5 @@
-import { type OddsChangedData } from '../contexts/socket';
+import { type OddsChangedData } from '../contexts/socket'
+
 
 type Cb = (oddsData?: OddsChangedData) => void
 

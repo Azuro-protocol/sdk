@@ -19,17 +19,21 @@
   "scripts": {
     "gql": "graphql-codegen",
     "build": "npm run gql && rimraf dist && rollup -c",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "------------------  Lint --------------------------------------------------------------------------------": "",
+    "lint": "next lint && tsc --noEmit",
+    "lint-fix": "eslint ./src -c .eslintrc --fix --ext js,ts,tsx",
+    "lint-ts": "tsc --noEmit"
   },
   "peerDependencies": {
     "@apollo/client": "^3.8.0-beta.7",
     "@azuro-org/dictionaries": "^3.0.10",
+    "axios": "^1.6.5",
+    "cookies-next": "^4.1.0",
     "graphql": "^16.6.0",
     "react": "^18.2.0",
     "viem": "^1.19.13",
-    "wagmi": "^1.4.11",
-    "axios": "^1.6.5",
-    "cookies-next": "^4.1.0"
+    "wagmi": "^1.4.11"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^4.0.1",
@@ -38,6 +42,10 @@
     "@graphql-codegen/typescript-react-apollo": "^3.3.7",
     "@rollup/plugin-typescript": "^11.1.2",
     "@types/react": "^18.2.18",
+    "@typescript-eslint/eslint-plugin": "^6.19.1",
+    "eslint": "^8.56.0",
+    "eslint-import-resolver-typescript": "^3.6.1",
+    "eslint-plugin-import": "^2.29.1",
     "rimraf": "^5.0.1",
     "rollup": "^3.25.3",
     "rollup-plugin-preserve-directives": "^0.2.0",

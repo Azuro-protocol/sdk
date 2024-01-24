@@ -1,12 +1,13 @@
 import React, { useContext, createContext, useState, useMemo, useCallback, useEffect, useRef } from 'react'
+import type { ApolloCache, NormalizedCacheObject } from '@apollo/client'
+
 import { useApolloClients } from './apollo'
 import { MainGameInfoFragmentDoc, type MainGameInfoFragment } from '../docs/prematch/fragments/mainGameInfo'
 import { liveCoreAddress, localStorageKeys } from '../config'
-import { ApolloCache, NormalizedCacheObject } from '@apollo/client'
 import { useChain } from './chain'
-import { useCalcOdds } from '../hooks/useCalcOdds';
-import { useConditionsStatuses } from '../hooks/useConditionsStatuses';
-import { ConditionStatus } from 'src/docs/live/types'
+import { useCalcOdds } from '../hooks/useCalcOdds'
+import { useConditionsStatuses } from '../hooks/useConditionsStatuses'
+import { ConditionStatus } from '../docs/live/types'
 
 
 export enum BetslipDisableReason {
@@ -128,7 +129,8 @@ export const BetslipProvider: React.FC<Props> = (props) => {
   if (isCombo && !isComboAllowed) {
     if (isLiveBet) {
       disableReason = BetslipDisableReason.ComboWithLive
-    } else {
+    }
+    else {
       disableReason = BetslipDisableReason.ComboWithForbiddenItem
     }
   }
@@ -147,11 +149,12 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     if (coreAddress === liveCoreAddress) {
       cache = liveClient!.cache
       gameEntityId = gameId
-    } else {
+    }
+    else {
       cache = prematchClient!.cache
       gameEntityId = `${lpAddress.toLowerCase()}_${gameId}`
     }
-      
+
     game = cache.readFragment<MainGameInfoFragment>({
       id: cache.identify({ __typename: 'Game', id: gameEntityId }),
       fragment: MainGameInfoFragmentDoc,
@@ -173,11 +176,11 @@ export const BetslipProvider: React.FC<Props> = (props) => {
       league: {
         name: leagueName,
         slug: leagueSlug,
-        country: { 
-          name: countryName, 
+        country: {
+          name: countryName,
           slug: countrySlug,
-        }
-      }
+        },
+      },
     } = game
 
     const item = {
@@ -193,7 +196,7 @@ export const BetslipProvider: React.FC<Props> = (props) => {
         sportId: +_sportId,
         sportSlug,
         sportName,
-      }
+      },
     } as BetslipItem
 
     setItems(items => {

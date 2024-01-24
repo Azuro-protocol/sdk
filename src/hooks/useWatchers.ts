@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useContractEvent } from 'wagmi'
+
 import { useChain } from '../contexts/chain'
 import { oddsWatcher } from '../modules/oddsWatcher'
 import { conditionStatusWatcher } from '../modules/conditionStatusWatcher'
@@ -44,7 +45,7 @@ export const useWatchers = () => {
       const log = logs[0]!
       const conditionId = log.args.conditionId!
       const isStopped = log.args.flag!
-      
+
       const status = isStopped ? ConditionStatus.Paused : ConditionStatus.Created
 
       conditionStatusWatcher.dispatch(conditionId.toString(), status)
@@ -52,7 +53,6 @@ export const useWatchers = () => {
   })
 
   useEffect(() => {
-
     return () => {
       unwatchSingle?.()
       unwatchCombo?.()
