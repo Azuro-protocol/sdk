@@ -1,6 +1,6 @@
 import { GameStatus, getGameStatus } from './getGameStatus'
-import { type Bet } from '../hooks/useBets'
 import { BetStatus as GraphBetStatus } from '../docs/prematch/types'
+import { type GameQuery } from '../docs/prematch/game'
 
 
 export enum BetStatus {
@@ -11,7 +11,7 @@ export enum BetStatus {
   Canceled,
 }
 
-type Game = Pick<Bet['outcomes'][0]['game'], 'status' | 'startsAt'>
+type Game = Pick<GameQuery['games'][0], 'status' | 'startsAt'>
 
 const getExpressIsLive = (games: Game[]) => {
   const firstStartDate = Math.min(...games.map(({ startsAt }) => +startsAt))

@@ -4,11 +4,11 @@ import type { WriteContractResult } from '@wagmi/core'
 
 import { useChain } from '../contexts/chain'
 import { useBetsCache } from './useBetsCache'
-import type { Bet } from './useBets'
+import { type PrematchBet } from './usePrematchBets'
 
 
 type SubmitProps = {
-  bets: Array<Pick<Bet, 'tokenId' | 'coreAddress'>>
+  bets: Array<Pick<PrematchBet, 'tokenId' | 'coreAddress'>>
 }
 
 export const useRedeemBet = () => {

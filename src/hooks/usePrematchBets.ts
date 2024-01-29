@@ -3,16 +3,14 @@ import { useQuery } from '@apollo/client'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 import { type Address } from 'wagmi'
 
-import type { BetsQuery, BetsQueryVariables } from '../docs/prematch/bets'
-import { BetsDocument } from '../docs/prematch/bets'
-import type { GameQuery } from '../docs/prematch/game'
-import { Bet_OrderBy, OrderDirection, BetResult, BetStatus, SelectionResult, ConditionStatus } from '../docs/prematch/types'
-import { getGameStatus, GameStatus } from '../utils/getGameStatus'
+import { type BetsQuery, type BetsQueryVariables, BetsDocument } from '../docs/prematch/bets'
+import { type GameQuery } from '../docs/prematch/game'
+import { Bet_OrderBy, OrderDirection, BetResult, BetStatus, SelectionResult, ConditionStatus, GameStatus as GraphGameStatus } from '../docs/prematch/types'
 import { useApolloClients } from '../contexts/apollo'
 import type { Selection } from '../global'
 
 
-export type BetOutcome = {
+export type PrematchBetOutcome = {
   selectionName: string
   odds: number
   marketName: string
@@ -22,14 +20,14 @@ export type BetOutcome = {
   isCanceled: boolean
 } & Selection
 
-export type Bet = {
+export type PrematchBet = {
   tokenId: string
   freebetId?: string
   freebetContractAddress?: Address
   totalOdds: number
   coreAddress: Address
   lpAddress: Address
-  outcomes: BetOutcome[]
+  outcomes: PrematchBetOutcome[]
   txHash: string
   status: BetStatus
   amount: string
@@ -43,7 +41,7 @@ export type Bet = {
   isCanceled: boolean
 }
 
-export type UseBetsProps = {
+export type UsePrematchBetsProps = {
   filter: {
     bettor: Address
     limit?: number
@@ -53,7 +51,7 @@ export type UseBetsProps = {
   orderDir?: OrderDirection
 }
 
-export const useBets = (props: UseBetsProps) => {
+export const usePrematchBets = (props: UsePrematchBetsProps) => {
   const {
     filter,
     orderBy = Bet_OrderBy.CreatedBlockTimestamp,
@@ -114,21 +112,15 @@ export const useBets = (props: UseBetsProps) => {
       const totalOdds = settledOdds ? +settledOdds : +odds
       const possibleWin = +amount * totalOdds - +betDiff
 
-      const outcomes: BetOutcome[] = selections
+      const outcomes: PrematchBetOutcome[] = selections
         .map((selection) => {
           const { odds, result, outcome: { outcomeId, condition: { conditionId, status: conditionStatus, game } } } = selection
-
-          const gameStatus = getGameStatus({
-            graphStatus: game.status,
-            startsAt: +game.startsAt,
-            isGameInLive: false,
-          })
 
           const isWin = result ? result === SelectionResult.Won : null
           const isLose = result ? result === SelectionResult.Lost : null
           const isCanceled = (
             conditionStatus === ConditionStatus.Canceled
-            || gameStatus === GameStatus.Canceled
+            || game.status === GraphGameStatus.Canceled
           )
 
           const marketName = getMarketName({ outcomeId })
@@ -149,7 +141,7 @@ export const useBets = (props: UseBetsProps) => {
         })
         .sort((a, b) => +a.game.startsAt - +b.game.startsAt)
 
-      const bet: Bet = {
+      const bet: PrematchBet = {
         tokenId,
         freebetContractAddress: freebetContractAddress as Address,
         freebetId,
@@ -176,7 +168,7 @@ export const useBets = (props: UseBetsProps) => {
 
   return {
     loading,
-    data: bets,
+    bets,
     error,
   }
 }

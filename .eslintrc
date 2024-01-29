@@ -12,7 +12,8 @@
   "ignorePatterns": [
     "*.js",
     "*.graphql.ts",
-    "src/docs/*"
+    "src/docs/*",
+    "examples/**"
   ],
   "settings": {
     "import/parsers": {
