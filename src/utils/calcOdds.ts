@@ -2,10 +2,11 @@ import { readContract } from '@wagmi/core'
 import type { Address } from 'viem'
 import { formatUnits } from 'viem'
 
-import { ODDS_DECIMALS, prematchComboCoreAbi, prematchCoreAbi } from '../config'
+import { ODDS_DECIMALS } from '../config'
 import { type OddsChangedData } from '../contexts/socket'
 import type { Selection } from '../global'
 import { formatToFixed } from '../helpers/formatToFixed'
+import { prematchComboCoreAbi, prematchCoreAbi } from '../abis'
 
 
 type OddsData = OddsChangedData

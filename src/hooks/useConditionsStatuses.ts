@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 
-import { liveCoreAddress } from '../config'
+import { liveHostAddress } from '../config'
 import type { Selection } from '../global'
 import { useSocket } from '../contexts/socket'
 import { batchSocketSubscribe, batchSocketUnsubscribe } from '../helpers'
@@ -22,7 +22,7 @@ export const useConditionsStatuses = ({ selections }: ConditionsStatusesProps) =
 
   const { liveItems, prematchItems } = useMemo<{ liveItems: Selection[], prematchItems: Selection[] }>(() => {
     return selections.reduce((acc, item) => {
-      if (item.coreAddress.toLocaleLowerCase() === liveCoreAddress.toLocaleLowerCase()) {
+      if (item.coreAddress.toLocaleLowerCase() === liveHostAddress.toLocaleLowerCase()) {
         acc.liveItems.push(item)
       }
       else {

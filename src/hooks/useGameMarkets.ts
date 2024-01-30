@@ -9,7 +9,7 @@ import {
 } from '../docs/prematch/conditions'
 import type { ConditionStatus } from '../docs/prematch/types'
 import type { Selection } from '../global'
-import { liveCoreAddress } from '../config'
+import { liveHostAddress } from '../config'
 import { GameStatus } from '../utils/getGameStatus'
 import { useChain } from '../contexts/chain'
 
@@ -63,7 +63,7 @@ const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string 
 
   conditions.forEach((condition) => {
     const { conditionId, outcomes: rawOutcomes, status } = condition
-    const coreAddress = (condition as PrematchConditionsQuery['conditions'][0]).core?.address || liveCoreAddress
+    const coreAddress = (condition as PrematchConditionsQuery['conditions'][0]).core?.address || liveHostAddress
     const isExpressForbidden = (condition as PrematchConditionsQuery['conditions'][0]).isExpressForbidden ?? true
 
     rawOutcomes.forEach((rawOutcome) => {

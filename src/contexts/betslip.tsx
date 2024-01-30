@@ -3,7 +3,7 @@ import type { ApolloCache, NormalizedCacheObject } from '@apollo/client'
 
 import { useApolloClients } from './apollo'
 import { MainGameInfoFragmentDoc, type MainGameInfoFragment } from '../docs/prematch/fragments/mainGameInfo'
-import { liveCoreAddress, localStorageKeys } from '../config'
+import { liveHostAddress, localStorageKeys } from '../config'
 import { useChain } from './chain'
 import { useCalcOdds } from '../hooks/useCalcOdds'
 import { useConditionsStatuses } from '../hooks/useConditionsStatuses'
@@ -97,7 +97,7 @@ export const BetslipProvider: React.FC<Props> = (props) => {
   const isCombo = items.length > 1
 
   const isLiveBet = useMemo(() => {
-    return items.some(({ coreAddress }) => coreAddress === liveCoreAddress)
+    return items.some(({ coreAddress }) => coreAddress === liveHostAddress)
   }, [ items ])
 
   const isConditionsInCreatedStatus = useMemo(() => {
@@ -110,7 +110,7 @@ export const BetslipProvider: React.FC<Props> = (props) => {
 
   const isPrematchBetAllowed = useMemo(() => {
     return items.every(({ coreAddress, game: { startsAt } }) => {
-      if (coreAddress === liveCoreAddress) {
+      if (coreAddress === liveHostAddress) {
         return true
       }
 
@@ -146,7 +146,7 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     let cache: ApolloCache<NormalizedCacheObject>
     let gameEntityId: string
 
-    if (coreAddress === liveCoreAddress) {
+    if (coreAddress === liveHostAddress) {
       cache = liveClient!.cache
       gameEntityId = gameId
     }

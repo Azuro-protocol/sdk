@@ -3,7 +3,7 @@ import { formatUnits } from 'viem'
 import { usePublicClient } from 'wagmi'
 
 import { oddsWatcher } from '../modules/oddsWatcher'
-import { ODDS_DECIMALS, liveCoreAddress } from '../config'
+import { ODDS_DECIMALS, liveHostAddress } from '../config'
 import { useChain } from '../contexts/chain'
 import { useApolloClients } from '../contexts/apollo'
 import { useSocket, type OddsChangedData } from '../contexts/socket'
@@ -32,7 +32,7 @@ export const useOutcome = ({ selection, initialOdds, initialStatus }: Props) => 
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useSocket()
   const publicClient = usePublicClient()
 
-  const isLive = coreAddress.toLowerCase() === liveCoreAddress.toLowerCase()
+  const isLive = coreAddress.toLowerCase() === liveHostAddress.toLowerCase()
 
   const [ odds, setOdds ] = useState(initialOdds || '0')
   const [ isOddsFetching, setOddsFetching ] = useState(!initialOdds)

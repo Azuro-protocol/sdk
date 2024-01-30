@@ -1,0 +1,5 @@
+query Condition($conditionId: BigInt!) {
+  condition(id: $conditionId, subgraphError: allow) {
+    ...Condition
+  }
+}

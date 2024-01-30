@@ -1,19 +1,15 @@
 import { useMemo } from 'react'
 import { useQuery } from '@apollo/client'
 
-import type {
-  ConditionsQuery as PrematchConditionsQuery,
-  ConditionsQueryVariables as PrematchConditionsQueryVariables,
-} from '../docs/prematch/conditions'
 import {
   ConditionsDocument as PrematchConditionsDocument,
+  type ConditionsQuery as PrematchConditionsQuery,
+  type ConditionsQueryVariables as PrematchConditionsQueryVariables,
 } from '../docs/prematch/conditions'
-import type {
-  ConditionsQuery as LiveConditionsQuery,
-  ConditionsQueryVariables as LiveConditionsQueryVariables,
-} from '../docs/live/conditions'
 import {
   ConditionsDocument as LiveConditionsDocument,
+  type ConditionsQuery as LiveConditionsQuery,
+  type ConditionsQueryVariables as LiveConditionsQueryVariables,
 } from '../docs/live/conditions'
 import { useApolloClients } from '../contexts/apollo'
 

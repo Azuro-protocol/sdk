@@ -4,7 +4,7 @@ import { parseUnits, encodeAbiParameters, parseAbiParameters, keccak256, toBytes
 import axios from 'axios'
 
 import { useChain } from '../contexts/chain'
-import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256, liveCoreAddress, getApiUrl } from '../config'
+import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256, liveHostAddress, getApiUrl } from '../config'
 import type { Selection } from '../global'
 import { useBetsCache } from './useBetsCache'
 
@@ -52,7 +52,7 @@ export const usePrepareBet = (props: Props) => {
   const { appChain, contracts, betToken } = useChain()
   const { addBet } = useBetsCache()
 
-  const isLiveBet = selections.some(({ coreAddress }) => coreAddress === liveCoreAddress)
+  const isLiveBet = selections.some(({ coreAddress }) => coreAddress === liveHostAddress)
 
   const approveAddress = isLiveBet ? contracts.liveRelayer!.address : contracts.proxyFront.address
 
@@ -292,16 +292,14 @@ export const usePrepareBet = (props: Props) => {
 
       allowanceTx.refetch()
 
-      if (!isLiveBet) {
-        addBet({
-          receipt,
-          bet: {
-            amount: `${fixedAmount}`,
-            selections,
-            selectionsOdds: selectionsOdds!,
-          },
-        })
-      }
+      addBet({
+        receipt,
+        bet: {
+          amount: `${fixedAmount}`,
+          selections,
+          selectionsOdds: selectionsOdds!,
+        },
+      })
 
       if (onSuccess) {
         onSuccess(receipt)

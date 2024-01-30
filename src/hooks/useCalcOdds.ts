@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { parseUnits } from 'viem'
 
-import { liveCoreAddress } from '../config'
+import { liveHostAddress } from '../config'
 import { useChain } from '../contexts/chain'
 import type { OddsChangedData } from '../contexts/socket'
 import { useSocket } from '../contexts/socket'
@@ -25,7 +25,7 @@ export const useCalcOdds = ({ selections, amount }: CalcOddsProps) => {
 
   const { liveItems, prematchItems } = useMemo<{ liveItems: Selection[], prematchItems: Selection[] }>(() => {
     return selections.reduce((acc, item) => {
-      if (item.coreAddress.toLocaleLowerCase() === liveCoreAddress.toLocaleLowerCase()) {
+      if (item.coreAddress.toLocaleLowerCase() === liveHostAddress.toLocaleLowerCase()) {
         acc.liveItems.push(item)
       }
       else {

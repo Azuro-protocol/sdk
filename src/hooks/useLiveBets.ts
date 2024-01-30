@@ -167,8 +167,6 @@ export const useLiveBets = (props: UseLiveBetsProps) => {
       return
     }
 
-    setGamesFetching(true)
-
     ;(async () => {
       let games: Record<string, GameQuery['games'][0]> = {}
       const needToGetGames = new Set<string>()

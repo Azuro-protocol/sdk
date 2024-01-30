@@ -13,7 +13,8 @@
     "*.js",
     "*.graphql.ts",
     "src/docs/*",
-    "examples/**"
+    "examples/**",
+    "*.json"
   ],
   "settings": {
     "import/parsers": {
