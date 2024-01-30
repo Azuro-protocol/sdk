@@ -2,6 +2,7 @@ import { erc20ABI, useAccount, useContractRead, useContractWrite, useWaitForTran
 import type { TransactionReceipt, Hex } from 'viem'
 import { parseUnits, encodeAbiParameters, parseAbiParameters, keccak256, toBytes, createWalletClient, custom } from 'viem'
 import axios from 'axios'
+import { useState } from 'react'
 
 import { useChain } from '../contexts/chain'
 import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256, liveHostAddress, getApiUrl } from '../config'
@@ -51,6 +52,8 @@ export const usePrepareBet = (props: Props) => {
   const publicClient = usePublicClient()
   const { appChain, contracts, betToken } = useChain()
   const { addBet } = useBetsCache()
+  const [ isLiveBetPending, setLiveBetPending ] = useState(false)
+  const [ isLiveBetProcessing, setLiveBetProcessing ] = useState(false)
 
   const isLiveBet = selections.some(({ coreAddress }) => coreAddress === liveHostAddress)
 
@@ -118,6 +121,7 @@ export const usePrepareBet = (props: Props) => {
 
     try {
       if (isLiveBet) {
+        setLiveBetPending(true)
         const { conditionId, outcomeId } = selections[0]!
 
         let signature: Hex
@@ -169,6 +173,8 @@ export const usePrepareBet = (props: Props) => {
             raw: message,
           },
         })
+        setLiveBetPending(false)
+        setLiveBetProcessing(true)
 
         const signedBet = {
           environment: 'PolygonMumbaiUSDT', // ATTN create getProviderEnvironment function
@@ -187,7 +193,7 @@ export const usePrepareBet = (props: Props) => {
           txHash = await new Promise<Hex>((res, rej) => {
             const interval = setInterval(async () => {
               const {
-                data: { state, txHash, price, betId: tokenId },
+                data: { state, txHash },
               } = await axios.get<LiveGetOrderResponse>(`${apiUrl}/orders/${orderId}`)
 
               if (state === LiveOrderState.Rejected) {
@@ -197,32 +203,6 @@ export const usePrepareBet = (props: Props) => {
 
               if (txHash) {
                 clearInterval(interval)
-
-                // betId = tokenId
-                // const finalOdds = formatUnits(BigInt(price), constants.decimals.oddsV2)
-                // const potentialPayout = +finalOdds * +betAmount
-                // const shouldOpenCollateralModal = !localStorage.getItem(constants.localStorage.wasCollateralModalShown)
-
-                // modifyLiveCache({
-                //   account,
-                //   txHash,
-                //   bet: {
-                //     betId,
-                //     coreAddress: items[0].coreAddress,
-                //     lpAddress: items[0].lpAddress,
-                //     odds: finalOdds,
-                //     amount: betAmount,
-                //     potentialPayout: +finalOdds * +betAmount,
-                //     betTokenSymbol,
-                //     outcomes: items.map(({ outcomeId, conditionId, conditionEntityId, game, odds }) => ({
-                //       odds,
-                //       outcomeId,
-                //       conditionId,
-                //       conditionEntityId,
-                //       gameEntityId: game.gameId,
-                //     })),
-                //   },
-                // })
                 res(txHash as Hex)
               }
             }, 1000)
@@ -290,6 +270,11 @@ export const usePrepareBet = (props: Props) => {
         hash: txHash!,
       })
 
+      if (onSuccess) {
+        onSuccess(receipt)
+      }
+
+      setLiveBetProcessing(false)
       allowanceTx.refetch()
 
       addBet({
@@ -300,12 +285,11 @@ export const usePrepareBet = (props: Props) => {
           selectionsOdds: selectionsOdds!,
         },
       })
-
-      if (onSuccess) {
-        onSuccess(receipt)
-      }
     }
     catch (err) {
+      setLiveBetPending(false)
+      setLiveBetProcessing(false)
+
       if (onError) {
         onError(err as any)
       }
@@ -328,15 +312,10 @@ export const usePrepareBet = (props: Props) => {
     approveTx: {
       isPending: approveTx.isLoading,
       isProcessing: approveReceipt.isLoading,
-      data: approveTx.data,
-      error: approveTx.error,
     },
     betTx: {
-      isPending: betTx.isLoading,
-      isProcessing: betReceipt.isLoading,
-      isSuccess: betReceipt.isSuccess,
-      data: betTx.data,
-      error: betTx.error,
+      isPending: betTx.isLoading || isLiveBetPending,
+      isProcessing: betReceipt.isLoading || isLiveBetProcessing,
     },
   }
 }
