@@ -3,7 +3,7 @@ import React from 'react'
 import { ChainId, AzuroSDKProvider } from '@azuro-org/sdk'
 import { RainbowKitProvider, getDefaultWallets } from '@rainbow-me/rainbowkit'
 import { WagmiConfig, configureChains, createConfig } from 'wagmi'
-import { polygonMumbai, arbitrumGoerli } from 'viem/chains'
+import { polygonMumbai, gnosis } from 'viem/chains'
 import { jsonRpcProvider } from 'wagmi/providers/jsonRpc'
 import { publicProvider } from 'wagmi/providers/public'
 
@@ -12,11 +12,11 @@ import { BetslipProvider } from '@/context/betslip';
 
 const rpcUrls: Record<number, string> = {
   [polygonMumbai.id]: 'https://rpc.ankr.com/polygon_mumbai',
-  [arbitrumGoerli.id]: 'https://arbitrum-goerli.publicnode.com',
+  [gnosis.id]: 'https://gnosis.publicnode.com',
 }
 
 const { chains, publicClient } = configureChains(
-  [ polygonMumbai, arbitrumGoerli ],
+  [ polygonMumbai, gnosis ],
   [
     jsonRpcProvider({
       rpc: (chain) => ({

@@ -41,6 +41,7 @@ export const useSportsNavigation = (props: UseNavigationProps = {}) => {
       variables,
       ssr: false,
       client: isLive ? liveClient! : prematchClient!,
+      notifyOnNetworkStatusChange: true,
     }
   }, [ withGameCount, startsAt_gt, isLive ])
 

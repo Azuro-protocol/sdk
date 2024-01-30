@@ -80,6 +80,7 @@ export const useLiveBets = (props: UseLiveBetsProps) => {
       ssr: false,
       client: prematchClient!,
       skip: !filter.bettor,
+      notifyOnNetworkStatusChange: true,
     }
   }, [
     filter.limit,
@@ -164,6 +165,8 @@ export const useLiveBets = (props: UseLiveBetsProps) => {
 
   useEffect(() => {
     if (!formattedBets.length) {
+      setGamesFetching(false)
+
       return
     }
 
@@ -228,6 +231,10 @@ export const useLiveBets = (props: UseLiveBetsProps) => {
       setGamesFetching(false)
       setBets(betsWithGames)
     })()
+
+    return () => {
+      setBets([])
+    }
   }, [ formattedBets ])
 
   return {

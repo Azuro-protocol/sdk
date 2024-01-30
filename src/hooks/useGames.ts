@@ -68,6 +68,7 @@ export const useGames = (props?: UseGamesProps) => {
       variables,
       ssr: false,
       client: isLive ? liveClient! : prematchClient!,
+      notifyOnNetworkStatusChange: true,
     }
   }, [
     filter?.limit,

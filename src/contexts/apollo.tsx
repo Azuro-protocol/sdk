@@ -13,12 +13,11 @@ const getPrematchLink = (chainId: number) => {
 
 const getPrematchApolloClient = (chainId: number) => {
   const link = getPrematchLink(chainId)
-  const cache = new InMemoryCache()
 
   return new ApolloClient({
     link,
     ssrMode: typeof window === 'undefined',
-    cache,
+    cache: new InMemoryCache(),
     connectToDevTools: true,
     assumeImmutableResults: true,
   })
@@ -28,12 +27,11 @@ const getLiveApolloClient = () => {
   const link = new HttpLink({
     uri: graphqlLiveEndpoint,
   })
-  const cache = new InMemoryCache()
 
   return new ApolloClient({
     link,
     ssrMode: typeof window === 'undefined',
-    cache,
+    cache: new InMemoryCache(),
     connectToDevTools: true,
     assumeImmutableResults: true,
   })

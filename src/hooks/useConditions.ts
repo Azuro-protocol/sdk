@@ -54,6 +54,7 @@ export const useConditions = (props: UseConditionsProps) => {
     ssr: false,
     client: prematchClient!,
     skip: isLive,
+    notifyOnNetworkStatusChange: true,
   })
   const {
     data: liveData,
@@ -65,6 +66,7 @@ export const useConditions = (props: UseConditionsProps) => {
     client: liveClient!,
     skip: !isLive,
     pollInterval: livePollInterval,
+    notifyOnNetworkStatusChange: true,
   })
 
   const data = (isLive ? liveData : prematchData) || {} as ConditionsQuery
