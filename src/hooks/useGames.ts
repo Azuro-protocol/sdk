@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useQuery, type QueryHookOptions } from '@apollo/client'
 import { GamesDocument, GamesQuery, GamesQueryVariables } from '../docs/games'
-import { Game_OrderBy, OrderDirection } from '../types'
+import { Game_OrderBy, OrderDirection, GameStatus } from '../types'
 import { getGameStartsAtGtValue } from '../helpers'
 
 
@@ -33,6 +33,7 @@ export const useGames = (props?: UseGamesProps) => {
       where: {
         startsAt_gt,
         hasActiveConditions: true,
+        status_in: [ GameStatus.Created, GameStatus.Paused ],
       },
     }
 

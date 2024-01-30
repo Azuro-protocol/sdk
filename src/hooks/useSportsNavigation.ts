@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useQuery, type QueryHookOptions } from '@apollo/client'
 import { NavigationDocument, NavigationQuery, NavigationQueryVariables } from '../docs/navigation'
+import { GameStatus } from '../types'
 import { getGameStartsAtGtValue } from '../helpers'
 
 
@@ -16,13 +17,11 @@ export const useSportsNavigation = (props: UseNavigationProps = {}) => {
   const options = useMemo<QueryHookOptions<NavigationQuery, NavigationQueryVariables>>(() => {
     const variables: NavigationQueryVariables = {
       withGameCount,
-    }
-
-    if (withGameCount) {
-      variables.where = {
-        startsAt_gt,
+      where: {
         hasActiveConditions: true,
-      }
+        status_in: [ GameStatus.Created, GameStatus.Paused ],
+        startsAt_gt,
+      },
     }
 
     return {
