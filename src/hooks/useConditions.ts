@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useQuery } from '@apollo/client'
+import { polygonMumbai } from 'viem/chains'
 
 import {
   ConditionsDocument as PrematchConditionsDocument,
@@ -12,6 +13,7 @@ import {
   type ConditionsQueryVariables as LiveConditionsQueryVariables,
 } from '../docs/live/conditions'
 import { useApolloClients } from '../contexts/apollo'
+import { useChain } from '../contexts/chain'
 
 
 export type ConditionsQuery = PrematchConditionsQuery | LiveConditionsQuery
@@ -28,6 +30,7 @@ type UseConditionsProps = {
 export const useConditions = (props: UseConditionsProps) => {
   const { gameId, isLive, livePollInterval, filter } = props
   const { prematchClient, liveClient } = useApolloClients()
+  const { appChain } = useChain()
 
   const variables = useMemo<PrematchConditionsQueryVariables>(() => {
     const vars: PrematchConditionsQueryVariables = {
@@ -64,9 +67,8 @@ export const useConditions = (props: UseConditionsProps) => {
     variables,
     ssr: false,
     client: liveClient!,
-    skip: !isLive,
+    skip: !isLive || appChain.id !== polygonMumbai.id,
     pollInterval: livePollInterval,
-    notifyOnNetworkStatusChange: true,
   })
 
   const data = (isLive ? liveData : prematchData) || {} as ConditionsQuery

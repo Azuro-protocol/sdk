@@ -57,7 +57,7 @@ export const usePrepareBet = (props: Props) => {
 
   const isLiveBet = selections.some(({ coreAddress }) => coreAddress === liveHostAddress)
 
-  const approveAddress = isLiveBet ? contracts.liveRelayer!.address : contracts.proxyFront.address
+  const approveAddress = isLiveBet ? contracts.liveRelayer?.address : contracts.proxyFront.address
 
   const allowanceTx = useContractRead({
     chainId: appChain.id,
@@ -66,9 +66,9 @@ export const usePrepareBet = (props: Props) => {
     functionName: 'allowance',
     args: [
       account.address!,
-      approveAddress,
+      approveAddress!,
     ],
-    enabled: Boolean(account.address),
+    enabled: Boolean(account.address) && Boolean(approveAddress),
   })
 
   const approveTx = useContractWrite({
@@ -76,7 +76,7 @@ export const usePrepareBet = (props: Props) => {
     abi: erc20ABI,
     functionName: 'approve',
     args: [
-      approveAddress,
+      approveAddress!,
       MAX_UINT_256,
     ],
   })
