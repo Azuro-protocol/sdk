@@ -5,7 +5,7 @@ import axios from 'axios'
 import { useState } from 'react'
 
 import { useChain } from '../contexts/chain'
-import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256, liveHostAddress, getApiUrl } from '../config'
+import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256, liveHostAddress, getApiUrl, liveCoreAddress } from '../config'
 import type { Selection } from '../global'
 import { useBetsCache } from './useBetsCache'
 
@@ -19,7 +19,6 @@ enum LiveOrderState {
   Accepted = 'Accepted',
   Rejected = 'Rejected'
 }
-
 
 type LiveCreateOrderResponse = {
   id: string
@@ -126,39 +125,56 @@ export const usePrepareBet = (props: Props) => {
 
         let signature: Hex
 
-        const bet = {
+        const order = {
           affiliate,
-          amount: String(rawAmount),
-          chainId: appChain.id,
-          conditionId: conditionId,
-          outcomeId: +outcomeId,
-          minPrice: String(rawMinOdds),
-          nonce: Date.now(),
-          expiresAt: Math.floor(Date.now() / 1000) + 2000,
-          maxFee: String(parseUnits(String(Live_BET_GAS), betToken.decimals)),
+          bet: {
+            core: liveCoreAddress as Address,
+            amount: String(rawAmount),
+            chainId: appChain.id,
+            conditionId: conditionId,
+            outcomeId: +outcomeId,
+            minPrice: String(rawMinOdds),
+            nonce: String(Date.now()),
+            expiresAt: Math.floor(Date.now() / 1000) + 2000,
+            maxFee: String(parseUnits(String(Live_BET_GAS), betToken.decimals)),
+          },
         }
 
-        const message = toBytes(keccak256(encodeAbiParameters([
+        const abi = [
           { name: 'affiliate', type: 'address' },
-          { name: 'amount', type: 'uint128' },
-          { name: 'chainId', type: 'uint256' },
-          { name: 'conditionId', type: 'uint256' },
-          { name: 'outcomeId', type: 'uint64' },
-          { name: 'minPrice', type: 'uint64' },
-          { name: 'nonce', type: 'uint256' },
-          { name: 'expiresAt', type: 'uint256' },
-          { name: 'maxFee', type: 'uint256' },
-        ] as const, [
-          bet.affiliate,
-          BigInt(bet.amount),
-          BigInt(bet.chainId),
-          BigInt(bet.conditionId),
-          BigInt(bet.outcomeId),
-          BigInt(bet.minPrice),
-          BigInt(bet.nonce),
-          BigInt(bet.expiresAt),
-          BigInt(bet.maxFee),
-        ])))
+          {
+            name: 'bet', type: 'tuple',
+            components: [
+              { name: 'core', type: 'address' },
+              { name: 'amount', type: 'uint128' },
+              { name: 'nonce', type: 'uint256' },
+              { name: 'conditionId', type: 'uint256' },
+              { name: 'outcomeId', type: 'uint64' },
+              { name: 'minOdds', type: 'uint64' },
+              { name: 'expiredAt', type: 'uint256' },
+              { name: 'chainId', type: 'uint256' },
+              { name: 'relayerFeeAmount', type: 'uint256' },
+            ],
+          },
+        ] as const
+
+        const message = toBytes(keccak256(encodeAbiParameters(
+          abi,
+          [
+            order.affiliate,
+            {
+              core: order.bet.core,
+              amount: BigInt(order.bet.amount),
+              nonce: BigInt(order.bet.nonce),
+              conditionId: BigInt(order.bet.conditionId),
+              outcomeId: BigInt(order.bet.outcomeId),
+              minOdds: BigInt(order.bet.minPrice),
+              expiredAt: BigInt(order.bet.expiresAt),
+              chainId: BigInt(order.bet.chainId),
+              relayerFeeAmount: BigInt(order.bet.maxFee),
+            },
+          ]
+        )))
 
         // signMessage from wagmi doesn't allow array of bytes
         // but for contract we have to use toBytes function for message
@@ -179,7 +195,7 @@ export const usePrepareBet = (props: Props) => {
         const signedBet = {
           environment: 'PolygonMumbaiUSDT', // ATTN create getProviderEnvironment function
           bettor: account.address!.toLowerCase(),
-          data: bet,
+          data: order,
           bettorSignature: signature,
         }
 

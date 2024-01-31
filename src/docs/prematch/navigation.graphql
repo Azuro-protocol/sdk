@@ -1,4 +1,5 @@
 query Navigation(
+  $first: Int,
   $where: Game_filter
   $withGameCount: Boolean!,
 ) {
@@ -6,7 +7,7 @@ query Navigation(
     id
     slug
     name
-    games(where: $where) @include(if: $withGameCount) {
+    games(first: $first, where: $where) @include(if: $withGameCount) {
       id
     }
   }

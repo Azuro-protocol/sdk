@@ -64,7 +64,7 @@ export type DetailedBetslipContextValue = {
   totalOdds: number
   statuses: Record<string, ConditionStatus>
   disableReason: BetslipDisableReason | undefined
-  setAmount: (value: string) => void
+  changeAmount: (value: string) => void
   isStatusesFetching: boolean
   isOddsFetching: boolean
   isBetAllowed: boolean
@@ -137,6 +137,16 @@ export const BetslipProvider: React.FC<Props> = (props) => {
 
   if (!isPrematchBetAllowed) {
     disableReason = BetslipDisableReason.PrematchConditionInStartedGame
+  }
+
+  const changeAmount = (value: string) => {
+    const [ int, digits ] = value.split('.')
+
+    if (digits) {
+      value = `${int}.${digits.substring(0, 2)}`
+    }
+
+    setAmount(value)
   }
 
   const addItem = useCallback((itemProps: ItemProps) => {
@@ -271,7 +281,7 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     totalOdds,
     statuses,
     disableReason,
-    setAmount,
+    changeAmount,
     isStatusesFetching,
     isOddsFetching,
     isBetAllowed,
@@ -281,7 +291,7 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     totalOdds,
     statuses,
     disableReason,
-    setAmount,
+    changeAmount,
     isStatusesFetching,
     isOddsFetching,
     isBetAllowed,

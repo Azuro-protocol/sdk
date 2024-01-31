@@ -1,6 +1,6 @@
 import '@rainbow-me/rainbowkit/styles.css'
 import './globals.css'
-import { Providers, Header, Watchers, Betslip } from '@/components'
+import { Providers, Header, Betslip } from '@/components'
 import { cookies } from 'next/headers'
 
 
@@ -20,7 +20,6 @@ export default function RootLayout(props: { children: React.ReactNode }) {
             {children}
             <Betslip />
           </main>
-          <Watchers />
         </Providers>
       </body>
     </html>

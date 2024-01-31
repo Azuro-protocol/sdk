@@ -23,6 +23,7 @@ export const useSportsNavigation = (props: UseNavigationProps = {}) => {
 
   const options = useMemo<QueryHookOptions<NavigationQuery, NavigationQueryVariables>>(() => {
     const variables: NavigationQueryVariables = {
+      first: 1000,
       withGameCount,
       where: {
         hasActiveConditions: true,
