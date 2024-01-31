@@ -28,6 +28,7 @@ export const useGames = (props?: UseGamesProps) => {
 
   const options = useMemo<QueryHookOptions<GamesQuery, GamesQueryVariables>>(() => {
     const variables: GamesQueryVariables = {
+      first: 1000,
       orderBy,
       orderDirection: orderDir,
       where: {
