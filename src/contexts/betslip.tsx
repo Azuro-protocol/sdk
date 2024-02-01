@@ -12,6 +12,7 @@ import { ConditionStatus } from '../docs/live/types'
 
 export enum BetslipDisableReason {
   ConditionStatus = 'ConditionStatus',
+  BetAmountGreaterThanMaxBet = 'BetAmountGreaterThanMaxBet',
   ComboWithLive = 'ComboWithLive',
   ComboWithForbiddenItem = 'ComboWithForbiddenItem',
   PrematchConditionInStartedGame = 'PrematchConditionInStartedGame',
@@ -62,6 +63,7 @@ export type DetailedBetslipContextValue = {
   amount: string
   odds: Record<string, number>
   totalOdds: number
+  maxBet?: number
   statuses: Record<string, ConditionStatus>
   disableReason: BetslipDisableReason | undefined
   changeAmount: (value: string) => void
@@ -91,7 +93,7 @@ export const BetslipProvider: React.FC<Props> = (props) => {
   const { appChain } = useChain()
   const [ items, setItems ] = useState<BetslipItem[]>([])
   const [ amount, setAmount ] = useState('')
-  const { odds, totalOdds, loading: isOddsFetching } = useCalcOdds({ amount, selections: items })
+  const { odds, totalOdds, maxBet, loading: isOddsFetching } = useCalcOdds({ amount, selections: items })
   const { statuses, loading: isStatusesFetching } = useConditionsStatuses({ selections: items })
 
   const isCombo = items.length > 1
@@ -118,7 +120,9 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     })
   }, [ items ])
 
-  const isBetAllowed = isConditionsInCreatedStatus && isComboAllowed && isPrematchBetAllowed
+  const isAmountLowerThanMaxBet = Boolean(amount) && typeof maxBet !== 'undefined' ? +amount <= maxBet : true
+
+  const isBetAllowed = isConditionsInCreatedStatus && isComboAllowed && isPrematchBetAllowed && isAmountLowerThanMaxBet
 
   let disableReason: BetslipDisableReason | undefined = undefined
 
@@ -137,6 +141,10 @@ export const BetslipProvider: React.FC<Props> = (props) => {
 
   if (!isPrematchBetAllowed) {
     disableReason = BetslipDisableReason.PrematchConditionInStartedGame
+  }
+
+  if (!isAmountLowerThanMaxBet) {
+    disableReason = BetslipDisableReason.BetAmountGreaterThanMaxBet
   }
 
   const changeAmount = (value: string) => {
@@ -279,6 +287,7 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     amount,
     odds,
     totalOdds,
+    maxBet,
     statuses,
     disableReason,
     changeAmount,
@@ -289,6 +298,7 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     amount,
     odds,
     totalOdds,
+    maxBet,
     statuses,
     disableReason,
     changeAmount,

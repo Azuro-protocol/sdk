@@ -10,7 +10,7 @@ import { useBetslip } from '@/context/betslip';
 
 
 function AmountInput() {
-  const { amount, setAmount } = useDetailedBetslip()
+  const { amount, changeAmount } = useDetailedBetslip()
   const { betToken } = useChain()
   const { loading: isBalanceFetching, balance } = useBetTokenBalance()
 
@@ -39,7 +39,7 @@ function AmountInput() {
           type="number"
           placeholder="Bet amount"
           value={amount}
-          onChange={(event) => setAmount(event.target.value)}
+          onChange={(event) => changeAmount(event.target.value)}
         />
       </div>
     </div>
@@ -56,10 +56,11 @@ type SubmitButtonProps = {
 
 const errorPerDisableReason = {
   [BetslipDisableReason.ComboWithForbiddenItem]: 'One or more conditions can\'t be used in combo',
+  [BetslipDisableReason.BetAmountGreaterThanMaxBet]: 'Bet amount exceeds max bet',
   [BetslipDisableReason.ComboWithLive]: 'Live outcome can\'t be used in combo',
   [BetslipDisableReason.ConditionStatus]: 'One or more outcomes have been removed or suspended. Review your betslip and remove them.',
   [BetslipDisableReason.PrematchConditionInStartedGame]: 'Game has started',
-}
+} as const
 
 export const SubmitButton: React.FC<SubmitButtonProps> = (props) => {
   const { isAllowanceLoading, isApproveRequired, isPending, isProcessing, onClick } = props
