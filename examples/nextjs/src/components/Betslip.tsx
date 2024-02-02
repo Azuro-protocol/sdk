@@ -167,7 +167,7 @@ function Content() {
     slippage: 10,
     affiliate: '0x68E0C1dBF926cDa7A65ef2722e046746EB0f816f', // your affiliate address
     selections: items,
-    selectionsOdds: odds,
+    odds,
     totalOdds,
     onSuccess: () => {
       clear()

@@ -35,7 +35,7 @@ type NewBetProps = {
   bet: {
     amount: string
     selections: Selection[]
-    selectionsOdds: Record<string, number>
+    odds: Record<string, number>
     freebetId?: string | bigint
     freebetContractAddress?: Address
   }
@@ -80,7 +80,7 @@ export const useBetsCache = () => {
 
   const addBet = async (props: NewBetProps) => {
     const { bet, receipt } = props
-    const { amount, selections, selectionsOdds } = bet
+    const { amount, selections, odds } = bet
 
     const coreAddress = selections[0]!.coreAddress
     const isLive = coreAddress.toLowerCase() === liveHostAddress.toLowerCase()
@@ -115,7 +115,7 @@ export const useBetsCache = () => {
 
         const selectionFragment: LiveBetFragment['selections'][0] = {
           __typename: 'LiveSelection',
-          odds: String(selectionsOdds[`${conditionId}-${outcomeId}`]),
+          odds: String(odds[`${conditionId}-${outcomeId}`]),
           result: null,
           outcome: {
             __typename: 'LiveOutcome',
@@ -163,7 +163,7 @@ export const useBetsCache = () => {
 
         const selectionFragment: PrematchBetFragment['selections'][0] = {
           __typename: 'Selection',
-          odds: String(selectionsOdds[`${conditionId}-${outcomeId}`]),
+          odds: String(odds[`${conditionId}-${outcomeId}`]),
           result: null,
           outcome: {
             __typename: 'Outcome',

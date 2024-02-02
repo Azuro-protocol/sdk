@@ -37,7 +37,7 @@ type Props = {
   slippage: number
   affiliate: Address
   selections: Selection[]
-  selectionsOdds: Record<string, number>
+  odds: Record<string, number>
   totalOdds: number
   deadline?: number
   onSuccess?(receipt: TransactionReceipt): void
@@ -45,7 +45,7 @@ type Props = {
 }
 
 export const usePrepareBet = (props: Props) => {
-  const { betAmount, slippage, deadline, affiliate, selections, selectionsOdds, totalOdds, onSuccess, onError } = props
+  const { betAmount, slippage, deadline, affiliate, selections, odds, totalOdds, onSuccess, onError } = props
 
   const account = useAccount()
   const publicClient = usePublicClient()
@@ -298,7 +298,7 @@ export const usePrepareBet = (props: Props) => {
         bet: {
           amount: `${fixedAmount}`,
           selections,
-          selectionsOdds: selectionsOdds!,
+          odds,
         },
       })
     }
@@ -323,7 +323,6 @@ export const usePrepareBet = (props: Props) => {
   return {
     isAllowanceLoading: allowanceTx.isLoading,
     isApproveRequired,
-    totalOdds,
     submit,
     approveTx: {
       isPending: approveTx.isLoading,
