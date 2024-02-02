@@ -52,7 +52,7 @@ export function OutcomeButton(props: OutcomeProps) {
       disabled={isLocked}
     >
       <span className="text-zinc-500">{outcome.selectionName}</span>
-      <span className="font-medium">{isOddsFetching ? '--' : parseFloat(odds).toFixed(2)}</span>
+      <span className="font-medium">{isOddsFetching ? '--' : odds.toFixed(2)}</span>
     </button>
   )
 }

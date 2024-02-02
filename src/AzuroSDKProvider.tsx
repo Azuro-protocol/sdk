@@ -24,11 +24,11 @@ export const AzuroSDKProvider: React.FC<AzuroSDKProviderProps> = ({ children, in
           <SocketProvider>
             <BetslipProvider>
               {children}
-              <Watchers />
             </BetslipProvider>
           </SocketProvider>
         </ApolloProvider>
       </LiveProvider>
+      <Watchers />
     </ChainProvider>
   )
 }

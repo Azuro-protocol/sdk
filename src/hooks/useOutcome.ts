@@ -14,13 +14,9 @@ import { batchFetchOutcome } from '../helpers/batchFetchOutcome'
 import { batchSocketSubscribe, batchSocketUnsubscribe } from '../helpers'
 
 
-type Outcome = {
-  coreAddress: string
-} & Selection
-
 type Props = {
-  selection: Outcome
-  initialOdds?: string
+  selection: Selection
+  initialOdds?: number
   initialStatus?: ConditionStatus
 }
 
@@ -34,7 +30,7 @@ export const useOutcome = ({ selection, initialOdds, initialStatus }: Props) => 
 
   const isLive = coreAddress.toLowerCase() === liveHostAddress.toLowerCase()
 
-  const [ odds, setOdds ] = useState(initialOdds || '0')
+  const [ odds, setOdds ] = useState(initialOdds || 0)
   const [ isOddsFetching, setOddsFetching ] = useState(!initialOdds)
 
   const [ status, setStatus ] = useState(initialStatus || ConditionStatus.Created)
@@ -76,7 +72,7 @@ export const useOutcome = ({ selection, initialOdds, initialStatus }: Props) => 
         setOddsFetching(false)
       }
 
-      setOdds(String(odds))
+      setOdds(+odds)
     })
 
     return () => {
@@ -106,7 +102,7 @@ export const useOutcome = ({ selection, initialOdds, initialStatus }: Props) => 
       const data = await batchFetchOutcome(conditionEntityId, prematchClient!)
 
       if (!initialOdds) {
-        setOdds(data?.[key]?.odds || '0')
+        setOdds(data?.[key]?.odds || 0)
         setOddsFetching(false)
       }
 

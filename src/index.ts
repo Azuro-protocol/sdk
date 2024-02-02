@@ -1,4 +1,4 @@
-export { chainsData, type ChainId, cookieKeys } from './config'
+export { chainsData, type ChainId, cookieKeys, liveCoreAddress, liveHostAddress } from './config'
 export { type Selection } from './global'
 export { default as AzuroSDKProvider } from './AzuroSDKProvider'
 // contexts
@@ -16,7 +16,7 @@ export type { ConditionsDocument, ConditionsQuery, ConditionsQueryResult, Condit
 export type { NavigationDocument, NavigationQuery, NavigationQueryResult, NavigationQueryVariables } from './docs/prematch/navigation'
 // utils
 export { calcMindOdds } from './utils/calcMindOdds'
-export { calcLiveOdds } from './utils/calcLiveOdds'
+export { calcLiveOdds, calcPrematchOdds } from './utils/calcOdds'
 export { setGamesCacheTime } from './utils/setGamesCacheTime'
 export { getGameStatus, GameStatus } from './utils/getGameStatus'
 export { getBetStatus, BetStatus } from './utils/getBetStatus'

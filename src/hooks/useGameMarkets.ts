@@ -20,7 +20,7 @@ export type Condition = {
 
 export type MarketOutcome = {
   selectionName: string
-  odds: string
+  odds?: number
   lpAddress: string
   coreAddress: string
   status: ConditionStatus
@@ -87,10 +87,13 @@ const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string,
         conditionId,
         outcomeId,
         selectionName,
-        odds,
         status,
         gameId,
         isExpressForbidden,
+      }
+
+      if (odds) {
+        outcome.odds = +odds
       }
 
       if (!outcomesByMarkets[marketKey]) {

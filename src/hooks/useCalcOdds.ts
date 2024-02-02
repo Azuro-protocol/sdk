@@ -1,5 +1,4 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
-import { parseUnits } from 'viem'
 
 import { liveHostAddress } from '../config'
 import { useChain } from '../contexts/chain'
@@ -20,7 +19,7 @@ type CalcOddsProps = {
 
 export const useCalcOdds = ({ selections, betAmount }: CalcOddsProps) => {
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useSocket()
-  const { betToken, appChain, contracts } = useChain()
+  const { appChain } = useChain()
   const isMounted = useIsMounted()
 
   const { liveItems, prematchItems } = useMemo<{ liveItems: Selection[], prematchItems: Selection[] }>(() => {
@@ -69,12 +68,9 @@ export const useCalcOdds = ({ selections, betAmount }: CalcOddsProps) => {
     }
 
     try {
-      const rawAmount = parseUnits(betAmountRef.current || '0', betToken.decimals)
-
       const prematchOdds = await calcPrematchOdds({
-        expressAddress: contracts.prematchComboCore.address,
-        rawAmount,
-        items: prematchItems,
+        betAmount: betAmountRef.current,
+        selections: prematchItems,
         chainId: appChain.id,
       })
 

@@ -1,15 +1,12 @@
 import { readContract } from '@wagmi/core'
 import type { Address } from 'viem'
-import { formatUnits } from 'viem'
+import { formatUnits, parseUnits } from 'viem'
 
-import { ODDS_DECIMALS } from '../config'
-import { type OddsChangedData } from '../contexts/socket'
+import { type ChainId, ODDS_DECIMALS, chainsData } from '../config'
 import type { Selection } from '../global'
 import { formatToFixed } from '../helpers/formatToFixed'
 import { prematchComboCoreAbi, prematchCoreAbi } from '../abis'
 
-
-type OddsData = OddsChangedData
 
 const ratio = (self: number, other: number): number => (self > other ? self / other : other / self)
 
@@ -77,6 +74,17 @@ const getOddsFromProbabilities = (
   )
 }
 
+type OddsData = {
+  conditionId: string
+  margin: number
+  reinforcement: number
+  winningOutcomesCount: number
+  outcomes: Record<string, {
+    odds: number
+    clearOdds: number
+  }>
+}
+
 type CalcLiveOddsProps = {
   selection: Selection
   betAmount: string
@@ -126,19 +134,21 @@ export const calcLiveOdds = ({ selection, betAmount, oddsData }: CalcLiveOddsPro
 
 
 type CalcPrematchOddsProps = {
-  expressAddress: string
-  rawAmount: bigint
-  items: Array<{
-    coreAddress: string
-  } & Selection>
-  chainId: number
+  betAmount: string
+  selections: Selection[]
+  chainId: ChainId
 }
 
 export const calcPrematchOdds = async (props: CalcPrematchOddsProps): Promise<Record<string, number>> => {
-  const { expressAddress, items, rawAmount, chainId } = props
+  const { selections, betAmount, chainId } = props
 
-  if (items.length > 1) {
-    const subBets = items.map(({ conditionId, outcomeId }) => ({
+  const { betToken, contracts } = chainsData[chainId]
+  const rawAmount = parseUnits(betAmount, betToken.decimals)
+
+  if (selections.length > 1) {
+    const expressAddress = contracts.prematchComboCore.address
+
+    const subBets = selections.map(({ conditionId, outcomeId }) => ({
       conditionId: BigInt(conditionId),
       outcomeId: BigInt(outcomeId),
     }))
@@ -152,7 +162,7 @@ export const calcPrematchOdds = async (props: CalcPrematchOddsProps): Promise<Re
         args: [ subBets, rawAmount ],
       })
 
-      return items.reduce((acc, { conditionId, outcomeId }, index) => {
+      return selections.reduce((acc, { conditionId, outcomeId }, index) => {
         const key = `${conditionId}-${outcomeId}`
 
         acc[key] = formatToFixed(formatUnits(conditionOdds[index]!, ODDS_DECIMALS), 3)
@@ -163,8 +173,8 @@ export const calcPrematchOdds = async (props: CalcPrematchOddsProps): Promise<Re
     catch {}
   }
 
-  if (items.length === 1) {
-    const { conditionId, outcomeId, coreAddress } = items[0]!
+  if (selections.length === 1) {
+    const { conditionId, outcomeId, coreAddress } = selections[0]!
 
     try {
       const rawOdds = await readContract({
