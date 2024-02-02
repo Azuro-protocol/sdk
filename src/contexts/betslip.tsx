@@ -8,6 +8,7 @@ import { useChain } from './chain'
 import { useCalcOdds } from '../hooks/useCalcOdds'
 import { useConditionsStatuses } from '../hooks/useConditionsStatuses'
 import { ConditionStatus } from '../docs/live/types'
+import { type Selection } from '../global'
 
 
 export enum BetslipDisableReason {
@@ -35,22 +36,16 @@ type Game = {
 }
 
 type BetslipItem = {
-  conditionId: string
-  outcomeId: string
-  coreAddress: string
   lpAddress: string
   game: Game
-  isExpressForbidden?: boolean
-}
+  isExpressForbidden: boolean
+} & Selection
 
 type ItemProps = {
   gameId: string
-  conditionId: string
-  outcomeId: string
-  coreAddress: string
   lpAddress: string
   isExpressForbidden: boolean
-}
+} & Selection
 
 export type BaseBetslipContextValue = {
   items: BetslipItem[]
@@ -60,13 +55,13 @@ export type BaseBetslipContextValue = {
 }
 
 export type DetailedBetslipContextValue = {
-  amount: string
+  betAmount: string
   odds: Record<string, number>
   totalOdds: number
   maxBet?: number
   statuses: Record<string, ConditionStatus>
   disableReason: BetslipDisableReason | undefined
-  changeAmount: (value: string) => void
+  changeBetAmount: (value: string) => void
   isStatusesFetching: boolean
   isOddsFetching: boolean
   isBetAllowed: boolean
@@ -92,8 +87,8 @@ export const BetslipProvider: React.FC<Props> = (props) => {
   const { prematchClient, liveClient } = useApolloClients()
   const { appChain } = useChain()
   const [ items, setItems ] = useState<BetslipItem[]>([])
-  const [ amount, setAmount ] = useState('')
-  const { odds, totalOdds, maxBet, loading: isOddsFetching } = useCalcOdds({ amount, selections: items })
+  const [ betAmount, setBetAmount ] = useState('')
+  const { odds, totalOdds, maxBet, loading: isOddsFetching } = useCalcOdds({ betAmount, selections: items })
   const { statuses, loading: isStatusesFetching } = useConditionsStatuses({ selections: items })
 
   const isCombo = items.length > 1
@@ -120,7 +115,7 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     })
   }, [ items ])
 
-  const isAmountLowerThanMaxBet = Boolean(amount) && typeof maxBet !== 'undefined' ? +amount <= maxBet : true
+  const isAmountLowerThanMaxBet = Boolean(betAmount) && typeof maxBet !== 'undefined' ? +betAmount <= maxBet : true
 
   const isBetAllowed = isConditionsInCreatedStatus && isComboAllowed && isPrematchBetAllowed && isAmountLowerThanMaxBet
 
@@ -147,14 +142,14 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     disableReason = BetslipDisableReason.BetAmountGreaterThanMaxBet
   }
 
-  const changeAmount = (value: string) => {
+  const changeBetAmount = (value: string) => {
     const [ int, digits ] = value.split('.')
 
     if (digits) {
       value = `${int}.${digits.substring(0, 2)}`
     }
 
-    setAmount(value)
+    setBetAmount(value)
   }
 
   const addItem = useCallback((itemProps: ItemProps) => {
@@ -284,24 +279,24 @@ export const BetslipProvider: React.FC<Props> = (props) => {
   ])
 
   const detailedValue = useMemo(() => ({
-    amount,
+    betAmount,
     odds,
     totalOdds,
     maxBet,
     statuses,
     disableReason,
-    changeAmount,
+    changeBetAmount,
     isStatusesFetching,
     isOddsFetching,
     isBetAllowed,
   }), [
-    amount,
+    betAmount,
     odds,
     totalOdds,
     maxBet,
     statuses,
     disableReason,
-    changeAmount,
+    changeBetAmount,
     isStatusesFetching,
     isOddsFetching,
     isBetAllowed,

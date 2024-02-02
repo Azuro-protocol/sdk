@@ -33,7 +33,7 @@ type LiveGetOrderResponse = {
 } & LiveCreateOrderResponse
 
 type Props = {
-  amount: string
+  betAmount: string
   slippage: number
   affiliate: Address
   selections: Selection[]
@@ -45,7 +45,7 @@ type Props = {
 }
 
 export const usePrepareBet = (props: Props) => {
-  const { amount, slippage, deadline, affiliate, selections, selectionsOdds, totalOdds, onSuccess, onError } = props
+  const { betAmount, slippage, deadline, affiliate, selections, selectionsOdds, totalOdds, onSuccess, onError } = props
 
   const account = useAccount()
   const publicClient = usePublicClient()
@@ -84,8 +84,8 @@ export const usePrepareBet = (props: Props) => {
 
   const isApproveRequired = Boolean(
     allowanceTx.data !== undefined
-    && +amount
-    && allowanceTx.data < parseUnits(isLiveBet ? String((+amount + Live_BET_GAS)) : amount, betToken.decimals)
+    && +betAmount
+    && allowanceTx.data < parseUnits(isLiveBet ? String((+betAmount + Live_BET_GAS)) : betAmount, betToken.decimals)
   )
 
   const approve = async () => {
@@ -108,7 +108,7 @@ export const usePrepareBet = (props: Props) => {
       return
     }
 
-    const fixedAmount = +parseFloat(String(amount)).toFixed(betToken.decimals)
+    const fixedAmount = +parseFloat(String(betAmount)).toFixed(betToken.decimals)
     const rawAmount = parseUnits(`${fixedAmount}`, betToken.decimals)
 
     const minOdds = 1 + (+totalOdds - 1) * (100 - slippage) / 100

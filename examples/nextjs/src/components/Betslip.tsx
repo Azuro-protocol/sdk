@@ -10,7 +10,7 @@ import { useBetslip } from '@/context/betslip';
 
 
 function AmountInput() {
-  const { amount, changeAmount } = useDetailedBetslip()
+  const { betAmount, changeBetAmount} = useDetailedBetslip()
   const { betToken } = useChain()
   const { loading: isBalanceFetching, balance } = useBetTokenBalance()
 
@@ -38,8 +38,8 @@ function AmountInput() {
           className="w-[140px] py-2 px-4 border border-zinc-400 text-md text-right font-semibold rounded-md"
           type="number"
           placeholder="Bet amount"
-          value={amount}
-          onChange={(event) => changeAmount(event.target.value)}
+          value={betAmount}
+          onChange={(event) => changeBetAmount(event.target.value)}
         />
       </div>
     </div>
@@ -67,7 +67,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = (props) => {
 
   const account = useAccount()
   const { appChain, isRightNetwork } = useChain()
-  const { amount, disableReason, isStatusesFetching, isOddsFetching, isBetAllowed } = useDetailedBetslip()
+  const { betAmount, disableReason, isStatusesFetching, isOddsFetching, isBetAllowed } = useDetailedBetslip()
   const { loading: isBalanceFetching, balance } = useBetTokenBalance()
 
   if (!account.address) {
@@ -86,7 +86,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = (props) => {
     )
   }
 
-  const isEnoughBalance = isBalanceFetching || !Boolean(+amount) ? true : Boolean(+balance! > +amount)
+  const isEnoughBalance = isBalanceFetching || !Boolean(+betAmount) ? true : Boolean(+balance! > +betAmount)
 
   const isLoading = (
     isOddsFetching
@@ -101,7 +101,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = (props) => {
     isLoading
     || !isBetAllowed
     || !isEnoughBalance
-    || !+amount
+    || !+betAmount
   )
 
   let title
@@ -155,7 +155,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = (props) => {
 
 function Content() {
   const { items, clear, removeItem } = useBaseBetslip()
-  const { amount, odds, totalOdds, statuses, isStatusesFetching, isOddsFetching } = useDetailedBetslip()
+  const { betAmount, odds, totalOdds, statuses, isStatusesFetching, isOddsFetching } = useDetailedBetslip()
   const {
     isAllowanceLoading,
     isApproveRequired,
@@ -163,7 +163,7 @@ function Content() {
     approveTx,
     betTx,
   } = usePrepareBet({
-    amount,
+    betAmount,
     slippage: 10,
     affiliate: '0x68E0C1dBF926cDa7A65ef2722e046746EB0f816f', // your affiliate address
     selections: items,
@@ -273,7 +273,7 @@ function Content() {
                   isOddsFetching ? (
                     <>Loading...</>
                   ) : (
-                    <>{ totalOdds * +amount }</>
+                    <>{ totalOdds * +betAmount }</>
                   )
                 }
               </span>

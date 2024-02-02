@@ -15,7 +15,7 @@ import { useChain } from '../contexts/chain'
 
 
 export type Condition = {
-  conditionId: string | bigint
+  conditionId: string
 }
 
 export type MarketOutcome = {
@@ -24,7 +24,7 @@ export type MarketOutcome = {
   lpAddress: string
   coreAddress: string
   status: ConditionStatus
-  gameId: string | bigint
+  gameId: string
   isExpressForbidden: boolean
 } & Selection
 
@@ -55,7 +55,7 @@ type OutcomeRowsByMarket = Record<string, Market>
 
 export type GameMarkets = Market[]
 
-const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string | bigint,
+const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string,
   lpAddress: Address): GameMarkets => {
   const outcomesByMarkets: OutcomesByMarkets = {}
   const result: OutcomeRowsByMarket = {}
@@ -209,7 +209,7 @@ const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string 
 }
 
 type Props = {
-  gameId: string | bigint
+  gameId: string
   gameStatus: GameStatus
   filter?: {
     outcomeIds?: string[]

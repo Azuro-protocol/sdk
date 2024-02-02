@@ -15,10 +15,10 @@ import { debounce } from '../helpers/debounce'
 
 type CalcOddsProps = {
   selections: Selection[]
-  amount: string
+  betAmount: string
 }
 
-export const useCalcOdds = ({ selections, amount }: CalcOddsProps) => {
+export const useCalcOdds = ({ selections, betAmount }: CalcOddsProps) => {
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useSocket()
   const { betToken, appChain, contracts } = useChain()
   const isMounted = useIsMounted()
@@ -45,7 +45,7 @@ export const useCalcOdds = ({ selections, amount }: CalcOddsProps) => {
 
   const oddsDataRef = useRef<Record<string, OddsChangedData>>({})
   const betAmountRef = useRef<string>('')
-  betAmountRef.current = amount
+  betAmountRef.current = betAmount
 
   const liveKey = liveItems.map(({ conditionId }) => conditionId).join('-')
 
@@ -156,7 +156,7 @@ export const useCalcOdds = ({ selections, amount }: CalcOddsProps) => {
 
   useEffect(() => {
     fetchOdds()
-  }, [ amount ])
+  }, [ betAmount ])
 
   useEffect(() => {
     if (!selections?.length) {
