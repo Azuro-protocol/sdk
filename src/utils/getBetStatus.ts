@@ -42,6 +42,10 @@ export const getBetStatus = (props: Props): BetStatus => {
     return BetStatus.Canceled
   }
 
+  if (graphStatus === GraphBetStatus.Resolved) {
+    return BetStatus.Resolved
+  }
+
   const isExpress = games.length > 1
 
   const isPendingResolution = isExpress
