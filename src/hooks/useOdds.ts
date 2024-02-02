@@ -17,7 +17,7 @@ type CalcOddsProps = {
   betAmount: string
 }
 
-export const useCalcOdds = ({ selections, betAmount }: CalcOddsProps) => {
+export const useOdds = ({ selections, betAmount }: CalcOddsProps) => {
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useSocket()
   const { appChain } = useChain()
   const isMounted = useIsMounted()

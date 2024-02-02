@@ -62,7 +62,7 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
 
   const options = useMemo(() => {
     const variables: BetsQueryVariables = {
-      first: filter.limit,
+      first: filter.limit || 1000,
       skip: filter.offset,
       orderBy,
       orderDirection: orderDir,

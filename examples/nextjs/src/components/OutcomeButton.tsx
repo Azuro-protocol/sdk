@@ -1,5 +1,5 @@
 'use client'
-import { type MarketOutcome, useOutcome, useBaseBetslip } from '@azuro-org/sdk'
+import { type MarketOutcome, useSelection, useBaseBetslip } from '@azuro-org/sdk'
 import cx from 'clsx';
 
 type OutcomeProps = {
@@ -11,7 +11,7 @@ export function OutcomeButton(props: OutcomeProps) {
   const { className, outcome } = props
 
   const { items, addItem, removeItem } = useBaseBetslip()
-  const { odds, isLocked, isOddsFetching } = useOutcome({
+  const { odds, isLocked, isOddsFetching } = useSelection({
     selection: outcome,
     initialOdds: outcome.odds,
     initialStatus: outcome.status,

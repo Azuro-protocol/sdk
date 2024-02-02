@@ -66,7 +66,7 @@ export const useLiveBets = (props: UseLiveBetsProps) => {
 
   const options = useMemo(() => {
     const variables: LiveBetsQueryVariables = {
-      first: filter.limit,
+      first: filter.limit || 1000,
       skip: filter.offset,
       orderBy,
       orderDirection: orderDir,

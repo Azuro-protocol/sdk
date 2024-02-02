@@ -5,8 +5,8 @@ import { useApolloClients } from './apollo'
 import { MainGameInfoFragmentDoc, type MainGameInfoFragment } from '../docs/prematch/fragments/mainGameInfo'
 import { liveHostAddress, localStorageKeys } from '../config'
 import { useChain } from './chain'
-import { useCalcOdds } from '../hooks/useCalcOdds'
-import { useConditionsStatuses } from '../hooks/useConditionsStatuses'
+import { useOdds } from '../hooks/useOdds'
+import { useStatuses } from '../hooks/useStatuses'
 import { ConditionStatus } from '../docs/live/types'
 import { type Selection } from '../global'
 
@@ -88,8 +88,8 @@ export const BetslipProvider: React.FC<Props> = (props) => {
   const { appChain } = useChain()
   const [ items, setItems ] = useState<BetslipItem[]>([])
   const [ betAmount, setBetAmount ] = useState('')
-  const { odds, totalOdds, maxBet, loading: isOddsFetching } = useCalcOdds({ betAmount, selections: items })
-  const { statuses, loading: isStatusesFetching } = useConditionsStatuses({ selections: items })
+  const { odds, totalOdds, maxBet, loading: isOddsFetching } = useOdds({ betAmount, selections: items })
+  const { statuses, loading: isStatusesFetching } = useStatuses({ selections: items })
 
   const isCombo = items.length > 1
 

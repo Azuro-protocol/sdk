@@ -14,7 +14,7 @@ type ConditionsStatusesProps = {
   selections: Selection[]
 }
 
-export const useConditionsStatuses = ({ selections }: ConditionsStatusesProps) => {
+export const useStatuses = ({ selections }: ConditionsStatusesProps) => {
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useSocket()
   const { prematchClient } = useApolloClients()
 
