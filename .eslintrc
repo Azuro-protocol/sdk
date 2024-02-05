@@ -14,7 +14,8 @@
     "*.graphql.ts",
     "src/docs/*",
     "examples/**",
-    "*.json"
+    "*.json",
+    "codegen.ts",
   ],
   "settings": {
     "import/parsers": {
