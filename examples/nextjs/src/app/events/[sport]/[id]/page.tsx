@@ -41,10 +41,9 @@ type ContentProps = {
 
 const Content: React.FC<ContentProps> = ({ game, isGameInLive }) => {
   const { status: gameStatus } = useGameStatus({
-    gameId: game.gameId,
     startsAt: +game.startsAt,
+    graphStatus: game.status,
     isGameExistInLive: isGameInLive,
-    initialStatus: game.status,
   })
 
   return (

@@ -7,21 +7,21 @@ import type { GameStatus as PrematchGameStatus } from '../docs/prematch/types'
 
 type Props = {
   startsAt: number
-  initialStatus: LiveGameStatus | PrematchGameStatus
+  graphStatus: LiveGameStatus | PrematchGameStatus
   isGameExistInLive: boolean
 }
 
-export const useGameStatus = ({ initialStatus, startsAt, isGameExistInLive }: Props) => {
+export const useGameStatus = ({ graphStatus, startsAt, isGameExistInLive }: Props) => {
   const startDate = +startsAt * 1000
   const [ isGameStarted, setGameStarted ] = useState(Date.now() > startDate)
 
   const gameStatus = useMemo<GameStatus>(() => {
     return getGameStatus({
-      graphStatus: initialStatus,
+      graphStatus,
       startsAt,
       isGameInLive: isGameExistInLive,
     })
-  }, [ initialStatus, isGameStarted, isGameExistInLive ])
+  }, [ graphStatus, isGameStarted, isGameExistInLive ])
 
   useEffect(() => {
     if (isGameStarted) {
