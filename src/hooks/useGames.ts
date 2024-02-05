@@ -17,7 +17,6 @@ type UseGamesProps = {
   }
   orderBy?: Game_OrderBy
   orderDir?: OrderDirection
-  withConditions?: boolean
 }
 
 export const useGames = (props?: UseGamesProps) => {
@@ -25,7 +24,6 @@ export const useGames = (props?: UseGamesProps) => {
     filter,
     orderBy = Game_OrderBy.CreatedBlockTimestamp,
     orderDir = OrderDirection.Desc,
-    withConditions = false,
   } = props || {}
 
   const { prematchClient, liveClient } = useApolloClients()
@@ -78,7 +76,6 @@ export const useGames = (props?: UseGamesProps) => {
     orderBy,
     orderDir,
     startsAt_gt,
-    withConditions,
     isLive,
   ])
 
