@@ -18,11 +18,11 @@ const getGraphqlEndpoint = (network: string) => `https://thegraph.azuro.org/subg
 export const graphqlEndpoints: Record<number, string> = {
   [gnosis.id]: getGraphqlEndpoint('gnosis'),
   [polygon.id]: getGraphqlEndpoint('polygon'),
-  [polygonMumbai.id]: getGraphqlEndpoint('mumbai-dev'),
+  [polygonMumbai.id]: getGraphqlEndpoint('mumbai'),
 }
 
-export const graphqlLiveEndpoint = 'https://thegraph.azuro.org/subgraphs/name/azuro-protocol/azuro-api-live-data-feed-dev'
-export const socketApiUrl = 'wss://dev-streams.azuro.org/v1/streams/conditions'
+export const graphqlLiveEndpoint = 'https://thegraph.azuro.org/subgraphs/name/azuro-protocol/azuro-api-live-data-feed'
+export const socketApiUrl = 'wss://streams.azuro.org/v1/streams/conditions'
 
 
 type SetupContractsProps = {
@@ -129,15 +129,15 @@ const polygonData: ChainData = {
 const polygonMumbaiData: ChainData = {
   chain: polygonMumbai,
   contracts: setupContracts({
-    lp: '0xe47F16bc95f4cF421f008BC5C23c1D3d5F402935',
-    prematchCore: '0x8ea11e2aefab381e87b644e018ae1f78aa338851',
-    prematchComboCore: '0xc0a46fc9952e4b804960a91ece75f89952a2c205',
-    proxyFront: '0xa43328ABd99ae605A87661E7fC84a0e509DE6BD0',
-    liveRelayer: '0x548bCB06650eC6702B979d235c660e5047B0A07f',
+    lp: '0xA39e988b357122D9ba75C0038E625a5ab9363F54',
+    prematchCore: '0x33742d3D8bE5A7F47D2eC1fA39fDa9FCB5288727',
+    prematchComboCore: '0xb7f1B3dA0eECf0a084cdd16Df917216BB72b42f5',
+    proxyFront: '0x545715348d9ba42Bf8Cc907Be323283EF616E807',
+    liveRelayer: '0x0969A58949E28f3aeF057e7707Bd12D4E9b88599',
   }),
   betToken: {
-    address: '0xe656De3EC9eFf1B851e0b39AFFaa1478353885a4',
-    symbol: 'USDT',
+    address: '0x37B9324f3Aa84DE6D062DC18C0539D5440Dca3FF',
+    symbol: 'AZUSD',
     decimals: 6,
   },
 }
@@ -148,11 +148,13 @@ export const chainsData = {
   [polygonMumbai.id]: polygonMumbaiData,
 } as const
 
-export const liveCoreAddress = '0x6B55953a3085AAb3cd36f02ed29622b63aDa526C'
-export const liveHostAddress = '0x2276b77B2C6ea24e1677F40A821D07907f5Dbba0'
+export const liveCoreAddress = '0xc50D33C06C45D30dAC2a11D2aaD912c1101914ab'
+export const liveHostAddress = '0xBb35f2490B050538FCeDD6d708a37CC922973483'
 
 export const getApiUrl = (chainId: ChainId) => {
-  if ([ polygonMumbai.id ].includes(chainId as any)) {
+  // there is place for testnets
+  // ATTN: mumbai with live uses prod api
+  if ([ 0 ].includes(chainId as any)) {
     return 'https://dev-api.azuro.org/api/v1/public'
   }
 

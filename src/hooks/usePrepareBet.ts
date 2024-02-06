@@ -193,7 +193,7 @@ export const usePrepareBet = (props: Props) => {
         setLiveBetProcessing(true)
 
         const signedBet = {
-          environment: 'PolygonMumbaiUSDT', // ATTN create getProviderEnvironment function
+          environment: 'PolygonMumbaiAZUSD', // ATTN create getProviderEnvironment function
           bettor: account.address!.toLowerCase(),
           data: order,
           bettorSignature: signature,
