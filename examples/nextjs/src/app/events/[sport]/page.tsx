@@ -1,6 +1,6 @@
 'use client'
 import { useParams } from 'next/navigation'
-import { useGames, Game_OrderBy } from '@azuro-org/sdk'
+import { useGames, useSports, type UseSportsProps, Game_OrderBy, OrderDirection } from '@azuro-org/sdk'
 import { GameCard, SportsNavigation } from '@/components'
 
 
@@ -24,8 +24,30 @@ const useData = () => {
   return useGames(props)
 }
 
+const useSportsData = () => {
+  const params = useParams()
+
+  const props: UseSportsProps = params.sport === 'top' ? {
+    gameOrderBy: Game_OrderBy.Turnover,
+    filter: {
+      limit: 10,
+    }
+  } : {
+    gameOrderBy: Game_OrderBy.StartsAt,
+    orderDir: OrderDirection.Asc,
+    filter: {
+      sportSlug: params.sport,
+    }
+  }
+
+  return useSports(props)
+}
+
 export default function Events() {
   const { loading, data } = useData()
+  const {data: sports} = useSportsData()
+
+  console.log(sports, 'sports');
 
   return (
     <>

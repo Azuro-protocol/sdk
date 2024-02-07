@@ -6,10 +6,10 @@ import { GamesDocument } from '../docs/prematch/games'
 import { useApolloClients } from '../contexts/apollo'
 import { useLive } from '../contexts/live'
 import { GameStatus, Game_OrderBy, OrderDirection } from '../docs/prematch/types'
-import { getGameStartsAtGtValue } from '../helpers'
+import { getGameStartsAtValue } from '../helpers'
 
 
-type UseGamesProps = {
+export type UseGamesProps = {
   filter?: {
     limit?: number
     offset?: number
@@ -29,7 +29,7 @@ export const useGames = (props?: UseGamesProps) => {
   const { prematchClient, liveClient } = useApolloClients()
   const { isLive } = useLive()
 
-  const startsAt_gt = getGameStartsAtGtValue()
+  const startsAt = getGameStartsAtValue()
 
   const options = useMemo<QueryHookOptions<GamesQuery, GamesQueryVariables>>(() => {
     const variables: GamesQueryVariables = {
@@ -43,10 +43,10 @@ export const useGames = (props?: UseGamesProps) => {
     }
 
     if (isLive) {
-      variables.where.startsAt_lt = startsAt_gt
+      variables.where.startsAt_lt = startsAt
     }
     else {
-      variables.where.startsAt_gt = startsAt_gt
+      variables.where.startsAt_gt = startsAt
     }
 
     if (filter?.limit) {
@@ -75,7 +75,7 @@ export const useGames = (props?: UseGamesProps) => {
     filter?.sportSlug,
     orderBy,
     orderDir,
-    startsAt_gt,
+    startsAt,
     isLive,
   ])
 
