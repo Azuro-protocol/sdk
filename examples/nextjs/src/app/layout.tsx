@@ -8,13 +8,13 @@ export default function RootLayout(props: { children: React.ReactNode }) {
   const { children } = props
   const cookieStore = cookies()
 
-  const initialChainId = cookieStore.get('appChainId')
-  const initialLiveState = JSON.parse(cookieStore.get('live')?.value || '')
+  const initialChainId = cookieStore.get('appChainId')?.value
+  const initialLiveState = JSON.parse(cookieStore.get('live')?.value || 'false')
 
   return (
     <html lang="en">
       <body>
-        <Providers initialChainId={initialChainId?.value} initialLiveState={initialLiveState}>
+        <Providers initialChainId={initialChainId} initialLiveState={initialLiveState}>
           <Header />
           <main className="container pt-5 pb-10">
             {children}
