@@ -223,7 +223,7 @@ export const useGameMarkets = (props: Props) => {
   const { gameId, gameStatus, filter } = props
 
   const { contracts } = useChain()
-  const { loading, data, error } = useConditions({
+  const { loading, conditions, error } = useConditions({
     gameId,
     filter,
     isLive: gameStatus === GameStatus.Live,
@@ -231,23 +231,19 @@ export const useGameMarkets = (props: Props) => {
   })
 
   // generate unique key for memo deps
-  const conditionIds = data?.conditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('')
+  const conditionIds = conditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('')
 
   const markets = useMemo(() => {
-    if (!data) {
-      return undefined
+    if (!conditions?.length) {
+      return []
     }
 
-    if (!data?.conditions?.length) {
-      return null
-    }
-
-    return groupMarkets(data.conditions, gameId, contracts.lp.address)
+    return groupMarkets(conditions, gameId, contracts.lp.address)
   }, [ conditionIds ])
 
   return {
     loading,
-    data: markets,
+    markets,
     error,
   }
 }

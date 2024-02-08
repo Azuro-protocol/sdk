@@ -7,7 +7,7 @@ import { graphqlEndpoints, graphqlLiveEndpoint } from '../config'
 
 const getPrematchLink = (chainId: number) => {
   return new HttpLink({
-    uri: graphqlEndpoints[chainId],
+    uri: ({ operationName }) => `${graphqlEndpoints[chainId]}?op=${operationName}`,
   })
 }
 
@@ -25,7 +25,7 @@ const getPrematchApolloClient = (chainId: number) => {
 
 const getLiveApolloClient = () => {
   const link = new HttpLink({
-    uri: graphqlLiveEndpoint,
+    uri: ({ operationName }) => `${graphqlLiveEndpoint}?op=${operationName}`,
   })
 
   return new ApolloClient({

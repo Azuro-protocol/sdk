@@ -74,7 +74,7 @@ export const useConditions = (props: UseConditionsProps) => {
   const data = (isLive ? liveData : prematchData) || {} as ConditionsQuery
 
   return {
-    data,
+    conditions: data?.conditions,
     loading: isPrematchLoading || isLiveLoading,
     error: prematchError || liveError,
   }

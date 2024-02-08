@@ -5,7 +5,7 @@ import type { NavigationQuery, NavigationQueryVariables } from '../docs/prematch
 import { NavigationDocument } from '../docs/prematch/navigation'
 import { useApolloClients } from '../contexts/apollo'
 import { useLive } from '../contexts/live'
-import { getGameStartsAtGtValue } from '../helpers'
+import { getGameStartsAtValue } from '../helpers'
 import { GameStatus } from '../docs/prematch/types'
 
 
@@ -19,7 +19,7 @@ export const useSportsNavigation = (props: UseNavigationProps = {}) => {
   const { prematchClient, liveClient } = useApolloClients()
   const { isLive } = useLive()
 
-  const startsAt_gt = getGameStartsAtGtValue()
+  const startsAt = getGameStartsAtValue()
 
   const options = useMemo<QueryHookOptions<NavigationQuery, NavigationQueryVariables>>(() => {
     const variables: NavigationQueryVariables = {
@@ -32,10 +32,10 @@ export const useSportsNavigation = (props: UseNavigationProps = {}) => {
     }
 
     if (isLive) {
-      variables.where!.startsAt_lt = startsAt_gt
+      variables.where!.startsAt_lt = startsAt
     }
     else {
-      variables.where!.startsAt_gt = startsAt_gt
+      variables.where!.startsAt_gt = startsAt
     }
 
     return {
@@ -44,7 +44,13 @@ export const useSportsNavigation = (props: UseNavigationProps = {}) => {
       client: isLive ? liveClient! : prematchClient!,
       notifyOnNetworkStatusChange: true,
     }
-  }, [ withGameCount, startsAt_gt, isLive ])
+  }, [ withGameCount, startsAt, isLive ])
 
-  return useQuery<NavigationQuery, NavigationQueryVariables>(NavigationDocument, options)
+  const { data, loading, error } = useQuery<NavigationQuery, NavigationQueryVariables>(NavigationDocument, options)
+
+  return {
+    sports: data?.sports,
+    loading,
+    error,
+  }
 }

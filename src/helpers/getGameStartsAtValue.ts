@@ -9,8 +9,8 @@ let ref: Ref = {
   lastUpdateTime: undefined,
 }
 
-export const getGameStartsAtGtValue = () => {
-  let startsAt_gt: number
+export const getGameStartsAtValue = () => {
+  let startsAt: number
   const dateNow = Math.floor(Date.now() / 1000)
 
   // if first render or current time is greater the previous saved more than cache time
@@ -18,12 +18,12 @@ export const getGameStartsAtGtValue = () => {
     !ref.lastUpdateTime
     || dateNow - ref.lastUpdateTime > configRef.gamesCacheTime
   ) {
-    startsAt_gt = dateNow
+    startsAt = dateNow
     ref.lastUpdateTime = dateNow
   }
   else {
-    startsAt_gt = ref.lastUpdateTime
+    startsAt = ref.lastUpdateTime
   }
 
-  return startsAt_gt
+  return startsAt
 }

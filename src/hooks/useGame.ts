@@ -40,7 +40,7 @@ export const useGame = (props: UseGameProps) => {
   const isGameInLive = Boolean(liveGame)
 
   return {
-    data: game,
+    game,
     loading: isPrematchLoading || isLiveLoading,
     error: prematchError || liveError,
     isGameInLive,
