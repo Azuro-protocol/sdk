@@ -41,7 +41,7 @@ function Game(props: GameProps) {
         <div>{dayjs(+startsAt * 1000).format('DD MMM HH:mm')}</div>
       </div>
       {
-        Boolean(markets?.[0].outcomeRows[0]) && (
+        Boolean(markets?.[0]?.outcomeRows[0]) && (
           <div className="min-w-[500px]">
             <div className="text-center">{markets![0].name}</div>
             <div className="flex items-center">
