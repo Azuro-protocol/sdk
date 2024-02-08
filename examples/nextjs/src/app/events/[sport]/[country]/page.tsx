@@ -1,6 +1,6 @@
 'use client'
 
-export default function Events() {
+export default function Country() {
   return (
     <>
     </>

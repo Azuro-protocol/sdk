@@ -11,22 +11,31 @@ query Sports(
     where: $sportFilter, 
     subgraphError: allow
   ) {
+    slug
+    name
     countries(
       where: $countryFilter, 
       orderBy: turnover, 
       orderDirection: desc
     ) {
+      slug
+      name
+      turnover
       leagues(
         where: $leagueFilter, 
         orderBy: turnover, 
         orderDirection: desc
       ) {
+        slug
+        name
+        turnover
         games(
           where: $gameFilter
           first: $first
           orderBy: $gameOrderBy
           orderDirection: $gameOrderDirection
         ) {
+          turnover,
           ...MainGameInfo
         }
       }

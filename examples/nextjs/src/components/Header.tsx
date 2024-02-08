@@ -17,7 +17,7 @@ export function Header() {
   }, [])
 
   return (
-    <header className="container flex items-center py-3.5 border-b border-zinc-200">
+    <header className="flex items-center py-3.5 border-b border-zinc-200">
       <div className="text-xl font-semibold">Azuro Betting</div>
       <div className="flex ml-10">
         <ActiveLink

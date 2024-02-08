@@ -15,11 +15,13 @@ export default function RootLayout(props: { children: React.ReactNode }) {
     <html lang="en">
       <body>
         <Providers initialChainId={initialChainId} initialLiveState={initialLiveState}>
-          <Header />
-          <main className="container pt-5 pb-10">
-            {children}
-            <Betslip />
-          </main>
+          <div className="md:max-w-[1040px] mx-auto">
+            <Header />
+            <main className="pt-5 pb-10">
+              {children}
+              <Betslip />
+            </main>
+          </div>
         </Providers>
       </body>
     </html>

@@ -178,7 +178,7 @@ function Content() {
   const isProcessing = approveTx.isProcessing  || betTx.isProcessing
 
   return (
-    <div className="bg-zinc-100 p-4 mb-4 rounded-md w-full max-h-[90vh] overflow-hidden">
+    <div className="bg-zinc-100 p-4 mb-4 rounded-md w-full max-h-[90vh] overflow-hidden border border-solid">
       <div className="flex items-center justify-between mb-2">
         <div className="">Betslip {items.length > 1 ? 'Combo' : 'Single'} {items.length ? `(${items.length})`: ''}</div>
         {

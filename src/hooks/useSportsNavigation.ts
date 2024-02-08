@@ -35,7 +35,7 @@ export const useSportsNavigation = (props: UseNavigationProps = {}) => {
       variables.where!.startsAt_lt = startsAt
     }
     else {
-      variables.where!.startsAt = startsAt
+      variables.where!.startsAt_gt = startsAt
     }
 
     return {

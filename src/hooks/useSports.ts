@@ -1,8 +1,7 @@
 import { useMemo } from 'react'
 import { useQuery, type QueryHookOptions } from '@apollo/client'
 
-import { useChain } from 'src/contexts/chain'
-
+import { useChain } from '../contexts/chain'
 import { useApolloClients } from '../contexts/apollo'
 import { useLive } from '../contexts/live'
 import { SportsDocument, type SportsQuery, type SportsQueryVariables } from '../docs/prematch/sports'
@@ -21,7 +20,7 @@ export type UseSportsProps = {
     countrySlug?: string
     leagueSlug?: string
   }
-  gameOrderBy?: Game_OrderBy
+  gameOrderBy?: Game_OrderBy.Turnover | Game_OrderBy.StartsAt
   orderDir?: OrderDirection
 }
 
@@ -29,7 +28,7 @@ export const useSports = (props: UseSportsProps) => {
   const {
     filter,
     gameOrderBy = Game_OrderBy.StartsAt,
-    orderDir = OrderDirection.Desc,
+    orderDir = OrderDirection.Asc,
   } = props || {}
 
   const { prematchClient, liveClient } = useApolloClients()
@@ -65,8 +64,8 @@ export const useSports = (props: UseSportsProps) => {
       variables.gameFilter!.startsAt_lt = startsAt
     }
     else {
-      variables.gameFilter!.startsAt = startsAt
-      variables.gameFilter!.liquidityPool = contracts.lp.address
+      variables.gameFilter!.startsAt_gt = startsAt
+      variables.gameFilter!.liquidityPool = contracts.lp.address.toLowerCase()
     }
 
     variables.leagueFilter!.games_ = variables.gameFilter!
@@ -83,6 +82,7 @@ export const useSports = (props: UseSportsProps) => {
     }
   }, [
     isLive,
+    contracts.lp.address,
     gameOrderBy,
     orderDir,
     filter?.limit,
@@ -92,5 +92,70 @@ export const useSports = (props: UseSportsProps) => {
     startsAt,
   ])
 
-  return useQuery<SportsQuery, SportsQueryVariables>(SportsDocument, options)
+  const { data, loading } = useQuery<SportsQuery, SportsQueryVariables>(SportsDocument, options)
+
+  const { sports } = data || { sports: [] }
+
+  const formattedSports = useMemo(() => {
+    if (!sports.length) {
+      return []
+    }
+
+    const filteredSports = sports.map(sport => {
+      const { countries } = sport
+
+      const filteredCountries = countries.filter(({ leagues }) => leagues.length)
+
+      return {
+        ...sport,
+        countries: filteredCountries,
+      }
+    }).filter(sport => sport.countries.length)
+
+    if (gameOrderBy === Game_OrderBy.Turnover) {
+      const sportsWithTurnover = filteredSports.map(sport => {
+        const { countries } = sport
+
+        const turnover = countries.reduce((acc, { turnover }) => {
+          acc += +turnover
+
+          return acc
+        }, 0)
+
+        return {
+          ...sport,
+          turnover,
+        }
+      })
+
+      return sportsWithTurnover.sort((a, b) => b.turnover - a.turnover)
+    }
+
+    if (gameOrderBy === Game_OrderBy.StartsAt) {
+      return filteredSports.map(sport => {
+        const { countries } = sport
+
+        const sortedCountries = countries.map(country => {
+          const { leagues } = country
+
+          return {
+            ...country,
+            leagues: [ ...leagues ].sort((a, b) => +a.games[0]!.startsAt - +b.games[0]!.startsAt),
+          }
+        }).sort((a, b) => +a.leagues[0]!.games[0]!.startsAt - +b.leagues[0]!.games[0]!.startsAt)
+
+        return {
+          ...sport,
+          countries: sortedCountries,
+        }
+      }).sort((a, b) => +a.countries[0]!.leagues[0]!.games[0]!.startsAt - +b.countries[0]!.leagues[0]!.games[0]!.startsAt)
+    }
+
+    return filteredSports
+  }, [ sports ])
+
+  return {
+    loading,
+    sports: formattedSports,
+  }
 }

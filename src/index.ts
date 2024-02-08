@@ -11,6 +11,7 @@ export * from './contexts/betslip'
 export { Game_OrderBy, Bet_OrderBy, ConditionStatus, OrderDirection, GameStatus as GraphGameStatus } from './docs/prematch/types'
 export type { GamesDocument, GamesQuery, GamesQueryResult, GamesQueryVariables } from './docs/prematch/games'
 export type { GameDocument, GameQuery, GameQueryResult, GameQueryVariables } from './docs/prematch/game'
+export type { SportsDocument, SportsQuery, SportsQueryResult, SportsQueryVariables } from './docs/prematch/sports'
 export type {
   BetsDocument as PrematchBetsDocument,
   BetsQuery as PrematchBetsQuery,
