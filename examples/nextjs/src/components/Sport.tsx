@@ -26,12 +26,22 @@ export function Sport(props: SportProps) {
     >
       {
         !isSportPage && (
-          <Link className="text-lg mb-2 hover:underline font-bold" href={`/events/${sport.slug}`}>{sport.name}</Link>
+          <Link 
+            className="text-lg mb-2 hover:underline font-bold" 
+            href={`/events/${sport.slug}`}
+          >
+            {sport.name}
+          </Link>
         )
       }
       {
         countries.map(country => (
-          <Country key={country.slug} className="mt-2 first-of-type:mt-0" country={country} sportSlug={sport.slug} />
+          <Country 
+            key={country.slug} 
+            className="mt-2 first-of-type:mt-0" 
+            country={country} 
+            sportSlug={sport.slug} 
+          />
         ))
       }
     </div>

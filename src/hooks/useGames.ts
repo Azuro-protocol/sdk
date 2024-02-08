@@ -79,5 +79,11 @@ export const useGames = (props?: UseGamesProps) => {
     isLive,
   ])
 
-  return useQuery<GamesQuery, GamesQueryVariables>(GamesDocument, options)
+  const { data, loading, error } = useQuery<GamesQuery, GamesQueryVariables>(GamesDocument, options)
+
+  return {
+    games: data?.games,
+    loading,
+    error,
+  }
 }

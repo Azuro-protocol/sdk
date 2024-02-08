@@ -46,5 +46,11 @@ export const useSportsNavigation = (props: UseNavigationProps = {}) => {
     }
   }, [ withGameCount, startsAt, isLive ])
 
-  return useQuery<NavigationQuery, NavigationQueryVariables>(NavigationDocument, options)
+  const { data, loading, error } = useQuery<NavigationQuery, NavigationQueryVariables>(NavigationDocument, options)
+
+  return {
+    sports: data?.sports,
+    loading,
+    error,
+  }
 }

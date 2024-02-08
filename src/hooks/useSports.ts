@@ -103,7 +103,7 @@ export const useSports = (props: UseSportsProps) => {
     startsAt,
   ])
 
-  const { data, loading } = useQuery<SportsQuery, SportsQueryVariables>(SportsDocument, options)
+  const { data, loading, error } = useQuery<SportsQuery, SportsQueryVariables>(SportsDocument, options)
 
   const { sports } = data || { sports: [] }
 
@@ -168,5 +168,6 @@ export const useSports = (props: UseSportsProps) => {
   return {
     loading,
     sports: formattedSports,
+    error,
   }
 }

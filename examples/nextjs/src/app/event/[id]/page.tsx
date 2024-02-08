@@ -18,7 +18,7 @@ type MarketsProps = {
 }
 
 const Markets: React.FC<MarketsProps> = ({ gameId, gameStatus }) => {
-  const { loading, data } = useGameMarkets({
+  const { loading, markets } = useGameMarkets({
     gameId,
     gameStatus,
   })
@@ -27,11 +27,11 @@ const Markets: React.FC<MarketsProps> = ({ gameId, gameStatus }) => {
     return <div>Loading...</div>
   }
 
-  if (!data) {
+  if (!markets) {
     return null
   }
 
-  return <GameMarkets markets={data!} />
+  return <GameMarkets markets={markets} />
 }
 
 type ContentProps = {
@@ -60,7 +60,7 @@ const Content: React.FC<ContentProps> = ({ game, isGameInLive }) => {
 export default function Game() {
   const params = useParams()
 
-  const { loading, data, isGameInLive } = useGame({
+  const { loading, game, isGameInLive } = useGame({
     gameId: params.id as string,
   })
 
@@ -68,13 +68,13 @@ export default function Game() {
     return <div>Loading...</div>
   }
 
-  if (!data) {
+  if (!game) {
     return (
       <div>Game info not found</div>
     )
   }
 
   return (
-    <Content game={data} isGameInLive={isGameInLive} />
+    <Content game={game} isGameInLive={isGameInLive} />
   )
 }

@@ -24,7 +24,7 @@ function Game(props: GameProps) {
     startsAt: +startsAt,
     isGameExistInLive: isLive,
   })
-  const { data } = useGameMarkets({
+  const { markets } = useGameMarkets({
     gameStatus: status,
     gameId,
   })
@@ -41,12 +41,12 @@ function Game(props: GameProps) {
         <div>{dayjs(+startsAt * 1000).format('DD MMM HH:mm')}</div>
       </div>
       {
-        Boolean(data?.[0].outcomeRows[0]) && (
+        Boolean(markets?.[0].outcomeRows[0]) && (
           <div className="min-w-[500px]">
-            <div className="text-center">{data![0].name}</div>
+            <div className="text-center">{markets![0].name}</div>
             <div className="flex items-center">
               {
-                data![0].outcomeRows[0].map((outcome) => (
+                markets![0].outcomeRows[0].map((outcome) => (
                   <OutcomeButton
                     className="ml-2 first-of-type:ml-0"
                     key={outcome.selectionName}
