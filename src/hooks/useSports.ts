@@ -13,9 +13,15 @@ import {
 import { getGameStartsAtValue } from '../helpers'
 
 
+export enum SportHub {
+  Sports = 'sports',
+  Esports = 'esports'
+}
+
 export type UseSportsProps = {
   filter?: {
     limit?: number
+    sportHub?: SportHub
     sportSlug?: string
     countrySlug?: string
     leagueSlug?: string
@@ -56,6 +62,10 @@ export const useSports = (props: UseSportsProps) => {
       variables.sportFilter!.slug = filter.sportSlug
     }
 
+    if (filter?.sportHub) {
+      variables.sportFilter!.sporthub = filter.sportHub
+    }
+
     if (filter?.countrySlug) {
       variables.countryFilter!.slug = filter.countrySlug
     }
@@ -86,6 +96,7 @@ export const useSports = (props: UseSportsProps) => {
     gameOrderBy,
     orderDir,
     filter?.limit,
+    filter?.sportHub,
     filter?.sportSlug,
     filter?.countrySlug,
     filter?.leagueSlug,
