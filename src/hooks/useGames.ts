@@ -7,13 +7,16 @@ import { useApolloClients } from '../contexts/apollo'
 import { useLive } from '../contexts/live'
 import { GameStatus, Game_OrderBy, OrderDirection } from '../docs/prematch/types'
 import { getGameStartsAtValue } from '../helpers'
+import type { SportHub } from '../global'
 
 
 export type UseGamesProps = {
   filter?: {
     limit?: number
     offset?: number
+    sportHub?: SportHub
     sportSlug?: string
+    leagueSlug?: string
   }
   orderBy?: Game_OrderBy
   orderDir?: OrderDirection
@@ -57,9 +60,21 @@ export const useGames = (props?: UseGamesProps) => {
       variables.skip = filter.offset
     }
 
+    if (filter?.sportHub) {
+      variables.where.sport_ = {
+        sporthub: filter.sportHub,
+      }
+    }
+
     if (filter?.sportSlug) {
       variables.where.sport_ = {
         slug_starts_with_nocase: filter.sportSlug,
+      }
+    }
+
+    if (filter?.leagueSlug) {
+      variables.where.league_ = {
+        slug_ends_with_nocase: filter.leagueSlug,
       }
     }
 
@@ -73,6 +88,8 @@ export const useGames = (props?: UseGamesProps) => {
     filter?.limit,
     filter?.offset,
     filter?.sportSlug,
+    filter?.sportHub,
+    filter?.leagueSlug,
     orderBy,
     orderDir,
     startsAt,

@@ -11,12 +11,8 @@ import {
   OrderDirection,
 } from '../docs/prematch/types'
 import { getGameStartsAtValue } from '../helpers'
+import type { SportHub } from '../global'
 
-
-export enum SportHub {
-  Sports = 'sports',
-  Esports = 'esports'
-}
 
 export type UseSportsProps = {
   filter?: {
