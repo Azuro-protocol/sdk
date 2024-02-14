@@ -3,7 +3,7 @@ import { MainGameInfoFragmentDoc, type MainGameInfoFragment } from '../docs/frag
 import { ConditionFragmentDoc, type ConditionFragment } from '../docs/fragments/condition'
 import { ConditionStatus, BetStatus } from '../types';
 import { useApolloClient } from '@apollo/client'
-import { Address } from 'wagmi';
+import { Address } from 'viem';
 import { TransactionReceipt, formatUnits } from 'viem';
 import { getEventArgsFromTxReceipt } from '../helpers';
 import { useChain } from '../contexts/chain';

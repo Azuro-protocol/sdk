@@ -1,5 +1,6 @@
 import React, { useState, useContext, createContext } from 'react'
-import { type Chain, useNetwork } from 'wagmi'
+import { useAccount } from 'wagmi'
+import { type Chain } from 'viem';
 import { chainsData, type ChainId, type ChainData } from '../config'
 
 
@@ -21,7 +22,7 @@ export const ChainProvider: React.FC<Props> = (props) => {
   const { children, initialChainId } = props
 
   const [ appChainId, setAppChainId ] = useState<ChainId>(initialChainId)
-  const { chain: walletChain } = useNetwork()
+  const { chain: walletChain } = useAccount()
 
   const walletChainId = walletChain?.id || null
 

@@ -1,4 +1,4 @@
-import { useContractRead, usePublicClient } from 'wagmi'
+import { usePublicClient, useReadContract } from 'wagmi'
 import { parseUnits } from 'viem'
 import { useChain } from '../contexts/chain'
 import { oddsWatcher } from '../modules/oddsWatcher';
@@ -29,7 +29,7 @@ export const useCalcOdds = (props: CalcOddsProps) => {
     outcomeId: BigInt(outcomeId),
   }))
 
-  const single = useContractRead({
+  const single = useReadContract({
     chainId: appChain.id,
     address: contracts.prematchCore.address,
     abi: contracts.prematchCore.abi,
@@ -39,10 +39,12 @@ export const useCalcOdds = (props: CalcOddsProps) => {
       rawAmount,
       rawSelections[0]!.outcomeId,
     ],
-    enabled: Boolean(rawSelections.length === 1),
+    query: {
+      enabled: Boolean(rawSelections.length === 1)
+    }
   })
 
-  const combo = useContractRead({
+  const combo = useReadContract({
     chainId: appChain.id,
     address: contracts.prematchComboCore.address,
     abi: contracts.prematchComboCore.abi,
@@ -51,7 +53,9 @@ export const useCalcOdds = (props: CalcOddsProps) => {
       rawSelections,
       rawAmount,
     ],
-    enabled: Boolean(rawSelections.length > 1),
+    query: {
+      enabled: Boolean(rawSelections.length > 1),
+    }
   })
 
   useEffect(() => {

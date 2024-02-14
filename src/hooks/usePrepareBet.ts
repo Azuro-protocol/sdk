@@ -1,5 +1,5 @@
-import { erc20ABI, useAccount, useContractRead, useContractWrite, useWaitForTransaction, usePublicClient, type Address } from 'wagmi'
-import { parseUnits, formatUnits, encodeAbiParameters, parseAbiParameters, TransactionReceipt } from 'viem'
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi'
+import { parseUnits, formatUnits, encodeAbiParameters, parseAbiParameters, TransactionReceipt, type Address, erc20Abi } from 'viem'
 import { useChain } from '../contexts/chain'
 import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256 } from '../config'
 import { useCalcOdds } from './useCalcOdds'
@@ -13,7 +13,7 @@ type Props = {
   affiliate: Address
   selections: Selection[]
   deadline?: number
-  onSuccess?(receipt: TransactionReceipt): void
+  onSuccess?(receipt?: TransactionReceipt): void
   onError?(err?: Error): void
 }
 
@@ -25,29 +25,25 @@ export const usePrepareBet = (props: Props) => {
   const { appChain, contracts, betToken } = useChain()
   const { addBet } = useBetsCache()
 
-  const allowanceTx = useContractRead({
+  const allowanceTx = useReadContract({
     chainId: appChain.id,
     address: betToken.address,
-    abi: erc20ABI,
+    abi: erc20Abi,
     functionName: 'allowance',
     args: [
       account.address!,
       contracts.proxyFront.address,
     ],
-    enabled: Boolean(account.address),
+    query: {
+      enabled: Boolean(account.address),
+    }
   })
 
-  const approveTx = useContractWrite({
-    address: betToken.address,
-    abi: erc20ABI,
-    functionName: 'approve',
-    args: [
-      contracts.proxyFront.address,
-      MAX_UINT_256,
-    ],
+  const approveTx = useWriteContract()
+  
+  const approveReceipt = useWaitForTransactionReceipt({
+    hash: approveTx.data
   })
-
-  const approveReceipt = useWaitForTransaction(approveTx.data)
 
   const isApproveRequired = Boolean(
     allowanceTx.data !== undefined
@@ -56,8 +52,18 @@ export const usePrepareBet = (props: Props) => {
   )
 
   const approve = async () => {
-    const tx = await approveTx.writeAsync()
-    await publicClient.waitForTransactionReceipt(tx)
+    const hash = await approveTx.writeContractAsync({
+      address: betToken.address!,
+      abi: erc20Abi,
+      functionName: 'approve',
+      args: [
+        contracts.proxyFront.address,
+        MAX_UINT_256,
+      ],
+    })
+    await publicClient!.waitForTransactionReceipt({
+      hash
+    })
     allowanceTx.refetch()
   }
 
@@ -72,14 +78,11 @@ export const usePrepareBet = (props: Props) => {
 
   const totalOdds = oddsData.totalOdds ? formatUnits(oddsData.totalOdds, ODDS_DECIMALS) : undefined
 
-  const betTx = useContractWrite({
-    address: contracts.proxyFront.address,
-    abi: contracts.proxyFront.abi,
-    functionName: 'bet',
-    value: BigInt(0),
-  })
+  const betTx = useWriteContract()
 
-  const betReceipt = useWaitForTransaction(betTx.data)
+  const betReceipt = useWaitForTransactionReceipt({
+    hash: betTx.data,
+  })
 
   const placeBet = async () => {
     if (!totalOdds) {
@@ -127,7 +130,11 @@ export const usePrepareBet = (props: Props) => {
     }
 
     try {
-      const tx = await betTx.writeAsync({
+      const hash = await betTx.writeContractAsync({
+        address: contracts.proxyFront.address,
+        abi: contracts.proxyFront.abi,
+        functionName: 'bet',
+        value: BigInt(0),
         args: [
           contracts.lp.address,
           [
@@ -144,17 +151,21 @@ export const usePrepareBet = (props: Props) => {
           ]
         ],
       })
-  
-      const receipt = await publicClient.waitForTransactionReceipt(tx)
 
-      addBet({
-        receipt,
-        bet: {
-          amount: `${fixedAmount}`,
-          selections,
-          selectionsOdds: selectionsOdds!,
-        }
+      const receipt = await publicClient?.waitForTransactionReceipt({
+        hash
       })
+
+      if (receipt) {
+        addBet({
+          receipt,
+          bet: {
+            amount: `${fixedAmount}`,
+            selections,
+            selectionsOdds: selectionsOdds!,
+          }
+        })
+      }
 
       if (onSuccess) {
         onSuccess(receipt)
@@ -182,13 +193,13 @@ export const usePrepareBet = (props: Props) => {
     totalOdds,
     submit,
     approveTx: {
-      isPending: approveTx.isLoading,
+      isPending: approveTx.isPending,
       isProcessing: approveReceipt.isLoading,
       data: approveTx.data,
       error: approveTx.error,
     },
     betTx: {
-      isPending: betTx.isLoading,
+      isPending: betTx.isPending,
       isProcessing: betReceipt.isLoading,
       isSuccess: betReceipt.isSuccess,
       data: betTx.data,
