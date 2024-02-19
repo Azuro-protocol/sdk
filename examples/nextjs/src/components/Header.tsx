@@ -2,7 +2,8 @@
 import React, { useEffect } from 'react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { ActiveLink, SelectAppChain, LiveSwitcher } from '@/components'
-import { useConfig } from 'wagmi';
+import { reconnect } from '@wagmi/core'
+import { useConfig } from 'wagmi'
 
 export function Header() {
   const config = useConfig()
@@ -10,7 +11,7 @@ export function Header() {
   useEffect(() => {
     ;(async () => {
       try {
-        await config.autoConnect()
+        await reconnect(config)
       }
       catch {}
     })()

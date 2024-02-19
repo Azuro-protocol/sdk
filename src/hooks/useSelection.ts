@@ -55,7 +55,7 @@ export const useSelection = ({ selection, initialOdds, initialStatus }: Props) =
       let odds: string | number | undefined = oddsData?.outcomes?.[String(outcomeId)]?.odds
 
       if (!odds) {
-        const rawOdds = await publicClient.readContract({
+        const rawOdds = await publicClient!.readContract({
           address: contracts.prematchCore.address,
           abi: contracts.prematchCore.abi,
           functionName: 'calcOdds',

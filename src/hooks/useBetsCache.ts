@@ -1,6 +1,4 @@
-import type { Address } from 'wagmi'
-import type { TransactionReceipt } from 'viem'
-import { formatUnits } from 'viem'
+import { type TransactionReceipt, type Address, formatUnits } from 'viem'
 
 import { BetFragmentDoc as PrematchBetFragmentDoc, type BetFragment as PrematchBetFragment } from '../docs/prematch/fragments/bet'
 import { LiveBetFragmentDoc, type LiveBetFragment } from '../docs/prematch/fragments/liveBet'

@@ -32,8 +32,8 @@ export const useConditions = (props: UseConditionsProps) => {
   const { prematchClient, liveClient } = useApolloClients()
   const { appChain } = useChain()
 
-  const variables = useMemo<PrematchConditionsQueryVariables>(() => {
-    const vars: PrematchConditionsQueryVariables = {
+  const variables = useMemo<PrematchConditionsQueryVariables | LiveConditionsQueryVariables>(() => {
+    const vars: PrematchConditionsQueryVariables | LiveConditionsQueryVariables = {
       where: {
         game_: {
           gameId,
@@ -53,7 +53,7 @@ export const useConditions = (props: UseConditionsProps) => {
     loading: isPrematchLoading,
     error: prematchError,
   } = useQuery<PrematchConditionsQuery, PrematchConditionsQueryVariables>(PrematchConditionsDocument, {
-    variables,
+    variables: variables as PrematchConditionsQueryVariables,
     ssr: false,
     client: prematchClient!,
     skip: isLive,
@@ -64,7 +64,7 @@ export const useConditions = (props: UseConditionsProps) => {
     loading: isLiveLoading,
     error: liveError,
   } = useQuery<LiveConditionsQuery, LiveConditionsQueryVariables>(LiveConditionsDocument, {
-    variables,
+    variables: variables as LiveConditionsQueryVariables,
     ssr: false,
     client: liveClient!,
     skip: !isLive || appChain.id !== polygonMumbai.id,

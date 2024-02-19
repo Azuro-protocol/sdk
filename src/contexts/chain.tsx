@@ -1,5 +1,6 @@
 import React, { useState, useContext, createContext } from 'react'
-import { type Chain, useNetwork } from 'wagmi'
+import { useAccount } from 'wagmi'
+import { type Chain} from 'viem';
 import { setCookie } from 'cookies-next'
 
 import { chainsData, type ChainId, type ChainData, cookieKeys } from '../config'
@@ -27,7 +28,7 @@ export const ChainProvider: React.FC<ChainProviderProps> = (props) => {
   const { children, initialChainId } = props
 
   const [ appChainId, setAppChainId ] = useState<ChainId>(initialChainId)
-  const { chain: walletChain } = useNetwork()
+  const { chain: walletChain } = useAccount()
 
   const walletChainId = walletChain?.id || null
 

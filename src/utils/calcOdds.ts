@@ -1,6 +1,6 @@
 import { readContract } from '@wagmi/core'
-import type { Address } from 'viem'
-import { formatUnits, parseUnits } from 'viem'
+import { type Config } from 'wagmi'
+import { type Address, formatUnits, parseUnits } from 'viem'
 
 import { type ChainId, ODDS_DECIMALS, chainsData } from '../config'
 import type { Selection } from '../global'
@@ -134,13 +134,14 @@ export const calcLiveOdds = ({ selection, betAmount, oddsData }: CalcLiveOddsPro
 
 
 type CalcPrematchOddsProps = {
+  config: Config
   betAmount: string
   selections: Selection[]
   chainId: ChainId
 }
 
 export const calcPrematchOdds = async (props: CalcPrematchOddsProps): Promise<Record<string, number>> => {
-  const { selections, betAmount, chainId } = props
+  const { config, selections, betAmount, chainId } = props
 
   const { betToken, contracts } = chainsData[chainId]
   const rawAmount = parseUnits(betAmount, betToken.decimals)
@@ -154,7 +155,7 @@ export const calcPrematchOdds = async (props: CalcPrematchOddsProps): Promise<Re
     }))
 
     try {
-      const [ conditionOdds ] = await readContract({
+      const [ conditionOdds ] = await readContract(config, {
         abi: prematchComboCoreAbi,
         address: expressAddress as Address,
         chainId,
@@ -177,7 +178,7 @@ export const calcPrematchOdds = async (props: CalcPrematchOddsProps): Promise<Re
     const { conditionId, outcomeId, coreAddress } = selections[0]!
 
     try {
-      const rawOdds = await readContract({
+      const rawOdds = await readContract(config, {
         abi: prematchCoreAbi,
         address: coreAddress as Address,
         chainId,

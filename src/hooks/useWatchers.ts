@@ -1,6 +1,4 @@
-import { useEffect } from 'react'
-import { useContractEvent } from 'wagmi'
-
+import { useWatchContractEvent } from 'wagmi'
 import { useChain } from '../contexts/chain'
 import { oddsWatcher } from '../modules/oddsWatcher'
 import { conditionStatusWatcher } from '../modules/conditionStatusWatcher'
@@ -10,12 +8,12 @@ import { ConditionStatus } from '../docs/prematch/types'
 export const useWatchers = () => {
   const { appChain, contracts } = useChain()
 
-  const unwatchSingle = useContractEvent({
+  useWatchContractEvent({
     address: contracts.prematchCore.address,
     abi: contracts.prematchCore.abi,
     eventName: 'NewBet',
     chainId: appChain.id,
-    listener(logs) {
+    onLogs(logs) {
       const log = logs[0]!
       const conditionId = log.args.conditionId!
 
@@ -23,12 +21,12 @@ export const useWatchers = () => {
     },
   })
 
-  const unwatchCombo = useContractEvent({
+  useWatchContractEvent({
     address: contracts.prematchCore.address,
     abi: contracts.prematchCore.abi,
     eventName: 'OddsChanged',
     chainId: appChain.id,
-    listener(logs) {
+    onLogs(logs) {
       const log = logs[0]!
       const conditionId = log.args.conditionId!
 
@@ -36,12 +34,12 @@ export const useWatchers = () => {
     },
   })
 
-  const unwatchConditionStopped = useContractEvent({
+  useWatchContractEvent({
     address: contracts.prematchCore.address,
     abi: contracts.prematchCore.abi,
     eventName: 'ConditionStopped',
     chainId: appChain.id,
-    listener(logs) {
+    onLogs(logs) {
       const log = logs[0]!
       const conditionId = log.args.conditionId!
       const isStopped = log.args.flag!
@@ -51,19 +49,4 @@ export const useWatchers = () => {
       conditionStatusWatcher.dispatch(conditionId.toString(), status)
     },
   })
-
-  useEffect(() => {
-    return () => {
-      unwatchSingle?.()
-      unwatchCombo?.()
-    }
-  }, [ unwatchSingle, unwatchCombo, appChain.id ])
-
-
-  useEffect(() => {
-
-    return () => {
-      unwatchConditionStopped?.()
-    }
-  }, [ unwatchConditionStopped, contracts ])
 }

@@ -18,11 +18,11 @@ const getGraphqlEndpoint = (network: string) => `https://thegraph.azuro.org/subg
 export const graphqlEndpoints: Record<number, string> = {
   [gnosis.id]: getGraphqlEndpoint('gnosis'),
   [polygon.id]: getGraphqlEndpoint('polygon'),
-  [polygonMumbai.id]: getGraphqlEndpoint('mumbai'),
+  [polygonMumbai.id]: 'https://thegraph.azuro.org/subgraphs/name/azuro-protocol/azuro-api-mumbai-preprod-v3',
 }
 
-export const graphqlLiveEndpoint = 'https://thegraph.azuro.org/subgraphs/name/azuro-protocol/azuro-api-live-data-feed'
-export const socketApiUrl = 'wss://streams.azuro.org/v1/streams/conditions'
+export const graphqlLiveEndpoint = 'https://thegraph.azuro.org/subgraphs/name/azuro-protocol/azuro-api-live-data-feed-preprod'
+export const socketApiUrl = 'wss://preprod-streams.azuro.org/v1/streams/conditions'
 
 
 type SetupContractsProps = {
@@ -158,7 +158,7 @@ export const getApiUrl = (chainId: ChainId) => {
     return 'https://dev-api.azuro.org/api/v1/public'
   }
 
-  return 'https://api.azuro.org/api/v1/public'
+  return 'https://preprod-api.azuro.org/api/v1/public'
 }
 
 export const cookieKeys = {

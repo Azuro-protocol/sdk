@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
+import { useConfig } from 'wagmi'
 
 import { liveHostAddress } from '../config'
 import { useChain } from '../contexts/chain'
@@ -20,6 +21,7 @@ type CalcOddsProps = {
 export const useOdds = ({ selections, betAmount }: CalcOddsProps) => {
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useSocket()
   const { appChain } = useChain()
+  const config = useConfig()
   const isMounted = useIsMounted()
 
   const { liveItems, prematchItems } = useMemo<{ liveItems: Selection[], prematchItems: Selection[] }>(() => {
@@ -69,6 +71,7 @@ export const useOdds = ({ selections, betAmount }: CalcOddsProps) => {
 
     try {
       const prematchOdds = await calcPrematchOdds({
+        config,
         betAmount: betAmountRef.current,
         selections: prematchItems,
         chainId: appChain.id,

@@ -1,6 +1,5 @@
-import { erc20ABI, useAccount, useContractRead, useContractWrite, useWaitForTransaction, usePublicClient, type Address } from 'wagmi'
-import type { TransactionReceipt, Hex } from 'viem'
-import { parseUnits, encodeAbiParameters, parseAbiParameters, keccak256, toBytes, createWalletClient, custom } from 'viem'
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi'
+import { parseUnits, encodeAbiParameters, parseAbiParameters, keccak256, toBytes, createWalletClient, custom, type Address, erc20Abi, type TransactionReceipt, type Hex } from 'viem'
 import axios from 'axios'
 import { useState } from 'react'
 
@@ -40,7 +39,7 @@ type Props = {
   odds: Record<string, number>
   totalOdds: number
   deadline?: number
-  onSuccess?(receipt: TransactionReceipt): void
+  onSuccess?(receipt?: TransactionReceipt): void
   onError?(err?: Error): void
 }
 
@@ -58,29 +57,25 @@ export const usePrepareBet = (props: Props) => {
 
   const approveAddress = isLiveBet ? contracts.liveRelayer?.address : contracts.proxyFront.address
 
-  const allowanceTx = useContractRead({
+  const allowanceTx = useReadContract({
     chainId: appChain.id,
     address: betToken.address,
-    abi: erc20ABI,
+    abi: erc20Abi,
     functionName: 'allowance',
     args: [
       account.address!,
       approveAddress!,
     ],
-    enabled: Boolean(account.address) && Boolean(approveAddress),
+    query: {
+      enabled: Boolean(account.address) && Boolean(approveAddress),
+    },
   })
 
-  const approveTx = useContractWrite({
-    address: betToken.address,
-    abi: erc20ABI,
-    functionName: 'approve',
-    args: [
-      approveAddress!,
-      MAX_UINT_256,
-    ],
-  })
+  const approveTx = useWriteContract()
 
-  const approveReceipt = useWaitForTransaction(approveTx.data)
+  const approveReceipt = useWaitForTransactionReceipt({
+    hash: approveTx.data,
+  })
 
   const isApproveRequired = Boolean(
     allowanceTx.data !== undefined
@@ -89,19 +84,26 @@ export const usePrepareBet = (props: Props) => {
   )
 
   const approve = async () => {
-    const tx = await approveTx.writeAsync()
-    await publicClient.waitForTransactionReceipt(tx)
+    const hash = await approveTx.writeContractAsync({
+      address: betToken.address!,
+      abi: erc20Abi,
+      functionName: 'approve',
+      args: [
+        contracts.proxyFront.address,
+        MAX_UINT_256,
+      ],
+    })
+    await publicClient!.waitForTransactionReceipt({
+      hash,
+    })
     allowanceTx.refetch()
   }
 
-  const betTx = useContractWrite({
-    address: contracts.proxyFront.address,
-    abi: contracts.proxyFront.abi,
-    functionName: 'bet',
-    value: BigInt(0),
-  })
+  const betTx = useWriteContract()
 
-  const betReceipt = useWaitForTransaction(betTx.data)
+  const betReceipt = useWaitForTransactionReceipt({
+    hash: betTx.data,
+  })
 
   const placeBet = async () => {
     if (!totalOdds) {
@@ -260,8 +262,11 @@ export const usePrepareBet = (props: Props) => {
             ]
           )
         }
-
-        const tx = await betTx.writeAsync({
+        txHash = await betTx.writeContractAsync({
+          address: contracts.proxyFront.address,
+          abi: contracts.proxyFront.abi,
+          functionName: 'bet',
+          value: BigInt(0),
           args: [
             contracts.lp.address,
             [
@@ -278,29 +283,26 @@ export const usePrepareBet = (props: Props) => {
             ],
           ],
         })
-
-        txHash = tx.hash
       }
 
-      const receipt = await publicClient.waitForTransactionReceipt({
-        hash: txHash!,
+      const receipt = await publicClient?.waitForTransactionReceipt({
+        hash: txHash,
       })
+
+      if (receipt) {
+        addBet({
+          receipt,
+          bet: {
+            amount: `${fixedAmount}`,
+            selections,
+            odds,
+          },
+        })
+      }
 
       if (onSuccess) {
         onSuccess(receipt)
       }
-
-      setLiveBetProcessing(false)
-      allowanceTx.refetch()
-
-      addBet({
-        receipt,
-        bet: {
-          amount: `${fixedAmount}`,
-          selections,
-          odds,
-        },
-      })
     }
     catch (err) {
       setLiveBetPending(false)
@@ -325,11 +327,11 @@ export const usePrepareBet = (props: Props) => {
     isApproveRequired,
     submit,
     approveTx: {
-      isPending: approveTx.isLoading,
+      isPending: approveTx.isPending,
       isProcessing: approveReceipt.isLoading,
     },
     betTx: {
-      isPending: betTx.isLoading || isLiveBetPending,
+      isPending: betTx.isPending || isLiveBetPending,
       isProcessing: betReceipt.isLoading || isLiveBetProcessing,
     },
   }
