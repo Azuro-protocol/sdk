@@ -8,7 +8,6 @@ import {
   createWalletClient,
   custom,
   type Address, erc20Abi, type TransactionReceipt, type Hex } from 'viem'
-import axios from 'axios'
 import { useState } from 'react'
 
 import { useChain } from '../contexts/chain'
@@ -211,16 +210,26 @@ export const usePrepareBet = (props: Props) => {
 
         const apiUrl = getApiUrl(appChain.id)
 
+        const createOrderResponse = await fetch(`${apiUrl}/orders`, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(signedBet),
+        })
+
         const {
-          data: { id: orderId, state: newOrderState, errorMessage },
-        } = await axios.post<LiveCreateOrderResponse>(`${apiUrl}/orders`, signedBet)
+          id: orderId,
+          state: newOrderState,
+          errorMessage,
+        }: LiveCreateOrderResponse = await createOrderResponse.json()
 
         if (newOrderState === LiveOrderState.Created) {
           txHash = await new Promise<Hex>((res, rej) => {
             const interval = setInterval(async () => {
-              const {
-                data: { state, txHash },
-              } = await axios.get<LiveGetOrderResponse>(`${apiUrl}/orders/${orderId}`)
+              const getOrderResponse = await fetch(`${apiUrl}/orders/${orderId}`)
+              const { state, txHash }: LiveGetOrderResponse = await getOrderResponse.json()
 
               if (state === LiveOrderState.Rejected) {
                 clearInterval(interval)
@@ -233,6 +242,7 @@ export const usePrepareBet = (props: Props) => {
               }
             }, 1000)
           })
+          setLiveBetProcessing(false)
         }
         else {
           throw Error(errorMessage)
