@@ -14,8 +14,8 @@ npm install @azuro-org/sdk
 @azuro-org/dictionaries@^3.0.10
 graphql@^16.8.1
 react@^18.2.0
-viem@^1.19.13
-wagmi@^1.4.11
+viem@^2.7.9
+wagmi@^2.5.7
 ```
 
 Package information can be found in our [Doc](https://gem.azuro.org/sdk/overview)
