@@ -1,7 +1,6 @@
 import React, { useState, useContext, createContext } from 'react'
 import { useAccount } from 'wagmi'
 import { type Chain } from 'viem'
-import { setCookie } from 'cookies-next'
 
 import { chainsData, type ChainId, type ChainData, cookieKeys } from '../config'
 
@@ -37,7 +36,7 @@ export const ChainProvider: React.FC<ChainProviderProps> = (props) => {
   const { chain, contracts, betToken } = chainsData[appChainId]
 
   const handleChangeChain = (chainId: ChainId) => {
-    setCookie(cookieKeys.appChainId, chainId)
+    document.cookie = `${cookieKeys.appChainId}=${chainId};path=/;`
 
     setAppChainId(chainId)
   }

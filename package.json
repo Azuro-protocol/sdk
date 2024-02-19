@@ -28,8 +28,6 @@
   "peerDependencies": {
     "@apollo/client": "^3.8.0-beta.7",
     "@azuro-org/dictionaries": "^3.0.11",
-    "axios": "^1.6.5",
-    "cookies-next": "^4.1.0",
     "graphql": "^16.8.1",
     "react": "^18.2.0",
     "viem": "^2.7.9",
