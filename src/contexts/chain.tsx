@@ -1,6 +1,6 @@
 import React, { useState, useContext, createContext } from 'react'
 import { useAccount } from 'wagmi'
-import { type Chain} from 'viem';
+import { type Chain } from 'viem'
 import { setCookie } from 'cookies-next'
 
 import { chainsData, type ChainId, type ChainData, cookieKeys } from '../config'
