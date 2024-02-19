@@ -13,9 +13,7 @@ export function Header() {
       try {
         await reconnect(config)
       }
-      catch(err) {
-        console.log('err', err);
-      }
+      catch {}
     })()
   }, [])
 
