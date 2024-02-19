@@ -16,9 +16,9 @@ const useData = () => {
     gameOrderBy: Game_OrderBy.StartsAt,
     orderDir: OrderDirection.Asc,
     filter: {
-      sportSlug: params.sport,
-      countrySlug: params.country,
-      leagueSlug: params.league,
+      sportSlug: params.sport as string,
+      countrySlug: params.country as string,
+      leagueSlug: params.league as string,
     }
   }
 

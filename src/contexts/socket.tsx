@@ -44,8 +44,8 @@ export const useSocket = () => {
   return useContext(SocketContext) as SocketContextValue
 }
 
-export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [ socket, setSocket ] = useState<WebSocket>()
+export const SocketProvider: React.FC<any> = ({ children }) => {
+  const socket = useRef<WebSocket>()
   const [ isSocketReady, setSocketReady ] = useState(false)
   const subscribers = useRef<Record<string, number>>({})
 
@@ -62,7 +62,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       subscribers.current[conditionId] += 1
     })
 
-    socket!.send(JSON.stringify({
+    socket.current!.send(JSON.stringify({
       action: 'subscribe',
       conditionIds,
     }))
@@ -90,20 +90,23 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return
     }
 
-    socket!.send(JSON.stringify({
+    socket.current!.send(JSON.stringify({
       action: 'unsubscribe',
       conditionIds: newUnsubscribers,
     }))
   }
 
   useEffect(() => {
+    if (socket.current) {
+      return
+    }
+
     const connect = () => {
       const newSocket = new WebSocket(socketApiUrl)
 
-      setSocket(newSocket)
-
       newSocket.onopen = () => {
         setSocketReady(true)
+        socket.current = newSocket
       }
 
       newSocket.onmessage = (message: MessageEvent<SocketData>) => {
@@ -139,7 +142,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       newSocket.onclose = () => {
-        setSocket(undefined)
+        socket.current = undefined
         setSocketReady(false)
 
         setTimeout(connect, 1000)
@@ -153,8 +156,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     connect()
 
     return () => {
-      if (socket) {
-        socket.close()
+      if (socket.current) {
+        socket.current.close()
       }
     }
   }, [])

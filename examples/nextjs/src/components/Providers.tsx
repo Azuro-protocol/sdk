@@ -4,9 +4,9 @@ import { ChainId, AzuroSDKProvider } from '@azuro-org/sdk'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RainbowKitProvider, getDefaultWallets, getDefaultConfig } from '@rainbow-me/rainbowkit'
 import { polygonMumbai, gnosis } from 'wagmi/chains'
-import {WagmiProvider} from 'wagmi';
+import { WagmiProvider } from 'wagmi'
 
-import { BetslipProvider } from '@/context/betslip';
+import { BetslipProvider } from '@/context/betslip'
 
 
 const { wallets } = getDefaultWallets()

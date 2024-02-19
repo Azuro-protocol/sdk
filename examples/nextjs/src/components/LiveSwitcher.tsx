@@ -1,5 +1,5 @@
 'use client'
-import { useLive } from "@azuro-org/sdk";
+import { useLive } from "@azuro-org/sdk"
 
 
 export function LiveSwitcher() {

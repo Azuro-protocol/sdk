@@ -1,12 +1,12 @@
 'use client'
-import { GamesQuery, SportsQuery, useGameStatus, useGameMarkets, useLive } from '@azuro-org/sdk';
-import Link from 'next/link';
-import cx from 'clsx';
+import { GamesQuery, SportsQuery, useGameStatus, useGameMarkets, useLive } from '@azuro-org/sdk'
+import Link from 'next/link'
+import cx from 'clsx'
 import { useParams } from 'next/navigation'
 import dayjs from 'dayjs'
 
-import { CountryFlag } from './CountryFlag/CountryFlag';
-import { OutcomeButton } from './index';
+import { CountryFlag } from './CountryFlag/CountryFlag'
+import { OutcomeButton } from './index'
 
 
 type GameProps = {

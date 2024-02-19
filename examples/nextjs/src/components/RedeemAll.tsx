@@ -1,7 +1,7 @@
 'use client'
-import React from 'react';
+import React from 'react'
 import { type Bet, useRedeemBet } from '@azuro-org/sdk'
-import cx from 'clsx';
+import cx from 'clsx'
 
 type Props = {
   bets: Array<Bet>

@@ -1,11 +1,11 @@
 'use client'
-import { SportsQuery } from '@azuro-org/sdk';
+import { SportsQuery } from '@azuro-org/sdk'
 import { useParams } from 'next/navigation'
-import Link from 'next/link';
-import cx from 'clsx';
+import Link from 'next/link'
+import cx from 'clsx'
 
-import { League } from './Leaglue';
-import { CountryFlag } from './CountryFlag/CountryFlag';
+import { League } from './Leaglue'
+import { CountryFlag } from './CountryFlag/CountryFlag'
 
 type CountryProps = {
   className?: string

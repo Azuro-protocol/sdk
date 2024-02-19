@@ -1,10 +1,10 @@
 'use client'
-import { SportsQuery } from '@azuro-org/sdk';
+import { SportsQuery } from '@azuro-org/sdk'
 import { useParams } from 'next/navigation'
-import Link from 'next/link';
-import cx from 'clsx';
+import Link from 'next/link'
+import cx from 'clsx'
 
-import { Country } from './Country';
+import { Country } from './Country'
 
 
 type SportProps = {
