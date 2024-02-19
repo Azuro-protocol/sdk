@@ -17,7 +17,7 @@ const useData = () => {
       }
       : {
         filter: {
-          sportSlug: params.sport,
+          sportSlug: params.sport as string,
         },
       }
 

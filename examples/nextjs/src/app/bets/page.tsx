@@ -1,7 +1,7 @@
 'use client'
 import { useBets, OrderDirection } from '@azuro-org/sdk'
-import { useAccount } from 'wagmi';
-import { BetCard, RedeemAll } from '@/components';
+import { useAccount } from 'wagmi'
+import { BetCard, RedeemAll } from '@/components'
 
 const useData = () => {
   const { address } = useAccount()

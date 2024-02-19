@@ -18,7 +18,7 @@ export function PlaceBetModal(props: Props) {
   const { outcome, closeModal } = props
 
   const params = useParams()
-  const { data } = useGame({ gameId: params.id })
+  const { data } = useGame({ gameId: params.id as string })
   const [ amount, setAmount ] = useState('')
   const [ isSuccess, setSuccess ] = useState(false)
 

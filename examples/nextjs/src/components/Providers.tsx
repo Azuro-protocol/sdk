@@ -2,53 +2,40 @@
 import React from 'react'
 import { ChainProvider } from '@azuro-org/sdk'
 import { ApolloProvider } from '@azuro-org/sdk/nextjs/apollo'
-import { RainbowKitProvider, getDefaultWallets } from '@rainbow-me/rainbowkit'
-import { WagmiConfig, configureChains, createConfig } from 'wagmi'
-import { polygonMumbai, arbitrumGoerli } from 'viem/chains'
-import { jsonRpcProvider } from 'wagmi/providers/jsonRpc'
-import { publicProvider } from 'wagmi/providers/public'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { RainbowKitProvider, getDefaultWallets, getDefaultConfig } from '@rainbow-me/rainbowkit'
+import { WagmiProvider } from 'wagmi'
+import { polygonMumbai, arbitrumGoerli } from 'wagmi/chains'
 
 
-const rpcUrls: Record<number, string> = {
-  [polygonMumbai.id]: 'https://rpc.ankr.com/polygon_mumbai',
-  [arbitrumGoerli.id]: 'https://arbitrum-goerli.publicnode.com',
-}
+const { wallets } = getDefaultWallets()
 
-const { chains, publicClient } = configureChains(
-  [ polygonMumbai, arbitrumGoerli ],
-  [
-    jsonRpcProvider({
-      rpc: (chain) => ({
-        http: rpcUrls[chain.id],
-      }),
-    }),
-    publicProvider(),
-  ]
-)
-
-const { connectors } = getDefaultWallets({
+const config = getDefaultConfig({
   appName: 'Azuro',
   projectId: '2f82a1608c73932cfc64ff51aa38a87b', // get your own project ID - https://cloud.walletconnect.com/sign-in
-  chains,
+  wallets,
+  chains: [
+    polygonMumbai,
+    arbitrumGoerli,
+  ]
 })
 
-const wagmiConfig = createConfig({
-  connectors,
-  publicClient,
-})
+const queryClient = new QueryClient()
 
 export function Providers(props: { children: React.ReactNode }) {
   const { children } = props
 
   return (
-    <WagmiConfig config={wagmiConfig}>
-      <RainbowKitProvider chains={chains}>
-        <ChainProvider initialChainId={polygonMumbai.id}>
-          <ApolloProvider>
-            {children}
-          </ApolloProvider>
-        </ChainProvider>
-      </RainbowKitProvider>
-    </WagmiConfig>
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider>
+          <ChainProvider initialChainId={polygonMumbai.id}>
+            <ApolloProvider>
+              {children}
+            </ApolloProvider>
+          </ChainProvider>
+        </RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
   )
 }
