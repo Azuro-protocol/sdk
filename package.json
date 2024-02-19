@@ -1,6 +1,6 @@
 {
   "name": "@azuro-org/sdk",
-  "version": "1.0.6",
+  "version": "2.0.0",
   "author": "Azuro",
   "type": "module",
   "main": "dist/index.js",
@@ -27,8 +27,8 @@
     "@azuro-org/dictionaries": "^3.0.10",
     "graphql": "^16.8.1",
     "react": "^18.2.0",
-    "viem": "^1.19.13",
-    "wagmi": "^1.4.11"
+    "viem": "^2.7.9",
+    "wagmi": "^2.5.7"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^4.0.1",

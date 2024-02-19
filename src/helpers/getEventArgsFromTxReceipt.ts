@@ -8,7 +8,7 @@ type Props = {
 }
 
 export const getEventArgsFromTxReceipt = <T = Record<string, any>>({ receipt, eventName, abi }: Props): T | undefined => {
-  let result: DecodeEventLogReturnType = {} as any
+  let result: DecodeEventLogReturnType<typeof abi> = {} as any
 
   receipt.logs.some((log) => {
     try {

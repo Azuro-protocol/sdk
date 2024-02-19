@@ -33,7 +33,7 @@ export const useOutcome = ({ selection, initialOdds, initialStatus }: Props) => 
 
   useEffect(() => {
     const unsubscribe = oddsWatcher.subscribe(`${conditionId}`, `${outcomeId}`, async () => {
-      const rawOdds = await publicClient.readContract({
+      const rawOdds = await publicClient!.readContract({
         address: contracts.prematchCore.address,
         abi: contracts.prematchCore.abi,
         functionName: 'calcOdds',

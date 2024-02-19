@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useQuery } from '@apollo/client'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
-import { type Address } from 'wagmi'
+import { type Address } from 'viem'
 import { BetsDocument, BetsQuery, BetsQueryVariables } from '../docs/bets'
 import { GameQuery } from '../docs/game'
 import { Bet_OrderBy, OrderDirection, BetResult, BetStatus, SelectionResult, ConditionStatus } from '../types'
