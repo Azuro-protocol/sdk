@@ -1,7 +1,8 @@
 import React, { useState, useContext, createContext } from 'react'
 import { useAccount } from 'wagmi'
-import { type Chain } from 'viem';
-import { chainsData, type ChainId, type ChainData } from '../config'
+import { type Chain } from 'viem'
+
+import { chainsData, type ChainId, type ChainData, cookieKeys } from '../config'
 
 
 export type ChainContextValue = Omit<ChainData, 'chain'> & {
@@ -13,12 +14,16 @@ export type ChainContextValue = Omit<ChainData, 'chain'> & {
 
 const ChainContext = createContext<ChainContextValue | null>(null)
 
-type Props = {
+export const useChain = () => {
+  return useContext(ChainContext) as ChainContextValue
+}
+
+export type ChainProviderProps = {
   children: React.ReactNode
   initialChainId: ChainId
 }
 
-export const ChainProvider: React.FC<Props> = (props) => {
+export const ChainProvider: React.FC<ChainProviderProps> = (props) => {
   const { children, initialChainId } = props
 
   const [ appChainId, setAppChainId ] = useState<ChainId>(initialChainId)
@@ -30,13 +35,19 @@ export const ChainProvider: React.FC<Props> = (props) => {
 
   const { chain, contracts, betToken } = chainsData[appChainId]
 
+  const handleChangeChain = (chainId: ChainId) => {
+    document.cookie = `${cookieKeys.appChainId}=${chainId};path=/;`
+
+    setAppChainId(chainId)
+  }
+
   const context: ChainContextValue = {
     appChain: chain,
     walletChain,
     contracts,
     betToken,
     isRightNetwork,
-    setAppChainId,
+    setAppChainId: handleChangeChain,
   }
 
   return (
@@ -44,8 +55,4 @@ export const ChainProvider: React.FC<Props> = (props) => {
       {children}
     </ChainContext.Provider>
   )
-}
-
-export const useChain = () => {
-  return useContext(ChainContext) as ChainContextValue
 }

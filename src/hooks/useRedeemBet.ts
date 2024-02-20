@@ -1,12 +1,13 @@
 import { useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi'
-import { Address } from 'viem';
+import type { Address } from 'viem'
+
 import { useChain } from '../contexts/chain'
-import { useBetsCache } from './useBetsCache';
-import { Bet } from './useBets';
+import { useBetsCache } from './useBetsCache'
+import { type PrematchBet } from './usePrematchBets'
 
 
 type SubmitProps = {
-  bets: Array<Pick<Bet, 'tokenId' | 'coreAddress'>>
+  bets: Array<Pick<PrematchBet, 'tokenId' | 'coreAddress'>>
 }
 
 export const useRedeemBet = () => {
@@ -22,7 +23,7 @@ export const useRedeemBet = () => {
     hash: redeemTx.data,
   })
   const batchReceipt = useWaitForTransactionReceipt({
-    hash: batchRedeemTx.data
+    hash: batchRedeemTx.data,
   })
 
   const submit = async (props: SubmitProps) => {
@@ -32,7 +33,7 @@ export const useRedeemBet = () => {
     let hash: Address
 
     if (isBatch) {
-      const betsData = bets.map(({tokenId, coreAddress}) => ({
+      const betsData = bets.map(({ tokenId, coreAddress }) => ({
         core: coreAddress as Address,
         tokenId: BigInt(tokenId),
         isNative: false,
@@ -44,7 +45,8 @@ export const useRedeemBet = () => {
         functionName: 'withdrawPayouts',
         args: [ betsData ],
       })
-    } else {
+    }
+    else {
       const { tokenId, coreAddress } = bets[0]!
 
       hash = await redeemTx.writeContractAsync({
@@ -59,10 +61,10 @@ export const useRedeemBet = () => {
     }
 
     const receipt = await publicClient!.waitForTransactionReceipt({
-      hash
+      hash,
     })
 
-    bets.forEach(({tokenId, coreAddress}) => {
+    bets.forEach(({ tokenId, coreAddress }) => {
       updateBetCache({
         coreAddress,
         tokenId,

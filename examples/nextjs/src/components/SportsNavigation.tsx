@@ -4,7 +4,7 @@ import { ActiveLink } from '@/components'
 
 
 export function SportsNavigation() {
-  const { loading, data } = useSportsNavigation({
+  const { loading, sports } = useSportsNavigation({
     withGameCount: true,
   })
 
@@ -24,7 +24,7 @@ export function SportsNavigation() {
             Top
           </ActiveLink>
           {
-            [ ...data?.sports || [] ]
+            [ ...sports || [] ]
               .sort((a, b) => b.games!.length - a.games!.length)
               .map(({ slug, name, games }) => (
                 <ActiveLink

@@ -1,0 +1,22 @@
+fragment Condition on Condition {
+  id
+  conditionId
+  status
+  isExpressForbidden
+  outcomes {
+    outcomeId
+    odds: currentOdds
+  }
+  core {
+    address
+    liquidityPool {
+      address
+    }
+  }
+  game {
+    gameId
+    sport {
+      sportId
+    }
+  }
+}

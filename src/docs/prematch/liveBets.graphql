@@ -1,0 +1,18 @@
+query LiveBets(
+  $first: Int,
+  $skip: Int,
+  $where: Bet_filter!,
+  $orderBy: Bet_orderBy,
+  $orderDirection: OrderDirection
+) {
+  liveBets(
+    first: $first,
+    skip: $skip,
+    where: $where,
+    orderBy: $orderBy,
+    orderDirection: $orderDirection,
+    subgraphError: allow
+  ) {
+    ...LiveBet
+  }
+}

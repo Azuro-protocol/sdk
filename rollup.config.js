@@ -8,16 +8,12 @@ import typescript from '@rollup/plugin-typescript'
 export default {
   input: {
     'index': 'src/index.ts',
-    'nextjs/apollo': 'src/nextjs/apollo.tsx',
-    'react/apollo': 'src/react/apollo.tsx',
   },
   output: {
     dir: 'dist',
     format: 'es',
-    // preserveModules: true,
     manualChunks: {
       'config': [ 'src/config.ts' ],
-      'chainContext': [ 'src/contexts/chain.tsx' ],
     },
     chunkFileNames: '[name].js',
     compact: true,
@@ -29,6 +25,8 @@ export default {
     /react/,
     /viem/,
     /wagmi/,
+    /axios/,
+    /cookies-next/,
   ],
   plugins: [
     typescript({

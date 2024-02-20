@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect } from 'react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { ActiveLink, SelectAppChain } from '@/components'
+import { ActiveLink, SelectAppChain, LiveSwitcher } from '@/components'
 import { reconnect } from '@wagmi/core'
 import { useConfig } from 'wagmi'
 
@@ -18,7 +18,7 @@ export function Header() {
   }, [])
 
   return (
-    <header className="container flex items-center py-3.5 border-b border-zinc-200">
+    <header className="flex items-center py-3.5 border-b border-zinc-200">
       <div className="text-xl font-semibold">Azuro Betting</div>
       <div className="flex ml-10">
         <ActiveLink
@@ -39,6 +39,7 @@ export function Header() {
         </ActiveLink>
       </div>
       <div className="ml-auto flex items-center">
+        <LiveSwitcher />
         <SelectAppChain />
         <ConnectButton chainStatus="none" />
       </div>

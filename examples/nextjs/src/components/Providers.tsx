@@ -1,39 +1,51 @@
 'use client'
 import React from 'react'
-import { ChainProvider } from '@azuro-org/sdk'
-import { ApolloProvider } from '@azuro-org/sdk/nextjs/apollo'
+import { ChainId, AzuroSDKProvider } from '@azuro-org/sdk'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RainbowKitProvider, getDefaultWallets, getDefaultConfig } from '@rainbow-me/rainbowkit'
+import { polygonMumbai, gnosis } from 'wagmi/chains'
 import { WagmiProvider } from 'wagmi'
-import { polygonMumbai, arbitrumGoerli } from 'wagmi/chains'
+
+import { BetslipProvider } from '@/context/betslip'
 
 
 const { wallets } = getDefaultWallets()
 
-const config = getDefaultConfig({
+const chains = [
+  polygonMumbai,
+  gnosis,
+] as const
+
+const wagmiConfig = getDefaultConfig({
   appName: 'Azuro',
   projectId: '2f82a1608c73932cfc64ff51aa38a87b', // get your own project ID - https://cloud.walletconnect.com/sign-in
   wallets,
-  chains: [
-    polygonMumbai,
-    arbitrumGoerli,
-  ]
+  chains,
 })
 
 const queryClient = new QueryClient()
 
-export function Providers(props: { children: React.ReactNode }) {
-  const { children } = props
+type ProvidersProps = {
+  children: React.ReactNode
+  initialChainId?: string
+  initialLiveState?: boolean
+}
+
+export function Providers(props: ProvidersProps) {
+  const { children, initialChainId, initialLiveState } = props
+
+  const chainId = initialChainId &&
+                  chains.find(chain => chain.id === +initialChainId) ? +initialChainId as ChainId : polygonMumbai.id
 
   return (
-    <WagmiProvider config={config}>
+    <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
-          <ChainProvider initialChainId={polygonMumbai.id}>
-            <ApolloProvider>
+          <AzuroSDKProvider initialChainId={chainId} initialLiveState={initialLiveState}>
+            <BetslipProvider>
               {children}
-            </ApolloProvider>
-          </ChainProvider>
+            </BetslipProvider>
+          </AzuroSDKProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>

@@ -26,7 +26,7 @@ export const ActiveLink: React.FC<React.PropsWithChildren<ActiveLinkProps>> = (p
 
     // Using URL().pathname to get rid of query and hash
     const activePathname = new URL(pathname, location.href).pathname
-    const isMatch = regex ? new RegExp(regex).test(activePathname) : activePathname === linkPathname
+    const isMatch = regex ? new RegExp(regex).test(activePathname) : activePathname.includes(linkPathname)
 
     const newClassName =
       isMatch

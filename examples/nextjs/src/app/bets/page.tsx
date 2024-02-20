@@ -1,9 +1,11 @@
 'use client'
-import { useBets, OrderDirection } from '@azuro-org/sdk'
-import { useAccount } from 'wagmi'
-import { BetCard, RedeemAll } from '@/components'
+import { usePrematchBets, useLiveBets, OrderDirection } from '@azuro-org/sdk'
+import { useAccount } from 'wagmi';
+import { BetCard, RedeemAll } from '@/components';
+import { useMemo } from 'react';
 
-const useData = () => {
+
+export default function Bets() {
   const { address } = useAccount()
 
   const props = {
@@ -13,25 +15,26 @@ const useData = () => {
     orderDir: OrderDirection.Desc,
   }
 
-  return useBets(props)
-}
+  const { loading: isPrematchLoading, bets: prematchBets } = usePrematchBets(props)
+  const { loading: isLiveLoading, bets: liveBets } = useLiveBets(props)
 
-export default function Bets() {
-  const { loading, data } = useData()
+  const bets = useMemo(() => {
+    return [...liveBets, ...prematchBets].sort((betA, betB) => betB.createdAt - betA.createdAt)
+  }, [ prematchBets, liveBets ])
 
-  if (loading) {
+  if (isLiveLoading || isPrematchLoading) {
     return <div>Loading...</div>
   }
 
-  if (!data?.length) {
+  if (!prematchBets?.length && !liveBets?.length) {
     return <div>You don't have bets yet</div>
   }
 
   return (
     <div>
-      <RedeemAll bets={data} />
+      <RedeemAll bets={bets} />
       {
-        data.map(bet => (
+        bets.map(bet => (
           <BetCard key={`${bet.createdAt}-${bet.tokenId}`} bet={bet} />
         ))
       }

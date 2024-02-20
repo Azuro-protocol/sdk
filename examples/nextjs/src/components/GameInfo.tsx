@@ -21,7 +21,7 @@ export function GameInfo(props: Props) {
       <div className="mt-5 grid grid-cols-[1fr_auto_1fr]">
         <ParticipantLogo {...participants[0]} />
         <div className="mx-5 pt-7 text-md text-zinc-500">
-          {dayjs(startsAt * 1000).format('DD MMM HH:mm')}
+          {dayjs(+startsAt * 1000).format('DD MMM HH:mm')}
         </div>
         <ParticipantLogo {...participants[1]} />
       </div>

@@ -1,12 +1,13 @@
-import { debounce } from './debounce'
 import { type ApolloClient } from '@apollo/client'
-import { type ConditionsBatchQuery, ConditionsBatchDocument } from '../docs/conditionsBatch'
-import { ConditionStatus } from '../types'
+
+import { debounce } from './debounce'
+import { type ConditionsBatchQuery, ConditionsBatchDocument } from '../docs/prematch/conditionsBatch'
+import type { ConditionStatus } from '../docs/prematch/types'
 
 
 type OutcomeData = {
   status: ConditionStatus
-  odds: string
+  odds: number
 }
 
 type Result = Record<string, OutcomeData>
@@ -36,7 +37,7 @@ const fetch = debounce(async (client: ApolloClient<object>) => {
       outcomes.forEach(({ outcomeId, odds }) => {
         const key = `${conditionEntityId}-${outcomeId}`
         acc[key] = {
-          odds,
+          odds: +odds,
           status,
         }
       })

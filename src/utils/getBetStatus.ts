@@ -1,6 +1,7 @@
 import { GameStatus, getGameStatus } from './getGameStatus'
-import { type Bet } from '../hooks/useBets';
-import { BetStatus as GraphBetStatus } from '../types';
+import { BetStatus as GraphBetStatus } from '../docs/prematch/types'
+import { type GameQuery } from '../docs/prematch/game'
+
 
 export enum BetStatus {
   Accepted,
@@ -10,30 +11,32 @@ export enum BetStatus {
   Canceled,
 }
 
-type Game = Pick<Bet['outcomes'][0]['game'], 'status' | 'startsAt'>
+type Game = Pick<GameQuery['games'][0], 'status' | 'startsAt'>
 
 const getExpressIsLive = (games: Game[]) => {
-  const firstStartDate = Math.min(...games.map(({ startsAt }) => startsAt))
+  const firstStartDate = Math.min(...games.map(({ startsAt }) => +startsAt))
 
   return +firstStartDate * 1000 < Date.now()
 }
 
 const getExpressIsPendingResolution = (games: Game[]) => {
-  const lastStartDate = Math.max(...games.map(({ startsAt }) => startsAt))
-  const lastGames = games.filter(({ startsAt }) => startsAt === lastStartDate)
+  const lastStartDate = Math.max(...games.map(({ startsAt }) => +startsAt))
+  const lastGames = games.filter(({ startsAt }) => +startsAt === lastStartDate)
 
   return lastGames.some(({ status, startsAt }) => {
-    return getGameStatus({ graphStatus: status, startsAt }) === GameStatus.PendingResolution
+    return getGameStatus({ graphStatus: status, startsAt: +startsAt, isGameInLive: false }) === GameStatus.PendingResolution
   })
 }
 
 type Props = {
   games: Game[]
   graphStatus: GraphBetStatus
+  isLiveBet: boolean
 }
 
 export const getBetStatus = (props: Props): BetStatus => {
-  const { games, graphStatus } = props
+
+  const { games, graphStatus, isLiveBet } = props
 
   if (graphStatus === GraphBetStatus.Canceled) {
     return BetStatus.Canceled
@@ -45,11 +48,9 @@ export const getBetStatus = (props: Props): BetStatus => {
 
   const isExpress = games.length > 1
 
-  const gameStatus = getGameStatus({ graphStatus: games[0]!.status, startsAt: games[0]!.startsAt })
-
   const isPendingResolution = isExpress
     ? getExpressIsPendingResolution(games)
-    : gameStatus === GameStatus.PendingResolution
+    : getGameStatus({ graphStatus: games[0]!.status, startsAt: +games[0]!.startsAt, isGameInLive: isLiveBet }) === GameStatus.PendingResolution
 
   if (isPendingResolution) {
     return BetStatus.PendingResolution
@@ -57,7 +58,7 @@ export const getBetStatus = (props: Props): BetStatus => {
 
   const isLive = isExpress
     ? getExpressIsLive(games)
-    : gameStatus === GameStatus.Live
+    : getGameStatus({ graphStatus: games[0]!.status, startsAt: +games[0]!.startsAt, isGameInLive: isLiveBet }) === GameStatus.Live
 
   if (isLive) {
     return BetStatus.Live

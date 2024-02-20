@@ -1,7 +1,7 @@
-import { GameStatus as GraphGameStatus } from '../types';
+import { GameStatus as GraphGameStatus } from '../docs/live/types'
 
 
-const isPendingResolution = (startDate: number): boolean => {
+const getIsPendingResolution = (startDate: number): boolean => {
   const now = Date.now()
   const isStarted = startDate < now
   const pendingResolutionDate = startDate + 6000000
@@ -10,44 +10,50 @@ const isPendingResolution = (startDate: number): boolean => {
 }
 
 export enum GameStatus {
-  Preparing,
+  Created,
   Live,
-  PendingResolution,
   Resolved,
   Canceled,
   Paused,
+  PendingResolution,
 }
 
 type Props = {
   graphStatus: GraphGameStatus,
   startsAt: number
+  isGameInLive: boolean
 }
 
 export const getGameStatus = (props: Props): GameStatus => {
-  const { graphStatus, startsAt } = props
+  const { graphStatus, startsAt, isGameInLive } = props
 
   const startDate = startsAt * 1000
   const isStarted = startDate < Date.now()
 
+  // we use LiveGameStatus enum for conditions because it contains PrematchGameStatus
   if (graphStatus === GraphGameStatus.Canceled) {
     return GameStatus.Canceled
   }
-  
-  if (graphStatus === GraphGameStatus.Resolved) {
-    return GameStatus.Resolved
-  }
-  
-  if (isPendingResolution(startDate)) {
-    return GameStatus.PendingResolution
-  }
-  
-  if (isStarted) {
-    return GameStatus.Live
-  }
-  
+
   if (graphStatus === GraphGameStatus.Paused) {
     return GameStatus.Paused
   }
 
-  return GameStatus.Preparing
+  if (graphStatus === GraphGameStatus.Resolved) {
+    return GameStatus.Resolved
+  }
+
+  if (graphStatus === GraphGameStatus.Finished) {
+    return GameStatus.PendingResolution
+  }
+
+  if (isStarted) {
+    if (!isGameInLive && getIsPendingResolution(startDate)) {
+      return GameStatus.PendingResolution
+    }
+
+    return GameStatus.Live
+  }
+
+  return GameStatus.Created
 }

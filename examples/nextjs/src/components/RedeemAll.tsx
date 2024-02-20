@@ -1,10 +1,10 @@
 'use client'
-import React from 'react';
+import React from 'react'
 import { type Bet, useRedeemBet } from '@azuro-org/sdk'
-import cx from 'clsx';
+import cx from 'clsx'
 
 type Props = {
-  bets: Bet[]
+  bets: Array<Bet>
 }
 
 export function RedeemAll(props: Props) {
@@ -13,7 +13,7 @@ export function RedeemAll(props: Props) {
   const { submit, isPending, isProcessing } = useRedeemBet()
 
   const unredeemedBets = bets?.filter((bet) => (
-    !bet.freebetContractAddress
+    !(bet as Bet).freebetContractAddress
     && bet.isRedeemable
   ))
 

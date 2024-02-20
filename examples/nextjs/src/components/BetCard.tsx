@@ -4,6 +4,7 @@ import dayjs from 'dayjs'
 import Link from 'next/link'
 import { useMemo } from 'react'
 import cx from 'clsx'
+import { liveCoreAddress } from '@azuro-org/sdk'
 
 
 const BetStatusText = {
@@ -19,7 +20,7 @@ const GameStatusText = {
   [GameStatus.Live]: 'Live',
   [GameStatus.Paused]: 'Paused',
   [GameStatus.PendingResolution]: 'Pending resolution',
-  [GameStatus.Preparing]: 'Preparing',
+  [GameStatus.Created]: 'Preparing',
   [GameStatus.Resolved]: 'Resolved',
 }
 
@@ -31,17 +32,20 @@ export function BetCard(props: Props) {
   const { bet } = props
   const { 
     createdAt, status: graphBetStatus, amount, outcomes, 
-    payout, possibleWin, freebetId, 
+    payout, possibleWin, freebetId,  coreAddress,
     isWin, isLose, isCanceled, isRedeemed 
   } = bet
 
   const { betToken } = useChain()
   const { submit, isPending, isProcessing } = useRedeemBet()
 
+  const isLiveBet = coreAddress.toLowerCase() === liveCoreAddress.toLowerCase()
+
   const betStatus = useMemo(() => {
     return getBetStatus({
       graphStatus: graphBetStatus,
       games: outcomes.map(({ game }) => game),
+      isLiveBet: isLiveBet,
     })
   }, [])
 
@@ -97,7 +101,7 @@ export function BetCard(props: Props) {
                   <p className='mr-4'>{dayjs(+startsAt * 1000).format('DD.MM.YYYY, hh:mm A')}</p>
                   <p>{`${countryName}: ${leagueName}`}</p>
                 </div>
-                <p>{GameStatusText[getGameStatus({ graphStatus: gameStatus, startsAt })]}</p>
+                <p>{GameStatusText[getGameStatus({ graphStatus: gameStatus, startsAt: +startsAt, isGameInLive: Boolean(isLiveBet) })]}</p>
               </div>
               <div className="flex items-center">
                 <Link href={`/events/${sportSlug}/${gameId}`} className="flex items-center mr-4">

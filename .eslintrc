@@ -1,0 +1,165 @@
+{
+  "extends": [
+    "plugin:import/errors",
+    "plugin:import/warnings",
+    "plugin:import/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "plugins": [
+    "import",
+    "@typescript-eslint"
+  ],
+  "ignorePatterns": [
+    "*.js",
+    "*.graphql.ts",
+    "src/docs/*",
+    "examples/**",
+    "*.json",
+    "codegen.ts",
+  ],
+  "settings": {
+    "import/parsers": {
+      "@typescript-eslint/parser": [".ts", ".tsx"]
+    },
+    "import/resolver": {
+      "typescript": "./tsconfig.json"
+    }
+  },
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "rules": {
+    // Common
+
+    "padding-line-between-statements": [
+      "error",
+      {
+        "blankLine": "always",
+        "prev": "*",
+        "next": [ "return", "if", "try" ]
+      }
+    ],
+
+    "eol-last": [
+      "error",
+      "always"
+    ],
+    "curly": [
+      "error"
+    ],
+    "indent": "off",
+    "quotes": [
+      "error",
+      "single"
+    ],
+    "brace-style": [
+      "error",
+      "stroustrup"
+    ],
+    "prefer-const": "off",
+    "key-spacing": [
+      "error",
+      { "beforeColon": false }
+    ],
+    "arrow-spacing": "error",
+    "space-infix-ops": "error",
+    "space-before-blocks": "error",
+    "no-multi-spaces": "warn",
+    "no-trailing-spaces": "warn",
+    "semi": [
+      "error",
+      "never"
+    ],
+    "max-len": "off",
+    "object-curly-spacing": [
+      "error",
+      "always"
+    ],
+    "array-bracket-spacing": [
+      "error",
+      "always"
+    ],
+    "no-multiple-empty-lines": [
+      "error",
+      {
+        "max": 2
+      }
+    ],
+    "comma-spacing": "warn",
+    "comma-dangle": [
+      "error",
+      {
+        "arrays": "always-multiline",
+        "objects": "always-multiline",
+        "imports": "always-multiline",
+        "exports": "always-multiline",
+        "functions": "never"
+      }
+    ],
+    "keyword-spacing": "error",
+
+    // Import plugin
+
+    "import/order": [
+      "error",
+      {
+        "groups": [
+          [ "builtin", "external" ],
+          "internal"
+        ],
+        "pathGroups": [
+          {
+            "pattern": "react",
+            "group": "builtin",
+            "position": "before"
+          },
+          {
+            "pattern": "wagmi",
+            "group": "external"
+          },
+          {
+            "pattern": "viem",
+            "group": "external"
+          },
+          {
+            "pattern": "cookies-next",
+            "group": "external"
+          },
+          {
+            "pattern": "@apollo/**",
+            "group": "external"
+          }
+        ],
+        "newlines-between": "always"
+      }
+    ],
+    "import/first": 0,
+    "import/extensions": 0,
+    "import/no-unresolved": 0,
+    "import/no-dynamic-require": 0,
+    "import/prefer-default-export": 0,
+    "import/no-webpack-loader-syntax": 0,
+    "import/no-named-as-default-member": 1,
+    "import/no-extraneous-dependencies": 0,
+    "import/no-anonymous-default-export": 0,
+    "import/newline-after-import": [
+      "error",
+      {
+        "count": 2
+      }
+    ],
+    // typescript
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-for-in-array": "error",
+    "@typescript-eslint/await-thenable": "warn",
+    "@typescript-eslint/consistent-type-imports": "error",
+    "@typescript-eslint/type-annotation-spacing": "error",
+    "@typescript-eslint/indent": [
+      "error",
+      2,
+      {
+        "SwitchCase": 1
+      }
+    ]
+  }
+}
