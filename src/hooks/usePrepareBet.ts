@@ -1,12 +1,10 @@
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi'
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient, useWalletClient } from 'wagmi'
 import {
   parseUnits,
   encodeAbiParameters,
   parseAbiParameters,
   keccak256,
   toBytes,
-  createWalletClient,
-  custom,
   type Address, erc20Abi, type TransactionReceipt, type Hex } from 'viem'
 import { useState } from 'react'
 
@@ -55,6 +53,7 @@ export const usePrepareBet = (props: Props) => {
 
   const account = useAccount()
   const publicClient = usePublicClient()
+  const walletClient = useWalletClient()
   const { appChain, contracts, betToken } = useChain()
   const { addBet } = useBetsCache()
   const [ isLiveBetPending, setLiveBetPending ] = useState(false)
@@ -185,15 +184,8 @@ export const usePrepareBet = (props: Props) => {
           ]
         )))
 
-        // signMessage from wagmi doesn't allow array of bytes
-        // but for contract we have to use toBytes function for message
-        const walletClient = createWalletClient({
+        signature = await walletClient!.data!.signMessage({
           account: account.address,
-          transport: custom((window as any).ethereum),
-        })
-
-        signature = await walletClient.signMessage({
-          account: account.address!,
           message: {
             raw: message,
           },
