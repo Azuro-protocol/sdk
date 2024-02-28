@@ -133,7 +133,7 @@ const polygonMumbaiData: ChainData = {
     prematchCore: '0x33742d3D8bE5A7F47D2eC1fA39fDa9FCB5288727',
     prematchComboCore: '0xb7f1B3dA0eECf0a084cdd16Df917216BB72b42f5',
     proxyFront: '0x545715348d9ba42Bf8Cc907Be323283EF616E807',
-    liveRelayer: '0x0969A58949E28f3aeF057e7707Bd12D4E9b88599',
+    liveRelayer: '0x2d14b12e08ED8599E020fdBC867B604Ad58F192c',
   }),
   betToken: {
     address: '0x37B9324f3Aa84DE6D062DC18C0539D5440Dca3FF',
@@ -148,7 +148,7 @@ export const chainsData = {
   [polygonMumbai.id]: polygonMumbaiData,
 } as const
 
-export const liveCoreAddress = '0xc50D33C06C45D30dAC2a11D2aaD912c1101914ab'
+export const liveCoreAddress = '0xEeC45059b34BF76174C4d5E495BB380F4A810F58'
 export const liveHostAddress = '0xBb35f2490B050538FCeDD6d708a37CC922973483'
 
 export const getApiUrl = (chainId: ChainId) => {

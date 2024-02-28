@@ -3,8 +3,6 @@ import {
   parseUnits,
   encodeAbiParameters,
   parseAbiParameters,
-  keccak256,
-  toBytes,
   type Address, erc20Abi, type TransactionReceipt, type Hex } from 'viem'
 import { useState } from 'react'
 
@@ -43,13 +41,14 @@ type Props = {
   selections: Selection[]
   odds: Record<string, number>
   totalOdds: number
+  liveEIP712Attention?: string
   deadline?: number
   onSuccess?(receipt?: TransactionReceipt): void
   onError?(err?: Error): void
 }
 
 export const usePrepareBet = (props: Props) => {
-  const { betAmount, slippage, deadline, affiliate, selections, odds, totalOdds, onSuccess, onError } = props
+  const { betAmount, slippage, deadline, affiliate, selections, odds, totalOdds, liveEIP712Attention, onSuccess, onError } = props
 
   const account = useAccount()
   const publicClient = usePublicClient()
@@ -95,7 +94,7 @@ export const usePrepareBet = (props: Props) => {
       abi: erc20Abi,
       functionName: 'approve',
       args: [
-        contracts.proxyFront.address,
+        approveAddress!,
         MAX_UINT_256,
       ],
     })
@@ -131,11 +130,10 @@ export const usePrepareBet = (props: Props) => {
         setLiveBetPending(true)
         const { conditionId, outcomeId } = selections[0]!
 
-        let signature: Hex
-
         const order = {
-          affiliate,
           bet: {
+            attention: liveEIP712Attention || 'By signing this transaction, I agree to place a bet for a live event on \'Azuro SDK Example',
+            affiliate,
             core: liveCoreAddress as Address,
             amount: String(rawAmount),
             chainId: appChain.id,
@@ -148,46 +146,46 @@ export const usePrepareBet = (props: Props) => {
           },
         }
 
-        const abi = [
-          { name: 'affiliate', type: 'address' },
-          {
-            name: 'bet', type: 'tuple',
-            components: [
-              { name: 'core', type: 'address' },
-              { name: 'amount', type: 'uint128' },
-              { name: 'nonce', type: 'uint256' },
-              { name: 'conditionId', type: 'uint256' },
-              { name: 'outcomeId', type: 'uint64' },
-              { name: 'minOdds', type: 'uint64' },
-              { name: 'expiredAt', type: 'uint256' },
-              { name: 'chainId', type: 'uint256' },
-              { name: 'relayerFeeAmount', type: 'uint256' },
-            ],
-          },
-        ] as const
+        const EIP712Domain = {
+          name: 'Live Betting',
+          version: '1.0.0',
+          chainId: appChain.id,
+          verifyingContract: liveCoreAddress as Address,
+        }
 
-        const message = toBytes(keccak256(encodeAbiParameters(
-          abi,
-          [
-            order.affiliate,
-            {
-              core: order.bet.core,
-              amount: BigInt(order.bet.amount),
-              nonce: BigInt(order.bet.nonce),
-              conditionId: BigInt(order.bet.conditionId),
-              outcomeId: BigInt(order.bet.outcomeId),
-              minOdds: BigInt(order.bet.minPrice),
-              expiredAt: BigInt(order.bet.expiresAt),
-              chainId: BigInt(order.bet.chainId),
-              relayerFeeAmount: BigInt(order.bet.maxFee),
-            },
-          ]
-        )))
+        const clientBetDataTypes = {
+          ClientBetData: [
+            { name: 'attention', type: 'string' },
+            { name: 'affiliate', type: 'address' },
+            { name: 'core', type: 'address' },
+            { name: 'amount', type: 'uint128' },
+            { name: 'nonce', type: 'uint256' },
+            { name: 'conditionId', type: 'uint256' },
+            { name: 'outcomeId', type: 'uint64' },
+            { name: 'minOdds', type: 'uint64' },
+            { name: 'expiredAt', type: 'uint256' },
+            { name: 'chainId', type: 'uint256' },
+            { name: 'relayerFeeAmount', type: 'uint256' },
+          ],
+        } as const
 
-        signature = await walletClient!.data!.signMessage({
+        const signature = await walletClient!.data!.signTypedData({
           account: account.address,
+          domain: EIP712Domain,
+          primaryType: 'ClientBetData',
+          types: clientBetDataTypes,
           message: {
-            raw: message,
+            attention: order.bet.attention,
+            affiliate: order.bet.affiliate,
+            core: order.bet.core,
+            amount: BigInt(order.bet.amount),
+            nonce: BigInt(order.bet.nonce),
+            conditionId: BigInt(order.bet.conditionId),
+            outcomeId: BigInt(order.bet.outcomeId),
+            minOdds: BigInt(order.bet.minPrice),
+            expiredAt: BigInt(order.bet.expiresAt),
+            chainId: BigInt(order.bet.chainId),
+            relayerFeeAmount: BigInt(order.bet.maxFee),
           },
         })
         setLiveBetPending(false)

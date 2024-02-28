@@ -42,6 +42,11 @@ export default [
   },
   {
     'inputs': [],
+    'name': 'IncorrectAffiliate',
+    'type': 'error',
+  },
+  {
+    'inputs': [],
     'name': 'IncorrectAmount',
     'type': 'error',
   },
@@ -256,6 +261,12 @@ export default [
         'internalType': 'uint64',
         'name': 'outcomeId',
         'type': 'uint64',
+      },
+      {
+        'indexed': false,
+        'internalType': 'uint256',
+        'name': 'nonce',
+        'type': 'uint256',
       },
       {
         'indexed': false,
