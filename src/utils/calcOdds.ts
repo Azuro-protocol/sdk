@@ -129,7 +129,7 @@ export const calcLiveOdds = ({ selection, betAmount, oddsData }: CalcLiveOddsPro
     return outcomes[outcomeId]!.odds
   }
 
-  return formatToFixed(odds[outcomeId]!, 3)
+  return formatToFixed(odds[outcomeId]!, 2)
 }
 
 
