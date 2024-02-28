@@ -30,6 +30,37 @@ export default [
     'type': 'error',
   },
   {
+    'inputs': [
+      {
+        'internalType': 'uint64',
+        'name': 'outcome',
+        'type': 'uint64',
+      },
+    ],
+    'name': 'DuplicateOutcomes',
+    'type': 'error',
+  },
+  {
+    'inputs': [],
+    'name': 'IncorrectAffiliate',
+    'type': 'error',
+  },
+  {
+    'inputs': [],
+    'name': 'IncorrectAmount',
+    'type': 'error',
+  },
+  {
+    'inputs': [],
+    'name': 'IncorrectConditionIds',
+    'type': 'error',
+  },
+  {
+    'inputs': [],
+    'name': 'IncorrectCore',
+    'type': 'error',
+  },
+  {
     'inputs': [],
     'name': 'IncorrectOdds',
     'type': 'error',
@@ -233,6 +264,12 @@ export default [
       },
       {
         'indexed': false,
+        'internalType': 'uint256',
+        'name': 'nonce',
+        'type': 'uint256',
+      },
+      {
+        'indexed': false,
         'internalType': 'uint128',
         'name': 'amount',
         'type': 'uint128',
@@ -345,12 +382,12 @@ export default [
   {
     'inputs': [
       {
-        'internalType': 'uint256',
-        'name': 'conditionId',
-        'type': 'uint256',
+        'internalType': 'uint256[]',
+        'name': 'conditionIds',
+        'type': 'uint256[]',
       },
     ],
-    'name': 'cancelCondition',
+    'name': 'cancelConditions',
     'outputs': [],
     'stateMutability': 'nonpayable',
     'type': 'function',
@@ -378,6 +415,11 @@ export default [
     ],
     'name': 'conditions',
     'outputs': [
+      {
+        'internalType': 'int128',
+        'name': 'maxReserved',
+        'type': 'int128',
+      },
       {
         'internalType': 'uint128',
         'name': 'totalNetBets',
@@ -429,6 +471,11 @@ export default [
     'outputs': [
       {
         'components': [
+          {
+            'internalType': 'int128',
+            'name': 'maxReserved',
+            'type': 'int128',
+          },
           {
             'internalType': 'uint128[]',
             'name': 'payouts',
@@ -583,13 +630,23 @@ export default [
         'name': '',
         'type': 'address',
       },
-    ],
-    'name': 'nonces',
-    'outputs': [
       {
         'internalType': 'uint256',
         'name': '',
         'type': 'uint256',
+      },
+      {
+        'internalType': 'uint256',
+        'name': '',
+        'type': 'uint256',
+      },
+    ],
+    'name': 'nonces',
+    'outputs': [
+      {
+        'internalType': 'bool',
+        'name': '',
+        'type': 'bool',
       },
     ],
     'stateMutability': 'view',
@@ -681,22 +738,29 @@ export default [
   {
     'inputs': [
       {
-        'internalType': 'uint256',
-        'name': 'conditionId',
-        'type': 'uint256',
-      },
-      {
-        'internalType': 'uint64[]',
-        'name': 'winningOutcomes_',
-        'type': 'uint64[]',
-      },
-      {
-        'internalType': 'uint64',
-        'name': 'settledAt',
-        'type': 'uint64',
+        'components': [
+          {
+            'internalType': 'uint256',
+            'name': 'conditionId',
+            'type': 'uint256',
+          },
+          {
+            'internalType': 'uint64[]',
+            'name': 'winningOutcomes',
+            'type': 'uint64[]',
+          },
+          {
+            'internalType': 'uint64',
+            'name': 'settledAt',
+            'type': 'uint64',
+          },
+        ],
+        'internalType': 'struct IClientCoreBase.ResolveData[]',
+        'name': 'data',
+        'type': 'tuple[]',
       },
     ],
-    'name': 'resolveCondition',
+    'name': 'resolveConditions',
     'outputs': [],
     'stateMutability': 'nonpayable',
     'type': 'function',

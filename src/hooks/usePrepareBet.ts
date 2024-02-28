@@ -10,7 +10,6 @@ import { useChain } from '../contexts/chain'
 import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256, liveHostAddress, getApiUrl, liveCoreAddress } from '../config'
 import type { Selection } from '../global'
 import { useBetsCache } from './useBetsCache'
-import pkg from '../../package.json'
 
 
 const Live_BET_GAS = 0.01
@@ -42,17 +41,14 @@ type Props = {
   selections: Selection[]
   odds: Record<string, number>
   totalOdds: number
-  liveEIP712?: {
-    name?: string
-    version?: string
-  }
+  liveEIP712Attention?: string
   deadline?: number
   onSuccess?(receipt?: TransactionReceipt): void
   onError?(err?: Error): void
 }
 
 export const usePrepareBet = (props: Props) => {
-  const { betAmount, slippage, deadline, affiliate, selections, odds, totalOdds, liveEIP712, onSuccess, onError } = props
+  const { betAmount, slippage, deadline, affiliate, selections, odds, totalOdds, liveEIP712Attention, onSuccess, onError } = props
 
   const account = useAccount()
   const publicClient = usePublicClient()
@@ -98,7 +94,7 @@ export const usePrepareBet = (props: Props) => {
       abi: erc20Abi,
       functionName: 'approve',
       args: [
-        contracts.proxyFront.address,
+        approveAddress!,
         MAX_UINT_256,
       ],
     })
@@ -136,7 +132,7 @@ export const usePrepareBet = (props: Props) => {
 
         const order = {
           bet: {
-            attention: `By signing this transaction, I agree to place a bet for a live event on ${liveEIP712?.name || 'Azuro SDK Example'}`,
+            attention: liveEIP712Attention || 'By signing this transaction, I agree to place a bet for a live event on \'Azuro SDK Example',
             affiliate,
             core: liveCoreAddress as Address,
             amount: String(rawAmount),
@@ -151,8 +147,8 @@ export const usePrepareBet = (props: Props) => {
         }
 
         const EIP712Domain = {
-          name: liveEIP712?.name || '@azuro-org/sdk',
-          version: liveEIP712?.version || 'v3.0.2',
+          name: 'Live Betting',
+          version: '1.0.0',
           chainId: appChain.id,
           verifyingContract: liveCoreAddress as Address,
         }
