@@ -20,8 +20,8 @@ export type SocketData = {
   winningOutcomesCount: number
   outcomes?: Array<{
     id: number
-    price: number
-    clearPrice: number
+    odds: number
+    clearOdds: number
     maxStake: number
   }>
 }[]
@@ -122,10 +122,10 @@ export const SocketProvider: React.FC<any> = ({ children }) => {
               outcomes: {},
             }
 
-            eventData.outcomes = data.outcomes.reduce((acc, { id, price, clearPrice, maxStake }) => {
+            eventData.outcomes = data.outcomes.reduce((acc, { id, odds, clearOdds, maxStake }) => {
               acc[id] = {
-                odds: price,
-                clearOdds: clearPrice,
+                odds,
+                clearOdds,
                 maxBet: maxStake,
               }
 
