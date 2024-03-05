@@ -30,7 +30,7 @@ type LiveCreateOrderResponse = {
 
 type LiveGetOrderResponse = {
   txHash: string
-  price: string
+  odds: string
   betId: string
 } & LiveCreateOrderResponse
 
@@ -139,10 +139,10 @@ export const usePrepareBet = (props: Props) => {
             chainId: appChain.id,
             conditionId: conditionId,
             outcomeId: +outcomeId,
-            minPrice: String(rawMinOdds),
+            minOdds: String(rawMinOdds),
             nonce: String(Date.now()),
             expiresAt: Math.floor(Date.now() / 1000) + 2000,
-            maxFee: String(parseUnits(String(Live_BET_GAS), betToken.decimals)),
+            relayerFeeAmount: String(parseUnits(String(Live_BET_GAS), betToken.decimals)),
           },
         }
 
@@ -163,7 +163,7 @@ export const usePrepareBet = (props: Props) => {
             { name: 'conditionId', type: 'uint256' },
             { name: 'outcomeId', type: 'uint64' },
             { name: 'minOdds', type: 'uint64' },
-            { name: 'expiredAt', type: 'uint256' },
+            { name: 'expiresAt', type: 'uint256' },
             { name: 'chainId', type: 'uint256' },
             { name: 'relayerFeeAmount', type: 'uint256' },
           ],
@@ -182,10 +182,10 @@ export const usePrepareBet = (props: Props) => {
             nonce: BigInt(order.bet.nonce),
             conditionId: BigInt(order.bet.conditionId),
             outcomeId: BigInt(order.bet.outcomeId),
-            minOdds: BigInt(order.bet.minPrice),
-            expiredAt: BigInt(order.bet.expiresAt),
+            minOdds: BigInt(order.bet.minOdds),
+            expiresAt: BigInt(order.bet.expiresAt),
             chainId: BigInt(order.bet.chainId),
-            relayerFeeAmount: BigInt(order.bet.maxFee),
+            relayerFeeAmount: BigInt(order.bet.relayerFeeAmount),
           },
         })
         setLiveBetPending(false)
@@ -232,6 +232,7 @@ export const usePrepareBet = (props: Props) => {
               }
             }, 1000)
           })
+
           setLiveBetProcessing(false)
         }
         else {
