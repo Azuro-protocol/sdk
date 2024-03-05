@@ -232,6 +232,7 @@ export const usePrepareBet = (props: Props) => {
               }
             }, 1000)
           })
+
           setLiveBetProcessing(false)
         }
         else {
