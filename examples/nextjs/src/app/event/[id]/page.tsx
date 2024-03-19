@@ -4,14 +4,6 @@ import { useGame, useGameMarkets, type GameQuery, useGameStatus, GameStatus } fr
 import { GameInfo, GameMarkets } from '@/components'
 
 
-type InfoProps = {
-  game: GameQuery['games'][0]
-}
-
-const Info: React.FC<InfoProps> = ({ game }) => {
-  return <GameInfo game={game} />
-}
-
 type MarketsProps = {
   gameId: string
   gameStatus: GameStatus
@@ -48,7 +40,7 @@ const Content: React.FC<ContentProps> = ({ game, isGameInLive }) => {
 
   return (
     <>
-      <Info game={game} />
+      <GameInfo game={game} />
       <Markets
         gameId={game.gameId}
         gameStatus={gameStatus}

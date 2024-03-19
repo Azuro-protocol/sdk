@@ -1,37 +1,45 @@
-export default [
+[
+  {
+    'inputs': [],
+    'stateMutability': 'nonpayable',
+    'type': 'constructor',
+  },
   {
     'inputs': [],
     'name': 'IncorrectValue',
     'type': 'error',
   },
   {
+    'anonymous': false,
     'inputs': [
       {
-        'internalType': 'enum SafeCast.Type',
-        'name': 'to',
+        'indexed': false,
+        'internalType': 'uint8',
+        'name': 'version',
         'type': 'uint8',
       },
     ],
-    'name': 'SafeCastError',
-    'type': 'error',
+    'name': 'Initialized',
+    'type': 'event',
   },
   {
+    'anonymous': false,
     'inputs': [
       {
+        'indexed': true,
         'internalType': 'address',
-        'name': 'lp',
+        'name': 'previousOwner',
         'type': 'address',
       },
       {
-        'internalType': 'bytes',
-        'name': 'data',
-        'type': 'bytes',
+        'indexed': true,
+        'internalType': 'address',
+        'name': 'newOwner',
+        'type': 'address',
       },
     ],
-    'name': 'addLiquidityNative',
-    'outputs': [],
-    'stateMutability': 'payable',
-    'type': 'function',
+    'name': 'OwnershipTransferred',
+    'type': 'event',
   },
   {
     'inputs': [
@@ -94,23 +102,46 @@ export default [
     'inputs': [
       {
         'internalType': 'address',
-        'name': 'lp',
+        'name': 'account',
         'type': 'address',
       },
+    ],
+    'name': 'checkOwner',
+    'outputs': [],
+    'stateMutability': 'view',
+    'type': 'function',
+  },
+  {
+    'inputs': [],
+    'name': 'initialize',
+    'outputs': [],
+    'stateMutability': 'nonpayable',
+    'type': 'function',
+  },
+  {
+    'inputs': [],
+    'name': 'owner',
+    'outputs': [
       {
-        'internalType': 'uint48',
-        'name': 'depositId',
-        'type': 'uint48',
-      },
-      {
-        'internalType': 'uint40',
-        'name': 'percent',
-        'type': 'uint40',
+        'internalType': 'address',
+        'name': '',
+        'type': 'address',
       },
     ],
-    'name': 'withdrawLiquidityNative',
+    'stateMutability': 'view',
+    'type': 'function',
+  },
+  {
+    'inputs': [
+      {
+        'internalType': 'address',
+        'name': 'newOwner',
+        'type': 'address',
+      },
+    ],
+    'name': 'transferOwnership',
     'outputs': [],
-    'stateMutability': 'payable',
+    'stateMutability': 'nonpayable',
     'type': 'function',
   },
   {
@@ -127,11 +158,6 @@ export default [
             'name': 'tokenId',
             'type': 'uint256',
           },
-          {
-            'internalType': 'bool',
-            'name': 'isNative',
-            'type': 'bool',
-          },
         ],
         'internalType': 'struct IProxyFront.WithdrawPayoutData[]',
         'name': 'data',
@@ -147,4 +173,4 @@ export default [
     'stateMutability': 'payable',
     'type': 'receive',
   },
-] as const
+]

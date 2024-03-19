@@ -152,7 +152,6 @@ export const SubmitButton: React.FC<SubmitButtonProps> = (props) => {
   )
 }
 
-
 function Content() {
   const { items, clear, removeItem } = useBaseBetslip()
   const { betAmount, odds, totalOdds, statuses, isStatusesFetching, isOddsFetching } = useDetailedBetslip()
