@@ -10,7 +10,7 @@ import { useSocket, type OddsChangedData } from '../contexts/socket'
 import type { Selection } from '../global'
 import { ConditionStatus } from '../docs/prematch/types'
 import { conditionStatusWatcher } from '../modules/conditionStatusWatcher'
-import { batchFetchOutcome } from '../helpers/batchFetchOutcome'
+import { batchFetchOutcome } from '../helpers/batchFetchOutcomes'
 import { batchSocketSubscribe, batchSocketUnsubscribe } from '../helpers'
 
 
@@ -99,7 +99,7 @@ export const useSelection = ({ selection, initialOdds, initialStatus }: Props) =
     ;(async () => {
       const conditionEntityId = `${contracts.prematchCore.address.toLowerCase()}_${conditionId}`
       const key = `${conditionEntityId}-${outcomeId}`
-      const data = await batchFetchOutcome(conditionEntityId, prematchClient!)
+      const data = await batchFetchOutcome([ conditionEntityId ], prematchClient!)
 
       if (!initialOdds) {
         setOdds(data?.[key]?.odds || 0)

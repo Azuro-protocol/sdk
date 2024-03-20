@@ -1,5 +1,4 @@
 export { getGameStartsAtValue } from './getGameStartsAtValue'
 export { getEventArgsFromTxReceipt } from './getEventArgsFromTxReceipt'
-export { batchSocketSubscribe } from './batchSocketSubscribe'
-export { batchSocketUnsubscribe } from './batchSocketUnsubscribe'
+export { createSocketBatch } from './createSocketBatch'
 export { formatToFixed } from './formatToFixed'

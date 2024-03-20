@@ -4,8 +4,8 @@ import { liveHostAddress } from '../config'
 import type { Selection } from '../global'
 import { useSocket } from '../contexts/socket'
 import { batchSocketSubscribe, batchSocketUnsubscribe } from '../helpers'
+import { batchFetchConditions } from '../helpers/batchFetchConditions'
 import { useApolloClients } from '../contexts/apollo'
-import { type ConditionsQuery, ConditionsDocument } from '../docs/prematch/conditions'
 import { conditionStatusWatcher } from '../modules/conditionStatusWatcher'
 import type { ConditionStatus } from '../docs/prematch/types'
 
@@ -91,15 +91,7 @@ export const useStatuses = ({ selections }: ConditionsStatusesProps) => {
     setPrematchStatusesFetching(true)
 
     ;(async () => {
-      const { data: { conditions } } = await prematchClient!.query<ConditionsQuery>({
-        query: ConditionsDocument,
-        variables: {
-          where: {
-            conditionId_in: prematchItems.map(({ conditionId }) => conditionId),
-          },
-        },
-        fetchPolicy: 'network-only',
-      })
+      const { data: { conditions } } = await batchFetchConditions(prematchItems.map(({ conditionId }) => conditionId), prematchClient!)
 
       const prematchStatuses = conditions.reduce((acc, { conditionId, status }) => {
         acc[conditionId] = status
