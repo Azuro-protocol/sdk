@@ -1,7 +1,7 @@
 import { polygon, gnosis, polygonMumbai, type Chain } from 'viem/chains'
 import { parseUnits, type Address } from 'viem'
 
-import { lpAbi, prematchComboCoreAbi, prematchCoreAbi, proxyFrontAbi } from './abis'
+import { liveCoreAbi, lpAbi, prematchComboCoreAbi, prematchCoreAbi, proxyFrontAbi } from './abis'
 
 
 export const DEFAULT_CACHE_TIME = 3 * 60
@@ -31,9 +31,10 @@ type SetupContractsProps = {
   prematchComboCore: Address
   proxyFront: Address
   liveRelayer?: Address
+  liveCore?: Address
 }
 
-const setupContracts = ({ lp, prematchCore, prematchComboCore, proxyFront, liveRelayer }: SetupContractsProps): Contracts => {
+const setupContracts = ({ lp, prematchCore, prematchComboCore, proxyFront, liveRelayer, liveCore }: SetupContractsProps): Contracts => {
   const contracts: Contracts = {
     lp: {
       address: lp,
@@ -59,6 +60,13 @@ const setupContracts = ({ lp, prematchCore, prematchComboCore, proxyFront, liveR
     }
   }
 
+  if (liveCore) {
+    contracts.liveCore = {
+      address: liveCore,
+      abi: liveCoreAbi,
+    }
+  }
+
   return contracts
 }
 
@@ -81,6 +89,10 @@ type Contracts = {
   }
   liveRelayer?: {
     address: Address
+  }
+  liveCore?: {
+    address: Address
+    abi: typeof liveCoreAbi
   }
 }
 
@@ -134,6 +146,7 @@ const polygonMumbaiData: ChainData = {
     prematchComboCore: '0xb7f1B3dA0eECf0a084cdd16Df917216BB72b42f5',
     proxyFront: '0x0a727CE540258f9736eAfcD411e57Caf5a3B3b6C',
     liveRelayer: '0x2d14b12e08ED8599E020fdBC867B604Ad58F192c',
+    liveCore: '0xEeC45059b34BF76174C4d5E495BB380F4A810F58',
   }),
   betToken: {
     address: '0x37B9324f3Aa84DE6D062DC18C0539D5440Dca3FF',
@@ -148,8 +161,8 @@ export const chainsData = {
   [polygonMumbai.id]: polygonMumbaiData,
 } as const
 
-export const liveCoreAddress = '0xEeC45059b34BF76174C4d5E495BB380F4A810F58'
 export const liveHostAddress = '0xBb35f2490B050538FCeDD6d708a37CC922973483'
+export const liveSupportedChains: ChainId[] = [ gnosis.id, polygonMumbai.id ]
 
 export const getApiUrl = (chainId: ChainId) => {
   // there is place for testnets

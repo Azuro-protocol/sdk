@@ -1,7 +1,7 @@
 import React, { useContext, createContext, useState, useMemo } from 'react'
 import { polygonMumbai } from 'viem/chains'
 
-import { cookieKeys } from '../config'
+import { cookieKeys, liveSupportedChains } from '../config'
 import { useChain } from './chain'
 
 
@@ -28,7 +28,7 @@ export const LiveProvider: React.FC<LiveProviderProps> = (props) => {
   const [ isLive, setLive ] = useState(appChain.id === polygonMumbai.id && Boolean(initialLiveState))
 
   useMemo(() => {
-    if (appChain.id !== polygonMumbai.id && isLive) {
+    if (!liveSupportedChains.includes(appChain.id) && isLive) {
       setLive(false)
       document.cookie = `${cookieKeys.live}=false;path=/;`
     }
@@ -37,8 +37,8 @@ export const LiveProvider: React.FC<LiveProviderProps> = (props) => {
   const handleChangeLive = (value: boolean) => {
     document.cookie = `${cookieKeys.live}=${value};path=/;`
 
-    if (value && appChain.id !== polygonMumbai.id) {
-      setAppChainId(polygonMumbai.id)
+    if (value && !liveSupportedChains.includes(appChain.id)) {
+      setAppChainId(liveSupportedChains[0]!)
     }
     setLive(value)
   }
