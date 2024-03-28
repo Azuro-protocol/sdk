@@ -3,11 +3,11 @@ import type { Address } from 'viem'
 
 import { useChain } from '../contexts/chain'
 import { useBetsCache } from './useBetsCache'
-import { type PrematchBet } from './usePrematchBets'
+import { type Bet } from '../global'
 
 
 type SubmitProps = {
-  bets: Array<Pick<PrematchBet, 'tokenId' | 'coreAddress'>>
+  bets: Array<Pick<Bet, 'tokenId' | 'coreAddress'>>
 }
 
 export const useRedeemBet = () => {

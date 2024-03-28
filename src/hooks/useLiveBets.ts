@@ -9,8 +9,7 @@ import { MainGameInfoFragmentDoc, type MainGameInfoFragment } from '../docs/prem
 import { type GamesQuery, GamesDocument } from '../docs/prematch/games'
 import { type GameQuery } from '../docs/prematch/game'
 import { useApolloClients } from '../contexts/apollo'
-import type { Selection } from '../global'
-import { type PrematchBet } from './usePrematchBets'
+import { type Selection, type Bet } from '../global'
 
 
 type LiveBetOutcome = {
@@ -40,6 +39,7 @@ type LiveBet = {
   isRedeemable: boolean
   isRedeemed: boolean
   isCanceled: boolean
+  isLive: boolean
 }
 
 export type UseLiveBetsProps = {
@@ -61,7 +61,7 @@ export const useLiveBets = (props: UseLiveBetsProps) => {
 
   const { prematchClient, liveClient } = useApolloClients()
 
-  const [ bets, setBets ] = useState<Array<PrematchBet>>([])
+  const [ bets, setBets ] = useState<Array<Bet>>([])
   const [ isGamesFetching, setGamesFetching ] = useState(true)
 
   const options = useMemo(() => {
@@ -157,6 +157,7 @@ export const useLiveBets = (props: UseLiveBetsProps) => {
         coreAddress: coreAddress as Address,
         lpAddress: lpAddress as Address,
         outcomes,
+        isLive: true,
       }
 
       return bet
@@ -226,7 +227,7 @@ export const useLiveBets = (props: UseLiveBetsProps) => {
             } ],
           }
         }
-      }).filter(Boolean) as Array<PrematchBet>
+      }).filter(Boolean) as Array<Bet>
 
       setGamesFetching(false)
       setBets(betsWithGames)

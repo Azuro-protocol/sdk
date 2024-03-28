@@ -4,42 +4,10 @@ import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 import { type Address } from 'viem'
 
 import { type BetsQuery, type BetsQueryVariables, BetsDocument } from '../docs/prematch/bets'
-import { type GameQuery } from '../docs/prematch/game'
 import { Bet_OrderBy, OrderDirection, BetResult, BetStatus, SelectionResult, ConditionStatus, GameStatus as GraphGameStatus } from '../docs/prematch/types'
 import { useApolloClients } from '../contexts/apollo'
-import type { Selection } from '../global'
+import { type BetOutcome, type Bet } from '../global'
 
-
-export type PrematchBetOutcome = {
-  selectionName: string
-  odds: number
-  marketName: string
-  game: GameQuery['games'][0]
-  isWin: boolean | null
-  isLose: boolean | null
-  isCanceled: boolean
-} & Selection
-
-export type PrematchBet = {
-  tokenId: string
-  freebetId?: string
-  freebetContractAddress?: Address
-  totalOdds: number
-  coreAddress: Address
-  lpAddress: Address
-  outcomes: PrematchBetOutcome[]
-  txHash: string
-  status: BetStatus
-  amount: string
-  possibleWin: number
-  payout: number | null
-  createdAt: number
-  isWin: boolean
-  isLose: boolean
-  isRedeemable: boolean
-  isRedeemed: boolean
-  isCanceled: boolean
-}
 
 export type UsePrematchBetsProps = {
   filter: {
@@ -113,7 +81,7 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
       const totalOdds = settledOdds ? +settledOdds : +odds
       const possibleWin = +amount * totalOdds - +betDiff
 
-      const outcomes: PrematchBetOutcome[] = selections
+      const outcomes: BetOutcome[] = selections
         .map((selection) => {
           const { odds, result, outcome: { outcomeId, condition: { conditionId, status: conditionStatus, game } } } = selection
 
@@ -142,7 +110,7 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
         })
         .sort((a, b) => +a.game.startsAt - +b.game.startsAt)
 
-      const bet: PrematchBet = {
+      const bet: Bet = {
         tokenId,
         freebetContractAddress: freebetContractAddress as Address,
         freebetId,
@@ -161,6 +129,7 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
         coreAddress: coreAddress as Address,
         lpAddress: lpAddress as Address,
         outcomes,
+        isLive: false,
       }
 
       return bet

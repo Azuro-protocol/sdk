@@ -65,7 +65,7 @@ export type ApolloClients = {
 
 const Context = createContext<ApolloClients | null>(null)
 
-export const useApolloClients = () => {
+export const useApolloClients = (): ApolloClients => {
   return useContext(Context) as ApolloClients
 }
 
