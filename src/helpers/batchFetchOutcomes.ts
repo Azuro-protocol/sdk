@@ -2,7 +2,7 @@ import { type ApolloClient } from '@apollo/client'
 
 import { type ConditionsBatchQuery, ConditionsBatchDocument } from '../docs/prematch/conditionsBatch'
 import type { ConditionStatus } from '../docs/prematch/types'
-import createBatch from './createBatch'
+import { createBatch } from './createBatch'
 
 
 type OutcomeData = {

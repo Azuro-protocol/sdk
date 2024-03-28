@@ -1,9 +1,10 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 
+import { createBatch } from '../helpers'
 import { socketApiUrl } from '../config'
-import type { ConditionStatus } from '../docs/prematch/types'
 import { conditionStatusWatcher } from '../modules/conditionStatusWatcher'
 import { oddsWatcher } from '../modules/oddsWatcher'
+import { type ConditionStatus } from '../docs/prematch/types'
 
 
 export type SocketContextValue = {
@@ -38,6 +39,14 @@ export type OddsChangedData = {
   }>
 }
 
+// class SocketManager {
+//   socket: WebSocket
+
+//   constructor(newSocket) {
+//     this.socket = null
+//   }
+// }
+
 const SocketContext = createContext<SocketContextValue | null>(null)
 
 export const useSocket = () => {
@@ -45,11 +54,11 @@ export const useSocket = () => {
 }
 
 export const SocketProvider: React.FC<any> = ({ children }) => {
-  const socket = useRef<WebSocket>()
   const [ isSocketReady, setSocketReady ] = useState(false)
+  const socket = useRef<WebSocket>()
   const subscribers = useRef<Record<string, number>>({})
 
-  const subscribeToUpdates = (conditionIds: string[]) => {
+  const subscribe = useCallback((conditionIds: string[]) => {
     if (!isSocketReady) {
       throw Error('socket isn\'t ready')
     }
@@ -66,9 +75,9 @@ export const SocketProvider: React.FC<any> = ({ children }) => {
       action: 'subscribe',
       conditionIds,
     }))
-  }
+  }, [ isSocketReady ])
 
-  const unsubscribeToUpdates = (conditionIds: string[]) => {
+  const unsubscribe = useCallback((conditionIds: string[]) => {
     if (!isSocketReady) {
       throw Error('socket isn\'t ready')
     }
@@ -77,12 +86,14 @@ export const SocketProvider: React.FC<any> = ({ children }) => {
     const newUnsubscribers: string[] = []
 
     conditionIds.forEach((conditionId) => {
-      if (subscribers.current[conditionId]! > 1) {
-        subscribers.current[conditionId] -= 1
-      }
-      else {
-        subscribers.current[conditionId] = 0
-        newUnsubscribers.push(conditionId)
+      if (subscribers.current[conditionId]) {
+        if (subscribers.current[conditionId]! > 1) {
+          subscribers.current[conditionId] -= 1
+        }
+        else {
+          subscribers.current[conditionId] = 0
+          newUnsubscribers.push(conditionId)
+        }
       }
     })
 
@@ -94,7 +105,11 @@ export const SocketProvider: React.FC<any> = ({ children }) => {
       action: 'unsubscribe',
       conditionIds: newUnsubscribers,
     }))
-  }
+  }, [ isSocketReady ])
+
+  const subscribeToUpdates = useCallback(createBatch(subscribe), [ subscribe ])
+
+  const unsubscribeToUpdates = useCallback(createBatch(unsubscribe), [ unsubscribe ])
 
   useEffect(() => {
     if (socket.current) {
@@ -162,7 +177,7 @@ export const SocketProvider: React.FC<any> = ({ children }) => {
     }
   }, [])
 
-  const value = {
+  const value: SocketContextValue = {
     isSocketReady,
     subscribeToUpdates,
     unsubscribeToUpdates,

@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { liveHostAddress } from '../config'
 import type { Selection } from '../global'
 import { useSocket } from '../contexts/socket'
-import { batchSocketSubscribe, batchSocketUnsubscribe } from '../helpers'
 import { batchFetchConditions } from '../helpers/batchFetchConditions'
 import { useApolloClients } from '../contexts/apollo'
 import { conditionStatusWatcher } from '../modules/conditionStatusWatcher'
@@ -49,14 +48,12 @@ export const useStatuses = ({ selections }: ConditionsStatusesProps) => {
       return
     }
 
-    liveItems.forEach(({ conditionId }) => {
-      batchSocketSubscribe(conditionId, subscribeToUpdates)
-    })
+    const ids = liveKey.split('-')
+
+    subscribeToUpdates(ids)
 
     return () => {
-      liveItems.forEach(({ conditionId }) => {
-        batchSocketUnsubscribe(conditionId, unsubscribeToUpdates)
-      })
+      unsubscribeToUpdates(ids)
     }
   }, [ liveKey, isSocketReady ])
 

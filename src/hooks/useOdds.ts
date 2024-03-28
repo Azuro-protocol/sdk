@@ -5,7 +5,7 @@ import { liveHostAddress } from '../config'
 import { useChain } from '../contexts/chain'
 import type { OddsChangedData } from '../contexts/socket'
 import { useSocket } from '../contexts/socket'
-import { batchSocketSubscribe, batchSocketUnsubscribe, formatToFixed } from '../helpers'
+import { formatToFixed } from '../helpers'
 import { type Selection } from '../global'
 import { calcLiveOdds, calcPrematchOdds } from '../utils/calcOdds'
 import useIsMounted from '../hooks/useIsMounted'
@@ -142,14 +142,12 @@ export const useOdds = ({ selections, betAmount }: CalcOddsProps) => {
       return
     }
 
-    liveItems.forEach(({ conditionId }) => {
-      batchSocketSubscribe(conditionId, subscribeToUpdates)
-    })
+    const ids = liveKey.split('-')
+
+    subscribeToUpdates(ids)
 
     return () => {
-      liveItems.forEach(({ conditionId }) => {
-        batchSocketUnsubscribe(conditionId, unsubscribeToUpdates)
-      })
+      unsubscribeToUpdates(ids)
     }
   }, [ liveKey, isSocketReady ])
 

@@ -11,7 +11,6 @@ import type { Selection } from '../global'
 import { ConditionStatus } from '../docs/prematch/types'
 import { conditionStatusWatcher } from '../modules/conditionStatusWatcher'
 import { batchFetchOutcomes } from '../helpers/batchFetchOutcomes'
-import { batchSocketSubscribe, batchSocketUnsubscribe } from '../helpers'
 
 
 type Props = {
@@ -43,12 +42,13 @@ export const useSelection = ({ selection, initialOdds, initialStatus }: Props) =
       return
     }
 
-    batchSocketSubscribe(String(conditionId), subscribeToUpdates)
+    console.log('call')
+    subscribeToUpdates([ conditionId ])
 
     return () => {
-      batchSocketUnsubscribe(String(conditionId), unsubscribeToUpdates)
+      unsubscribeToUpdates([ conditionId ])
     }
-  }, [])
+  }, [ isSocketReady ])
 
   useEffect(() => {
     const unsubscribe = oddsWatcher.subscribe(`${conditionId}`, `${outcomeId}`, async (oddsData?: OddsChangedData) => {

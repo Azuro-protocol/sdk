@@ -1,7 +1,7 @@
 import { debounce } from './debounce'
 
 
-const createBatch = <Result, T extends (ids: string[], ...rest: any) => Promise<Result | undefined> | Result | undefined>(fn: T): T => {
+export const createBatch = <Result, T extends (ids: string[], ...rest: any) => Promise<Result | undefined> | Result | undefined>(fn: T): T => {
   let idsWaitList = new Set<string>()
   let resolversWaitList: Array<(value?: Result) => void> = []
 
@@ -37,5 +37,3 @@ const createBatch = <Result, T extends (ids: string[], ...rest: any) => Promise<
 
   return batch as T
 }
-
-export default createBatch
