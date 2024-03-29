@@ -1,17 +1,18 @@
 'use client'
-import React from 'react';
-import { ConditionStatus, useBaseBetslip, useBetTokenBalance, useChain, useDetailedBetslip, usePrepareBet, BetslipDisableReason } from '@azuro-org/sdk';
-import { getMarketName, getSelectionName } from '@azuro-org/dictionaries';
+import React from 'react'
+import { ConditionStatus, useBaseBetslip, useBetTokenBalance, useChain, useDetailedBetslip, usePrepareBet, BetslipDisableReason } from '@azuro-org/sdk'
+import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 import { useAccount } from 'wagmi'
-import dayjs from 'dayjs';
+import dayjs from 'dayjs'
+import { gnosis } from 'viem/chains'
 import cx from 'clsx'
 
-import { useBetslip } from '@/context/betslip';
+import { useBetslip } from '@/context/betslip'
 
 
 function AmountInput() {
-  const { betAmount, changeBetAmount} = useDetailedBetslip()
-  const { betToken } = useChain()
+  const { betAmount, changeBetAmount, isLiveBet } = useDetailedBetslip()
+  const { betToken, appChain } = useChain()
   const { loading: isBalanceFetching, balance } = useBetTokenBalance()
 
   return (
@@ -39,6 +40,7 @@ function AmountInput() {
           type="number"
           placeholder="Bet amount"
           value={betAmount}
+          disabled={isLiveBet && appChain.id === gnosis.id}
           onChange={(event) => changeBetAmount(event.target.value)}
         />
       </div>
@@ -312,5 +314,5 @@ export function Betslip() {
         Betslip {items.length || ''}
       </button>
     </div>
-  );
+  )
 }

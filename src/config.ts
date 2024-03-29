@@ -163,6 +163,10 @@ export const chainsData = {
 
 export const liveHostAddress = '0xBb35f2490B050538FCeDD6d708a37CC922973483'
 export const liveSupportedChains: ChainId[] = [ gnosis.id, polygonMumbai.id ]
+/**
+ * Live Betting for Gnosis in beta, only 1 WXDAI possible
+ */
+export const liveBetAmount = '1'
 
 export const getApiUrl = (chainId: ChainId) => {
   // there is place for testnets
