@@ -3,7 +3,7 @@ import React from 'react'
 import { ChainId, AzuroSDKProvider } from '@azuro-org/sdk'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RainbowKitProvider, getDefaultWallets, getDefaultConfig } from '@rainbow-me/rainbowkit'
-import { polygonMumbai, gnosis } from 'wagmi/chains'
+import { polygonMumbai, gnosis, polygon } from 'wagmi/chains'
 import { WagmiProvider } from 'wagmi'
 
 import { BetslipProvider } from '@/context/betslip'
@@ -14,6 +14,7 @@ const { wallets } = getDefaultWallets()
 const chains = [
   polygonMumbai,
   gnosis,
+  polygon,
 ] as const
 
 const wagmiConfig = getDefaultConfig({

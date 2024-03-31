@@ -1,10 +1,11 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 
 import { createBatch } from '../helpers'
-import { socketApiUrl } from '../config'
+import { chainsData } from '../config'
 import { conditionStatusWatcher } from '../modules/conditionStatusWatcher'
 import { oddsWatcher } from '../modules/oddsWatcher'
 import { type ConditionStatus } from '../docs/prematch/types'
+import { useChain } from './chain'
 
 
 export type SocketContextValue = {
@@ -54,7 +55,10 @@ export const useSocket = () => {
 }
 
 export const SocketProvider: React.FC<any> = ({ children }) => {
+  const { appChain } = useChain()
   const [ isSocketReady, setSocketReady ] = useState(false)
+
+  const prevChainId = useRef<number>(appChain.id)
   const socket = useRef<WebSocket>()
   const subscribers = useRef<Record<string, number>>({})
 
@@ -111,71 +115,71 @@ export const SocketProvider: React.FC<any> = ({ children }) => {
 
   const unsubscribeToUpdates = useCallback(createBatch(unsubscribe), [ unsubscribe ])
 
+
+  const connect = () => {
+    socket.current = new WebSocket(chainsData[appChain.id].socket)
+
+    socket.current.onopen = () => {
+      setSocketReady(true)
+    }
+
+    socket.current.onmessage = (message: MessageEvent<SocketData>) => {
+      JSON.parse(message.data.toString()).forEach((data: SocketData[0]) => {
+        const { id: conditionId, reinforcement, margin, winningOutcomesCount } = data
+
+        if (data.outcomes) {
+          const eventData: OddsChangedData = {
+            conditionId: conditionId,
+            reinforcement: +reinforcement,
+            margin: +margin,
+            winningOutcomesCount: +winningOutcomesCount,
+            outcomes: {},
+          }
+
+          eventData.outcomes = data.outcomes.reduce((acc, { id, odds, clearOdds, maxStake }) => {
+            acc[id] = {
+              odds,
+              clearOdds,
+              maxBet: maxStake,
+            }
+
+            return acc
+          }, {} as Record<number, OddsChangedData['outcomes'][0]>)
+
+          oddsWatcher.dispatch(conditionId, eventData)
+        }
+
+        if (data.state) {
+          conditionStatusWatcher.dispatch(conditionId, data.state)
+        }
+      })
+    }
+
+    socket.current.onerror = () => {
+      socket.current = undefined
+      setSocketReady(false)
+
+      setTimeout(connect, 1000)
+    }
+  }
+
   useEffect(() => {
-    if (socket.current) {
+    if (isSocketReady && socket.current && (prevChainId.current !== appChain.id)) {
+      unsubscribe(Object.keys(subscribers.current))
+      socket.current.close()
+      socket.current = undefined
+      setSocketReady(false)
+    }
+    prevChainId.current = appChain.id
+  }, [ appChain, isSocketReady ])
+
+  useEffect(() => {
+    if (typeof socket.current !== 'undefined') {
       return
     }
 
-    const connect = () => {
-      const newSocket = new WebSocket(socketApiUrl)
-
-      newSocket.onopen = () => {
-        setSocketReady(true)
-        socket.current = newSocket
-      }
-
-      newSocket.onmessage = (message: MessageEvent<SocketData>) => {
-        JSON.parse(message.data.toString()).forEach((data: SocketData[0]) => {
-          const { id: conditionId, reinforcement, margin, winningOutcomesCount } = data
-
-          if (data.outcomes) {
-            const eventData: OddsChangedData = {
-              conditionId: conditionId,
-              reinforcement: +reinforcement,
-              margin: +margin,
-              winningOutcomesCount: +winningOutcomesCount,
-              outcomes: {},
-            }
-
-            eventData.outcomes = data.outcomes.reduce((acc, { id, odds, clearOdds, maxStake }) => {
-              acc[id] = {
-                odds,
-                clearOdds,
-                maxBet: maxStake,
-              }
-
-              return acc
-            }, {} as Record<number, OddsChangedData['outcomes'][0]>)
-
-            oddsWatcher.dispatch(conditionId, eventData)
-          }
-
-          if (data.state) {
-            conditionStatusWatcher.dispatch(conditionId, data.state)
-          }
-        })
-      }
-
-      newSocket.onclose = () => {
-        socket.current = undefined
-        setSocketReady(false)
-
-        setTimeout(connect, 1000)
-      }
-
-      newSocket.onerror = () => {
-        newSocket.close()
-      }
-    }
-
     connect()
-
-    return () => {
-      if (socket.current) {
-        socket.current.close()
-      }
-    }
-  }, [])
+  }, [ appChain ])
 
   const value: SocketContextValue = {
     isSocketReady,

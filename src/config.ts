@@ -13,16 +13,31 @@ export const configRef = {
   gamesCacheTime: DEFAULT_CACHE_TIME,
 }
 
-const getGraphqlEndpoint = (network: string) => `https://thegraph.azuro.org/subgraphs/name/azuro-protocol/azuro-api-${network}-v3`
+const getGraphqlPrematchEndpoint = (network: string) => `https://thegraph.azuro.org/subgraphs/name/azuro-protocol/azuro-api-${network}-v3`
 
-export const graphqlEndpoints: Record<number, string> = {
-  [gnosis.id]: getGraphqlEndpoint('gnosis'),
-  [polygon.id]: getGraphqlEndpoint('polygon'),
-  [polygonMumbai.id]: 'https://thegraph.azuro.org/subgraphs/name/azuro-protocol/azuro-api-mumbai-preprod-v3',
+const getGraphqlLiveEndpoint = (chainId: number) => {
+  if (chainId === polygonMumbai.id) {
+    return 'https://thegraph.azuro.org/subgraphs/name/azuro-protocol/azuro-api-live-data-feed-preprod'
+  }
+
+  return 'https://thegraph.azuro.org/subgraphs/name/azuro-protocol/azuro-api-live-data-feed'
 }
 
-export const graphqlLiveEndpoint = 'https://thegraph.azuro.org/subgraphs/name/azuro-protocol/azuro-api-live-data-feed-preprod'
-export const socketApiUrl = 'wss://preprod-streams.azuro.org/v1/streams/conditions'
+const getSocketEndpoint = (chainId: number) => {
+  if (chainId === polygonMumbai.id) {
+    return 'wss://preprod-streams.azuro.org/v1/streams/conditions'
+  }
+
+  return 'wss://streams.azuro.org/v1/streams/conditions'
+}
+
+export const getApiUrl = (chainId: ChainId) => {
+  if ([ polygonMumbai.id ].includes(chainId as any)) {
+    return 'https://preprod-api.azuro.org/api/v1/public'
+  }
+
+  return 'https://api.azuro.org/api/v1/public'
+}
 
 
 type SetupContractsProps = {
@@ -104,17 +119,28 @@ type BetToken = {
 
 export type ChainData = {
   chain: Omit<Chain, 'id'> & { id: ChainId }
+  graphql: {
+    prematch: string,
+    live: string,
+  }
+  socket: string
   contracts: Contracts
   betToken: BetToken
 }
 
 const gnosisData: ChainData = {
   chain: gnosis,
+  graphql: {
+    prematch: getGraphqlPrematchEndpoint('gnosis'),
+    live: getGraphqlLiveEndpoint(gnosis.id),
+  },
+  socket: getSocketEndpoint(gnosis.id),
   contracts: setupContracts({
     lp: '0x204e7371Ade792c5C006fb52711c50a7efC843ed',
     prematchCore: '0x7f3F3f19c4e4015fd9Db2f22e653c766154091EF',
     prematchComboCore: '0xDbC3BE2DDB53e1a288F7b7a4d020F8056D3b0F7C',
     proxyFront: '0x3A1c6640daeAc3513726F06A9f03911CC1080251',
+    liveCore: '0x0223ff7efca5aec919c471fa2eb44cda466f1500',
   }),
   betToken: {
     address: '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d',
@@ -125,6 +151,11 @@ const gnosisData: ChainData = {
 
 const polygonData: ChainData = {
   chain: polygon,
+  graphql: {
+    prematch: getGraphqlPrematchEndpoint('polygon'),
+    live: getGraphqlLiveEndpoint(polygon.id),
+  },
+  socket: getSocketEndpoint(polygon.id),
   contracts: setupContracts({
     lp: '0x7043E4e1c4045424858ECBCED80989FeAfC11B36',
     prematchCore: '0xA40F8D69D412b79b49EAbdD5cf1b5706395bfCf7',
@@ -140,6 +171,11 @@ const polygonData: ChainData = {
 
 const polygonMumbaiData: ChainData = {
   chain: polygonMumbai,
+  graphql: {
+    prematch: getGraphqlPrematchEndpoint('mumbai-preprod'),
+    live: getGraphqlLiveEndpoint(polygonMumbai.id),
+  },
+  socket: getSocketEndpoint(polygonMumbai.id),
   contracts: setupContracts({
     lp: '0xA39e988b357122D9ba75C0038E625a5ab9363F54',
     prematchCore: '0x33742d3D8bE5A7F47D2eC1fA39fDa9FCB5288727',
@@ -168,15 +204,11 @@ export const liveSupportedChains: ChainId[] = [ gnosis.id, polygonMumbai.id ]
  */
 export const liveBetAmount = '1'
 
-export const getApiUrl = (chainId: ChainId) => {
-  // there is place for testnets
-  // ATTN: mumbai with live uses prod api
-  if ([ 0 ].includes(chainId as any)) {
-    return 'https://dev-api.azuro.org/api/v1/public'
-  }
-
-  return 'https://preprod-api.azuro.org/api/v1/public'
-}
+export const environments = {
+  [gnosis.id]: 'GnosisXDAI',
+  [polygon.id]: 'PolygonUSDT',
+  [polygonMumbai.id]: 'PolygonMumbaiAZUSD',
+} as const
 
 export const cookieKeys = {
   appChainId: 'appChainId',

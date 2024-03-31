@@ -18,8 +18,8 @@ type AzuroSDKProviderProps = ChainProviderProps & LiveProviderProps
 
 export const AzuroSDKProvider: React.FC<AzuroSDKProviderProps> = ({ children, initialChainId, initialLiveState }) => {
   return (
-    <SocketProvider>
-      <ChainProvider initialChainId={initialChainId}>
+    <ChainProvider initialChainId={initialChainId}>
+      <SocketProvider>
         <LiveProvider initialLiveState={initialLiveState}>
           <ApolloProvider>
             <BetslipProvider>
@@ -28,8 +28,8 @@ export const AzuroSDKProvider: React.FC<AzuroSDKProviderProps> = ({ children, in
           </ApolloProvider>
         </LiveProvider>
         <Watchers />
-      </ChainProvider>
-    </SocketProvider>
+      </SocketProvider>
+    </ChainProvider>
   )
 }
 

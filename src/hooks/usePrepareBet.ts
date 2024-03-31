@@ -7,7 +7,7 @@ import {
 import { useState } from 'react'
 
 import { useChain } from '../contexts/chain'
-import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256, liveHostAddress, getApiUrl, liveBetAmount } from '../config'
+import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256, liveHostAddress, getApiUrl, liveBetAmount, environments } from '../config'
 import type { Selection } from '../global'
 import { useBetsCache } from './useBetsCache'
 
@@ -115,9 +115,9 @@ export const usePrepareBet = (props: Props) => {
       return
     }
 
-    if (isLiveBet && +betAmount !== +liveBetAmount) {
-      throw Error(`Live betting is in beta: bet amount have to be ${liveBetAmount} ${betToken.symbol}`)
-    }
+    // if (isLiveBet && +betAmount !== +liveBetAmount) {
+    //   throw Error(`Live betting is in beta: bet amount have to be ${liveBetAmount} ${betToken.symbol}`)
+    // }
 
     const fixedAmount = +parseFloat(String(betAmount)).toFixed(betToken.decimals)
     const rawAmount = parseUnits(`${fixedAmount}`, betToken.decimals)
@@ -196,7 +196,7 @@ export const usePrepareBet = (props: Props) => {
         setLiveBetProcessing(true)
 
         const signedBet = {
-          environment: 'PolygonMumbaiAZUSD', // ATTN create getProviderEnvironment function
+          environment: environments[appChain.id],
           bettor: account.address!.toLowerCase(),
           data: order,
           bettorSignature: signature,

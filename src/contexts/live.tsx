@@ -25,7 +25,7 @@ export const LiveProvider: React.FC<LiveProviderProps> = (props) => {
   const { children, initialLiveState } = props
 
   const { appChain, setAppChainId } = useChain()
-  const [ isLive, setLive ] = useState(appChain.id === polygonMumbai.id && Boolean(initialLiveState))
+  const [ isLive, setLive ] = useState(liveSupportedChains.includes(appChain.id) && Boolean(initialLiveState))
 
   useMemo(() => {
     if (!liveSupportedChains.includes(appChain.id) && isLive) {
