@@ -140,6 +140,7 @@ const gnosisData: ChainData = {
     prematchCore: '0x7f3F3f19c4e4015fd9Db2f22e653c766154091EF',
     prematchComboCore: '0xDbC3BE2DDB53e1a288F7b7a4d020F8056D3b0F7C',
     proxyFront: '0x3A1c6640daeAc3513726F06A9f03911CC1080251',
+    liveRelayer: '0x936c02503A32aA23BCF7CFaF5c29100b0F93FCfe',
     liveCore: '0x0223ff7efca5aec919c471fa2eb44cda466f1500',
   }),
   betToken: {

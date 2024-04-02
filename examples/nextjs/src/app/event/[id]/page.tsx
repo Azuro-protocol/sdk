@@ -23,6 +23,8 @@ const Markets: React.FC<MarketsProps> = ({ gameId, gameStatus }) => {
     return null
   }
 
+  console.log(markets, 'markets 2');
+
   return <GameMarkets markets={markets} />
 }
 

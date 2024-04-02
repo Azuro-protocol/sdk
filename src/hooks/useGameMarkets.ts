@@ -231,7 +231,7 @@ export const useGameMarkets = (props: Props) => {
   })
 
   // generate unique key for memo deps
-  const conditionIds = conditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('')
+  const conditionIds = conditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('_')
 
   const markets = useMemo(() => {
     if (!conditions?.length) {

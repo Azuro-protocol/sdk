@@ -1,15 +1,20 @@
 import { debounce } from './debounce'
 
 
-export const createBatch = <Result, T extends (ids: string[], ...rest: any) => Promise<Result | undefined> | Result | undefined>(fn: T): T => {
-  let idsWaitList = new Set<string>()
+export const createBatch = <Result, T extends (ids: string[], ...rest: any) => Promise<Result | undefined> | Result | undefined>(fn: T, isSet = true): T => {
+  let idsWaitList: Set<string> | string[] = isSet ? new Set<string>() : []
   let resolversWaitList: Array<(value?: Result) => void> = []
 
   const request = debounce(async (fn: T, ...rest) => {
     const ids = [ ...idsWaitList ]
     const resolvers = resolversWaitList
 
-    idsWaitList.clear()
+    if (idsWaitList instanceof Set) {
+      idsWaitList.clear()
+    }
+    else {
+      idsWaitList = []
+    }
     resolversWaitList = []
 
     try {
@@ -28,7 +33,14 @@ export const createBatch = <Result, T extends (ids: string[], ...rest: any) => P
 
   const batch = (ids: string[], ...rest: any) => {
     request(fn, ...rest)
-    ids.forEach(id => idsWaitList.add(id))
+    ids.forEach(id => {
+      if (idsWaitList instanceof Set) {
+        idsWaitList.add(id)
+      }
+      else {
+        idsWaitList.push(id)
+      }
+    })
 
     return new Promise<Result | undefined>((resolve) => {
       resolversWaitList.push(resolve)

@@ -38,6 +38,7 @@ export const useStatuses = ({ selections }: ConditionsStatusesProps) => {
   const [ isPrematchStatusesFetching, setPrematchStatusesFetching ] = useState(Boolean(prematchItems.length))
 
   const liveKey = liveItems.map(({ conditionId }) => conditionId).join('-')
+  const selectionsKey = selections.map(({ conditionId }) => conditionId).join('-')
 
   const isLiveStatusesFetching = useMemo(() => {
     return !liveItems.every(({ conditionId }) => Boolean(statuses[conditionId]))
@@ -78,7 +79,7 @@ export const useStatuses = ({ selections }: ConditionsStatusesProps) => {
         unsubscribe()
       })
     }
-  }, [ selections ])
+  }, [ selectionsKey ])
 
   useEffect(() => {
     if (!prematchItems.length) {
