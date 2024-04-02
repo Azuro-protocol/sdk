@@ -43,13 +43,11 @@ export const useSelection = ({ selection, initialOdds, initialStatus }: Props) =
     }
 
     subscribeToUpdates([ conditionId ])
-  }, [ isSocketReady ])
 
-  useEffect(() => {
     return () => {
       unsubscribeToUpdates([ conditionId ])
     }
-  }, [])
+  }, [ isSocketReady ])
 
   useEffect(() => {
     const unsubscribe = oddsWatcher.subscribe(`${conditionId}`, `${outcomeId}`, async (oddsData?: OddsChangedData) => {
