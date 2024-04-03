@@ -19,7 +19,7 @@ import { ConditionStatus, BetStatus } from '../docs/prematch/types'
 import { useApolloClients } from '../contexts/apollo'
 import { getEventArgsFromTxReceipt } from '../helpers'
 import { useChain } from '../contexts/chain'
-import { ODDS_DECIMALS, liveCoreAddress, liveHostAddress } from '../config'
+import { ODDS_DECIMALS, liveHostAddress } from '../config'
 import type { Selection } from '../global'
 import { liveCoreAbi } from '../abis'
 
@@ -48,7 +48,7 @@ export const useBetsCache = () => {
     { coreAddress, tokenId }: UpdateBetProps,
     values: Partial<PrematchBetFragment> | Partial<LiveBetFragment>
   ) => {
-    const isLive = coreAddress.toLowerCase() === liveCoreAddress.toLowerCase()
+    const isLive = contracts.liveCore ? coreAddress.toLowerCase() === contracts.liveCore.address.toLowerCase() : false
     const { cache } = prematchClient!
 
     const betEntityId = `${coreAddress}_${tokenId}`

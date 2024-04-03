@@ -3,16 +3,17 @@ import {
   parseUnits,
   encodeAbiParameters,
   parseAbiParameters,
-  type Address, erc20Abi, type TransactionReceipt, type Hex } from 'viem'
+  type Address, erc20Abi, type TransactionReceipt, type Hex, type TypedDataDomain } from 'viem'
 import { useState } from 'react'
+import { gnosis } from 'viem/chains'
 
 import { useChain } from '../contexts/chain'
-import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256, liveHostAddress, getApiUrl, liveCoreAddress } from '../config'
+import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256, liveHostAddress, getApiUrl, liveBetAmount, environments } from '../config'
 import type { Selection } from '../global'
 import { useBetsCache } from './useBetsCache'
 
 
-const Live_BET_GAS = 0.01
+const Live_BET_GAS = 0
 
 enum LiveOrderState {
   Created = 'Created',
@@ -115,6 +116,10 @@ export const usePrepareBet = (props: Props) => {
       return
     }
 
+    if (isLiveBet && appChain.id === gnosis.id && +betAmount !== +liveBetAmount) {
+      throw Error(`Live betting is in beta: bet amount have to be ${liveBetAmount} ${betToken.symbol}`)
+    }
+
     const fixedAmount = +parseFloat(String(betAmount)).toFixed(betToken.decimals)
     const rawAmount = parseUnits(`${fixedAmount}`, betToken.decimals)
 
@@ -134,7 +139,7 @@ export const usePrepareBet = (props: Props) => {
           bet: {
             attention: liveEIP712Attention || 'By signing this transaction, I agree to place a bet for a live event on \'Azuro SDK Example',
             affiliate,
-            core: liveCoreAddress as Address,
+            core: contracts.liveCore!.address,
             amount: String(rawAmount),
             chainId: appChain.id,
             conditionId: conditionId,
@@ -146,11 +151,11 @@ export const usePrepareBet = (props: Props) => {
           },
         }
 
-        const EIP712Domain = {
+        const EIP712Domain: TypedDataDomain = {
           name: 'Live Betting',
           version: '1.0.0',
           chainId: appChain.id,
-          verifyingContract: liveCoreAddress as Address,
+          verifyingContract: contracts.liveCore!.address,
         }
 
         const clientBetDataTypes = {
@@ -192,7 +197,7 @@ export const usePrepareBet = (props: Props) => {
         setLiveBetProcessing(true)
 
         const signedBet = {
-          environment: 'PolygonMumbaiAZUSD', // ATTN create getProviderEnvironment function
+          environment: environments[appChain.id],
           bettor: account.address!.toLowerCase(),
           data: order,
           bettorSignature: signature,

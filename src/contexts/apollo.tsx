@@ -2,16 +2,21 @@ import { createContext, useContext, useMemo, useRef } from 'react'
 import { ApolloClient, HttpLink, InMemoryCache, type NormalizedCacheObject } from '@apollo/client'
 
 import { useChain } from '../contexts/chain'
-import { graphqlEndpoints, graphqlLiveEndpoint } from '../config'
+import { type ChainId, chainsData } from '../config'
 
 
-const getPrematchLink = (chainId: number) => {
+const getPrematchLink = (chainId: ChainId) => {
   return new HttpLink({
-    uri: ({ operationName }) => `${graphqlEndpoints[chainId]}?op=${operationName}`,
+    uri: ({ operationName }) => `${chainsData[chainId].graphql.prematch}?op=${operationName}`,
+  })
+}
+const getLiveLink = (chainId: ChainId) => {
+  return new HttpLink({
+    uri: ({ operationName }) => `${chainsData[chainId].graphql.live}?op=${operationName}`,
   })
 }
 
-const getPrematchApolloClient = (chainId: number) => {
+const getPrematchApolloClient = (chainId: ChainId) => {
   const link = getPrematchLink(chainId)
 
   return new ApolloClient({
@@ -23,10 +28,8 @@ const getPrematchApolloClient = (chainId: number) => {
   })
 }
 
-const getLiveApolloClient = () => {
-  const link = new HttpLink({
-    uri: ({ operationName }) => `${graphqlLiveEndpoint}?op=${operationName}`,
-  })
+const getLiveApolloClient = (chainId: ChainId) => {
+  const link = getLiveLink(chainId)
 
   return new ApolloClient({
     link,
@@ -42,17 +45,17 @@ const apolloClients: ApolloClients = {
   liveClient: null,
 }
 
-export const getApolloClients = (chainId: number): ApolloClients => {
+export const getApolloClients = (chainId: ChainId): ApolloClients => {
   if (typeof window === 'undefined') {
     return {
       prematchClient: getPrematchApolloClient(chainId),
-      liveClient: getLiveApolloClient(),
+      liveClient: getLiveApolloClient(chainId),
     }
   }
 
   if (!apolloClients.prematchClient) {
     apolloClients.prematchClient = getPrematchApolloClient(chainId)
-    apolloClients.liveClient = getLiveApolloClient()
+    apolloClients.liveClient = getLiveApolloClient(chainId)
   }
 
   return apolloClients
@@ -65,7 +68,7 @@ export type ApolloClients = {
 
 const Context = createContext<ApolloClients | null>(null)
 
-export const useApolloClients = () => {
+export const useApolloClients = (): ApolloClients => {
   return useContext(Context) as ApolloClients
 }
 
@@ -83,11 +86,16 @@ export const ApolloProvider = (props: Props) => {
   // set new link before render for send requests with new one
   useMemo(() => {
     if (appChain.id !== prevAppChainIdRef.current) {
-      const { prematchClient } = apolloClientsRef.current
+      const { prematchClient, liveClient } = apolloClientsRef.current
+
       const prematchLink = getPrematchLink(appChain.id)
+      const liveLink = getLiveLink(appChain.id)
 
       prematchClient!.setLink(prematchLink)
       prematchClient!.resetStore()
+
+      liveClient!.setLink(liveLink)
+      liveClient!.resetStore()
 
       prevAppChainIdRef.current = appChain.id
     }

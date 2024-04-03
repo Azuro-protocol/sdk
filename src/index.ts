@@ -1,5 +1,5 @@
-export { chainsData, type ChainId, cookieKeys, liveCoreAddress, liveHostAddress } from './config'
-export { type Selection, SportHub } from './global'
+export { chainsData, type ChainId, cookieKeys, liveHostAddress, liveSupportedChains, liveBetAmount } from './config'
+export { type Selection, type BetOutcome, type Bet, SportHub } from './global'
 export { default as AzuroSDKProvider } from './AzuroSDKProvider'
 // contexts
 export * from './contexts/chain'
@@ -28,7 +28,7 @@ export { setGamesCacheTime } from './utils/setGamesCacheTime'
 export { getGameStatus, GameStatus } from './utils/getGameStatus'
 export { getBetStatus, BetStatus } from './utils/getBetStatus'
 // hooks
-export { usePrematchBets, type UsePrematchBetsProps, type PrematchBet as Bet, type PrematchBetOutcome as BetOutcome } from './hooks/usePrematchBets'
+export { usePrematchBets, type UsePrematchBetsProps } from './hooks/usePrematchBets'
 export { useLiveBets, type UseLiveBetsProps } from './hooks/useLiveBets'
 export { useBetTokenBalance } from './hooks/useBetTokenBalance'
 export { useOdds } from './hooks/useOdds'

@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useQuery } from '@apollo/client'
-import { polygonMumbai } from 'viem/chains'
+
+import { liveSupportedChains } from 'src/config'
 
 import {
   ConditionsDocument as PrematchConditionsDocument,
@@ -67,7 +68,7 @@ export const useConditions = (props: UseConditionsProps) => {
     variables: variables as LiveConditionsQueryVariables,
     ssr: false,
     client: liveClient!,
-    skip: !isLive || appChain.id !== polygonMumbai.id,
+    skip: !isLive || !liveSupportedChains.includes(appChain.id),
     pollInterval: livePollInterval,
   })
 

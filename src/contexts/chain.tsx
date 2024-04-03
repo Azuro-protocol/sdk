@@ -33,7 +33,7 @@ export const ChainProvider: React.FC<ChainProviderProps> = (props) => {
 
   const isRightNetwork = walletChainId === appChainId
 
-  const { chain, contracts, betToken } = chainsData[appChainId]
+  const { chain, contracts, betToken, graphql, socket } = chainsData[appChainId]
 
   const handleChangeChain = (chainId: ChainId) => {
     document.cookie = `${cookieKeys.appChainId}=${chainId};path=/;`
@@ -46,6 +46,8 @@ export const ChainProvider: React.FC<ChainProviderProps> = (props) => {
     walletChain,
     contracts,
     betToken,
+    graphql,
+    socket,
     isRightNetwork,
     setAppChainId: handleChangeChain,
   }

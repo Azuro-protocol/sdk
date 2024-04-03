@@ -3,9 +3,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { liveHostAddress } from '../config'
 import type { Selection } from '../global'
 import { useSocket } from '../contexts/socket'
-import { batchSocketSubscribe, batchSocketUnsubscribe } from '../helpers'
+import { batchFetchConditions } from '../helpers/batchFetchConditions'
 import { useApolloClients } from '../contexts/apollo'
-import { type ConditionsQuery, ConditionsDocument } from '../docs/prematch/conditions'
 import { conditionStatusWatcher } from '../modules/conditionStatusWatcher'
 import type { ConditionStatus } from '../docs/prematch/types'
 
@@ -39,6 +38,7 @@ export const useStatuses = ({ selections }: ConditionsStatusesProps) => {
   const [ isPrematchStatusesFetching, setPrematchStatusesFetching ] = useState(Boolean(prematchItems.length))
 
   const liveKey = liveItems.map(({ conditionId }) => conditionId).join('-')
+  const selectionsKey = selections.map(({ conditionId }) => conditionId).join('-')
 
   const isLiveStatusesFetching = useMemo(() => {
     return !liveItems.every(({ conditionId }) => Boolean(statuses[conditionId]))
@@ -49,14 +49,12 @@ export const useStatuses = ({ selections }: ConditionsStatusesProps) => {
       return
     }
 
-    liveItems.forEach(({ conditionId }) => {
-      batchSocketSubscribe(conditionId, subscribeToUpdates)
-    })
+    const ids = liveKey.split('-')
+
+    subscribeToUpdates(ids)
 
     return () => {
-      liveItems.forEach(({ conditionId }) => {
-        batchSocketUnsubscribe(conditionId, unsubscribeToUpdates)
-      })
+      unsubscribeToUpdates(ids)
     }
   }, [ liveKey, isSocketReady ])
 
@@ -81,7 +79,7 @@ export const useStatuses = ({ selections }: ConditionsStatusesProps) => {
         unsubscribe()
       })
     }
-  }, [ selections ])
+  }, [ selectionsKey ])
 
   useEffect(() => {
     if (!prematchItems.length) {
@@ -91,15 +89,7 @@ export const useStatuses = ({ selections }: ConditionsStatusesProps) => {
     setPrematchStatusesFetching(true)
 
     ;(async () => {
-      const { data: { conditions } } = await prematchClient!.query<ConditionsQuery>({
-        query: ConditionsDocument,
-        variables: {
-          where: {
-            conditionId_in: prematchItems.map(({ conditionId }) => conditionId),
-          },
-        },
-        fetchPolicy: 'network-only',
-      })
+      const { data: { conditions } } = await batchFetchConditions(prematchItems.map(({ conditionId }) => conditionId), prematchClient!)
 
       const prematchStatuses = conditions.reduce((acc, { conditionId, status }) => {
         acc[conditionId] = status

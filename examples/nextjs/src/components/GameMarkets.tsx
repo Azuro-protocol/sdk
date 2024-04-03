@@ -24,7 +24,7 @@ export function GameMarkets(props: GameMarketsProps) {
                       {
                         outcomes.map((outcome) => (
                           <OutcomeButton
-                            key={outcome.selectionName}
+                            key={outcome.outcomeId}
                             outcome={outcome}
                           />
                         ))

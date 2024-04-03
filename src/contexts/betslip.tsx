@@ -1,9 +1,10 @@
 import React, { useContext, createContext, useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import type { ApolloCache, NormalizedCacheObject } from '@apollo/client'
+import { gnosis } from 'viem/chains'
 
 import { useApolloClients } from './apollo'
 import { MainGameInfoFragmentDoc, type MainGameInfoFragment } from '../docs/prematch/fragments/mainGameInfo'
-import { liveHostAddress, localStorageKeys } from '../config'
+import { liveBetAmount, liveHostAddress, localStorageKeys } from '../config'
 import { useChain } from './chain'
 import { useOdds } from '../hooks/useOdds'
 import { useStatuses } from '../hooks/useStatuses'
@@ -62,6 +63,7 @@ export type DetailedBetslipContextValue = {
   statuses: Record<string, ConditionStatus>
   disableReason: BetslipDisableReason | undefined
   changeBetAmount: (value: string) => void
+  isLiveBet: boolean
   isStatusesFetching: boolean
   isOddsFetching: boolean
   isBetAllowed: boolean
@@ -266,6 +268,12 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     setItems(storedItems)
   }, [])
 
+  useEffect(() => {
+    if (isLiveBet && appChain.id === gnosis.id) {
+      setBetAmount(liveBetAmount)
+    }
+  }, [ isLiveBet, appChain ])
+
   const baseValue = useMemo(() => ({
     items,
     addItem,
@@ -286,6 +294,7 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     statuses,
     disableReason,
     changeBetAmount,
+    isLiveBet,
     isStatusesFetching,
     isOddsFetching,
     isBetAllowed,
@@ -297,6 +306,7 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     statuses,
     disableReason,
     changeBetAmount,
+    isLiveBet,
     isStatusesFetching,
     isOddsFetching,
     isBetAllowed,
