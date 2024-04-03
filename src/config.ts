@@ -32,7 +32,7 @@ const getSocketEndpoint = (chainId: number) => {
 }
 
 export const getApiUrl = (chainId: ChainId) => {
-  if ([ polygonMumbai.id ].includes(chainId as any)) {
+  if (chainId === polygonMumbai.id) {
     return 'https://preprod-api.azuro.org/api/v1/public'
   }
 

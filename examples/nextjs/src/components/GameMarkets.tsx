@@ -10,8 +10,6 @@ type GameMarketsProps = {
 export function GameMarkets(props: GameMarketsProps) {
   const { markets } = props
 
-  console.log(markets, 'markets');
-
   return (
     <div className="max-w-[600px] mx-auto mt-12 space-y-6">
       {
