@@ -40,14 +40,6 @@ export type OddsChangedData = {
   }>
 }
 
-// class SocketManager {
-//   socket: WebSocket
-
-//   constructor(newSocket) {
-//     this.socket = null
-//   }
-// }
-
 const SocketContext = createContext<SocketContextValue | null>(null)
 
 export const useSocket = () => {
