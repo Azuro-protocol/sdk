@@ -5,6 +5,7 @@ import {
   parseAbiParameters,
   type Address, erc20Abi, type TransactionReceipt, type Hex, type TypedDataDomain } from 'viem'
 import { useState } from 'react'
+import { gnosis } from 'viem/chains'
 
 import { useChain } from '../contexts/chain'
 import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256, liveHostAddress, getApiUrl, liveBetAmount, environments } from '../config'
@@ -115,9 +116,9 @@ export const usePrepareBet = (props: Props) => {
       return
     }
 
-    // if (isLiveBet && +betAmount !== +liveBetAmount) {
-    //   throw Error(`Live betting is in beta: bet amount have to be ${liveBetAmount} ${betToken.symbol}`)
-    // }
+    if (isLiveBet && appChain.id === gnosis.id && +betAmount !== +liveBetAmount) {
+      throw Error(`Live betting is in beta: bet amount have to be ${liveBetAmount} ${betToken.symbol}`)
+    }
 
     const fixedAmount = +parseFloat(String(betAmount)).toFixed(betToken.decimals)
     const rawAmount = parseUnits(`${fixedAmount}`, betToken.decimals)
