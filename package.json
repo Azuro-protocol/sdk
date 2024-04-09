@@ -17,7 +17,8 @@
   },
   "sideEffects": true,
   "scripts": {
-    "gql": "graphql-codegen",
+    "gql:cleanup": "rimraf src/docs/**/*.ts src/docs/**/**/*.ts",
+    "gql": "npm run gql:cleanup & graphql-codegen",
     "build": "npm run gql && rimraf dist && rollup -c",
     "prepublishOnly": "npm run build",
     "------------------  Lint --------------------------------------------------------------------------------": "",
