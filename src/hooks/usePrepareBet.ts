@@ -1,15 +1,15 @@
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient, useWalletClient } from 'wagmi'
 import {
   parseUnits,
-  encodeAbiParameters,
-  parseAbiParameters,
   type Address, erc20Abi, type TransactionReceipt, type Hex, type TypedDataDomain } from 'viem'
 import { useState } from 'react'
 import { gnosis } from 'viem/chains'
 
+import { getPrematchBetDataBytes } from 'src/helpers/getPrematchBetDataBytes'
+
 import { useChain } from '../contexts/chain'
-import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256, liveHostAddress, getApiUrl, liveBetAmount, environments } from '../config'
-import type { Selection } from '../global'
+import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256, liveHostAddress, getApiUrl, liveBetAmount, environments, deBridgeUrl } from '../config'
+import { type Selection } from '../global'
 import { useBetsCache } from './useBetsCache'
 
 
@@ -121,10 +121,10 @@ export const usePrepareBet = (props: Props) => {
     }
 
     const fixedAmount = +parseFloat(String(betAmount)).toFixed(betToken.decimals)
-    const rawAmount = parseUnits(`${fixedAmount}`, betToken.decimals)
-
     const minOdds = 1 + (+totalOdds - 1) * (100 - slippage) / 100
     const fixedMinOdds = +parseFloat(String(minOdds)).toFixed(ODDS_DECIMALS)
+
+    const rawAmount = parseUnits(`${fixedAmount}`, betToken.decimals)
     const rawMinOdds = parseUnits(`${fixedMinOdds}`, ODDS_DECIMALS)
     const rawDeadline = BigInt(Math.floor(Date.now() / 1000) + (deadline || DEFAULT_DEADLINE))
 
@@ -245,37 +245,9 @@ export const usePrepareBet = (props: Props) => {
         }
       }
       else {
-        let coreAddress: Address
-        let data: Address
+        const coreAddress = selections.length > 1 ? contracts.prematchComboCore.address : contracts.prematchCore.address
+        const data = getPrematchBetDataBytes(selections)
 
-        if (selections.length > 1) {
-          coreAddress = contracts.prematchComboCore.address
-
-          const tuple: [ bigint, bigint ][] = selections.map(({ conditionId, outcomeId }) => [
-            BigInt(conditionId),
-            BigInt(outcomeId),
-          ])
-
-          data = encodeAbiParameters(
-            parseAbiParameters('(uint256, uint64)[]'),
-            [
-              tuple,
-            ]
-          )
-        }
-        else {
-          coreAddress = contracts.prematchCore.address
-
-          const { conditionId, outcomeId } = selections[0]!
-
-          data = encodeAbiParameters(
-            parseAbiParameters('uint256, uint64'),
-            [
-              BigInt(conditionId),
-              BigInt(outcomeId),
-            ]
-          )
-        }
         txHash = await betTx.writeContractAsync({
           address: contracts.proxyFront.address,
           abi: contracts.proxyFront.abi,

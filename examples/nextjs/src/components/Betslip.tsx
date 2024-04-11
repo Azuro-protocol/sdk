@@ -1,13 +1,14 @@
 'use client'
-import React from 'react'
-import { ConditionStatus, useBaseBetslip, useBetTokenBalance, useChain, useDetailedBetslip, usePrepareBet, BetslipDisableReason } from '@azuro-org/sdk'
+import React, { useEffect, useState } from 'react'
+import { ConditionStatus, useBaseBetslip, useBetTokenBalance, useChain, useDetailedBetslip, BetslipDisableReason } from '@azuro-org/sdk'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 import { useAccount } from 'wagmi'
 import dayjs from 'dayjs'
 import { gnosis } from 'viem/chains'
-import cx from 'clsx'
 
 import { useBetslip } from '@/context/betslip'
+
+import { BetButton, DeBridgeBetButton } from './index'
 
 
 function AmountInput() {
@@ -48,14 +49,6 @@ function AmountInput() {
   )
 }
 
-type SubmitButtonProps = {
-  isAllowanceLoading: boolean
-  isApproveRequired: boolean
-  isPending: boolean
-  isProcessing: boolean
-  onClick(): void
-}
-
 const errorPerDisableReason = {
   [BetslipDisableReason.ComboWithForbiddenItem]: 'One or more conditions can\'t be used in combo',
   [BetslipDisableReason.BetAmountGreaterThanMaxBet]: 'Bet amount exceeds max bet',
@@ -64,122 +57,24 @@ const errorPerDisableReason = {
   [BetslipDisableReason.PrematchConditionInStartedGame]: 'Game has started',
 } as const
 
-export const SubmitButton: React.FC<SubmitButtonProps> = (props) => {
-  const { isAllowanceLoading, isApproveRequired, isPending, isProcessing, onClick } = props
-
-  const account = useAccount()
-  const { appChain, isRightNetwork } = useChain()
-  const { betAmount, disableReason, isStatusesFetching, isOddsFetching, isBetAllowed } = useDetailedBetslip()
-  const { loading: isBalanceFetching, balance } = useBetTokenBalance()
-
-  if (!account.address) {
-    return (
-      <div className="mt-6 py-3.5 text-center bg-red-200 rounded-2xl">
-        Connect your wallet
-      </div>
-    )
-  }
-
-  if (!isRightNetwork) {
-    return (
-      <div className="mt-6 py-3.5 text-center bg-red-200 rounded-2xl">
-        Switch network to <b>{appChain.name}</b> in your wallet
-      </div>
-    )
-  }
-
-  const isEnoughBalance = isBalanceFetching || !Boolean(+betAmount) ? true : Boolean(+balance! > +betAmount)
-
-  const isLoading = (
-    isOddsFetching
-    || isBalanceFetching
-    || isStatusesFetching
-    || isAllowanceLoading
-    || isPending
-    || isProcessing
-  )
-
-  const isDisabled = (
-    isLoading
-    || !isBetAllowed
-    || !isEnoughBalance
-    || !+betAmount
-  )
-
-  let title
-
-  if (isPending) {
-    title = 'Waiting for approval'
-  }
-  else if (isProcessing) {
-    title = 'Processing...'
-  }
-  else if (isApproveRequired) {
-    title = 'Approve'
-  }
-  else if (isLoading) {
-    title = 'Loading...'
-  }
-  else {
-    title = 'Place Bet'
-  }
-
-  return (
-    <div className="mt-6">
-      {
-        !isEnoughBalance && (
-          <div className="mb-1 text-red-500 text-center font-semibold">
-            Not enough balance.
-          </div>
-        )
-      }
-      {
-        Boolean(disableReason) && (
-          <div className="mb-1 text-red-500 text-center font-semibold">
-            {errorPerDisableReason[disableReason!]}
-          </div>
-        )
-      }
-      <button
-        className={cx('w-full py-3.5 text-white font-semibold text-center rounded-xl', {
-          'bg-blue-500 hover:bg-blue-600 transition shadow-md': !isDisabled,
-          'bg-zinc-300 cursor-not-allowed': isDisabled,
-        })}
-        disabled={isDisabled}
-        onClick={onClick}
-      >
-        {title}
-      </button>
-    </div>
-  )
-}
-
 function Content() {
+  const account = useAccount()
   const { items, clear, removeItem } = useBaseBetslip()
-  const { betAmount, odds, totalOdds, statuses, isStatusesFetching, isOddsFetching } = useDetailedBetslip()
-  const {
-    isAllowanceLoading,
-    isApproveRequired,
-    submit,
-    approveTx,
-    betTx,
-  } = usePrepareBet({
-    betAmount,
-    slippage: 10,
-    affiliate: '0x68E0C1dBF926cDa7A65ef2722e046746EB0f816f', // your affiliate address
-    selections: items,
-    odds,
-    totalOdds,
-    onSuccess: () => {
-      clear()
-    },
-  })
+  const { betAmount, odds, totalOdds, statuses, disableReason, isStatusesFetching, isOddsFetching, isLiveBet } = useDetailedBetslip()
+  const [ isDeBridgeEnable, setDeBridgeEnable ] = useState(false)
 
-  const isPending = approveTx.isPending || betTx.isPending
-  const isProcessing = approveTx.isProcessing  || betTx.isProcessing
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setDeBridgeEnable(event.target.checked)
+  }
+
+  useEffect(() => {
+    if (isLiveBet) {
+      setDeBridgeEnable(false)
+    }
+  }, [ isLiveBet ])
 
   return (
-    <div className="bg-zinc-100 p-4 mb-4 rounded-md w-full max-h-[90vh] overflow-hidden border border-solid">
+    <div className="bg-zinc-100 p-4 mb-4 rounded-md w-full max-h-[90vh] overflow-auto border border-solid">
       <div className="flex items-center justify-between mb-2">
         <div className="">Betslip {items.length > 1 ? 'Combo' : 'Single'} {items.length ? `(${items.length})`: ''}</div>
         {
@@ -280,13 +175,38 @@ function Content() {
               </span>
             </div>
             <AmountInput />
-            <SubmitButton
-              isAllowanceLoading={isAllowanceLoading}
-              isApproveRequired={isApproveRequired}
-              isPending={isPending}
-              isProcessing={isProcessing}
-              onClick={submit}
-            />
+            {
+              !isLiveBet && (
+                <div className="flex items-center justify-between mt-4">
+                  <label className="mr-2" htmlFor="deBridge">Bet from another blockchain</label>
+                  <input id="deBridge" type="checkbox" checked={isDeBridgeEnable} onChange={handleChange} />
+                </div>
+              )
+            }
+            {
+              Boolean(disableReason) && (
+                <div className="mb-1 text-red-500 text-center font-semibold">
+                  {errorPerDisableReason[disableReason!]}
+                </div>
+              )
+            }
+            {
+              account?.address ? (
+                <>
+                  {
+                    isDeBridgeEnable ? (
+                      <DeBridgeBetButton />
+                    ) : (
+                      <BetButton />
+                    )
+                  }
+                </>
+              ) : (
+                <div className="mt-6 py-3.5 text-center bg-red-200 rounded-2xl">
+                Connect your wallet
+              </div>
+              )
+            }
           </>
         ) : (
           <div>Empty</div>
