@@ -2,16 +2,18 @@
 import { useState } from "react";
 import { useBaseBetslip, useDeBridgeBet, useDetailedBetslip } from "@azuro-org/sdk";
 import cx from 'clsx'
+import { formatUnits } from "viem";
 
 
 export const DeBridgeBetButton = () => {
   const { items, clear } = useBaseBetslip()
   const { betAmount, totalOdds, isStatusesFetching, isOddsFetching, isBetAllowed } = useDetailedBetslip()
-  const [fromChainId, setFromChainId] = useState('')
-  const [fromTokenAddress, setFromTokenAddress] = useState('')
-  const { submit, approveTx, betTx, isAllowanceLoading, isApproveRequired, isTxReady, loading: isDeBridgeLoading } = useDeBridgeBet({
-    // fromChainId: 42161,
-    // fromTokenAddress: '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9',
+  const [ fromChainId, setFromChainId ] = useState('')
+  const [ fromTokenAddress, setFromTokenAddress ] = useState('')
+  const { 
+    submit, approveTx, betTx, estimation, fixFee,
+    isAllowanceLoading, isApproveRequired, isTxReady, loading: isDeBridgeLoading 
+  } = useDeBridgeBet({
     fromChainId: +fromChainId,
     fromTokenAddress,
     betAmount,
@@ -29,7 +31,6 @@ export const DeBridgeBetButton = () => {
 
   const isPending = approveTx.isPending || betTx.isPending
   const isProcessing = approveTx.isProcessing  || betTx.isProcessing
-
 
   const isLoading = (
     isOddsFetching
@@ -66,7 +67,7 @@ export const DeBridgeBetButton = () => {
   }
 
   return (
-    <div className="mt-6">
+    <div className="mt-2">
       <div className="flex items-center justify-between mb-2">
         <span className="text-md text-zinc-400">ChainId</span>
         <input
@@ -86,8 +87,68 @@ export const DeBridgeBetButton = () => {
           onChange={(event) => setFromTokenAddress(event.target.value)}
         />
       </div>
+      <div className="flex items-center justify-between mt-4">
+        <span className="text-md text-zinc-400">Required amount:</span>
+        <span className="text-md font-semibold">
+          {
+            isDeBridgeLoading ? (
+              <>Loading...</>
+            ) : (
+              <>
+                {
+                  Boolean(estimation) ? (
+                    <>
+                      {formatUnits(BigInt(estimation!.srcChainTokenIn.amount), estimation!.srcChainTokenIn.decimals)} {estimation!.srcChainTokenIn.symbol.toUpperCase()}
+                    </>
+                  ) : (
+                    0
+                  )
+                }
+              </>
+            )
+          }
+        </span>
+      </div>
+      {
+        estimation?.srcChainTokenIn?.mutatedWithOperatingExpense && (
+          <div className="flex items-center justify-between mt-4">
+            <span className="text-md text-zinc-400">Incl. gas expense:</span>
+            <span className="text-md font-semibold">
+              {
+                isDeBridgeLoading ? (
+                  <>Loading...</>
+                ) : (
+                  <>
+                    {
+                      Boolean(estimation) ? (
+                        <>
+                          {formatUnits(BigInt(estimation!.srcChainTokenIn.approximateOperatingExpense), estimation!.srcChainTokenIn.decimals)} {estimation!.srcChainTokenIn.symbol.toUpperCase()}
+                        </>
+                      ) : (
+                        0
+                      )
+                    }
+                  </>
+                )
+              }
+            </span>
+          </div>
+        )
+      }
+      <div className="flex items-center justify-between mt-4">
+        <span className="text-md text-zinc-400">Service fixed fee:</span>
+        <span className="text-md font-semibold">
+          {
+            isDeBridgeLoading ? (
+              <>Loading...</>
+            ) : (
+              <>{formatUnits(BigInt(fixFee || '0'), 18)}</>
+            )
+          }
+        </span>
+      </div>
       <button
-        className={cx('w-full py-3.5 text-white font-semibold text-center rounded-xl', {
+        className={cx('w-full py-3.5 text-white font-semibold text-center rounded-xl mt-6', {
           'bg-blue-500 hover:bg-blue-600 transition shadow-md': !isDisabled,
           'bg-zinc-300 cursor-not-allowed': isDisabled,
         })}

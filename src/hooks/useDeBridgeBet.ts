@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useAccount, usePublicClient, useReadContract, useSendTransaction, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
 import { useState } from 'react'
 
+import { useApolloClients } from 'src/contexts/apollo'
+
 import { DEFAULT_DEADLINE, MAX_UINT_256, ODDS_DECIMALS, deBridgeUrl, liveHostAddress } from '../config'
 import { useChain } from '../contexts/chain'
 import { type Selection } from '../global'
@@ -83,8 +85,6 @@ type OrderStatusResponse = {
   orderId: Hex
   status: DeBridgeOrderStatus
   externalCallState: DeBridgeExternalCallStatus
-  // we don't need it at this moment
-  orderStruct: {}
 }
 
 type Props = {
@@ -103,6 +103,7 @@ type Props = {
 export const useDeBridgeBet = (props: Props) => {
   const { fromChainId: _fromChainId, fromTokenAddress: _fromTokenAddress, betAmount: _betAmount, slippage, deadline, affiliate, selections, totalOdds, onSuccess, onError } = props
 
+  const { prematchClient } = useApolloClients()
   const publicClient = usePublicClient()
   const account = useAccount()
   const { appChain, betToken, contracts } = useChain()
@@ -177,7 +178,7 @@ export const useDeBridgeBet = (props: Props) => {
   const selectionsKey = selections.map(({ conditionId }) => conditionId).join('-')
 
   const { isFetching: isCreateTxFetching, data } = useQuery({
-    queryKey: [ '/debridge-create-tx', fromChainId, fromTokenAddress, account?.address, betAmount, selectionsKey ],
+    queryKey: [ '/debridge-create-tx', fromChainId, fromTokenAddress, account?.address, betAmount, selectionsKey, totalOdds, slippage ],
     queryFn,
     enabled: (
       !isLiveBet
@@ -268,9 +269,7 @@ export const useDeBridgeBet = (props: Props) => {
         const {
           status: orderStatus,
           externalCallState: betPlacingStatus,
-          orderStruct,
         } = order
-        console.log(orderStatus, betPlacingStatus, orderStruct, 'orderStruct')
 
         const isBetPlaced = betPlacingStatus === DeBridgeExternalCallStatus.Completed
         const isOrderFulfilled = isBetPlaced || orderStatus === DeBridgeOrderStatus.Fulfilled || orderStatus === DeBridgeOrderStatus.ClaimedUnlock
@@ -278,6 +277,9 @@ export const useDeBridgeBet = (props: Props) => {
         if (isOrderFulfilled) {
           setBetProcessing(false)
           clearInterval(interval)
+          prematchClient!.refetchQueries({
+            include: [ 'Bets' ],
+          })
           onSuccess?.()
         }
 
@@ -303,7 +305,7 @@ export const useDeBridgeBet = (props: Props) => {
           clearInterval(interval)
           throw new Error(error)
         }
-      }, 1000)
+      }, 5000)
     }
     catch (err: any) {
       setBetPending(false)

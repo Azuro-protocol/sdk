@@ -19,7 +19,7 @@ function AmountInput() {
   return (
     <div className="mt-4 pt-4 border-t border-zinc-300 space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-md text-zinc-400">Wallet balance</span>
+        <span className="text-md text-zinc-400">Wallet balance:</span>
         <span className="text-md font-semibold">
           {
             isBalanceFetching ? (
@@ -151,7 +151,7 @@ function Content() {
               }
             </div>
             <div className="flex items-center justify-between mt-4">
-              <span className="text-md text-zinc-400">Total Odds</span>
+              <span className="text-md text-zinc-400">Total Odds:</span>
               <span className="text-md font-semibold">
                 {
                   isOddsFetching ? (
@@ -163,7 +163,7 @@ function Content() {
               </span>
             </div>
             <div className="flex items-center justify-between mt-4">
-              <span className="text-md text-zinc-400">Possible win</span>
+              <span className="text-md text-zinc-400">Possible win:</span>
               <span className="text-md font-semibold">
                 {
                   isOddsFetching ? (
@@ -177,7 +177,7 @@ function Content() {
             <AmountInput />
             {
               !isLiveBet && (
-                <div className="flex items-center justify-between mt-4">
+                <div className="flex items-center justify-between mt-4 border-t border-zinc-300 pt-4">
                   <label className="mr-2" htmlFor="deBridge">Bet from another blockchain</label>
                   <input id="deBridge" type="checkbox" checked={isDeBridgeEnable} onChange={handleChange} />
                 </div>
