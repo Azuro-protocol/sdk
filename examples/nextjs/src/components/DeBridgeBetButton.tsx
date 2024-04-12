@@ -8,8 +8,8 @@ import { formatUnits } from "viem";
 export const DeBridgeBetButton = () => {
   const { items, clear } = useBaseBetslip()
   const { betAmount, totalOdds, isStatusesFetching, isOddsFetching, isBetAllowed } = useDetailedBetslip()
-  const [ fromChainId, setFromChainId ] = useState('')
-  const [ fromTokenAddress, setFromTokenAddress ] = useState('')
+  const [ fromChainId, setFromChainId ] = useState('42161')
+  const [ fromTokenAddress, setFromTokenAddress ] = useState('0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9')
   const { 
     submit, approveTx, betTx, estimation, fixFee,
     isAllowanceLoading, isApproveRequired, isTxReady, loading: isDeBridgeLoading 

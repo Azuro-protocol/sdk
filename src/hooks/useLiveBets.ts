@@ -81,7 +81,8 @@ export const useLiveBets = (props: UseLiveBetsProps) => {
       client: prematchClient!,
       skip: !filter.bettor,
       notifyOnNetworkStatusChange: true,
-    }
+      fetchPolicy: 'cache-and-network',
+    } as const
   }, [
     filter.limit,
     filter.offset,
