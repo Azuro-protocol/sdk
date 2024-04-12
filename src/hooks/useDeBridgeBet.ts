@@ -14,6 +14,7 @@ import { useDeBridgeSupportedChains } from './useDeBridgeSupportedChains'
 import { getPrematchBetDataBytes } from '../helpers/getPrematchBetDataBytes'
 import useDebounce from '../helpers/hooks/useDebounce'
 import { useBetsCache } from './useBetsCache'
+import { useDeBridgeSupportedTokens } from './useDeBridgeSupportedTokens'
 
 
 type DeBridgeCreateTxResponse = {
@@ -138,6 +139,14 @@ export const useDeBridgeBet = (props: Props) => {
     enabled: !isLiveBet,
   })
 
+  const {
+    supportedTokenAddresses,
+    loading: isDeBridgeSupportedTokensFetching,
+  } = useDeBridgeSupportedTokens({
+    chainId: fromChainId,
+    enabled: !isLiveBet && !isDeBridgeSupportedChainsFetching && (supportedChainIds || []).includes(fromChainId),
+  })
+
   const queryFn = async () => {
     const fixedAmount = +parseFloat(String(betAmount)).toFixed(betToken.decimals)
     const minOdds = 1 + (+totalOdds - 1) * (100 - slippage) / 100
@@ -201,11 +210,13 @@ export const useDeBridgeBet = (props: Props) => {
       && Boolean(fromChainId)
       && Boolean(fromTokenAddress)
       && Boolean(account)
-      && Boolean(betAmount)
+      && Boolean(+betAmount)
       && Boolean(selections.length)
       && !isDeBridgeSupportedChainsFetching
+      && !isDeBridgeSupportedTokensFetching
       && (supportedChainIds || []).includes(appChain.id)
       && (supportedChainIds || []).includes(fromChainId)
+      && (supportedTokenAddresses || []).includes(fromTokenAddress)
     ),
     refetchOnWindowFocus: false,
     refetchInterval: 20000,
