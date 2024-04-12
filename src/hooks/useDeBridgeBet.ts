@@ -380,6 +380,7 @@ export const useDeBridgeBet = (props: Props) => {
   }
 
   return {
+    orderId,
     submit,
     estimation,
     fixFee,
