@@ -7,7 +7,7 @@ import { formatUnits } from "viem";
 
 export const DeBridgeBetButton = () => {
   const { items, clear } = useBaseBetslip()
-  const { betAmount, totalOdds, isStatusesFetching, isOddsFetching, isBetAllowed } = useDetailedBetslip()
+  const { betAmount, odds, totalOdds, isStatusesFetching, isOddsFetching, isBetAllowed } = useDetailedBetslip()
   const [ fromChainId, setFromChainId ] = useState('42161')
   const [ fromTokenAddress, setFromTokenAddress ] = useState('0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9')
   const { 
@@ -20,6 +20,7 @@ export const DeBridgeBetButton = () => {
     slippage: 10,
     affiliate: '0x68E0C1dBF926cDa7A65ef2722e046746EB0f816f', // your affiliate address
     selections: items,
+    odds,
     totalOdds,
     onSuccess: () => {
       clear()

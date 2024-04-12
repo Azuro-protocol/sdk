@@ -1,16 +1,19 @@
-import { parseUnits, type Address, type Hex, encodeFunctionData, erc20Abi, zeroAddress } from 'viem'
+import { parseUnits, encodeFunctionData, erc20Abi, zeroAddress } from 'viem'
+import { type TransactionReceipt, type Address, type Hex } from 'viem'
+import { getTransactionReceipt } from '@wagmi/core'
 import { useQuery } from '@tanstack/react-query'
-import { useAccount, usePublicClient, useReadContract, useSendTransaction, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
+import { useAccount, useConfig, usePublicClient, useReadContract, useSendTransaction, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
 import { useState } from 'react'
 
 import { useApolloClients } from 'src/contexts/apollo'
 
-import { DEFAULT_DEADLINE, MAX_UINT_256, ODDS_DECIMALS, deBridgeUrl, liveHostAddress } from '../config'
+import { DEFAULT_DEADLINE, MAX_UINT_256, ODDS_DECIMALS, deBridgeTxUrl, deBridgeUrl, liveHostAddress } from '../config'
 import { useChain } from '../contexts/chain'
 import { type Selection } from '../global'
 import { useDeBridgeSupportedChains } from './useDeBridgeSupportedChains'
 import { getPrematchBetDataBytes } from '../helpers/getPrematchBetDataBytes'
 import useDebounce from '../helpers/hooks/useDebounce'
+import { useBetsCache } from './useBetsCache'
 
 
 type DeBridgeCreateTxResponse = {
@@ -81,10 +84,18 @@ enum DeBridgeExternalCallStatus {
   Cancelled = 'Cancelled',
 }
 
-type OrderStatusResponse = {
+type DeBridgeOrderStatusResponse = {
   orderId: Hex
   status: DeBridgeOrderStatus
   externalCallState: DeBridgeExternalCallStatus
+}
+
+type DeBridgeOrderTxResponse = {
+  fulfilledDstEventMetadata: {
+    transactionHash: {
+      stringValue: string
+    }
+  }
 }
 
 type Props = {
@@ -94,17 +105,20 @@ type Props = {
   slippage: number
   affiliate: Address
   selections: Selection[]
+  odds: Record<string, number>
   totalOdds: number
   deadline?: number
-  onSuccess?(): void
+  onSuccess?(receipt?: TransactionReceipt): void
   onError?(err?: Error): void
 }
 
 export const useDeBridgeBet = (props: Props) => {
-  const { fromChainId: _fromChainId, fromTokenAddress: _fromTokenAddress, betAmount: _betAmount, slippage, deadline, affiliate, selections, totalOdds, onSuccess, onError } = props
+  const { fromChainId: _fromChainId, fromTokenAddress: _fromTokenAddress, betAmount: _betAmount, slippage, deadline, affiliate, selections, odds, totalOdds, onSuccess, onError } = props
 
   const { prematchClient } = useApolloClients()
+  const { addBet } = useBetsCache()
   const publicClient = usePublicClient()
+  const config = useConfig()
   const account = useAccount()
   const { appChain, betToken, contracts } = useChain()
 
@@ -263,49 +277,81 @@ export const useDeBridgeBet = (props: Props) => {
         hash,
       })
 
-      const interval = setInterval(async () => {
-        const orderResponse = await fetch(`${deBridgeUrl}/dln/order/${orderId}`)
-        const order: OrderStatusResponse = await orderResponse.json()
-        const {
-          status: orderStatus,
-          externalCallState: betPlacingStatus,
-        } = order
+      const txHash = await new Promise<Hex>((res, rej) => {
+        const interval = setInterval(async () => {
+          const orderResponse = await fetch(`${deBridgeUrl}/dln/order/${orderId}`)
+          const order: DeBridgeOrderStatusResponse = await orderResponse.json()
+          const {
+            status: orderStatus,
+            externalCallState: betPlacingStatus,
+          } = order
 
-        const isBetPlaced = betPlacingStatus === DeBridgeExternalCallStatus.Completed
-        const isOrderFulfilled = isBetPlaced || orderStatus === DeBridgeOrderStatus.Fulfilled || orderStatus === DeBridgeOrderStatus.ClaimedUnlock
+          const isBetPlaced = betPlacingStatus === DeBridgeExternalCallStatus.Completed
+          const isOrderFulfilled = isBetPlaced || orderStatus === DeBridgeOrderStatus.Fulfilled || orderStatus === DeBridgeOrderStatus.ClaimedUnlock
 
-        if (isOrderFulfilled) {
-          setBetProcessing(false)
-          clearInterval(interval)
-          prematchClient!.refetchQueries({
-            include: [ 'Bets' ],
+          if (isOrderFulfilled) {
+            clearInterval(interval)
+
+            const orderTxResponse = await fetch(`${deBridgeTxUrl}/orders/${orderId}`)
+            const { fulfilledDstEventMetadata }: DeBridgeOrderTxResponse = await orderTxResponse.json()
+
+            res(fulfilledDstEventMetadata?.transactionHash?.stringValue as Hex)
+          }
+
+          let error = ''
+
+          if (betPlacingStatus === DeBridgeExternalCallStatus.Cancelled) {
+            error = DeBridgeExternalCallStatus.Cancelled
+          }
+
+          if (betPlacingStatus === DeBridgeExternalCallStatus.Failed) {
+            error = DeBridgeExternalCallStatus.Failed
+          }
+
+          if (orderStatus === DeBridgeOrderStatus.SentOrderCancel) {
+            error = DeBridgeOrderStatus.SentOrderCancel
+          }
+
+          if (orderStatus === DeBridgeOrderStatus.OrderCancelled) {
+            error = DeBridgeOrderStatus.OrderCancelled
+          }
+
+          if (error) {
+            clearInterval(interval)
+            rej(error)
+          }
+        }, 5000)
+      })
+
+      let receipt: TransactionReceipt | undefined
+
+      if (txHash) {
+        receipt = await getTransactionReceipt(config, {
+          hash: txHash,
+          chainId: appChain.id,
+        })
+
+        if (receipt) {
+          const fixedAmount = +parseFloat(String(betAmount)).toFixed(betToken.decimals)
+
+          addBet({
+            receipt,
+            bet: {
+              amount: `${fixedAmount}`,
+              selections,
+              odds,
+            },
           })
-          onSuccess?.()
         }
+      }
+      else {
+        prematchClient!.refetchQueries({
+          include: [ 'Bets' ],
+        })
+      }
 
-        let error = ''
-
-        if (betPlacingStatus === DeBridgeExternalCallStatus.Cancelled) {
-          error = DeBridgeExternalCallStatus.Cancelled
-        }
-
-        if (betPlacingStatus === DeBridgeExternalCallStatus.Failed) {
-          error = DeBridgeExternalCallStatus.Failed
-        }
-
-        if (orderStatus === DeBridgeOrderStatus.SentOrderCancel) {
-          error = DeBridgeOrderStatus.SentOrderCancel
-        }
-
-        if (orderStatus === DeBridgeOrderStatus.OrderCancelled) {
-          error = DeBridgeOrderStatus.OrderCancelled
-        }
-
-        if (error) {
-          clearInterval(interval)
-          throw new Error(error)
-        }
-      }, 5000)
+      setBetProcessing(false)
+      onSuccess?.(receipt)
     }
     catch (err: any) {
       setBetPending(false)
