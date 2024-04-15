@@ -104,6 +104,7 @@ type Props = {
   fromTokenAddress: string
   betAmount: string
   slippage: number
+  referralCode: number
   affiliate: Address
   selections: Selection[]
   odds: Record<string, number>
@@ -114,7 +115,10 @@ type Props = {
 }
 
 export const useDeBridgeBet = (props: Props) => {
-  const { fromChainId: _fromChainId, fromTokenAddress: _fromTokenAddress, betAmount: _betAmount, slippage, deadline, affiliate, selections, odds, totalOdds, onSuccess, onError } = props
+  const {
+    fromChainId: _fromChainId, fromTokenAddress: _fromTokenAddress, betAmount: _betAmount,
+    slippage, deadline, referralCode, affiliate, selections, odds, totalOdds, onSuccess, onError,
+  } = props
 
   const { prematchClient } = useApolloClients()
   const { addBet } = useBetsCache()
@@ -190,7 +194,7 @@ export const useDeBridgeBet = (props: Props) => {
           }),
         },
       }),
-      referralCode: '9126',
+      referralCode: String(referralCode),
     })
     const deBridgeCreateTxResponse = await fetch(`${deBridgeUrl}/dln/order/create-tx?${params}`)
     const data: DeBridgeCreateTxResponse = await deBridgeCreateTxResponse.json()

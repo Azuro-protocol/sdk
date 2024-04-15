@@ -18,6 +18,7 @@ export const DeBridgeBetButton = () => {
     fromTokenAddress,
     betAmount,
     slippage: 10,
+    referralCode: 9126, // your deBridge referral code
     affiliate: '0x68E0C1dBF926cDa7A65ef2722e046746EB0f816f', // your affiliate address
     selections: items,
     odds,
