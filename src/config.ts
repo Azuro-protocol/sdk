@@ -39,6 +39,8 @@ export const getApiUrl = (chainId: ChainId) => {
   return 'https://api.azuro.org/api/v1/public'
 }
 
+export const deBridgeUrl = 'https://api.dln.trade/v1.0'
+export const deBridgeTxUrl = 'https://stats-api.dln.trade/api'
 
 type SetupContractsProps = {
   lp: Address

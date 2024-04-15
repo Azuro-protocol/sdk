@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { formatUnits } from 'viem'
-import { usePublicClient } from 'wagmi'
+import { useConfig } from 'wagmi'
+import { readContract } from '@wagmi/core'
 
 import { oddsWatcher } from '../modules/oddsWatcher'
 import { ODDS_DECIMALS, liveHostAddress } from '../config'
@@ -22,10 +23,10 @@ type Props = {
 export const useSelection = ({ selection, initialOdds, initialStatus }: Props) => {
   const { coreAddress, conditionId, outcomeId } = selection
 
-  const { contracts } = useChain()
+  const { appChain, contracts } = useChain()
   const { prematchClient } = useApolloClients()
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useSocket()
-  const publicClient = usePublicClient()
+  const config = useConfig()
 
   const isLive = coreAddress.toLowerCase() === liveHostAddress.toLowerCase()
 
@@ -54,10 +55,11 @@ export const useSelection = ({ selection, initialOdds, initialStatus }: Props) =
       let odds: string | number | undefined = oddsData?.outcomes?.[String(outcomeId)]?.odds
 
       if (!odds) {
-        const rawOdds = await publicClient!.readContract({
+        const rawOdds = await readContract(config, {
           address: contracts.prematchCore.address,
           abi: contracts.prematchCore.abi,
           functionName: 'calcOdds',
+          chainId: appChain.id,
           args: [
             BigInt(conditionId),
             BigInt(1),
@@ -77,7 +79,7 @@ export const useSelection = ({ selection, initialOdds, initialStatus }: Props) =
     return () => {
       unsubscribe()
     }
-  }, [ publicClient ])
+  }, [ config ])
 
   useEffect(() => {
     const unsubscribe = conditionStatusWatcher.subscribe(`${conditionId}`, (newStatus: ConditionStatus) => {

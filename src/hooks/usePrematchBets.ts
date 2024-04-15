@@ -45,7 +45,7 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
       client: prematchClient!,
       skip: !filter.bettor,
       notifyOnNetworkStatusChange: true,
-    }
+    } as const
   }, [
     filter.limit,
     filter.offset,
