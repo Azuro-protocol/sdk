@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 
-import { deBridgeUrl } from 'src/config'
-import { useChain } from 'src/contexts/chain'
+import { deBridgeUrl } from '../config'
+import { useChain } from '../contexts/chain'
 
 
 type SupportedChainsResponse = {
