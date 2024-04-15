@@ -200,7 +200,7 @@ export const chainsData = {
   [polygonAmoy.id]: polygonAmoyData,
 } as const
 
-export const liveHostAddress = '0xBb35f2490B050538FCeDD6d708a37CC922973483'
+export const liveHostAddress = '0x67Fca88E2f5F2C33b86bFa4EccfCb8dCD6a56D17'
 export const liveSupportedChains: ChainId[] = [ gnosis.id, polygonAmoy.id ]
 /**
  * Live Betting for Gnosis in beta, only 1 WXDAI possible
