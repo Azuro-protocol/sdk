@@ -21,7 +21,7 @@ type Props = {
 
 export const useDeBridgeSupportedTokens = ({ chainId, enabled = true }: Props) => {
   const queryFn = async () => {
-    const response = await fetch(`${deBridgeUrl}/token-list?chainId=42161`)
+    const response = await fetch(`${deBridgeUrl}/token-list?chainId=${chainId}`)
     const { tokens }: SupportedTokensResponse = await response.json()
 
     const supportedTokens = Object.values(tokens)
