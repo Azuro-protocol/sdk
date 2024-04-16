@@ -1,5 +1,4 @@
 import React, { useContext, createContext, useState, useMemo } from 'react'
-import { polygonMumbai } from 'viem/chains'
 
 import { cookieKeys, liveSupportedChains } from '../config'
 import { useChain } from './chain'
