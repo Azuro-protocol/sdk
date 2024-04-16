@@ -55,8 +55,7 @@ type OutcomeRowsByMarket = Record<string, Market>
 
 export type GameMarkets = Market[]
 
-const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string,
-  lpAddress: Address): GameMarkets => {
+const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string, lpAddress: Address): GameMarkets => {
   const outcomesByMarkets: OutcomesByMarkets = {}
   const result: OutcomeRowsByMarket = {}
   const sportId = conditions[0]!.game.sport.sportId

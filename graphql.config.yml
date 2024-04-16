@@ -1,11 +1,21 @@
 projects:
   protocol-dev:
     schema: protocol.schema.graphql
-    include: src/docs/**/*.graphql
+    include: src/docs/prematch/**/*.graphql
     extensions:
       endpoints:
         Protocol:
           url: https://thegraph.azuro.org/subgraphs/name/azuro-protocol/azuro-api-mumbai-dev-v3
+          headers:
+            user-agent: JS GraphQL
+          introspect: false
+  live-dev:
+    schema: live.schema.graphql
+    include: src/docs/live/**/*.graphql
+    extensions:
+      endpoints:
+        Protocol:
+          url: https://thegraph.azuro.org/subgraphs/name/azuro-protocol/azuro-api-live-data-feed-preprod
           headers:
             user-agent: JS GraphQL
           introspect: false

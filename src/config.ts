@@ -114,7 +114,7 @@ type Contracts = {
 }
 
 type BetToken = {
-  address?: Address | undefined
+  address: Address
   symbol: string
   decimals: number
 }

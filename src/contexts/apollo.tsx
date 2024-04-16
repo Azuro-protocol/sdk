@@ -41,8 +41,8 @@ const getLiveApolloClient = (chainId: ChainId) => {
 }
 
 const apolloClients: ApolloClients = {
-  prematchClient: null,
-  liveClient: null,
+  prematchClient: null as any,
+  liveClient: null as any,
 }
 
 export const getApolloClients = (chainId: ChainId): ApolloClients => {
@@ -62,11 +62,11 @@ export const getApolloClients = (chainId: ChainId): ApolloClients => {
 }
 
 export type ApolloClients = {
-  prematchClient: ApolloClient<NormalizedCacheObject> | null
-  liveClient: ApolloClient<NormalizedCacheObject> | null
+  prematchClient: ApolloClient<NormalizedCacheObject>
+  liveClient: ApolloClient<NormalizedCacheObject>
 }
 
-const Context = createContext<ApolloClients | null>(null)
+const Context = createContext<ApolloClients>(null as any)
 
 export const useApolloClients = (): ApolloClients => {
   return useContext(Context) as ApolloClients
