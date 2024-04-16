@@ -1,4 +1,4 @@
-import { polygon, gnosis, polygonMumbai, type Chain } from 'viem/chains'
+import { polygon, gnosis, polygonAmoy, type Chain } from 'viem/chains'
 import { parseUnits, type Address } from 'viem'
 
 import { liveCoreAbi, lpAbi, prematchComboCoreAbi, prematchCoreAbi, proxyFrontAbi } from './abis'
@@ -16,7 +16,7 @@ export const configRef = {
 const getGraphqlPrematchEndpoint = (network: string) => `https://thegraph.azuro.org/subgraphs/name/azuro-protocol/azuro-api-${network}-v3`
 
 const getGraphqlLiveEndpoint = (chainId: number) => {
-  if (chainId === polygonMumbai.id) {
+  if (chainId === polygonAmoy.id) {
     return 'https://thegraph.azuro.org/subgraphs/name/azuro-protocol/azuro-api-live-data-feed-preprod'
   }
 
@@ -24,7 +24,7 @@ const getGraphqlLiveEndpoint = (chainId: number) => {
 }
 
 const getSocketEndpoint = (chainId: number) => {
-  if (chainId === polygonMumbai.id) {
+  if (chainId === polygonAmoy.id) {
     return 'wss://preprod-streams.azuro.org/v1/streams/conditions'
   }
 
@@ -32,7 +32,7 @@ const getSocketEndpoint = (chainId: number) => {
 }
 
 export const getApiUrl = (chainId: ChainId) => {
-  if (chainId === polygonMumbai.id) {
+  if (chainId === polygonAmoy.id) {
     return 'https://preprod-api.azuro.org/api/v1/public'
   }
 
@@ -172,23 +172,23 @@ const polygonData: ChainData = {
   },
 }
 
-const polygonMumbaiData: ChainData = {
-  chain: polygonMumbai,
+const polygonAmoyData: ChainData = {
+  chain: polygonAmoy,
   graphql: {
-    prematch: getGraphqlPrematchEndpoint('mumbai-preprod'),
-    live: getGraphqlLiveEndpoint(polygonMumbai.id),
+    prematch: getGraphqlPrematchEndpoint('polygon-amoy-preprod'),
+    live: getGraphqlLiveEndpoint(polygonAmoy.id),
   },
-  socket: getSocketEndpoint(polygonMumbai.id),
+  socket: getSocketEndpoint(polygonAmoy.id),
   contracts: setupContracts({
-    lp: '0xA39e988b357122D9ba75C0038E625a5ab9363F54',
-    prematchCore: '0x33742d3D8bE5A7F47D2eC1fA39fDa9FCB5288727',
-    prematchComboCore: '0xb7f1B3dA0eECf0a084cdd16Df917216BB72b42f5',
-    proxyFront: '0x0a727CE540258f9736eAfcD411e57Caf5a3B3b6C',
-    liveRelayer: '0x2d14b12e08ED8599E020fdBC867B604Ad58F192c',
-    liveCore: '0xEeC45059b34BF76174C4d5E495BB380F4A810F58',
+    lp: '0x3528186476FD0eA0AdC9fCcc41de4CD138f99653',
+    prematchCore: '0x2477B960080B3439b4684df3D9CE53B2ACe64315',
+    prematchComboCore: '0xdF71998f7931caD24439A12A2F56D7326C3D0295',
+    proxyFront: '0x7003CaA0847CA296EBF51C43D9021656a663304f',
+    liveRelayer: '0x355B8493380fA5D57E4d3aFBF7C5f38b64AD5eA9',
+    liveCore: '0x51eD5C2596d9AE32cE53ac1915Cb9333AFeF3156',
   }),
   betToken: {
-    address: '0x37B9324f3Aa84DE6D062DC18C0539D5440Dca3FF',
+    address: '0xf028b2dd00e20a8d9db3964a5feb0633d2ee46cd',
     symbol: 'AZUSD',
     decimals: 6,
   },
@@ -197,11 +197,11 @@ const polygonMumbaiData: ChainData = {
 export const chainsData = {
   [gnosis.id]: gnosisData,
   [polygon.id]: polygonData,
-  [polygonMumbai.id]: polygonMumbaiData,
+  [polygonAmoy.id]: polygonAmoyData,
 } as const
 
-export const liveHostAddress = '0xBb35f2490B050538FCeDD6d708a37CC922973483'
-export const liveSupportedChains: ChainId[] = [ gnosis.id, polygonMumbai.id ]
+export const liveHostAddress = '0x67Fca88E2f5F2C33b86bFa4EccfCb8dCD6a56D17'
+export const liveSupportedChains: ChainId[] = [ gnosis.id, polygonAmoy.id ]
 /**
  * Live Betting for Gnosis in beta, only 1 WXDAI possible
  */
@@ -210,7 +210,7 @@ export const liveBetAmount = '1'
 export const environments = {
   [gnosis.id]: 'GnosisXDAI',
   [polygon.id]: 'PolygonUSDT',
-  [polygonMumbai.id]: 'PolygonMumbaiAZUSD',
+  [polygonAmoy.id]: 'PolygonAmoyAZUSD',
 } as const
 
 export const cookieKeys = {
