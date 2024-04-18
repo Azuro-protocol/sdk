@@ -1,6 +1,7 @@
 'use client'
 import { useBaseBetslip, useBetTokenBalance, useChain, useDetailedBetslip, usePrepareBet } from "@azuro-org/sdk"
 import cx from 'clsx'
+import type { Address } from 'viem'
 
 
 export const BetButton: React.FC = () => {
@@ -18,7 +19,7 @@ export const BetButton: React.FC = () => {
   } = usePrepareBet({
     betAmount,
     slippage: 10,
-    affiliate: '0x68E0C1dBF926cDa7A65ef2722e046746EB0f816f', // your affiliate address
+    affiliate: process.env.NEXT_PUBLIC_AFFILIATE_ADDRESS as Address, // your affiliate address
     selections: items,
     odds,
     totalOdds,

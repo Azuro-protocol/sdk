@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useBaseBetslip, useDeBridgeBet, useDetailedBetslip } from "@azuro-org/sdk";
 import cx from 'clsx'
-import { formatUnits } from "viem";
+import { formatUnits, type Address } from 'viem'
 
 
 export const DeBridgeBetButton = () => {
@@ -10,16 +10,16 @@ export const DeBridgeBetButton = () => {
   const { betAmount, odds, totalOdds, isStatusesFetching, isOddsFetching, isBetAllowed } = useDetailedBetslip()
   const [ fromChainId, setFromChainId ] = useState('42161')
   const [ fromTokenAddress, setFromTokenAddress ] = useState('0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9')
-  const { 
+  const {
     submit, approveTx, betTx, estimation, fixFee,
-    isAllowanceLoading, isApproveRequired, isTxReady, loading: isDeBridgeLoading 
+    isAllowanceLoading, isApproveRequired, isTxReady, loading: isDeBridgeLoading
   } = useDeBridgeBet({
     fromChainId: +fromChainId,
     fromTokenAddress,
     betAmount,
     slippage: 10,
-    referralCode: 9126, // your deBridge referral code
-    affiliate: '0x68E0C1dBF926cDa7A65ef2722e046746EB0f816f', // your affiliate address
+    referralCode: 17687, // your deBridge referral code
+    affiliate: process.env.NEXT_PUBLIC_AFFILIATE_ADDRESS as Address, // your affiliate address
     selections: items,
     odds,
     totalOdds,

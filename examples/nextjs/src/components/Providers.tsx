@@ -23,6 +23,7 @@ const wagmiConfig = getDefaultConfig({
   projectId: '2f82a1608c73932cfc64ff51aa38a87b', // get your own project ID - https://cloud.walletconnect.com/sign-in
   wallets,
   chains,
+  ssr: false,
 })
 
 const queryClient = new QueryClient()
