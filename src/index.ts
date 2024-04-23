@@ -1,4 +1,4 @@
-export { chainsData, type ChainId, cookieKeys, liveHostAddress, liveSupportedChains, liveBetAmount } from './config'
+export { chainsData, type ChainId, cookieKeys, liveHostAddress, liveSupportedChains, minLiveBetAmount } from './config'
 export { type Selection, type BetOutcome, type Bet, SportHub } from './global'
 export { default as AzuroSDKProvider } from './AzuroSDKProvider'
 // contexts

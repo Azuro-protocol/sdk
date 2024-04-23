@@ -128,6 +128,7 @@ export type ChainData = {
   socket: string
   contracts: Contracts
   betToken: BetToken
+  type: 'mainnet' | 'testnet'
 }
 
 const gnosisData: ChainData = {
@@ -150,6 +151,7 @@ const gnosisData: ChainData = {
     symbol: 'WXDAI',
     decimals: 18,
   },
+  type: 'mainnet',
 }
 
 const polygonData: ChainData = {
@@ -172,6 +174,7 @@ const polygonData: ChainData = {
     symbol: 'USDT',
     decimals: 6,
   },
+  type: 'mainnet',
 }
 
 const polygonAmoyData: ChainData = {
@@ -194,6 +197,7 @@ const polygonAmoyData: ChainData = {
     symbol: 'AZUSD',
     decimals: 6,
   },
+  type: 'testnet',
 }
 
 export const chainsData = {
@@ -205,9 +209,9 @@ export const chainsData = {
 export const liveHostAddress = '0x67Fca88E2f5F2C33b86bFa4EccfCb8dCD6a56D17'
 export const liveSupportedChains: ChainId[] = [ polygon.id, gnosis.id, polygonAmoy.id ]
 /**
- * Live Betting for Gnosis in beta, only 1 WXDAI possible
+ * Live Betting in beta
  */
-export const liveBetAmount = '1'
+export const minLiveBetAmount = 1
 
 export const environments = {
   [gnosis.id]: 'GnosisXDAI',
