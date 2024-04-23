@@ -88,7 +88,7 @@ export const BetslipProvider: React.FC<Props> = (props) => {
   const { children } = props
 
   const { prematchClient, liveClient } = useApolloClients()
-  const { appChain, type: appChainType } = useChain()
+  const { appChain } = useChain()
   const [ items, setItems ] = useState<BetslipItem[]>([])
   const [ betAmount, setBetAmount ] = useState('')
   const { odds, totalOdds, maxBet, loading: isOddsFetching } = useOdds({ betAmount, selections: items })
@@ -118,7 +118,7 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     })
   }, [ items ])
 
-  const minBet = isLiveBet && appChainType === 'mainnet' ? minLiveBetAmount : undefined
+  const minBet = isLiveBet && !appChain?.testnet ? minLiveBetAmount : undefined
 
   const isAmountLowerThanMaxBet = Boolean(betAmount) && typeof maxBet !== 'undefined' ? +betAmount <= maxBet : true
   const isAmountBiggerThanMinBet = Boolean(betAmount) && typeof minBet !== 'undefined' ? +betAmount >= minBet : true

@@ -128,7 +128,6 @@ export type ChainData = {
   socket: string
   contracts: Contracts
   betToken: BetToken
-  type: 'mainnet' | 'testnet'
 }
 
 const gnosisData: ChainData = {
@@ -151,7 +150,6 @@ const gnosisData: ChainData = {
     symbol: 'WXDAI',
     decimals: 18,
   },
-  type: 'mainnet',
 }
 
 const polygonData: ChainData = {
@@ -174,7 +172,6 @@ const polygonData: ChainData = {
     symbol: 'USDT',
     decimals: 6,
   },
-  type: 'mainnet',
 }
 
 const polygonAmoyData: ChainData = {
@@ -197,7 +194,6 @@ const polygonAmoyData: ChainData = {
     symbol: 'AZUSD',
     decimals: 6,
   },
-  type: 'testnet',
 }
 
 export const chainsData = {
