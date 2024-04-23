@@ -1,6 +1,6 @@
 {
   "name": "@azuro-org/sdk",
-  "version": "3.2.2",
+  "version": "3.3.0",
   "author": "Azuro",
   "type": "module",
   "main": "dist/index.js",
@@ -19,7 +19,8 @@
   "scripts": {
     "gql:cleanup": "rimraf src/docs/**/*.ts src/docs/**/**/*.ts",
     "gql": "npm run gql:cleanup & graphql-codegen",
-    "build": "npm run gql && rimraf dist && rollup -c",
+    "build-pure": "rimraf dist && rollup -c",
+    "build": "npm run gql && npm run build-pure",
     "prepublishOnly": "npm run build",
     "------------------  Lint --------------------------------------------------------------------------------": "",
     "lint": "next lint && tsc --noEmit",

@@ -80,7 +80,7 @@ export const ApolloProvider = (props: Props) => {
   const { children } = props
 
   const { appChain } = useChain()
-  const prevAppChainIdRef = useRef<number>(appChain.id)
+  const prevAppChainIdRef = useRef(appChain.id)
   const apolloClientsRef = useRef<ApolloClients>(getApolloClients(appChain.id))
 
   // set new link before render for send requests with new one
@@ -89,13 +89,16 @@ export const ApolloProvider = (props: Props) => {
       const { prematchClient, liveClient } = apolloClientsRef.current
 
       const prematchLink = getPrematchLink(appChain.id)
-      const liveLink = getLiveLink(appChain.id)
 
       prematchClient!.setLink(prematchLink)
       prematchClient!.resetStore()
 
-      liveClient!.setLink(liveLink)
-      liveClient!.resetStore()
+      if (chainsData[prevAppChainIdRef.current].graphql.live !== chainsData[appChain.id].graphql.live) {
+        const liveLink = getLiveLink(appChain.id)
+
+        liveClient!.setLink(liveLink)
+        liveClient!.resetStore()
+      }
 
       prevAppChainIdRef.current = appChain.id
     }

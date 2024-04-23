@@ -41,7 +41,7 @@ function AmountInput() {
           type="number"
           placeholder="Bet amount"
           value={betAmount}
-          disabled={isLiveBet && appChain.id === gnosis.id}
+          // disabled={isLiveBet && appChain.id === gnosis.id}
           onChange={(event) => changeBetAmount(event.target.value)}
         />
       </div>

@@ -116,9 +116,9 @@ export const usePrepareBet = (props: Props) => {
       return
     }
 
-    if (isLiveBet && appChain.id === gnosis.id && +betAmount !== +liveBetAmount) {
-      throw Error(`Live betting is in beta: bet amount have to be ${liveBetAmount} ${betToken.symbol}`)
-    }
+    // if (isLiveBet && appChain.id === gnosis.id && +betAmount !== +liveBetAmount) {
+    //   throw Error(`Live betting is in beta: bet amount have to be ${liveBetAmount} ${betToken.symbol}`)
+    // }
 
     const fixedAmount = +parseFloat(String(betAmount)).toFixed(betToken.decimals)
     const minOdds = 1 + (+totalOdds - 1) * (100 - slippage) / 100

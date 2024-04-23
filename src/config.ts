@@ -164,6 +164,8 @@ const polygonData: ChainData = {
     prematchCore: '0xA40F8D69D412b79b49EAbdD5cf1b5706395bfCf7',
     prematchComboCore: '0x92a4e8Bc6B92a2e1ced411f41013B5FE6BE07613',
     proxyFront: '0x0DEE52b98ba8326DaD4C346a4F806Fd871360a00',
+    liveRelayer: '0xC6BB817a7f02874F360d135D880200A2E440207D',
+    liveCore: '0xc389558Faca41bC747F763cf8616704187CDcD04',
   }),
   betToken: {
     address: '0xc2132d05d31c914a87c6611c10748aeb04b58e8f',
@@ -201,7 +203,7 @@ export const chainsData = {
 } as const
 
 export const liveHostAddress = '0x67Fca88E2f5F2C33b86bFa4EccfCb8dCD6a56D17'
-export const liveSupportedChains: ChainId[] = [ gnosis.id, polygonAmoy.id ]
+export const liveSupportedChains: ChainId[] = [ polygon.id, gnosis.id, polygonAmoy.id ]
 /**
  * Live Betting for Gnosis in beta, only 1 WXDAI possible
  */
