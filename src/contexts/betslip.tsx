@@ -123,7 +123,13 @@ export const BetslipProvider: React.FC<Props> = (props) => {
   const isAmountLowerThanMaxBet = Boolean(betAmount) && typeof maxBet !== 'undefined' ? +betAmount <= maxBet : true
   const isAmountBiggerThanMinBet = Boolean(betAmount) && typeof minBet !== 'undefined' ? +betAmount >= minBet : true
 
-  const isBetAllowed = isConditionsInCreatedStatus && isComboAllowed && isPrematchBetAllowed && isAmountLowerThanMaxBet
+  const isBetAllowed = (
+    isConditionsInCreatedStatus
+    && isComboAllowed
+    && isPrematchBetAllowed
+    && isAmountLowerThanMaxBet
+    && isAmountBiggerThanMinBet
+  )
 
   let disableReason: BetslipDisableReason | undefined = undefined
 
