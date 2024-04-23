@@ -205,8 +205,12 @@ export const chainsData = {
 export const liveHostAddress = '0x67Fca88E2f5F2C33b86bFa4EccfCb8dCD6a56D17'
 export const liveSupportedChains: ChainId[] = [ polygon.id, gnosis.id, polygonAmoy.id ]
 /**
- * Live Betting in beta
+ * @deprecated Live bets are not strictly limited to "1" anymore.\
+ * Instead, use **`minLiveBetAmount`** for min bet value,\
+ * or **`minBet`** + **`maxBet`** parameters from **`useDetailedBetslip()`**.
  */
+export const liveBetAmount = 1
+
 export const minLiveBetAmount = 1
 
 export const environments = {
