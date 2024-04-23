@@ -209,7 +209,7 @@ export const liveSupportedChains: ChainId[] = [ polygon.id, gnosis.id, polygonAm
  * Instead, use **`minLiveBetAmount`** for min bet value,\
  * or **`minBet`** + **`maxBet`** parameters from **`useDetailedBetslip()`**.
  */
-export const liveBetAmount = 1
+export const liveBetAmount = '1'
 
 export const minLiveBetAmount = 1
 
