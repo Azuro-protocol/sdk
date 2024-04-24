@@ -70,9 +70,7 @@ export function BetCard(props: Props) {
   const handleRedeem = async () => {
     try {
       await submit({ bets: [ bet ] })
-    } catch(err) {
-      console.log(err);
-    }
+    } catch {}
   }
 
   return (
