@@ -1,10 +1,9 @@
 import React, { useContext, createContext, useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import type { ApolloCache, NormalizedCacheObject } from '@apollo/client'
-import { gnosis } from 'viem/chains'
 
 import { useApolloClients } from './apollo'
 import { MainGameInfoFragmentDoc, type MainGameInfoFragment } from '../docs/prematch/fragments/mainGameInfo'
-import { liveBetAmount, liveHostAddress, localStorageKeys } from '../config'
+import { minLiveBetAmount, liveHostAddress, localStorageKeys } from '../config'
 import { useChain } from './chain'
 import { useOdds } from '../hooks/useOdds'
 import { useStatuses } from '../hooks/useStatuses'
@@ -15,6 +14,7 @@ import { type Selection } from '../global'
 export enum BetslipDisableReason {
   ConditionStatus = 'ConditionStatus',
   BetAmountGreaterThanMaxBet = 'BetAmountGreaterThanMaxBet',
+  BetAmountLowerThanMinBet = 'BetAmountLowerThanMinBet',
   ComboWithLive = 'ComboWithLive',
   ComboWithForbiddenItem = 'ComboWithForbiddenItem',
   PrematchConditionInStartedGame = 'PrematchConditionInStartedGame',
@@ -59,7 +59,8 @@ export type DetailedBetslipContextValue = {
   betAmount: string
   odds: Record<string, number>
   totalOdds: number
-  maxBet?: number
+  maxBet: number | undefined
+  minBet: number | undefined
   statuses: Record<string, ConditionStatus>
   disableReason: BetslipDisableReason | undefined
   changeBetAmount: (value: string) => void
@@ -117,9 +118,18 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     })
   }, [ items ])
 
-  const isAmountLowerThanMaxBet = Boolean(betAmount) && typeof maxBet !== 'undefined' ? +betAmount <= maxBet : true
+  const minBet = isLiveBet && !appChain?.testnet ? minLiveBetAmount : undefined
 
-  const isBetAllowed = isConditionsInCreatedStatus && isComboAllowed && isPrematchBetAllowed && isAmountLowerThanMaxBet
+  const isAmountLowerThanMaxBet = Boolean(betAmount) && typeof maxBet !== 'undefined' ? +betAmount <= maxBet : true
+  const isAmountBiggerThanMinBet = Boolean(betAmount) && typeof minBet !== 'undefined' ? +betAmount >= minBet : true
+
+  const isBetAllowed = (
+    isConditionsInCreatedStatus
+    && isComboAllowed
+    && isPrematchBetAllowed
+    && isAmountLowerThanMaxBet
+    && isAmountBiggerThanMinBet
+  )
 
   let disableReason: BetslipDisableReason | undefined = undefined
 
@@ -142,6 +152,10 @@ export const BetslipProvider: React.FC<Props> = (props) => {
 
   if (!isAmountLowerThanMaxBet) {
     disableReason = BetslipDisableReason.BetAmountGreaterThanMaxBet
+  }
+
+  if (!isAmountBiggerThanMinBet) {
+    disableReason = BetslipDisableReason.BetAmountLowerThanMinBet
   }
 
   const changeBetAmount = (value: string) => {
@@ -268,12 +282,6 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     setItems(storedItems)
   }, [])
 
-  useEffect(() => {
-    if (isLiveBet && appChain.id === gnosis.id) {
-      setBetAmount(liveBetAmount)
-    }
-  }, [ isLiveBet, appChain ])
-
   const baseValue = useMemo(() => ({
     items,
     addItem,
@@ -291,6 +299,7 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     odds,
     totalOdds,
     maxBet,
+    minBet,
     statuses,
     disableReason,
     changeBetAmount,
@@ -303,6 +312,7 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     odds,
     totalOdds,
     maxBet,
+    minBet,
     statuses,
     disableReason,
     changeBetAmount,

@@ -50,7 +50,7 @@ export const SocketProvider: React.FC<any> = ({ children }) => {
   const { appChain } = useChain()
   const [ isSocketReady, setSocketReady ] = useState(false)
 
-  const prevChainId = useRef<number>(appChain.id)
+  const prevChainId = useRef(appChain.id)
   const socket = useRef<WebSocket>()
   const subscribers = useRef<Record<string, number>>({})
 
@@ -156,7 +156,12 @@ export const SocketProvider: React.FC<any> = ({ children }) => {
   }
 
   useEffect(() => {
-    if (isSocketReady && socket.current && (prevChainId.current !== appChain.id)) {
+    if (
+      isSocketReady
+      && socket.current
+      && prevChainId.current !== appChain.id
+      && chainsData[prevChainId.current].socket !== chainsData[appChain.id].socket
+    ) {
       unsubscribe(Object.keys(subscribers.current))
       socket.current.close()
       socket.current = undefined

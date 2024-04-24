@@ -4,7 +4,6 @@ import { ConditionStatus, useBaseBetslip, useBetTokenBalance, useChain, useDetai
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 import { useAccount } from 'wagmi'
 import dayjs from 'dayjs'
-import { gnosis } from 'viem/chains'
 
 import { useBetslip } from '@/context/betslip'
 
@@ -12,8 +11,8 @@ import { BetButton, DeBridgeBetButton } from './index'
 
 
 function AmountInput() {
-  const { betAmount, changeBetAmount, isLiveBet } = useDetailedBetslip()
-  const { betToken, appChain } = useChain()
+  const { betAmount, changeBetAmount, maxBet, minBet } = useDetailedBetslip()
+  const { betToken } = useChain()
   const { loading: isBalanceFetching, balance } = useBetTokenBalance()
 
   return (
@@ -34,6 +33,18 @@ function AmountInput() {
           }
         </span>
       </div>
+      {
+        Boolean(maxBet) && <div className="flex items-center justify-between">
+          <span className="text-md text-zinc-400">Max bet amount:</span>
+          <span className="text-md font-semibold">{maxBet} {betToken.symbol}</span>
+        </div>
+      }
+      {
+        Boolean(minBet) && <div className="flex items-center justify-between">
+          <span className="text-md text-zinc-400">Min bet amount:</span>
+          <span className="text-md font-semibold">{minBet} {betToken.symbol}</span>
+        </div>
+      }
       <div className="flex items-center justify-between">
         <span className="text-md text-zinc-400">Bet amount</span>
         <input
@@ -41,7 +52,6 @@ function AmountInput() {
           type="number"
           placeholder="Bet amount"
           value={betAmount}
-          disabled={isLiveBet && appChain.id === gnosis.id}
           onChange={(event) => changeBetAmount(event.target.value)}
         />
       </div>
@@ -52,6 +62,7 @@ function AmountInput() {
 const errorPerDisableReason = {
   [BetslipDisableReason.ComboWithForbiddenItem]: 'One or more conditions can\'t be used in combo',
   [BetslipDisableReason.BetAmountGreaterThanMaxBet]: 'Bet amount exceeds max bet',
+  [BetslipDisableReason.BetAmountLowerThanMinBet]: 'Bet amount lower than min bet',
   [BetslipDisableReason.ComboWithLive]: 'Live outcome can\'t be used in combo',
   [BetslipDisableReason.ConditionStatus]: 'One or more outcomes have been removed or suspended. Review your betslip and remove them.',
   [BetslipDisableReason.PrematchConditionInStartedGame]: 'Game has started',
