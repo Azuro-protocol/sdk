@@ -1,6 +1,6 @@
 'use client'
 import { useChain, type ChainId } from '@azuro-org/sdk';
-import { polygonAmoy, gnosis, polygon } from 'viem/chains';
+import { polygonAmoy, gnosis, polygon, chiliz, spicy } from 'viem/chains';
 
 export function SelectAppChain() {
   const { appChain, setAppChainId } = useChain()
@@ -14,6 +14,8 @@ export function SelectAppChain() {
       <option value={polygonAmoy.id}>{polygonAmoy.name}</option>
       <option value={gnosis.id}>{gnosis.name}</option>
       <option value={polygon.id}>{polygon.name}</option>
+      <option value={chiliz.id}>{chiliz.name}</option>
+      <option value={spicy.id}>{spicy.name}</option>
     </select>
   )
 }

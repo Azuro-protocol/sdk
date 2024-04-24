@@ -1,6 +1,14 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { ConditionStatus, useBaseBetslip, useBetTokenBalance, useChain, useDetailedBetslip, BetslipDisableReason } from '@azuro-org/sdk'
+import { 
+  ConditionStatus, 
+  useBaseBetslip, 
+  useBetTokenBalance, 
+  useChain, 
+  useDetailedBetslip, 
+  BetslipDisableReason,
+  useDeBridgeSupportedChains,
+} from '@azuro-org/sdk'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 import { useAccount } from 'wagmi'
 import dayjs from 'dayjs'
@@ -72,17 +80,21 @@ function Content() {
   const account = useAccount()
   const { items, clear, removeItem } = useBaseBetslip()
   const { betAmount, odds, totalOdds, statuses, disableReason, isStatusesFetching, isOddsFetching, isLiveBet } = useDetailedBetslip()
+  const { appChain } = useChain()
+  const { supportedChainIds } = useDeBridgeSupportedChains()
   const [ isDeBridgeEnable, setDeBridgeEnable ] = useState(false)
+
+  const isDeBridgeVisible = supportedChainIds?.includes(appChain.id)
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setDeBridgeEnable(event.target.checked)
   }
 
   useEffect(() => {
-    if (isLiveBet) {
+    if (isLiveBet || !isDeBridgeVisible) {
       setDeBridgeEnable(false)
     }
-  }, [ isLiveBet ])
+  }, [ isLiveBet, isDeBridgeVisible ])
 
   return (
     <div className="bg-zinc-100 p-4 mb-4 rounded-md w-full max-h-[90vh] overflow-auto border border-solid">
@@ -187,7 +199,7 @@ function Content() {
             </div>
             <AmountInput />
             {
-              !isLiveBet && (
+              Boolean(!isLiveBet && isDeBridgeVisible) && (
                 <div className="flex items-center justify-between mt-4 border-t border-zinc-300 pt-4">
                   <label className="mr-2" htmlFor="deBridge">Bet from another blockchain</label>
                   <input id="deBridge" type="checkbox" checked={isDeBridgeEnable} onChange={handleChange} />
