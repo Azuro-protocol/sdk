@@ -1,4 +1,4 @@
-import { polygon, gnosis, polygonAmoy, type Chain } from 'viem/chains'
+import { polygon, gnosis, polygonAmoy, chiliz, spicy, type Chain } from 'viem/chains'
 import { parseUnits, type Address } from 'viem'
 
 import { liveCoreAbi, lpAbi, prematchComboCoreAbi, prematchCoreAbi, proxyFrontAbi } from './abis'
@@ -20,6 +20,10 @@ const getGraphqlLiveEndpoint = (chainId: number) => {
     return 'https://thegraph.azuro.org/subgraphs/name/azuro-protocol/azuro-api-live-data-feed-preprod'
   }
 
+  if (chainId === spicy.id) {
+    return 'https://thegraph.azuro.org/subgraphs/name/azuro-protocol/azuro-api-live-data-feed-dev'
+  }
+
   return 'https://thegraph.azuro.org/subgraphs/name/azuro-protocol/azuro-api-live-data-feed'
 }
 
@@ -28,12 +32,20 @@ const getSocketEndpoint = (chainId: number) => {
     return 'wss://preprod-streams.azuro.org/v1/streams/conditions'
   }
 
+  if (chainId === spicy.id) {
+    return 'wss://dev-streams.azuro.org/v1/streams/conditions'
+  }
+
   return 'wss://streams.azuro.org/v1/streams/conditions'
 }
 
 export const getApiUrl = (chainId: ChainId) => {
   if (chainId === polygonAmoy.id) {
     return 'https://preprod-api.azuro.org/api/v1/public'
+  }
+
+  if (chainId === spicy.id) {
+    return 'https://dev-api.azuro.org/api/v1/public'
   }
 
   return 'https://api.azuro.org/api/v1/public'
@@ -196,14 +208,58 @@ const polygonAmoyData: ChainData = {
   },
 }
 
+const chilizData: ChainData = {
+  chain: chiliz,
+  graphql: {
+    prematch: getGraphqlPrematchEndpoint('chiliz'),
+    live: getGraphqlLiveEndpoint(chiliz.id),
+  },
+  socket: getSocketEndpoint(chiliz.id),
+  contracts: setupContracts({
+    lp: '0x6909eAD2a1DA7b632D5993d329DEf4d2dbBc8261',
+    prematchCore: '0x1a21C681Cc83889f4b213485aB6cF4971C43114B',
+    prematchComboCore: '0x724fa8931428D5B636F7191d3e848f28Ab23C425',
+    proxyFront: '0x45779134E5091756601Cb5bA389f9C76b914E520',
+  }),
+  betToken: {
+    address: '0x677F7e16C7Dd57be1D4C8aD1244883214953DC47',
+    symbol: 'WCHZ',
+    decimals: 18,
+  },
+}
+
+const spicyData: ChainData = {
+  chain: spicy,
+  graphql: {
+    prematch: getGraphqlPrematchEndpoint('chiliz-spicy-dev'),
+    live: getGraphqlLiveEndpoint(spicy.id),
+  },
+  socket: getSocketEndpoint(spicy.id),
+  contracts: setupContracts({
+    lp: '0x82f25d2670994b218b8a4C1e5Acc120D6c27d786',
+    prematchCore: '0x035AB843C9F6dCB9D9bDeAC18c191dEc6c975fB7',
+    prematchComboCore: '0xF94a49F0D78eAfeda81c785131eb6419EB18b33A',
+    proxyFront: '0x67f3228fD58f5A26D93a5dd0c6989b69c95618eB',
+    liveRelayer: '0x699A817E9414698Afc761dCBA83d158894EA7dd4',
+    liveCore: '0xC6B38c80427E4038e91798847b5C5b056C358817',
+  }),
+  betToken: {
+    address: '0x721ef6871f1c4efe730dce047d40d1743b886946',
+    symbol: 'WCHZ',
+    decimals: 18,
+  },
+}
+
 export const chainsData = {
   [gnosis.id]: gnosisData,
   [polygon.id]: polygonData,
   [polygonAmoy.id]: polygonAmoyData,
+  [chiliz.id]: chilizData,
+  [spicy.id]: spicyData,
 } as const
 
 export const liveHostAddress = '0x67Fca88E2f5F2C33b86bFa4EccfCb8dCD6a56D17'
-export const liveSupportedChains: ChainId[] = [ polygon.id, gnosis.id, polygonAmoy.id ]
+export const liveSupportedChains: ChainId[] = [ polygon.id, gnosis.id, polygonAmoy.id, spicy.id ]
 /**
  * @deprecated Live bets are not strictly limited to "1" anymore.\
  * Instead, use **`minLiveBetAmount`** for min bet value,\
@@ -217,6 +273,8 @@ export const environments = {
   [gnosis.id]: 'GnosisXDAI',
   [polygon.id]: 'PolygonUSDT',
   [polygonAmoy.id]: 'PolygonAmoyAZUSD',
+  [chiliz.id]: 'ChilizWCHZ',
+  [spicy.id]: 'ChilizSpicyWCHZ',
 } as const
 
 export const cookieKeys = {

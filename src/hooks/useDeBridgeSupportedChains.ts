@@ -1,8 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { useMemo } from 'react'
 
 import { deBridgeUrl } from '../config'
-import { useChain } from '../contexts/chain'
 
 
 type SupportedChainsResponse = {
@@ -17,13 +15,17 @@ type Props = {
 }
 
 export const useDeBridgeSupportedChains = ({ enabled }: Props = { enabled: true }) => {
-  const { appChain } = useChain()
-
   const queryFn = async () => {
     const response = await fetch(`${deBridgeUrl}/supported-chains-info`)
     const { chains }: SupportedChainsResponse = await response.json()
 
-    return chains
+
+    const chainIds = chains.map(({ chainId }) => chainId)
+
+    return {
+      chains,
+      chainIds,
+    }
   }
 
   const { isFetching, data, refetch } = useQuery({
@@ -33,23 +35,9 @@ export const useDeBridgeSupportedChains = ({ enabled }: Props = { enabled: true 
     refetchOnWindowFocus: false,
   })
 
-  const { supportedChains, supportedChainIds } = useMemo(() => {
-    if (!data?.length) {
-      return {}
-    }
-
-    const filteredChains = data?.filter(chain => chain.chainId !== appChain.id)
-    const supportedChainIds = filteredChains.map(({ chainId }) => chainId)
-
-    return {
-      supportedChains: filteredChains,
-      supportedChainIds,
-    }
-  }, [ appChain.id, data ])
-
   return {
-    supportedChains,
-    supportedChainIds,
+    supportedChains: data?.chains,
+    supportedChainIds: data?.chainIds,
     refetch,
     loading: isFetching,
   }
