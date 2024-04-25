@@ -11,11 +11,12 @@ export const BetButton: React.FC = () => {
   const { loading: isBalanceFetching, balance } = useBetTokenBalance()
 
   const {
-    isAllowanceLoading,
-    isApproveRequired,
     submit,
     approveTx,
     betTx,
+    isRelayerFeeLoading,
+    isAllowanceLoading,
+    isApproveRequired,
   } = usePrepareBet({
     betAmount,
     slippage: 10,
@@ -48,6 +49,7 @@ export const BetButton: React.FC = () => {
     || isAllowanceLoading
     || isPending
     || isProcessing
+    || isRelayerFeeLoading
   )
 
   const isDisabled = (
