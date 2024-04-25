@@ -268,8 +268,6 @@ const spicyData: ChainData = {
     prematchCore: '0x035AB843C9F6dCB9D9bDeAC18c191dEc6c975fB7',
     prematchComboCore: '0xF94a49F0D78eAfeda81c785131eb6419EB18b33A',
     proxyFront: '0x67f3228fD58f5A26D93a5dd0c6989b69c95618eB',
-    liveRelayer: '0x699A817E9414698Afc761dCBA83d158894EA7dd4',
-    liveCore: '0xC6B38c80427E4038e91798847b5C5b056C358817',
   }),
   betToken: {
     address: '0x721ef6871f1c4efe730dce047d40d1743b886946',
@@ -287,7 +285,7 @@ export const chainsData = {
 } as const
 
 export const liveHostAddress = '0x67Fca88E2f5F2C33b86bFa4EccfCb8dCD6a56D17'
-export const liveSupportedChains: ChainId[] = [ polygon.id, gnosis.id, polygonAmoy.id, spicy.id ]
+export const liveSupportedChains: ChainId[] = [ polygon.id, gnosis.id, polygonAmoy.id ]
 /**
  * @deprecated Live bets are not strictly limited to "1" anymore.\
  * Instead, use **`minLiveBetAmount`** for min bet value,\
