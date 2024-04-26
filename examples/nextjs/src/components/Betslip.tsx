@@ -8,6 +8,7 @@ import {
   useDetailedBetslip, 
   BetslipDisableReason,
   useDeBridgeSupportedChains,
+  useLiveBetFee,
 } from '@azuro-org/sdk'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 import { useAccount } from 'wagmi'
@@ -82,6 +83,9 @@ function Content() {
   const { betAmount, odds, totalOdds, statuses, disableReason, isStatusesFetching, isOddsFetching, isLiveBet } = useDetailedBetslip()
   const { appChain } = useChain()
   const { supportedChainIds } = useDeBridgeSupportedChains()
+  const { formattedRelayerFeeAmount, loading: isRelayerFeeLoading } = useLiveBetFee({
+    enabled: isLiveBet,
+  })
   const [ isDeBridgeEnable, setDeBridgeEnable ] = useState(false)
 
   const isDeBridgeVisible = supportedChainIds?.includes(appChain.id)
@@ -192,11 +196,27 @@ function Content() {
                   isOddsFetching ? (
                     <>Loading...</>
                   ) : (
-                    <>{ totalOdds * +betAmount }</>
+                    <>{totalOdds * +betAmount}</>
                   )
                 }
               </span>
             </div>
+            {
+              Boolean(isRelayerFeeLoading || formattedRelayerFeeAmount) && (
+                <div className="flex items-center justify-between mt-4">
+                  <span className="text-md text-zinc-400">Relayer fee:</span>
+                  <span className="text-md font-semibold">
+                    {
+                      isRelayerFeeLoading ? (
+                        <>Loading...</>
+                      ) : (
+                        <>{formattedRelayerFeeAmount}</>
+                      )
+                    }
+                  </span>
+                </div>
+              )
+            }
             <AmountInput />
             {
               Boolean(!isLiveBet && isDeBridgeVisible) && (

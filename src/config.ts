@@ -125,6 +125,22 @@ type Contracts = {
   }
 }
 
+export enum Environment {
+  GnosisXDAI = 'GnosisXDAI',
+  PolygonUSDT = 'PolygonUSDT',
+  PolygonAmoyAZUSD = 'PolygonAmoyAZUSD',
+  ChilizWCHZ = 'ChilizWCHZ',
+  ChilizSpicyWCHZ = 'ChilizSpicyWCHZ'
+}
+
+export const environments = {
+  [gnosis.id]: Environment.GnosisXDAI,
+  [polygon.id]: Environment.PolygonUSDT,
+  [polygonAmoy.id]: Environment.PolygonAmoyAZUSD,
+  [chiliz.id]: Environment.ChilizWCHZ,
+  [spicy.id]: Environment.ChilizSpicyWCHZ,
+} as const
+
 type BetToken = {
   address: Address
   symbol: string
@@ -138,6 +154,8 @@ export type ChainData = {
     live: string,
   }
   socket: string
+  api: string
+  environment: Environment
   contracts: Contracts
   betToken: BetToken
 }
@@ -149,6 +167,8 @@ const gnosisData: ChainData = {
     live: getGraphqlLiveEndpoint(gnosis.id),
   },
   socket: getSocketEndpoint(gnosis.id),
+  api: getApiUrl(gnosis.id),
+  environment: environments[gnosis.id],
   contracts: setupContracts({
     lp: '0x204e7371Ade792c5C006fb52711c50a7efC843ed',
     prematchCore: '0x7f3F3f19c4e4015fd9Db2f22e653c766154091EF',
@@ -171,6 +191,8 @@ const polygonData: ChainData = {
     live: getGraphqlLiveEndpoint(polygon.id),
   },
   socket: getSocketEndpoint(polygon.id),
+  api: getApiUrl(polygon.id),
+  environment: environments[polygon.id],
   contracts: setupContracts({
     lp: '0x7043E4e1c4045424858ECBCED80989FeAfC11B36',
     prematchCore: '0xA40F8D69D412b79b49EAbdD5cf1b5706395bfCf7',
@@ -193,6 +215,8 @@ const polygonAmoyData: ChainData = {
     live: getGraphqlLiveEndpoint(polygonAmoy.id),
   },
   socket: getSocketEndpoint(polygonAmoy.id),
+  api: getApiUrl(polygonAmoy.id),
+  environment: environments[polygonAmoy.id],
   contracts: setupContracts({
     lp: '0x3528186476FD0eA0AdC9fCcc41de4CD138f99653',
     prematchCore: '0x2477B960080B3439b4684df3D9CE53B2ACe64315',
@@ -215,6 +239,8 @@ const chilizData: ChainData = {
     live: getGraphqlLiveEndpoint(chiliz.id),
   },
   socket: getSocketEndpoint(chiliz.id),
+  api: getApiUrl(chiliz.id),
+  environment: environments[chiliz.id],
   contracts: setupContracts({
     lp: '0x6909eAD2a1DA7b632D5993d329DEf4d2dbBc8261',
     prematchCore: '0x1a21C681Cc83889f4b213485aB6cF4971C43114B',
@@ -235,13 +261,13 @@ const spicyData: ChainData = {
     live: getGraphqlLiveEndpoint(spicy.id),
   },
   socket: getSocketEndpoint(spicy.id),
+  api: getApiUrl(spicy.id),
+  environment: environments[spicy.id],
   contracts: setupContracts({
     lp: '0x82f25d2670994b218b8a4C1e5Acc120D6c27d786',
     prematchCore: '0x035AB843C9F6dCB9D9bDeAC18c191dEc6c975fB7',
     prematchComboCore: '0xF94a49F0D78eAfeda81c785131eb6419EB18b33A',
     proxyFront: '0x67f3228fD58f5A26D93a5dd0c6989b69c95618eB',
-    liveRelayer: '0x699A817E9414698Afc761dCBA83d158894EA7dd4',
-    liveCore: '0xC6B38c80427E4038e91798847b5C5b056C358817',
   }),
   betToken: {
     address: '0x721ef6871f1c4efe730dce047d40d1743b886946',
@@ -259,7 +285,7 @@ export const chainsData = {
 } as const
 
 export const liveHostAddress = '0x67Fca88E2f5F2C33b86bFa4EccfCb8dCD6a56D17'
-export const liveSupportedChains: ChainId[] = [ polygon.id, gnosis.id, polygonAmoy.id, spicy.id ]
+export const liveSupportedChains: ChainId[] = [ polygon.id, gnosis.id, polygonAmoy.id ]
 /**
  * @deprecated Live bets are not strictly limited to "1" anymore.\
  * Instead, use **`minLiveBetAmount`** for min bet value,\
@@ -268,14 +294,6 @@ export const liveSupportedChains: ChainId[] = [ polygon.id, gnosis.id, polygonAm
 export const liveBetAmount = '1'
 
 export const minLiveBetAmount = 1
-
-export const environments = {
-  [gnosis.id]: 'GnosisXDAI',
-  [polygon.id]: 'PolygonUSDT',
-  [polygonAmoy.id]: 'PolygonAmoyAZUSD',
-  [chiliz.id]: 'ChilizWCHZ',
-  [spicy.id]: 'ChilizSpicyWCHZ',
-} as const
 
 export const cookieKeys = {
   appChainId: 'appChainId',

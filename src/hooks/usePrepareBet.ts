@@ -7,12 +7,11 @@ import { useState } from 'react'
 import { getPrematchBetDataBytes } from 'src/helpers/getPrematchBetDataBytes'
 
 import { useChain } from '../contexts/chain'
-import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256, liveHostAddress, getApiUrl, environments } from '../config'
+import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256, liveHostAddress } from '../config'
 import { type Selection } from '../global'
 import { useBetsCache } from './useBetsCache'
+import { useLiveBetFee } from './useLiveBetFee'
 
-
-const Live_BET_GAS = 0
 
 enum LiveOrderState {
   Created = 'Created',
@@ -50,15 +49,22 @@ type Props = {
 export const usePrepareBet = (props: Props) => {
   const { betAmount, slippage, deadline, affiliate, selections, odds, totalOdds, liveEIP712Attention, onSuccess, onError } = props
 
+  const isLiveBet = selections.some(({ coreAddress }) => coreAddress === liveHostAddress)
+
   const account = useAccount()
   const publicClient = usePublicClient()
   const walletClient = useWalletClient()
-  const { appChain, contracts, betToken } = useChain()
+  const { appChain, contracts, betToken, api, environment } = useChain()
+  const {
+    relayerFeeAmount: rawRelayerFeeAmount,
+    formattedRelayerFeeAmount: relayerFeeAmount,
+    loading: isRelayerFeeFetching,
+  } = useLiveBetFee({
+    enabled: isLiveBet,
+  })
   const { addBet } = useBetsCache()
   const [ isLiveBetPending, setLiveBetPending ] = useState(false)
   const [ isLiveBetProcessing, setLiveBetProcessing ] = useState(false)
-
-  const isLiveBet = selections.some(({ coreAddress }) => coreAddress === liveHostAddress)
 
   const approveAddress = isLiveBet ? contracts.liveRelayer?.address : contracts.proxyFront.address
 
@@ -85,7 +91,7 @@ export const usePrepareBet = (props: Props) => {
   const isApproveRequired = Boolean(
     allowanceTx.data !== undefined
     && +betAmount
-    && allowanceTx.data < parseUnits(isLiveBet ? String((+betAmount + Live_BET_GAS)) : betAmount, betToken.decimals)
+    && allowanceTx.data < parseUnits(isLiveBet ? String((+betAmount + +relayerFeeAmount!)) : betAmount, betToken.decimals)
   )
 
   const approve = async () => {
@@ -115,11 +121,11 @@ export const usePrepareBet = (props: Props) => {
       return
     }
 
-    const fixedAmount = +parseFloat(String(betAmount)).toFixed(betToken.decimals)
+    const fixedAmount = parseFloat(String(betAmount)).toFixed(betToken.decimals)
     const minOdds = 1 + (+totalOdds - 1) * (100 - slippage) / 100
     const fixedMinOdds = +parseFloat(String(minOdds)).toFixed(ODDS_DECIMALS)
 
-    const rawAmount = parseUnits(`${fixedAmount}`, betToken.decimals)
+    const rawAmount = parseUnits(fixedAmount, betToken.decimals)
     const rawMinOdds = parseUnits(`${fixedMinOdds}`, ODDS_DECIMALS)
     const rawDeadline = BigInt(Math.floor(Date.now() / 1000) + (deadline || DEFAULT_DEADLINE))
 
@@ -142,7 +148,7 @@ export const usePrepareBet = (props: Props) => {
             minOdds: String(rawMinOdds),
             nonce: String(Date.now()),
             expiresAt: Math.floor(Date.now() / 1000) + 2000,
-            relayerFeeAmount: String(parseUnits(String(Live_BET_GAS), betToken.decimals)),
+            relayerFeeAmount: String(rawRelayerFeeAmount),
           },
         }
 
@@ -192,15 +198,13 @@ export const usePrepareBet = (props: Props) => {
         setLiveBetProcessing(true)
 
         const signedBet = {
-          environment: environments[appChain.id],
+          environment,
           bettor: account.address!.toLowerCase(),
           data: order,
           bettorSignature: signature,
         }
 
-        const apiUrl = getApiUrl(appChain.id)
-
-        const createOrderResponse = await fetch(`${apiUrl}/orders`, {
+        const createOrderResponse = await fetch(`${api}/orders`, {
           method: 'POST',
           headers: {
             'Accept': 'application/json',
@@ -218,7 +222,7 @@ export const usePrepareBet = (props: Props) => {
         if (newOrderState === LiveOrderState.Created) {
           txHash = await new Promise<Hex>((res, rej) => {
             const interval = setInterval(async () => {
-              const getOrderResponse = await fetch(`${apiUrl}/orders/${orderId}`)
+              const getOrderResponse = await fetch(`${api}/orders/${orderId}`)
               const { state, txHash }: LiveGetOrderResponse = await getOrderResponse.json()
 
               if (state === LiveOrderState.Rejected) {
@@ -304,8 +308,6 @@ export const usePrepareBet = (props: Props) => {
   }
 
   return {
-    isAllowanceLoading: allowanceTx.isLoading,
-    isApproveRequired,
     submit,
     approveTx: {
       isPending: approveTx.isPending,
@@ -315,5 +317,9 @@ export const usePrepareBet = (props: Props) => {
       isPending: betTx.isPending || isLiveBetPending,
       isProcessing: betReceipt.isLoading || isLiveBetProcessing,
     },
+    relayerFeeAmount,
+    isAllowanceLoading: allowanceTx.isLoading,
+    isApproveRequired,
+    isRelayerFeeLoading: isRelayerFeeFetching,
   }
 }
