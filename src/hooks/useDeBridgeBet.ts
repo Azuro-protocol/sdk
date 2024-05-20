@@ -1,19 +1,18 @@
 import { parseUnits, encodeFunctionData, erc20Abi, zeroAddress } from 'viem'
-import { type TransactionReceipt, type Address, type Hex } from 'viem'
+import { type TransactionReceipt, type Address, type Hex, maxUint256 } from 'viem'
 import { getTransactionReceipt } from '@wagmi/core'
 import { useQuery } from '@tanstack/react-query'
 import { useAccount, useConfig, usePublicClient, useReadContract, useSendTransaction, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
 import { useState } from 'react'
 
-import { useApolloClients } from 'src/contexts/apollo'
-
-import { DEFAULT_DEADLINE, MAX_UINT_256, ODDS_DECIMALS, deBridgeTxUrl, deBridgeUrl, liveHostAddress } from '../config'
+import { DEFAULT_DEADLINE, ODDS_DECIMALS, deBridgeTxUrl, deBridgeUrl, liveHostAddress } from '../config'
+import { useApolloClients } from '../contexts/apollo'
 import { useChain } from '../contexts/chain'
 import { type Selection } from '../global'
-import { useDeBridgeSupportedChains } from './useDeBridgeSupportedChains'
-import { getPrematchBetDataBytes } from '../helpers/getPrematchBetDataBytes'
+import { getPrematchBetDataBytes } from '../utils/getPrematchBetDataBytes'
 import useDebounce from '../helpers/hooks/useDebounce'
 import { useBetsCache } from './useBetsCache'
+import { useDeBridgeSupportedChains } from './useDeBridgeSupportedChains'
 import { useDeBridgeSupportedTokens } from './useDeBridgeSupportedTokens'
 
 
@@ -267,7 +266,7 @@ export const useDeBridgeBet = (props: Props) => {
         functionName: 'approve',
         args: [
           betTxData?.to as Address,
-          MAX_UINT_256,
+          maxUint256,
         ],
       })
       await publicClient!.waitForTransactionReceipt({

@@ -5,7 +5,6 @@ import { liveCoreAbi, lpAbi, prematchComboCoreAbi, prematchCoreAbi, proxyFrontAb
 
 
 export const DEFAULT_CACHE_TIME = 3 * 60
-export const MAX_UINT_256 = parseUnits('340282366920938463463', 0)
 export const DEFAULT_DEADLINE = 300 // 5 min
 export const ODDS_DECIMALS = 12
 
