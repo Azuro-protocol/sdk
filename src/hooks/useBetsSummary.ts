@@ -22,7 +22,7 @@ export const useBetsSummary = (props: Props) => {
   const options = useMemo<QueryHookOptions<BettorsQuery, BettorsQueryVariables>>(() => {
     const variables: BettorsQueryVariables = {
       where: {
-        address: account.toLowerCase(),
+        address: account?.toLowerCase(),
       },
     }
 
