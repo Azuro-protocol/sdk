@@ -1,8 +1,10 @@
-import { type TransactionReceipt, type Address, formatUnits } from 'viem'
+import { type TransactionReceipt, type Address, formatUnits, parseUnits } from 'viem'
+import { useAccount } from 'wagmi'
 
 import { BetFragmentDoc as PrematchBetFragmentDoc, type BetFragment as PrematchBetFragment } from '../docs/prematch/fragments/bet'
 import { LiveBetFragmentDoc, type LiveBetFragment } from '../docs/prematch/fragments/liveBet'
 import { MainGameInfoFragmentDoc, type MainGameInfoFragment } from '../docs/prematch/fragments/mainGameInfo'
+import { type BettorFragment, BettorFragmentDoc } from '../docs/prematch/fragments/bettor'
 import {
   type ConditionFragment as PrematchConditionFragment,
   ConditionFragmentDoc as PrematchConditionFragmentDoc,
@@ -15,7 +17,7 @@ import {
   type ConditionQuery as LiveConditionQuery,
   ConditionDocument as LiveConditionDocument,
 } from '../docs/live/condition'
-import { ConditionStatus, BetStatus } from '../docs/prematch/types'
+import { ConditionStatus, BetStatus, BetResult } from '../docs/prematch/types'
 import { useApolloClients } from '../contexts/apollo'
 import { getEventArgsFromTxReceipt } from '../helpers'
 import { useChain } from '../contexts/chain'
@@ -31,18 +33,20 @@ type UpdateBetProps = {
 
 type NewBetProps = {
   bet: {
-    amount: string
+    rawAmount: bigint
     selections: Selection[]
     odds: Record<string, number>
     freebetId?: string | bigint
     freebetContractAddress?: Address
   }
+  affiliate: Address
   receipt: TransactionReceipt
 }
 
 export const useBetsCache = () => {
   const { prematchClient, liveClient } = useApolloClients()
-  const { contracts } = useChain()
+  const { contracts, betToken } = useChain()
+  const { address } = useAccount()
 
   const updateBetCache = (
     { coreAddress, tokenId }: UpdateBetProps,
@@ -51,10 +55,11 @@ export const useBetsCache = () => {
     const isLive = contracts.liveCore ? coreAddress.toLowerCase() === contracts.liveCore.address.toLowerCase() : false
     const { cache } = prematchClient!
 
-    const betEntityId = `${coreAddress}_${tokenId}`
+    const betEntityId = `${coreAddress.toLowerCase()}_${tokenId}`
+    let bet: LiveBetFragment | PrematchBetFragment | null
 
     if (isLive) {
-      cache.updateFragment<LiveBetFragment>({
+      bet = cache.updateFragment<LiveBetFragment>({
         id: cache.identify({ __typename: 'LiveBet', id: betEntityId }),
         fragment: LiveBetFragmentDoc,
         fragmentName: 'LiveBet',
@@ -65,7 +70,7 @@ export const useBetsCache = () => {
 
     }
     else {
-      cache.updateFragment<PrematchBetFragment>({
+      bet = cache.updateFragment<PrematchBetFragment>({
         id: cache.identify({ __typename: 'Bet', id: betEntityId }),
         fragment: PrematchBetFragmentDoc,
         fragmentName: 'Bet',
@@ -74,11 +79,35 @@ export const useBetsCache = () => {
         ...values as PrematchBetFragment,
       }))
     }
+
+    if (!bet) {
+      return
+    }
+
+    const bettorEntity = `${contracts.lp.address.toLowerCase()}_${address!.toLowerCase()}_${bet.affiliate!.toLowerCase()}`
+
+    prematchClient.cache.updateFragment<BettorFragment>({
+      id: prematchClient.cache.identify({ __typename: 'Bettor', id: bettorEntity }),
+      fragment: BettorFragmentDoc,
+      fragmentName: 'Bettor',
+    }, (data) => {
+      if (!data) {
+        return data
+      }
+
+      const rawPayout = parseUnits(bet!.payout!, betToken.decimals)
+      const newRawToPayout = BigInt(data.rawToPayout) - rawPayout
+
+      return {
+        ...data,
+        rawToPayout: String(newRawToPayout),
+      }
+    })
   }
 
   const addBet = async (props: NewBetProps) => {
-    const { bet, receipt } = props
-    const { amount, selections, odds } = bet
+    const { bet, affiliate, receipt } = props
+    const { rawAmount, selections, odds } = bet
 
     const coreAddress = selections[0]!.coreAddress
     const isLive = coreAddress.toLowerCase() === liveHostAddress.toLowerCase()
@@ -198,9 +227,11 @@ export const useBetsCache = () => {
       rawOdds = isExpress ? receiptArgs?.bet.odds : receiptArgs?.odds
     }
 
-    const finalOdds = formatUnits(rawOdds, ODDS_DECIMALS)
+    const rawPotentialPayout = rawAmount * rawOdds
 
-    const potentialPayout = String(+amount * +finalOdds)
+    const potentialPayout = formatUnits(rawPotentialPayout, betToken.decimals)
+    const finalOdds = formatUnits(rawOdds, ODDS_DECIMALS)
+    const amount = formatUnits(rawAmount, betToken.decimals)
 
     if (isLive) {
       prematchClient!.cache.modify({
@@ -220,7 +251,7 @@ export const useBetsCache = () => {
                 },
               },
               status: BetStatus.Accepted,
-              amount: bet.amount,
+              amount,
               odds: finalOdds,
               settledOdds: null,
               createdAt: String(Math.floor(Date.now() / 1000)),
@@ -230,6 +261,7 @@ export const useBetsCache = () => {
               isRedeemable: false,
               result: null,
               txHash: receipt.transactionHash,
+              affiliate,
               selections: selectionFragments as LiveBetFragment['selections'],
             }
 
@@ -262,7 +294,7 @@ export const useBetsCache = () => {
                 },
               },
               status: BetStatus.Accepted,
-              amount: bet.amount,
+              amount,
               odds: finalOdds,
               settledOdds: null,
               createdAt: String(Math.floor(Date.now() / 1000)),
@@ -276,6 +308,7 @@ export const useBetsCache = () => {
               } : null,
               result: null,
               txHash: receipt.transactionHash,
+              affiliate,
               selections: selectionFragments as PrematchBetFragment['selections'],
             }
 
@@ -286,6 +319,52 @@ export const useBetsCache = () => {
             })
 
             return [ newBet, ...bets ]
+          },
+        },
+      })
+    }
+
+    const bettorEntity = `${contracts.lp.address.toLowerCase()}_${address!.toLowerCase()}_${affiliate.toLowerCase()}`
+
+    const bettorFragment = cache.readFragment<BettorFragment>({
+      id: cache.identify({ __typename: 'Bettor', id: bettorEntity }),
+      fragment: BettorFragmentDoc,
+      fragmentName: 'Bettor',
+    })
+
+    if (bettorFragment) {
+      prematchClient.cache.updateFragment<BettorFragment>({
+        id: prematchClient.cache.identify({ __typename: 'Bettor', id: bettorEntity }),
+        fragment: BettorFragmentDoc,
+        fragmentName: 'Bettor',
+      }, (data) => ({
+        ...data as BettorFragment,
+        betsCount: data!.betsCount + 1,
+        rawInBets: String(BigInt(data!.rawInBets) + rawAmount),
+      }))
+    }
+    else {
+      prematchClient!.cache.modify({
+        id: prematchClient!.cache.identify({ __typename: 'Query' }),
+        fields: {
+          bettors: (bettors) => {
+            const newBettor = prematchClient!.cache.writeFragment<BettorFragment>({
+              fragment: BettorFragmentDoc,
+              fragmentName: 'Bettor',
+              data: {
+                __typename: 'Bettor',
+                id: bettorEntity,
+                rawToPayout: '0',
+                rawInBets: String(rawAmount),
+                rawTotalPayout: '0',
+                rawTotalProfit: '0',
+                betsCount: 1,
+                wonBetsCount: 0,
+                lostBetsCount: 0,
+              },
+            })
+
+            return [ ...bettors, newBettor ]
           },
         },
       })
