@@ -277,8 +277,9 @@ export const usePrepareBet = (props: Props) => {
       if (receipt) {
         addBet({
           receipt,
+          affiliate,
           bet: {
-            amount: `${fixedAmount}`,
+            rawAmount,
             selections,
             odds,
           },

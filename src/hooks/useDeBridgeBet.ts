@@ -348,11 +348,13 @@ export const useDeBridgeBet = (props: Props) => {
 
         if (receipt) {
           const fixedAmount = +parseFloat(String(betAmount)).toFixed(betToken.decimals)
+          const rawAmount = parseUnits(`${fixedAmount}`, betToken.decimals)
 
           addBet({
             receipt,
+            affiliate,
             bet: {
-              amount: `${fixedAmount}`,
+              rawAmount,
               selections,
               odds,
             },
