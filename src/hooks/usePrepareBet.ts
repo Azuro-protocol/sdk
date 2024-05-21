@@ -1,13 +1,12 @@
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient, useWalletClient } from 'wagmi'
 import {
-  parseUnits,
+  parseUnits, maxUint256,
   type Address, erc20Abi, type TransactionReceipt, type Hex, type TypedDataDomain } from 'viem'
 import { useState } from 'react'
 
-import { getPrematchBetDataBytes } from 'src/helpers/getPrematchBetDataBytes'
-
+import { getPrematchBetDataBytes } from '../utils/getPrematchBetDataBytes'
 import { useChain } from '../contexts/chain'
-import { DEFAULT_DEADLINE, ODDS_DECIMALS, MAX_UINT_256, liveHostAddress } from '../config'
+import { DEFAULT_DEADLINE, ODDS_DECIMALS, liveHostAddress } from '../config'
 import { type Selection } from '../global'
 import { useBetsCache } from './useBetsCache'
 import { useLiveBetFee } from './useLiveBetFee'
@@ -101,7 +100,7 @@ export const usePrepareBet = (props: Props) => {
       functionName: 'approve',
       args: [
         approveAddress!,
-        MAX_UINT_256,
+        maxUint256,
       ],
     })
     await publicClient!.waitForTransactionReceipt({

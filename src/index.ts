@@ -1,6 +1,6 @@
 export { chainsData, type ChainId, cookieKeys, liveHostAddress, liveSupportedChains, minLiveBetAmount, environments } from './config'
 export { type Selection, type BetOutcome, type Bet, SportHub } from './global'
-export { default as AzuroSDKProvider } from './AzuroSDKProvider'
+export { AzuroSDKProvider, Watchers } from './AzuroSDKProvider'
 // contexts
 export * from './contexts/chain'
 export * from './contexts/live'
@@ -25,6 +25,7 @@ export { NavigationDocument, type NavigationQuery, type NavigationQueryResult, t
 export { calcMindOdds } from './utils/calcMindOdds'
 export { calcLiveOdds, calcPrematchOdds } from './utils/calcOdds'
 export { setGamesCacheTime } from './utils/setGamesCacheTime'
+export { getPrematchBetDataBytes } from './utils/getPrematchBetDataBytes'
 export { getGameStatus, GameStatus } from './utils/getGameStatus'
 export { getBetStatus, BetStatus } from './utils/getBetStatus'
 export { getLiveBetFee, type LiveBetFeeResponse } from './utils/getLiveBetFee'
