@@ -220,8 +220,22 @@ export const useBetsCache = () => {
     else {
       const isExpress = selections.length > 1
       const abi = isExpress ? contracts.prematchComboCore.abi : contracts.prematchCore.abi
+      let params
 
-      const receiptArgs = getEventArgsFromTxReceipt({ receipt, eventName: 'NewBet', abi })
+      if (!isExpress) {
+        const { conditionId, outcomeId } = selections[0]!
+        params = {
+          conditionId: BigInt(conditionId),
+          outcomeId: BigInt(outcomeId),
+        }
+      }
+
+      const receiptArgs = getEventArgsFromTxReceipt({
+        receipt,
+        eventName: 'NewBet',
+        abi,
+        params,
+      })
 
       tokenId = (isExpress ? receiptArgs?.betId : receiptArgs?.tokenId)?.toString()
       rawOdds = isExpress ? receiptArgs?.bet.odds : receiptArgs?.odds

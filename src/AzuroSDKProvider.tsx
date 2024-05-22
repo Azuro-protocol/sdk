@@ -3,7 +3,7 @@ import React from 'react'
 import { ChainProvider, type ChainProviderProps } from './contexts/chain'
 import { ApolloProvider } from './contexts/apollo'
 import { SocketProvider } from './contexts/socket'
-import { BetslipProvider } from './contexts/betslip'
+import { BetslipProvider, type BetslipProviderProps } from './contexts/betslip'
 import { useWatchers } from './hooks/useWatchers'
 
 
@@ -13,14 +13,14 @@ export function Watchers() {
   return null
 }
 
-type AzuroSDKProviderProps = ChainProviderProps
+type AzuroSDKProviderProps = ChainProviderProps & BetslipProviderProps
 
-export const AzuroSDKProvider: React.FC<AzuroSDKProviderProps> = ({ children, initialChainId }) => {
+export const AzuroSDKProvider: React.FC<AzuroSDKProviderProps> = ({ children, initialChainId, isBatchBetWithSameGameEnable }) => {
   return (
     <ChainProvider initialChainId={initialChainId}>
       <SocketProvider>
         <ApolloProvider>
-          <BetslipProvider>
+          <BetslipProvider isBatchBetWithSameGameEnable={isBatchBetWithSameGameEnable}>
             {children}
           </BetslipProvider>
         </ApolloProvider>

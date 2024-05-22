@@ -138,13 +138,37 @@ type CalcPrematchOddsProps = {
   betAmount: string
   selections: Selection[]
   chainId: ChainId
+  isBatch?: boolean
 }
 
 export const calcPrematchOdds = async (props: CalcPrematchOddsProps): Promise<Record<string, number>> => {
-  const { config, selections, betAmount, chainId } = props
+  const { config, selections, betAmount, chainId, isBatch } = props
 
   const { betToken, contracts } = chainsData[chainId]
   const rawAmount = parseUnits(betAmount, betToken.decimals)
+
+  if (selections.length === 1 || isBatch) {
+    let odds: Record<string, number> = {}
+
+    for (let index = 0; index < selections.length; index++) {
+      const { conditionId, outcomeId, coreAddress } = selections[index]!
+
+      try {
+        const rawOdds = await readContract(config, {
+          abi: prematchCoreAbi,
+          address: coreAddress as Address,
+          chainId,
+          functionName: 'calcOdds',
+          args: [ BigInt(conditionId), rawAmount, BigInt(outcomeId) ],
+        })
+
+        odds[`${conditionId}-${outcomeId}`] = formatToFixed(formatUnits(rawOdds, ODDS_DECIMALS), 3)
+      }
+      catch {}
+    }
+
+    return odds
+  }
 
   if (selections.length > 1) {
     const expressAddress = contracts.prematchComboCore.address
@@ -170,25 +194,6 @@ export const calcPrematchOdds = async (props: CalcPrematchOddsProps): Promise<Re
 
         return acc
       }, {} as Record<string, number>)
-    }
-    catch {}
-  }
-
-  if (selections.length === 1) {
-    const { conditionId, outcomeId, coreAddress } = selections[0]!
-
-    try {
-      const rawOdds = await readContract(config, {
-        abi: prematchCoreAbi,
-        address: coreAddress as Address,
-        chainId,
-        functionName: 'calcOdds',
-        args: [ BigInt(conditionId), rawAmount, BigInt(outcomeId) ],
-      })
-
-      return {
-        [`${conditionId}-${outcomeId}`]: formatToFixed(formatUnits(rawOdds, ODDS_DECIMALS), 3),
-      }
     }
     catch {}
   }

@@ -16,9 +16,10 @@ import { debounce } from '../helpers/debounce'
 type CalcOddsProps = {
   selections: Selection[]
   betAmount: string
+  isBatch?: boolean
 }
 
-export const useOdds = ({ selections, betAmount }: CalcOddsProps) => {
+export const useOdds = ({ selections, betAmount, isBatch }: CalcOddsProps) => {
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useSocket()
   const { appChain } = useChain()
   const config = useConfig()
@@ -75,6 +76,7 @@ export const useOdds = ({ selections, betAmount }: CalcOddsProps) => {
         betAmount: betAmountRef.current,
         selections: prematchItems,
         chainId: appChain.id,
+        isBatch,
       })
 
       if (isMounted()) {
@@ -135,7 +137,7 @@ export const useOdds = ({ selections, betAmount }: CalcOddsProps) => {
 
     fetchPrematchOdds()
     fetchLiveOdds(liveItems)
-  }, 100), [ selections ])
+  }, 100), [ selections, isBatch ])
 
   useEffect(() => {
     if (!isSocketReady || !liveItems.length) {
@@ -153,14 +155,12 @@ export const useOdds = ({ selections, betAmount }: CalcOddsProps) => {
 
   useEffect(() => {
     fetchOdds()
-  }, [ betAmount ])
+  }, [ selections, betAmount, isBatch ])
 
   useEffect(() => {
     if (!selections?.length) {
       return
     }
-
-    fetchOdds()
 
     const unsubscribeList = selections.map(({ conditionId, outcomeId }) => {
       return oddsWatcher.subscribe(`${conditionId}`, `${outcomeId}`, (oddsData?: OddsChangedData) => {
@@ -180,7 +180,7 @@ export const useOdds = ({ selections, betAmount }: CalcOddsProps) => {
         unsubscribe()
       })
     }
-  }, [ prematchItems, liveItems ])
+  }, [ selections ])
 
   return {
     odds,

@@ -6,31 +6,33 @@ type Props = {
   receipt: TransactionReceipt
   eventName: string
   abi: Parameters<typeof decodeEventLog>[0]['abi']
+  params?: Record<any, any>
 }
 
-export const getEventArgsFromTxReceipt = <T = Record<string, any>>({ receipt, eventName, abi }: Props): T | undefined => {
+export const getEventArgsFromTxReceipt = <T = Record<string, any>>({ receipt, eventName, abi, params }: Props): T | undefined => {
   let result: DecodeEventLogReturnType<typeof abi> = {} as any
 
-  receipt.logs.some((log) => {
+  receipt.logs.forEach((log) => {
     try {
-      const res = decodeEventLog({
+      const decodedLog = decodeEventLog({
         abi,
         topics: log.topics,
         eventName,
         data: log.data as Hex,
       })
 
-      let isMatch = false
+      if (decodedLog?.args && params) {
+        const isMatchByParams = Object.keys(params).every(paramKey => {
+          return (decodedLog.args as any)[paramKey] === params[paramKey]
+        })
 
-      if (res.eventName.toLowerCase() === eventName.toLowerCase()) {
-        isMatch = true
+        if (isMatchByParams) {
+          result = decodedLog
+        }
       }
-
-      if (isMatch) {
-        result = res
+      else {
+        result = decodedLog
       }
-
-      return isMatch
     }
     catch {}
   })

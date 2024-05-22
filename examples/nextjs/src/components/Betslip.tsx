@@ -9,6 +9,7 @@ import {
   BetslipDisableReason,
   useDeBridgeSupportedChains,
   useLiveBetFee,
+  type BetslipItem,
 } from '@azuro-org/sdk'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 import { useAccount } from 'wagmi'
@@ -75,12 +76,17 @@ const errorPerDisableReason = {
   [BetslipDisableReason.ComboWithLive]: 'Live outcome can\'t be used in combo',
   [BetslipDisableReason.ConditionStatus]: 'One or more outcomes have been removed or suspended. Review your betslip and remove them.',
   [BetslipDisableReason.PrematchConditionInStartedGame]: 'Game has started',
+  [BetslipDisableReason.ComboWithSameGame]: 'Combo with outcomes from same game prohibited, please use Batch bet',
+  [BetslipDisableReason.BatchWithLive]: 'Live outcome can\'t be used in batch',
 } as const
 
 function Content() {
   const account = useAccount()
   const { items, clear, removeItem } = useBaseBetslip()
-  const { betAmount, odds, totalOdds, statuses, disableReason, isStatusesFetching, isOddsFetching, isLiveBet } = useDetailedBetslip()
+  const { 
+    betAmount, odds, totalOdds, statuses, disableReason, 
+    isBatch, isStatusesFetching, isOddsFetching, isLiveBet, changeBatch
+  } = useDetailedBetslip()
   const { appChain } = useChain()
   const { supportedChainIds } = useDeBridgeSupportedChains()
   const { formattedRelayerFeeAmount, loading: isRelayerFeeLoading } = useLiveBetFee({
@@ -94,6 +100,15 @@ function Content() {
     setDeBridgeEnable(event.target.checked)
   }
 
+  const handleRemove = (item: BetslipItem) => {
+    const {game: {gameId}, conditionId, outcomeId} = item
+    removeItem({
+      gameId,
+      conditionId,
+      outcomeId
+    })
+  }
+
   useEffect(() => {
     if (isLiveBet || !isDeBridgeVisible) {
       setDeBridgeEnable(false)
@@ -103,7 +118,9 @@ function Content() {
   return (
     <div className="bg-zinc-100 p-4 mb-4 rounded-md w-full max-h-[90vh] overflow-auto border border-solid">
       <div className="flex items-center justify-between mb-2">
-        <div className="">Betslip {items.length > 1 ? 'Combo' : 'Single'} {items.length ? `(${items.length})`: ''}</div>
+        <div className="">
+          Betslip {items.length > 1 ? isBatch ? 'Batch' : 'Combo' : 'Single'} {items.length ? `(${items.length})`: ''}
+        </div>
         {
           Boolean(items.length) && (
             <button onClick={clear}>Remove All</button>
@@ -124,10 +141,10 @@ function Content() {
                   const isLock = !isStatusesFetching && statuses[conditionId] !== ConditionStatus.Created
 
                   return (
-                    <div key={gameId} className="bg-zinc-50 p-2 rounded-md mt-2 first-of-type:mt-0">
+                    <div key={`${gameId}-${outcomeId}`} className="bg-zinc-50 p-2 rounded-md mt-2 first-of-type:mt-0">
                       <div className="flex items-center justify-between mb-2">
                         <div>{sportName} / {leagueName}</div>
-                        <button onClick={() => removeItem(gameId)}>Remove</button>
+                        <button onClick={() => handleRemove(item)}>Remove</button>
                       </div>
                       <div className="flex items-center justify-between mb-2">
                         {
@@ -176,6 +193,10 @@ function Content() {
                   )
                 })
               }
+            </div>
+            <div className="flex items-center justify-between mt-4">
+              <span className="text-md text-zinc-400">Batch Bet:</span>
+              <input type="checkbox" checked={isBatch} onChange={(e) => changeBatch(e.target.checked)} />
             </div>
             <div className="flex items-center justify-between mt-4">
               <span className="text-md text-zinc-400">Total Odds:</span>
