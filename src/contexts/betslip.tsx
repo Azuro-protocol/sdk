@@ -121,11 +121,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
   }, [ statuses ])
 
   const isComboWithDifferentGames = useMemo(() => {
-    if (!isCombo) {
-      return true
-    }
-
-    return checkDifferentGames(items)
+    return !isCombo || checkDifferentGames(items)
   }, [ isCombo, items ])
 
   const isBatchAllowed = !isBatch || !isLiveBet
@@ -269,11 +265,10 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     setItems(items => {
       let newItems: BetslipItem[]
       const replaceIndex = items.findIndex(({ game: { gameId } }) => gameId === item.game.gameId)
-      const isItemsWithSameGame = replaceIndex !== -1
 
       // if cart contains outcome from same game as new item
       // then replace old item
-      if (isItemsWithSameGame) {
+      if (replaceIndex !== -1) {
         if (isBatchBetWithSameGameEnable) {
           setBatch(true)
 

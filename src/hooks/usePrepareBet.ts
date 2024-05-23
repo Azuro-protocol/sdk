@@ -247,10 +247,10 @@ export const usePrepareBet = (props: Props) => {
         }
       }
       else {
-        let _selections
+        let betData
 
         if (selections.length > 1 && isBatch) {
-          _selections = selections.map(selection => {
+          betData = selections.map(selection => {
             const { conditionId, outcomeId } = selection
 
             const fixedMinOdds = calcMindOdds({ odds: odds[`${conditionId}-${outcomeId}`]!, slippage })
@@ -275,7 +275,7 @@ export const usePrepareBet = (props: Props) => {
           const coreAddress = selections.length > 1 ? contracts.prematchComboCore.address : contracts.prematchCore.address
           const data = getPrematchBetDataBytes(selections)
 
-          _selections = [
+          betData = [
             {
               core: coreAddress,
               amount: rawAmount,
@@ -295,7 +295,7 @@ export const usePrepareBet = (props: Props) => {
           functionName: 'bet',
           args: [
             contracts.lp.address,
-            _selections,
+            betData,
           ],
         })
       }

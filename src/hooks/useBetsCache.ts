@@ -220,11 +220,11 @@ export const useBetsCache = () => {
     else {
       const isExpress = selections.length > 1
       const abi = isExpress ? contracts.prematchComboCore.abi : contracts.prematchCore.abi
-      let params
+      let eventParams
 
       if (!isExpress) {
         const { conditionId, outcomeId } = selections[0]!
-        params = {
+        eventParams = {
           conditionId: BigInt(conditionId),
           outcomeId: BigInt(outcomeId),
         }
@@ -234,7 +234,7 @@ export const useBetsCache = () => {
         receipt,
         eventName: 'NewBet',
         abi,
-        params,
+        params: eventParams,
       })
 
       tokenId = (isExpress ? receiptArgs?.betId : receiptArgs?.tokenId)?.toString()

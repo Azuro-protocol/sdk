@@ -10,32 +10,35 @@ type Props = {
 }
 
 export const getEventArgsFromTxReceipt = <T = Record<string, any>>({ receipt, eventName, abi, params }: Props): T | undefined => {
-  let result: DecodeEventLogReturnType<typeof abi> = {} as any
+  const { logs } = receipt
+  let result: DecodeEventLogReturnType<typeof abi> | undefined
 
-  receipt.logs.forEach((log) => {
+  for (let index = 0; index < logs.length; index++) {
     try {
-      const decodedLog = decodeEventLog({
+      const log = logs[index]!
+      result = decodeEventLog({
         abi,
         topics: log.topics,
         eventName,
         data: log.data as Hex,
       })
 
-      if (decodedLog?.args && params) {
+      if (result?.args && params) {
         const isMatchByParams = Object.keys(params).every(paramKey => {
-          return (decodedLog.args as any)[paramKey] === params[paramKey]
+          return (result!.args as any)[paramKey] === params[paramKey]
         })
 
-        if (isMatchByParams) {
-          result = decodedLog
+        if (!isMatchByParams) {
+          result = undefined
         }
       }
-      else {
-        result = decodedLog
+
+      if (result) {
+        break
       }
     }
     catch {}
-  })
+  }
 
   if (result?.args) {
     return result?.args as T
