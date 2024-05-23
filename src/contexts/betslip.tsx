@@ -90,11 +90,11 @@ export const useDetailedBetslip = () => {
 
 export type BetslipProviderProps = {
   children: React.ReactNode
-  isBatchBetWithSameGameEnable?: boolean
+  isBatchBetWithSameGameEnabled?: boolean
 }
 
 export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
-  const { children, isBatchBetWithSameGameEnable } = props
+  const { children, isBatchBetWithSameGameEnabled } = props
 
   const { prematchClient, liveClient } = useApolloClients()
   const { appChain } = useChain()
@@ -109,7 +109,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
   const checkDifferentGames = (items: BetslipItem[]) => {
     const gameIds = items.map(({ game }) => game.gameId)
 
-    return gameIds.length === new Set([ ...gameIds ]).size
+    return gameIds.length === new Set(gameIds).size
   }
 
   const isLiveBet = useMemo(() => {
@@ -269,7 +269,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
       // if cart contains outcome from same game as new item
       // then replace old item
       if (replaceIndex !== -1) {
-        if (isBatchBetWithSameGameEnable) {
+        if (isBatchBetWithSameGameEnabled) {
           setBatch(true)
 
           newItems = [ ...items, item ]

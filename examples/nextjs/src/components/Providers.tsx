@@ -45,7 +45,7 @@ export function Providers(props: ProvidersProps) {
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
-          <AzuroSDKProvider initialChainId={chainId} isBatchBetWithSameGameEnable>
+          <AzuroSDKProvider initialChainId={chainId} isBatchBetWithSameGameEnabled>
             <BetslipProvider>
               <LiveProvider initialLiveState={initialLiveState}>
                 {children}
