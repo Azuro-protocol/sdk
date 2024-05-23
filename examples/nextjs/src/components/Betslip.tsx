@@ -115,6 +115,12 @@ function Content() {
     }
   }, [ isLiveBet, isDeBridgeVisible ])
 
+  useEffect(() => {
+    if (isDeBridgeEnable) {
+      changeBatch(false)
+    }
+  }, [isDeBridgeEnable])
+
   return (
     <div className="bg-zinc-100 p-4 mb-4 rounded-md w-full max-h-[90vh] overflow-auto border border-solid">
       <div className="flex items-center justify-between mb-2">
@@ -194,10 +200,14 @@ function Content() {
                 })
               }
             </div>
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-md text-zinc-400">Batch Bet:</span>
-              <input type="checkbox" checked={isBatch} onChange={(e) => changeBatch(e.target.checked)} />
-            </div>
+            {
+              Boolean(items.length > 1 && !isDeBridgeEnable) && (
+                <div className="flex items-center justify-between mt-4">
+                  <span className="text-md text-zinc-400">Batch Bet:</span>
+                  <input type="checkbox" checked={isBatch} onChange={(e) => changeBatch(e.target.checked)} />
+                </div>
+              )
+            }
             <div className="flex items-center justify-between mt-4">
               <span className="text-md text-zinc-400">Total Odds:</span>
               <span className="text-md font-semibold">

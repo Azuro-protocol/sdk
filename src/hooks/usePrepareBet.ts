@@ -4,8 +4,7 @@ import {
   type Address, erc20Abi, type TransactionReceipt, type Hex, type TypedDataDomain } from 'viem'
 import { useState } from 'react'
 
-import { calcMindOdds } from 'src/utils/calcMindOdds'
-
+import { calcMindOdds } from '../utils/calcMindOdds'
 import { getPrematchBetDataBytes } from '../utils/getPrematchBetDataBytes'
 import { useChain } from '../contexts/chain'
 import { DEFAULT_DEADLINE, ODDS_DECIMALS, liveHostAddress } from '../config'
