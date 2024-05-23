@@ -1,4 +1,4 @@
-import { readContract } from '@wagmi/core'
+import { readContract, readContracts } from '@wagmi/core'
 import { type Config } from 'wagmi'
 import { type Address, formatUnits, parseUnits } from 'viem'
 
@@ -149,23 +149,26 @@ export const calcPrematchOdds = async (props: CalcPrematchOddsProps): Promise<Re
 
   if (selections.length === 1 || isBatch) {
     let odds: Record<string, number> = {}
+    const contracts = selections.map(({ conditionId, outcomeId, coreAddress }) => ({
+      abi: prematchCoreAbi,
+      address: coreAddress as Address,
+      chainId,
+      functionName: 'calcOdds',
+      args: [ BigInt(conditionId), rawAmount, BigInt(outcomeId) ],
+    }))
 
-    for (let index = 0; index < selections.length; index++) {
-      const { conditionId, outcomeId, coreAddress } = selections[index]!
+    try {
+      const response = await readContracts(config, {
+        contracts,
+      })
 
-      try {
-        const rawOdds = await readContract(config, {
-          abi: prematchCoreAbi,
-          address: coreAddress as Address,
-          chainId,
-          functionName: 'calcOdds',
-          args: [ BigInt(conditionId), rawAmount, BigInt(outcomeId) ],
-        })
+      odds = selections.reduce((acc, { conditionId, outcomeId }, index) => {
+        acc[`${conditionId}-${outcomeId}`] = formatToFixed(formatUnits((response[index]?.result as bigint), ODDS_DECIMALS), 3)
 
-        odds[`${conditionId}-${outcomeId}`] = formatToFixed(formatUnits(rawOdds, ODDS_DECIMALS), 3)
-      }
-      catch {}
+        return acc
+      }, {} as Record<string, number>)
     }
+    catch {}
 
     return odds
   }
