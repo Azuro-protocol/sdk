@@ -15,11 +15,11 @@ import { debounce } from '../helpers/debounce'
 
 type CalcOddsProps = {
   selections: Selection[]
-  betAmount: string
-  isBatch?: boolean
+  betAmount?: string
+  batchBetAmounts?: Record<string, string>
 }
 
-export const useOdds = ({ selections, betAmount, isBatch }: CalcOddsProps) => {
+export const useOdds = ({ selections, betAmount, batchBetAmounts }: CalcOddsProps) => {
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useSocket()
   const { appChain } = useChain()
   const config = useConfig()
@@ -46,8 +46,10 @@ export const useOdds = ({ selections, betAmount, isBatch }: CalcOddsProps) => {
   const [ isPrematchOddsFetching, setPrematchOddsFetching ] = useState(Boolean(prematchItems.length))
 
   const oddsDataRef = useRef<Record<string, OddsChangedData>>({})
-  const betAmountRef = useRef<string>('')
+  const betAmountRef = useRef(betAmount)
+  const batchBetAmountsRef = useRef(batchBetAmounts)
   betAmountRef.current = betAmount
+  batchBetAmountsRef.current = batchBetAmounts
 
   const liveKey = liveItems.map(({ conditionId }) => conditionId).join('-')
 
@@ -74,9 +76,9 @@ export const useOdds = ({ selections, betAmount, isBatch }: CalcOddsProps) => {
       const prematchOdds = await calcPrematchOdds({
         config,
         betAmount: betAmountRef.current,
+        batchBetAmounts: batchBetAmountsRef.current,
         selections: prematchItems,
         chainId: appChain.id,
-        isBatch,
       })
 
       if (isMounted()) {
@@ -137,7 +139,7 @@ export const useOdds = ({ selections, betAmount, isBatch }: CalcOddsProps) => {
 
     fetchPrematchOdds()
     fetchLiveOdds(liveItems)
-  }, 100), [ selections, isBatch ])
+  }, 100), [ selections ])
 
   useEffect(() => {
     if (!isSocketReady || !liveItems.length) {
@@ -155,7 +157,7 @@ export const useOdds = ({ selections, betAmount, isBatch }: CalcOddsProps) => {
 
   useEffect(() => {
     fetchOdds()
-  }, [ selections, betAmount, isBatch ])
+  }, [ fetchOdds, betAmount, batchBetAmounts ])
 
   useEffect(() => {
     if (!selections?.length) {

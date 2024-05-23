@@ -16,6 +16,7 @@ export const getEventArgsFromTxReceipt = <T = Record<string, any>>({ receipt, ev
   for (let index = 0; index < logs.length; index++) {
     try {
       const log = logs[index]!
+
       result = decodeEventLog({
         abi,
         topics: log.topics,
@@ -23,7 +24,11 @@ export const getEventArgsFromTxReceipt = <T = Record<string, any>>({ receipt, ev
         data: log.data as Hex,
       })
 
-      if (result?.args && params) {
+      if (result.eventName.toLowerCase() !== eventName.toLowerCase()) {
+        continue
+      }
+
+      if (params && result?.args) {
         const isMatchByParams = Object.keys(params).every(paramKey => {
           return (result!.args as any)[paramKey] === params[paramKey]
         })

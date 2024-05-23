@@ -352,10 +352,10 @@ export const useDeBridgeBet = (props: Props) => {
           addBet({
             receipt,
             affiliate,
+            odds,
             bet: {
               rawAmount,
               selections,
-              odds,
             },
           })
         }

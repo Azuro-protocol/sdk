@@ -7,7 +7,7 @@ import type { Address } from 'viem'
 export const BetButton: React.FC = () => {
   const { appChain, isRightNetwork } = useChain()
   const { items, clear } = useBaseBetslip()
-  const { betAmount, odds, totalOdds, isBatch, isStatusesFetching, isOddsFetching, isBetAllowed } = useDetailedBetslip()
+  const { betAmount, batchBetAmounts, odds, totalOdds, isBatch, isStatusesFetching, isOddsFetching, isBetAllowed } = useDetailedBetslip()
   const { loading: isBalanceFetching, balance } = useBetTokenBalance()
 
   const {
@@ -18,13 +18,12 @@ export const BetButton: React.FC = () => {
     isAllowanceLoading,
     isApproveRequired,
   } = usePrepareBet({
-    betAmount,
+    betAmount: isBatch ? batchBetAmounts : betAmount,
     slippage: 10,
     affiliate: process.env.NEXT_PUBLIC_AFFILIATE_ADDRESS as Address, // your affiliate address
     selections: items,
     odds,
     totalOdds,
-    isBatch,
     onSuccess: () => {
       clear()
     },
