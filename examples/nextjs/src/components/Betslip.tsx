@@ -161,32 +161,34 @@ function Content() {
                   <span className="text-md font-semibold">{betAmount} {betToken.symbol}</span>
                 </div>
               ) : (
-                <div className="flex items-center justify-between mt-4">
-                  <span className="text-md text-zinc-400">Total Odds:</span>
-                  <span className="text-md font-semibold">
-                    {
-                      isOddsFetching ? (
-                        <>Loading...</>
-                      ) : (
-                        <>{ totalOdds }</>
-                      )
-                    }
-                  </span>
-                </div>
+                <>
+                  <div className="flex items-center justify-between mt-4">
+                    <span className="text-md text-zinc-400">Total Odds:</span>
+                    <span className="text-md font-semibold">
+                      {
+                        isOddsFetching ? (
+                          <>Loading...</>
+                        ) : (
+                          <>{ totalOdds }</>
+                        )
+                      }
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between mt-4">
+                    <span className="text-md text-zinc-400">Possible win:</span>
+                    <span className="text-md font-semibold">
+                      {
+                        isOddsFetching ? (
+                          <>Loading...</>
+                        ) : (
+                          <>{totalOdds * +betAmount}</>
+                        )
+                      }
+                    </span>
+                  </div>
+                </>
               )
             }
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-md text-zinc-400">Possible win:</span>
-              <span className="text-md font-semibold">
-                {
-                  isOddsFetching ? (
-                    <>Loading...</>
-                  ) : (
-                    <>{totalOdds * +betAmount}</>
-                  )
-                }
-              </span>
-            </div>
             {
               Boolean(isRelayerFeeLoading || formattedRelayerFeeAmount) && (
                 <div className="flex items-center justify-between mt-4">
