@@ -2,13 +2,14 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import {
   parseUnits, maxUint256,
   type Address, erc20Abi, type TransactionReceipt, type Hex, type TypedDataDomain } from 'viem'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
+import { calcMindOdds } from '../utils/calcMindOdds'
 import { getPrematchBetDataBytes } from '../utils/getPrematchBetDataBytes'
 import { useChain } from '../contexts/chain'
 import { DEFAULT_DEADLINE, ODDS_DECIMALS, liveHostAddress } from '../config'
 import { type Selection } from '../global'
-import { useBetsCache } from './useBetsCache'
+import { useBetsCache, type NewBetProps } from './useBetsCache'
 import { useLiveBetFee } from './useLiveBetFee'
 
 
@@ -33,7 +34,7 @@ type LiveGetOrderResponse = {
 } & LiveCreateOrderResponse
 
 type Props = {
-  betAmount: string
+  betAmount: string | Record<string, string>
   slippage: number
   affiliate: Address
   selections: Selection[]
@@ -46,9 +47,15 @@ type Props = {
 }
 
 export const usePrepareBet = (props: Props) => {
-  const { betAmount, slippage, deadline, affiliate, selections, odds, totalOdds, liveEIP712Attention, onSuccess, onError } = props
+  const {
+    betAmount: _betAmount, slippage, deadline, affiliate, selections, odds,
+    totalOdds, liveEIP712Attention, onSuccess, onError,
+  } = props
 
-  const isLiveBet = selections.some(({ coreAddress }) => coreAddress === liveHostAddress)
+  const isLiveBet = useMemo(() => {
+    return selections.some(({ coreAddress }) => coreAddress === liveHostAddress)
+  }, [ selections ])
+  const isBatch = !isLiveBet && typeof _betAmount === 'object'
 
   const account = useAccount()
   const publicClient = usePublicClient()
@@ -87,11 +94,31 @@ export const usePrepareBet = (props: Props) => {
     hash: approveTx.data,
   })
 
-  const isApproveRequired = Boolean(
-    allowanceTx.data !== undefined
-    && +betAmount
-    && allowanceTx.data < parseUnits(isLiveBet ? String((+betAmount + +relayerFeeAmount!)) : betAmount, betToken.decimals)
-  )
+  const betAmount = useMemo(() => {
+    if (typeof _betAmount === 'string') {
+      return +_betAmount
+    }
+
+    return Object.values(_betAmount).reduce((acc, amount) => acc + +amount, 0)
+  }, [ _betAmount ])
+
+  const isApproveRequired = useMemo(() => {
+    if (
+      !betAmount
+      || typeof allowanceTx?.data === 'undefined'
+      || typeof relayerFeeAmount === 'undefined'
+    ) {
+      return false
+    }
+
+    let approveAmount = betAmount
+
+    if (isLiveBet) {
+      approveAmount += +relayerFeeAmount
+    }
+
+    return allowanceTx.data < parseUnits(String(approveAmount), betToken.decimals)
+  }, [ allowanceTx.data, isLiveBet, relayerFeeAmount, betAmount ])
 
   const approve = async () => {
     const hash = await approveTx.writeContractAsync({
@@ -120,12 +147,10 @@ export const usePrepareBet = (props: Props) => {
       return
     }
 
-    const fixedAmount = parseFloat(String(betAmount)).toFixed(betToken.decimals)
-    const minOdds = 1 + (+totalOdds - 1) * (100 - slippage) / 100
-    const fixedMinOdds = +parseFloat(String(minOdds)).toFixed(ODDS_DECIMALS)
+    let bets: NewBetProps['bet'][] = []
 
+    const fixedAmount = parseFloat(String(betAmount)).toFixed(betToken.decimals)
     const rawAmount = parseUnits(fixedAmount, betToken.decimals)
-    const rawMinOdds = parseUnits(`${fixedMinOdds}`, ODDS_DECIMALS)
     const rawDeadline = BigInt(Math.floor(Date.now() / 1000) + (deadline || DEFAULT_DEADLINE))
 
     let txHash: Hex
@@ -133,7 +158,15 @@ export const usePrepareBet = (props: Props) => {
     try {
       if (isLiveBet) {
         setLiveBetPending(true)
+
+        const fixedMinOdds = calcMindOdds({ odds: totalOdds, slippage })
+        const rawMinOdds = parseUnits(fixedMinOdds, ODDS_DECIMALS)
         const { conditionId, outcomeId } = selections[0]!
+
+        bets.push({
+          rawAmount,
+          selections,
+        })
 
         const order = {
           bet: {
@@ -243,28 +276,67 @@ export const usePrepareBet = (props: Props) => {
         }
       }
       else {
-        const coreAddress = selections.length > 1 ? contracts.prematchComboCore.address : contracts.prematchCore.address
-        const data = getPrematchBetDataBytes(selections)
+        let betData
+
+        if (selections.length > 1 && isBatch) {
+          betData = selections.map(selection => {
+            const { conditionId, outcomeId } = selection
+
+            const fixedAmount = parseFloat(_betAmount[`${conditionId}-${outcomeId}`]!).toFixed(betToken.decimals)
+            const rawAmount = parseUnits(fixedAmount, betToken.decimals)
+            const fixedMinOdds = calcMindOdds({ odds: odds[`${conditionId}-${outcomeId}`]!, slippage })
+            const rawMinOdds = parseUnits(fixedMinOdds, ODDS_DECIMALS)
+            const data = getPrematchBetDataBytes([ selection ])
+
+            bets.push({
+              rawAmount,
+              selections: [ selection ],
+            })
+
+            return {
+              core: contracts.prematchCore.address,
+              amount: rawAmount,
+              expiresAt: rawDeadline,
+              extraData: {
+                affiliate,
+                minOdds: rawMinOdds,
+                data,
+              },
+            }
+          })
+        }
+        else {
+          const fixedMinOdds = calcMindOdds({ odds: totalOdds, slippage })
+          const rawMinOdds = parseUnits(fixedMinOdds, ODDS_DECIMALS)
+          const coreAddress = selections.length > 1 ? contracts.prematchComboCore.address : contracts.prematchCore.address
+          const data = getPrematchBetDataBytes(selections)
+
+          bets.push({
+            rawAmount,
+            selections,
+          })
+
+          betData = [
+            {
+              core: coreAddress,
+              amount: rawAmount,
+              expiresAt: rawDeadline,
+              extraData: {
+                affiliate,
+                minOdds: rawMinOdds,
+                data,
+              },
+            },
+          ]
+        }
 
         txHash = await betTx.writeContractAsync({
           address: contracts.proxyFront.address,
           abi: contracts.proxyFront.abi,
           functionName: 'bet',
-          value: BigInt(0),
           args: [
             contracts.lp.address,
-            [
-              {
-                core: coreAddress,
-                amount: rawAmount,
-                expiresAt: rawDeadline,
-                extraData: {
-                  affiliate,
-                  minOdds: rawMinOdds,
-                  data,
-                },
-              },
-            ],
+            betData,
           ],
         })
       }
@@ -274,14 +346,13 @@ export const usePrepareBet = (props: Props) => {
       })
 
       if (receipt) {
-        addBet({
-          receipt,
-          affiliate,
-          bet: {
-            rawAmount,
-            selections,
+        bets.forEach((bet) => {
+          addBet({
+            receipt,
+            affiliate,
             odds,
-          },
+            bet,
+          })
         })
       }
 

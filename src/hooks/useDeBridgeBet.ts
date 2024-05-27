@@ -11,6 +11,7 @@ import { useChain } from '../contexts/chain'
 import { type Selection } from '../global'
 import { getPrematchBetDataBytes } from '../utils/getPrematchBetDataBytes'
 import useDebounce from '../helpers/hooks/useDebounce'
+import { calcMindOdds } from '../utils/calcMindOdds'
 import { useBetsCache } from './useBetsCache'
 import { useDeBridgeSupportedChains } from './useDeBridgeSupportedChains'
 import { useDeBridgeSupportedTokens } from './useDeBridgeSupportedTokens'
@@ -151,14 +152,13 @@ export const useDeBridgeBet = (props: Props) => {
   })
 
   const queryFn = async () => {
-    const fixedAmount = +parseFloat(String(betAmount)).toFixed(betToken.decimals)
-    const minOdds = 1 + (+totalOdds - 1) * (100 - slippage) / 100
-    const fixedMinOdds = +parseFloat(String(minOdds)).toFixed(ODDS_DECIMALS)
+    const fixedAmount = parseFloat(betAmount).toFixed(betToken.decimals)
+    const fixedMinOdds = calcMindOdds({ odds: totalOdds, slippage })
     const coreAddress = selections.length > 1 ? contracts.prematchComboCore.address : contracts.prematchCore.address
     const betData = getPrematchBetDataBytes(selections)
 
-    const rawAmount = parseUnits(`${fixedAmount}`, betToken.decimals)
-    const rawMinOdds = parseUnits(`${fixedMinOdds}`, ODDS_DECIMALS)
+    const rawAmount = parseUnits(fixedAmount, betToken.decimals)
+    const rawMinOdds = parseUnits(fixedMinOdds, ODDS_DECIMALS)
     const rawDeadline = BigInt(Math.floor(Date.now() / 1000) + (deadline || DEFAULT_DEADLINE))
 
     const params = new URLSearchParams({
@@ -352,10 +352,10 @@ export const useDeBridgeBet = (props: Props) => {
           addBet({
             receipt,
             affiliate,
+            odds,
             bet: {
               rawAmount,
               selections,
-              odds,
             },
           })
         }

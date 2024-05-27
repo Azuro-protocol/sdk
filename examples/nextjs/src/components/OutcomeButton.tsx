@@ -30,18 +30,10 @@ export function OutcomeButton(props: OutcomeProps) {
   })
 
   const handleClick = () => {
-    const item = {
-      gameId: String(outcome.gameId),
-      conditionId: String(outcome.conditionId),
-      outcomeId: String(outcome.outcomeId),
-      coreAddress: outcome.coreAddress,
-      lpAddress: outcome.lpAddress,
-      isExpressForbidden: outcome.isExpressForbidden,
-    }
     if (isActive) {
-      removeItem(String(outcome.gameId))
+      removeItem(outcome)
     } else {
-      addItem(item)
+      addItem(outcome)
     }
   }
 

@@ -1,7 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import { 
-  ConditionStatus, 
   useBaseBetslip, 
   useBetTokenBalance, 
   useChain, 
@@ -10,13 +9,11 @@ import {
   useDeBridgeSupportedChains,
   useLiveBetFee,
 } from '@azuro-org/sdk'
-import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 import { useAccount } from 'wagmi'
-import dayjs from 'dayjs'
 
 import { useBetslip } from '@/context/betslip'
 
-import { BetButton, DeBridgeBetButton } from './index'
+import { BetButton, DeBridgeBetButton, BetslipCard } from './index'
 
 
 function AmountInput() {
@@ -75,13 +72,18 @@ const errorPerDisableReason = {
   [BetslipDisableReason.ComboWithLive]: 'Live outcome can\'t be used in combo',
   [BetslipDisableReason.ConditionStatus]: 'One or more outcomes have been removed or suspended. Review your betslip and remove them.',
   [BetslipDisableReason.PrematchConditionInStartedGame]: 'Game has started',
+  [BetslipDisableReason.ComboWithSameGame]: 'Combo with outcomes from same game prohibited, please use Batch bet',
+  [BetslipDisableReason.BatchWithLive]: 'Live outcome can\'t be used in batch',
 } as const
 
 function Content() {
   const account = useAccount()
   const { items, clear, removeItem } = useBaseBetslip()
-  const { betAmount, odds, totalOdds, statuses, disableReason, isStatusesFetching, isOddsFetching, isLiveBet } = useDetailedBetslip()
-  const { appChain } = useChain()
+  const { 
+    betAmount, batchBetAmounts, odds, totalOdds, statuses, disableReason, 
+    isBatch, isStatusesFetching, isOddsFetching, isLiveBet, changeBatch, changeBatchBetAmount
+  } = useDetailedBetslip()
+  const { appChain, betToken } = useChain()
   const { supportedChainIds } = useDeBridgeSupportedChains()
   const { formattedRelayerFeeAmount, loading: isRelayerFeeLoading } = useLiveBetFee({
     enabled: isLiveBet,
@@ -90,20 +92,28 @@ function Content() {
 
   const isDeBridgeVisible = supportedChainIds?.includes(appChain.id)
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDeBridgeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setDeBridgeEnable(event.target.checked)
   }
 
   useEffect(() => {
-    if (isLiveBet || !isDeBridgeVisible) {
+    if (isLiveBet || isBatch || !isDeBridgeVisible) {
       setDeBridgeEnable(false)
     }
-  }, [ isLiveBet, isDeBridgeVisible ])
+  }, [ isLiveBet, isBatch, isDeBridgeVisible ])
+
+  useEffect(() => {
+    if (isDeBridgeEnable) {
+      changeBatch(false)
+    }
+  }, [ isDeBridgeEnable ])
 
   return (
     <div className="bg-zinc-100 p-4 mb-4 rounded-md w-full max-h-[90vh] overflow-auto border border-solid">
       <div className="flex items-center justify-between mb-2">
-        <div className="">Betslip {items.length > 1 ? 'Combo' : 'Single'} {items.length ? `(${items.length})`: ''}</div>
+        <div className="">
+          Betslip {items.length > 1 ? isBatch ? 'Batch' : 'Combo' : 'Single'} {items.length ? `(${items.length})`: ''}
+        </div>
         {
           Boolean(items.length) && (
             <button onClick={clear}>Remove All</button>
@@ -113,94 +123,72 @@ function Content() {
       {
         Boolean(items.length) ? (
           <>
-            <div className="max-h-[300px] overflow-auto">
+            <div className="max-h-[50vh] overflow-auto">
               {
                 items.map(item => {
-                  const { game: { gameId, startsAt, sportName, leagueName, participants }, conditionId, outcomeId } = item
-
-                  const marketName = getMarketName({ outcomeId })
-                  const selection = getSelectionName({ outcomeId, withPoint: true })
-
-                  const isLock = !isStatusesFetching && statuses[conditionId] !== ConditionStatus.Created
-
+                  const { game: { gameId }, conditionId, outcomeId } = item
+                  
                   return (
-                    <div key={gameId} className="bg-zinc-50 p-2 rounded-md mt-2 first-of-type:mt-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>{sportName} / {leagueName}</div>
-                        <button onClick={() => removeItem(gameId)}>Remove</button>
-                      </div>
-                      <div className="flex items-center justify-between mb-2">
-                        {
-                          participants.map(({ image, name }) => (
-                            <div key={name} className="flex items-center ml-2 first-of-type:ml-0">
-                              <div className="flex items-center justify-center w-8 h-8 p-1 mr-2 border border-zinc-300 rounded-full">
-                                {
-                                  Boolean(image) && (
-                                    <img className="w-full h-full" src={image!} alt="" />
-                                  )
-                                }
-                              </div>
-                              <span className="text-md">{name}</span>
-                            </div>
-                          ))
-                        }
-                      </div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold">Start Date: </span> 
-                        {dayjs(+startsAt * 1000).format('DD MMM HH:mm')}
-                      </div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold">Market: </span> 
-                        {marketName}
-                      </div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold">Selection: </span> 
-                        {selection}
-                      </div>
-                      <div className="flex items-center justify-between ">
-                        <span className="font-bold">Odds: </span>
-                        {
-                          isOddsFetching ? (
-                            <div className="span">Loading...</div>
-                          ) : (
-                            odds[`${conditionId}-${outcomeId}`]
-                          )
-                        }
-                      </div>
-                      {
-                        isLock && (
-                          <div className="text-orange-200 text-center">Outcome removed or suspended</div>
-                        )
-                      }
-                    </div>
+                    <BetslipCard 
+                      key={`${gameId}-${outcomeId}`}
+                      item={item} 
+                      batchBetAmount={batchBetAmounts[`${conditionId}-${outcomeId}`]}
+                      status={statuses[conditionId]}
+                      odds={odds?.[`${conditionId}-${outcomeId}`]}
+                      isStatusesFetching={isStatusesFetching}
+                      isOddsFetching={isOddsFetching}
+                      onRemove={() => removeItem(item)}
+                      onBatchAmountChange={(value) => changeBatchBetAmount(item, value)}
+                      isBatch={isBatch}
+                    />
                   )
+                 
                 })
               }
             </div>
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-md text-zinc-400">Total Odds:</span>
-              <span className="text-md font-semibold">
-                {
-                  isOddsFetching ? (
-                    <>Loading...</>
-                  ) : (
-                    <>{ totalOdds }</>
-                  )
-                }
-              </span>
-            </div>
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-md text-zinc-400">Possible win:</span>
-              <span className="text-md font-semibold">
-                {
-                  isOddsFetching ? (
-                    <>Loading...</>
-                  ) : (
-                    <>{totalOdds * +betAmount}</>
-                  )
-                }
-              </span>
-            </div>
+            {
+              Boolean(items.length > 1 && !isDeBridgeEnable) && (
+                <div className="flex items-center justify-between mt-4">
+                  <span className="text-md text-zinc-400">Batch Bet:</span>
+                  <input type="checkbox" checked={isBatch} onChange={(e) => changeBatch(e.target.checked)} />
+                </div>
+              )
+            }
+            {
+              isBatch ? (
+                <div className="flex items-center justify-between mt-4">
+                  <span className="text-md text-zinc-400">Total Bet Amount:</span>
+                  <span className="text-md font-semibold">{betAmount} {betToken.symbol}</span>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mt-4">
+                    <span className="text-md text-zinc-400">Total Odds:</span>
+                    <span className="text-md font-semibold">
+                      {
+                        isOddsFetching ? (
+                          <>Loading...</>
+                        ) : (
+                          <>{ totalOdds }</>
+                        )
+                      }
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between mt-4">
+                    <span className="text-md text-zinc-400">Possible win:</span>
+                    <span className="text-md font-semibold">
+                      {
+                        isOddsFetching ? (
+                          <>Loading...</>
+                        ) : (
+                          <>{totalOdds * +betAmount}</>
+                        )
+                      }
+                    </span>
+                  </div>
+                </>
+              )
+            }
             {
               Boolean(isRelayerFeeLoading || formattedRelayerFeeAmount) && (
                 <div className="flex items-center justify-between mt-4">
@@ -217,12 +205,16 @@ function Content() {
                 </div>
               )
             }
-            <AmountInput />
+            {
+              !isBatch && (
+                <AmountInput />
+              )
+            }
             {
               Boolean(!isLiveBet && isDeBridgeVisible) && (
                 <div className="flex items-center justify-between mt-4 border-t border-zinc-300 pt-4">
                   <label className="mr-2" htmlFor="deBridge">Bet from another blockchain</label>
-                  <input id="deBridge" type="checkbox" checked={isDeBridgeEnable} onChange={handleChange} />
+                  <input id="deBridge" type="checkbox" checked={isDeBridgeEnable} onChange={handleDeBridgeChange} />
                 </div>
               )
             }

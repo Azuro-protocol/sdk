@@ -17,7 +17,12 @@ import {
   type ConditionQuery as LiveConditionQuery,
   ConditionDocument as LiveConditionDocument,
 } from '../docs/live/condition'
-import { ConditionStatus, BetStatus, BetResult } from '../docs/prematch/types'
+import {
+  type ConditionQuery as PrematchConditionQuery,
+  ConditionDocument as PrematchConditionDocument,
+} from '../docs/prematch/condition'
+import { GameDocument, type GameQuery } from '../docs/prematch/game'
+import { ConditionStatus, BetStatus } from '../docs/prematch/types'
 import { useApolloClients } from '../contexts/apollo'
 import { getEventArgsFromTxReceipt } from '../helpers'
 import { useChain } from '../contexts/chain'
@@ -31,14 +36,14 @@ type UpdateBetProps = {
   tokenId: string | bigint
 }
 
-type NewBetProps = {
+export type NewBetProps = {
   bet: {
     rawAmount: bigint
     selections: Selection[]
-    odds: Record<string, number>
     freebetId?: string | bigint
     freebetContractAddress?: Address
   }
+  odds: Record<string, number>
   affiliate: Address
   receipt: TransactionReceipt
 }
@@ -106,8 +111,8 @@ export const useBetsCache = () => {
   }
 
   const addBet = async (props: NewBetProps) => {
-    const { bet, affiliate, receipt } = props
-    const { rawAmount, selections, odds } = bet
+    const { bet, odds, affiliate, receipt } = props
+    const { rawAmount, selections } = bet
 
     const coreAddress = selections[0]!.coreAddress
     const isLive = coreAddress.toLowerCase() === liveHostAddress.toLowerCase()
@@ -160,32 +165,43 @@ export const useBetsCache = () => {
       }
       else {
         const conditionEntityId = `${coreAddress.toLowerCase()}_${conditionId}`
-        const condition = cache.readFragment<PrematchConditionFragment>({
+        let condition = cache.readFragment<PrematchConditionFragment>({
           id: cache.identify({ __typename: 'Condition', id: conditionEntityId }),
           fragment: PrematchConditionFragmentDoc,
           fragmentName: 'Condition',
         })
 
+        if (!condition) {
+          const { data: { condition: _condition } } = await client!.query<PrematchConditionQuery>({
+            query: PrematchConditionDocument,
+            variables: {
+              id: conditionEntityId,
+            },
+            fetchPolicy: 'network-only',
+          })
+          condition = _condition!
+        }
+
         const gameId = condition?.game.gameId
 
         const gameEntityId = `${contracts.lp.address.toLowerCase()}_${gameId}`
 
-        const game = cache.readFragment<MainGameInfoFragment>({
+        let game = cache.readFragment<MainGameInfoFragment>({
           id: cache.identify({ __typename: 'Game', id: gameEntityId }),
           fragment: MainGameInfoFragmentDoc,
           fragmentName: 'MainGameInfo',
         })
 
-        // it's possible that we don't have a game in graphql cache,
-        // let's try to invalidate query and hope on update from the server
         if (!game) {
-          setTimeout(() => {
-            client!.refetchQueries({
-              include: [ 'Bets' ],
-            })
-          }, 1500)
+          const { data: { games } } = await client!.query<GameQuery>({
+            query: GameDocument,
+            variables: {
+              gameId,
+            },
+            fetchPolicy: 'network-only',
+          })
 
-          return
+          game = games[0]!
         }
 
         const selectionFragment: PrematchBetFragment['selections'][0] = {
@@ -220,8 +236,22 @@ export const useBetsCache = () => {
     else {
       const isExpress = selections.length > 1
       const abi = isExpress ? contracts.prematchComboCore.abi : contracts.prematchCore.abi
+      let eventParams
 
-      const receiptArgs = getEventArgsFromTxReceipt({ receipt, eventName: 'NewBet', abi })
+      if (!isExpress) {
+        const { conditionId, outcomeId } = selections[0]!
+        eventParams = {
+          conditionId: BigInt(conditionId),
+          outcomeId: BigInt(outcomeId),
+        }
+      }
+
+      const receiptArgs = getEventArgsFromTxReceipt({
+        receipt,
+        eventName: 'NewBet',
+        abi,
+        params: eventParams,
+      })
 
       tokenId = (isExpress ? receiptArgs?.betId : receiptArgs?.tokenId)?.toString()
       rawOdds = isExpress ? receiptArgs?.bet.odds : receiptArgs?.odds

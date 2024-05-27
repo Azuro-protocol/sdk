@@ -13,6 +13,7 @@ const Markets: React.FC<MarketsProps> = ({ gameId, gameStatus }) => {
   const { loading, markets } = useGameMarkets({
     gameId,
     gameStatus,
+    livePollInterval: 10000,
   })
 
   if (loading) {

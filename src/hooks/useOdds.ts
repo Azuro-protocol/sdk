@@ -15,10 +15,11 @@ import { debounce } from '../helpers/debounce'
 
 type CalcOddsProps = {
   selections: Selection[]
-  betAmount: string
+  betAmount?: string
+  batchBetAmounts?: Record<string, string>
 }
 
-export const useOdds = ({ selections, betAmount }: CalcOddsProps) => {
+export const useOdds = ({ selections, betAmount, batchBetAmounts }: CalcOddsProps) => {
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useSocket()
   const { appChain } = useChain()
   const config = useConfig()
@@ -45,8 +46,10 @@ export const useOdds = ({ selections, betAmount }: CalcOddsProps) => {
   const [ isPrematchOddsFetching, setPrematchOddsFetching ] = useState(Boolean(prematchItems.length))
 
   const oddsDataRef = useRef<Record<string, OddsChangedData>>({})
-  const betAmountRef = useRef<string>('')
+  const betAmountRef = useRef(betAmount)
+  const batchBetAmountsRef = useRef(batchBetAmounts)
   betAmountRef.current = betAmount
+  batchBetAmountsRef.current = batchBetAmounts
 
   const liveKey = liveItems.map(({ conditionId }) => conditionId).join('-')
 
@@ -73,6 +76,7 @@ export const useOdds = ({ selections, betAmount }: CalcOddsProps) => {
       const prematchOdds = await calcPrematchOdds({
         config,
         betAmount: betAmountRef.current,
+        batchBetAmounts: batchBetAmountsRef.current,
         selections: prematchItems,
         chainId: appChain.id,
       })
@@ -153,14 +157,12 @@ export const useOdds = ({ selections, betAmount }: CalcOddsProps) => {
 
   useEffect(() => {
     fetchOdds()
-  }, [ betAmount ])
+  }, [ fetchOdds, betAmount, batchBetAmounts ])
 
   useEffect(() => {
     if (!selections?.length) {
       return
     }
-
-    fetchOdds()
 
     const unsubscribeList = selections.map(({ conditionId, outcomeId }) => {
       return oddsWatcher.subscribe(`${conditionId}`, `${outcomeId}`, (oddsData?: OddsChangedData) => {
@@ -180,7 +182,7 @@ export const useOdds = ({ selections, betAmount }: CalcOddsProps) => {
         unsubscribe()
       })
     }
-  }, [ prematchItems, liveItems ])
+  }, [ selections ])
 
   return {
     odds,
