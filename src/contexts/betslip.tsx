@@ -216,7 +216,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     disableReason = BetslipDisableReason.BetAmountLowerThanMinBet
   }
 
-  const changeBatch = (value: boolean) => {
+  const changeBatch = useCallback((value: boolean) => {
     setBatch(value)
 
     if (value) {
@@ -226,13 +226,13 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     else {
       setBatchBetAmounts({})
     }
-  }
+  }, [ items ])
 
-  const changeBetAmount = (value: string) => {
+  const changeBetAmount = useCallback((value: string) => {
     setBetAmount(formatBetValue(value))
-  }
+  }, [])
 
-  const changeBatchBetAmount = (item: changeBatchBetAmountItem, value: string) => {
+  const changeBatchBetAmount = useCallback((item: changeBatchBetAmountItem, value: string) => {
     const { conditionId, outcomeId } = item
     const key = `${conditionId}-${outcomeId}`
 
@@ -242,7 +242,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
         [key]: formatBetValue(value),
       }
     })
-  }
+  }, [])
 
   const addItem = useCallback((itemProps: AddItemProps) => {
     const { gameId, coreAddress, lpAddress } = itemProps
@@ -377,6 +377,8 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
   const clear = useCallback(() => {
     setItems([])
     setBatch(false)
+    setBatchBetAmounts({})
+    setBetAmount('')
     localStorage.setItem(localStorageKeys.betslipItems, JSON.stringify([]))
   }, [])
 
