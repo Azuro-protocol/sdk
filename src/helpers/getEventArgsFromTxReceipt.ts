@@ -25,6 +25,8 @@ export const getEventArgsFromTxReceipt = <T = Record<string, any>>({ receipt, ev
       })
 
       if (result.eventName.toLowerCase() !== eventName.toLowerCase()) {
+        result = undefined
+
         continue
       }
 
