@@ -343,7 +343,21 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
 
       if (newItems.length < 2) {
         setBatch(false)
-        setBatchBetAmounts({})
+
+        setBatchBetAmounts(batchAmounts => {
+          const lastItem = newItems[0]
+
+          if (lastItem) {
+            const { conditionId, outcomeId } = lastItem
+            const amount = batchAmounts[`${conditionId}-${outcomeId}`]
+
+            if (amount) {
+              setBetAmount(amount)
+            }
+          }
+
+          return {}
+        })
       }
       else {
         setBatchBetAmounts(batchAmounts => {
