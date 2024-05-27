@@ -83,7 +83,7 @@ function Content() {
     betAmount, batchBetAmounts, odds, totalOdds, statuses, disableReason, 
     isBatch, isStatusesFetching, isOddsFetching, isLiveBet, changeBatch, changeBatchBetAmount
   } = useDetailedBetslip()
-  const { appChain } = useChain()
+  const { appChain, betToken } = useChain()
   const { supportedChainIds } = useDeBridgeSupportedChains()
   const { formattedRelayerFeeAmount, loading: isRelayerFeeLoading } = useLiveBetFee({
     enabled: isLiveBet,
@@ -154,34 +154,39 @@ function Content() {
                 </div>
               )
             }
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-md text-zinc-400">Total Odds:</span>
-              <span className="text-md font-semibold">
-                {
-                  isOddsFetching ? (
-                    <>Loading...</>
-                  ) : (
-                    <>{ totalOdds }</>
-                  )
-                }
-              </span>
-            </div>
             {
-              !isBatch && (
+              isBatch ? (
                 <div className="flex items-center justify-between mt-4">
-                  <span className="text-md text-zinc-400">Possible win:</span>
+                  <span className="text-md text-zinc-400">Total Bet Amount:</span>
+                  <span className="text-md font-semibold">{betAmount} {betToken.symbol}</span>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between mt-4">
+                  <span className="text-md text-zinc-400">Total Odds:</span>
                   <span className="text-md font-semibold">
                     {
                       isOddsFetching ? (
                         <>Loading...</>
                       ) : (
-                        <>{totalOdds * +betAmount}</>
+                        <>{ totalOdds }</>
                       )
                     }
                   </span>
                 </div>
               )
             }
+            <div className="flex items-center justify-between mt-4">
+              <span className="text-md text-zinc-400">Possible win:</span>
+              <span className="text-md font-semibold">
+                {
+                  isOddsFetching ? (
+                    <>Loading...</>
+                  ) : (
+                    <>{totalOdds * +betAmount}</>
+                  )
+                }
+              </span>
+            </div>
             {
               Boolean(isRelayerFeeLoading || formattedRelayerFeeAmount) && (
                 <div className="flex items-center justify-between mt-4">
