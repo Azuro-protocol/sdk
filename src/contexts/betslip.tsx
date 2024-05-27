@@ -9,6 +9,7 @@ import { useOdds } from '../hooks/useOdds'
 import { useStatuses } from '../hooks/useStatuses'
 import { ConditionStatus } from '../docs/live/types'
 import { type Selection } from '../global'
+import { formatBetValue } from '../helpers/formatBetValue'
 
 
 export enum BetslipDisableReason {
@@ -225,17 +226,6 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     else {
       setBatchBetAmounts({})
     }
-  }
-
-  const formatBetValue = (value: string) => {
-    let newValue = value
-    const [ int, digits ] = newValue.split('.')
-
-    if (digits) {
-      newValue = `${int}.${digits.substring(0, 2)}`
-    }
-
-    return newValue
   }
 
   const changeBetAmount = (value: string) => {
