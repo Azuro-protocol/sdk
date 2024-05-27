@@ -53,7 +53,7 @@ type AddItemProps = {
 
 type RemoveItemProps = Omit<Selection, 'coreAddress'>
 
-type changeBatchBetAmountItem = Omit<Selection, 'coreAddress'>
+type ChangeBatchBetAmountItem = Omit<Selection, 'coreAddress'>
 
 export type BaseBetslipContextValue = {
   items: BetslipItem[]
@@ -72,7 +72,7 @@ export type DetailedBetslipContextValue = {
   statuses: Record<string, ConditionStatus>
   disableReason: BetslipDisableReason | undefined
   changeBetAmount: (value: string) => void
-  changeBatchBetAmount: (item: changeBatchBetAmountItem, value: string) => void
+  changeBatchBetAmount: (item: ChangeBatchBetAmountItem, value: string) => void
   changeBatch: (value: boolean) => void
   isLiveBet: boolean
   isBatch: boolean
@@ -232,7 +232,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     setBetAmount(formatBetValue(value))
   }, [])
 
-  const changeBatchBetAmount = useCallback((item: changeBatchBetAmountItem, value: string) => {
+  const changeBatchBetAmount = useCallback((item: ChangeBatchBetAmountItem, value: string) => {
     const { conditionId, outcomeId } = item
     const key = `${conditionId}-${outcomeId}`
 
