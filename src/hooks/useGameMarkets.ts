@@ -216,17 +216,18 @@ type Props = {
   filter?: {
     outcomeIds?: string[]
   }
+  livePollInterval?: number
 }
 
 export const useGameMarkets = (props: Props) => {
-  const { gameId, gameStatus, filter } = props
+  const { gameId, gameStatus, filter, livePollInterval } = props
 
   const { contracts } = useChain()
   const { loading, conditions, error } = useConditions({
     gameId,
     filter,
     isLive: gameStatus === GameStatus.Live,
-    livePollInterval: 2000,
+    livePollInterval,
   })
 
   // generate unique key for memo deps

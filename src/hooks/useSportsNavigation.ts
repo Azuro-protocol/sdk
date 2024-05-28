@@ -4,20 +4,19 @@ import { useQuery, type QueryHookOptions } from '@apollo/client'
 import type { NavigationQuery, NavigationQueryVariables } from '../docs/prematch/navigation'
 import { NavigationDocument } from '../docs/prematch/navigation'
 import { useApolloClients } from '../contexts/apollo'
-import { useLive } from '../contexts/live'
 import { getGameStartsAtValue } from '../helpers'
 import { GameStatus } from '../docs/prematch/types'
 
 
 type UseNavigationProps = {
   withGameCount?: boolean
+  isLive?: boolean
 }
 
 export const useSportsNavigation = (props: UseNavigationProps = {}) => {
-  const { withGameCount = false } = props
+  const { withGameCount = false, isLive } = props
 
   const { prematchClient, liveClient } = useApolloClients()
-  const { isLive } = useLive()
 
   const startsAt = getGameStartsAtValue()
 

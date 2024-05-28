@@ -1,0 +1,10 @@
+fragment Bettor on Bettor {
+  id
+  rawToPayout
+  rawInBets
+  rawTotalPayout
+  rawTotalProfit
+  betsCount
+  wonBetsCount
+  lostBetsCount
+}

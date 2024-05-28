@@ -4,7 +4,6 @@ import { useQuery, type QueryHookOptions } from '@apollo/client'
 import type { GamesQuery, GamesQueryVariables } from '../docs/prematch/games'
 import { GamesDocument } from '../docs/prematch/games'
 import { useApolloClients } from '../contexts/apollo'
-import { useLive } from '../contexts/live'
 import { GameStatus, Game_OrderBy, OrderDirection } from '../docs/prematch/types'
 import { getGameStartsAtValue } from '../helpers'
 import type { SportHub } from '../global'
@@ -20,6 +19,7 @@ export type UseGamesProps = {
   }
   orderBy?: Game_OrderBy
   orderDir?: OrderDirection
+  isLive?: boolean
 }
 
 export const useGames = (props?: UseGamesProps) => {
@@ -27,10 +27,10 @@ export const useGames = (props?: UseGamesProps) => {
     filter,
     orderBy = Game_OrderBy.CreatedBlockTimestamp,
     orderDir = OrderDirection.Desc,
+    isLive,
   } = props || {}
 
   const { prematchClient, liveClient } = useApolloClients()
-  const { isLive } = useLive()
 
   const startsAt = getGameStartsAtValue()
 

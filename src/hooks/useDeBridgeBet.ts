@@ -1,19 +1,19 @@
 import { parseUnits, encodeFunctionData, erc20Abi, zeroAddress } from 'viem'
-import { type TransactionReceipt, type Address, type Hex } from 'viem'
+import { type TransactionReceipt, type Address, type Hex, maxUint256 } from 'viem'
 import { getTransactionReceipt } from '@wagmi/core'
 import { useQuery } from '@tanstack/react-query'
 import { useAccount, useConfig, usePublicClient, useReadContract, useSendTransaction, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
 import { useState } from 'react'
 
-import { useApolloClients } from 'src/contexts/apollo'
-
-import { DEFAULT_DEADLINE, MAX_UINT_256, ODDS_DECIMALS, deBridgeTxUrl, deBridgeUrl, liveHostAddress } from '../config'
+import { DEFAULT_DEADLINE, ODDS_DECIMALS, deBridgeTxUrl, deBridgeUrl, liveHostAddress } from '../config'
+import { useApolloClients } from '../contexts/apollo'
 import { useChain } from '../contexts/chain'
 import { type Selection } from '../global'
-import { useDeBridgeSupportedChains } from './useDeBridgeSupportedChains'
-import { getPrematchBetDataBytes } from '../helpers/getPrematchBetDataBytes'
+import { getPrematchBetDataBytes } from '../utils/getPrematchBetDataBytes'
 import useDebounce from '../helpers/hooks/useDebounce'
+import { calcMindOdds } from '../utils/calcMindOdds'
 import { useBetsCache } from './useBetsCache'
+import { useDeBridgeSupportedChains } from './useDeBridgeSupportedChains'
 import { useDeBridgeSupportedTokens } from './useDeBridgeSupportedTokens'
 
 
@@ -152,14 +152,13 @@ export const useDeBridgeBet = (props: Props) => {
   })
 
   const queryFn = async () => {
-    const fixedAmount = +parseFloat(String(betAmount)).toFixed(betToken.decimals)
-    const minOdds = 1 + (+totalOdds - 1) * (100 - slippage) / 100
-    const fixedMinOdds = +parseFloat(String(minOdds)).toFixed(ODDS_DECIMALS)
+    const fixedAmount = parseFloat(betAmount).toFixed(betToken.decimals)
+    const fixedMinOdds = calcMindOdds({ odds: totalOdds, slippage })
     const coreAddress = selections.length > 1 ? contracts.prematchComboCore.address : contracts.prematchCore.address
     const betData = getPrematchBetDataBytes(selections)
 
-    const rawAmount = parseUnits(`${fixedAmount}`, betToken.decimals)
-    const rawMinOdds = parseUnits(`${fixedMinOdds}`, ODDS_DECIMALS)
+    const rawAmount = parseUnits(fixedAmount, betToken.decimals)
+    const rawMinOdds = parseUnits(fixedMinOdds, ODDS_DECIMALS)
     const rawDeadline = BigInt(Math.floor(Date.now() / 1000) + (deadline || DEFAULT_DEADLINE))
 
     const params = new URLSearchParams({
@@ -267,7 +266,7 @@ export const useDeBridgeBet = (props: Props) => {
         functionName: 'approve',
         args: [
           betTxData?.to as Address,
-          MAX_UINT_256,
+          maxUint256,
         ],
       })
       await publicClient!.waitForTransactionReceipt({
@@ -347,14 +346,16 @@ export const useDeBridgeBet = (props: Props) => {
         })
 
         if (receipt) {
-          const fixedAmount = +parseFloat(String(betAmount)).toFixed(betToken.decimals)
+          const fixedAmount = parseFloat(betAmount).toFixed(betToken.decimals)
+          const rawAmount = parseUnits(fixedAmount, betToken.decimals)
 
           addBet({
             receipt,
+            affiliate,
+            odds,
             bet: {
-              amount: `${fixedAmount}`,
+              rawAmount,
               selections,
-              odds,
             },
           })
         }

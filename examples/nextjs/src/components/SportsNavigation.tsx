@@ -1,11 +1,13 @@
 'use client'
-import { useSportsNavigation } from '@azuro-org/sdk'
+import { useSportsNavigation, useLive } from '@azuro-org/sdk'
 import { ActiveLink } from '@/components'
 
 
 export function SportsNavigation() {
+  const { isLive } = useLive()
   const { loading, sports } = useSportsNavigation({
     withGameCount: true,
+    isLive,
   })
 
   if (loading) {

@@ -1,0 +1,10 @@
+query Bettors(
+  $where: Bettor_filter!,
+) {
+  bettors(
+    where: $where,
+    subgraphError: allow
+  ) {
+    ...Bettor
+  }
+}

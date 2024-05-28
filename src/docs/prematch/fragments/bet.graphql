@@ -12,6 +12,7 @@ fragment Bet on Bet {
   settledOdds # don't account canceled sub-bets after resolve of express
   createdAt: createdBlockTimestamp
   txHash: createdTxHash
+  affiliate
   core {
     address
     liquidityPool {

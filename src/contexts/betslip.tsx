@@ -9,14 +9,17 @@ import { useOdds } from '../hooks/useOdds'
 import { useStatuses } from '../hooks/useStatuses'
 import { ConditionStatus } from '../docs/live/types'
 import { type Selection } from '../global'
+import { formatBetValue } from '../helpers/formatBetValue'
 
 
 export enum BetslipDisableReason {
   ConditionStatus = 'ConditionStatus',
   BetAmountGreaterThanMaxBet = 'BetAmountGreaterThanMaxBet',
   BetAmountLowerThanMinBet = 'BetAmountLowerThanMinBet',
+  BatchWithLive = 'BatchWithLive',
   ComboWithLive = 'ComboWithLive',
   ComboWithForbiddenItem = 'ComboWithForbiddenItem',
+  ComboWithSameGame = 'ComboWithSameGame',
   PrematchConditionInStartedGame = 'PrematchConditionInStartedGame',
 }
 
@@ -36,27 +39,32 @@ type Game = {
   sportName: string
 }
 
-type BetslipItem = {
+export type BetslipItem = {
   lpAddress: string
   game: Game
   isExpressForbidden: boolean
 } & Selection
 
-type ItemProps = {
+type AddItemProps = {
   gameId: string
   lpAddress: string
   isExpressForbidden: boolean
 } & Selection
 
+type RemoveItemProps = Omit<Selection, 'coreAddress'>
+
+type ChangeBatchBetAmountItem = Omit<Selection, 'coreAddress'>
+
 export type BaseBetslipContextValue = {
   items: BetslipItem[]
-  addItem: (itemProps: ItemProps) => void
-  removeItem: (gameId: string) => void
+  addItem: (itemProps: AddItemProps) => void
+  removeItem: (itemProps: RemoveItemProps) => void
   clear: () => void
 }
 
 export type DetailedBetslipContextValue = {
   betAmount: string
+  batchBetAmounts: Record<string, string>
   odds: Record<string, number>
   totalOdds: number
   maxBet: number | undefined
@@ -64,7 +72,10 @@ export type DetailedBetslipContextValue = {
   statuses: Record<string, ConditionStatus>
   disableReason: BetslipDisableReason | undefined
   changeBetAmount: (value: string) => void
+  changeBatchBetAmount: (item: ChangeBatchBetAmountItem, value: string) => void
+  changeBatch: (value: boolean) => void
   isLiveBet: boolean
+  isBatch: boolean
   isStatusesFetching: boolean
   isOddsFetching: boolean
   isBetAllowed: boolean
@@ -80,21 +91,54 @@ export const useDetailedBetslip = () => {
   return useContext(DetailedBetslipContext) as DetailedBetslipContextValue
 }
 
-type Props = {
+export type BetslipProviderProps = {
   children: React.ReactNode
+  isBatchBetWithSameGameEnabled?: boolean
 }
 
-export const BetslipProvider: React.FC<Props> = (props) => {
-  const { children } = props
+export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
+  const { children, isBatchBetWithSameGameEnabled } = props
 
   const { prematchClient, liveClient } = useApolloClients()
   const { appChain } = useChain()
   const [ items, setItems ] = useState<BetslipItem[]>([])
   const [ betAmount, setBetAmount ] = useState('')
-  const { odds, totalOdds, maxBet, loading: isOddsFetching } = useOdds({ betAmount, selections: items })
+  const [ batchBetAmounts, setBatchBetAmounts ] = useState<Record<string, string>>({})
+  const [ isBatch, setBatch ] = useState(false)
+  const { odds, totalOdds, maxBet, loading: isOddsFetching } = useOdds({ betAmount, batchBetAmounts, selections: items })
   const { statuses, loading: isStatusesFetching } = useStatuses({ selections: items })
 
-  const isCombo = items.length > 1
+  const isCombo = !isBatch && items.length > 1
+
+  const checkDifferentGames = (items: BetslipItem[]) => {
+    const gameIds = items.map(({ game }) => game.gameId)
+
+    return gameIds.length === new Set(gameIds).size
+  }
+
+  const createInitialBatchAmounts = (items: BetslipItem[]) => {
+    setBatchBetAmounts(batchAmounts => {
+      const newBatchAmounts = { ...batchAmounts }
+
+      items.forEach(({ conditionId, outcomeId }) => {
+        const key = `${conditionId}-${outcomeId}`
+
+        if (typeof newBatchAmounts[key] === 'undefined') {
+          newBatchAmounts[key] = ''
+        }
+      })
+
+      return newBatchAmounts
+    })
+  }
+
+  const totalBetAmount = useMemo(() => {
+    if (isBatch) {
+      return String(Object.values(batchBetAmounts).reduce((acc, amount) => acc + +amount, 0))
+    }
+
+    return betAmount
+  }, [ isBatch, betAmount, batchBetAmounts ])
 
   const isLiveBet = useMemo(() => {
     return items.some(({ coreAddress }) => coreAddress === liveHostAddress)
@@ -104,9 +148,15 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     return Object.values(statuses).every(status => status === ConditionStatus.Created)
   }, [ statuses ])
 
+  const isComboWithDifferentGames = useMemo(() => {
+    return !isCombo || checkDifferentGames(items)
+  }, [ isCombo, items ])
+
+  const isBatchAllowed = !isBatch || !isLiveBet
+
   const isComboAllowed = useMemo(() => {
-    return !isCombo || !isLiveBet && items.every(({ isExpressForbidden }) => !isExpressForbidden)
-  }, [ items ])
+    return !isCombo || !isLiveBet && isComboWithDifferentGames && items.every(({ isExpressForbidden }) => !isExpressForbidden)
+  }, [ isCombo, items ])
 
   const isPrematchBetAllowed = useMemo(() => {
     return items.every(({ coreAddress, game: { startsAt } }) => {
@@ -126,6 +176,7 @@ export const BetslipProvider: React.FC<Props> = (props) => {
   const isBetAllowed = (
     isConditionsInCreatedStatus
     && isComboAllowed
+    && isBatchAllowed
     && isPrematchBetAllowed
     && isAmountLowerThanMaxBet
     && isAmountBiggerThanMinBet
@@ -137,9 +188,12 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     disableReason = BetslipDisableReason.ConditionStatus
   }
 
-  if (isCombo && !isComboAllowed) {
+  if (!isComboAllowed) {
     if (isLiveBet) {
       disableReason = BetslipDisableReason.ComboWithLive
+    }
+    else if (!isComboWithDifferentGames) {
+      disableReason = BetslipDisableReason.ComboWithSameGame
     }
     else {
       disableReason = BetslipDisableReason.ComboWithForbiddenItem
@@ -150,6 +204,10 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     disableReason = BetslipDisableReason.PrematchConditionInStartedGame
   }
 
+  if (!isBatchAllowed) {
+    disableReason = BetslipDisableReason.BatchWithLive
+  }
+
   if (!isAmountLowerThanMaxBet) {
     disableReason = BetslipDisableReason.BetAmountGreaterThanMaxBet
   }
@@ -158,17 +216,35 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     disableReason = BetslipDisableReason.BetAmountLowerThanMinBet
   }
 
-  const changeBetAmount = (value: string) => {
-    const [ int, digits ] = value.split('.')
+  const changeBatch = useCallback((value: boolean) => {
+    setBatch(value)
 
-    if (digits) {
-      value = `${int}.${digits.substring(0, 2)}`
+    if (value) {
+      setBetAmount('')
+      createInitialBatchAmounts(items)
     }
+    else {
+      setBatchBetAmounts({})
+    }
+  }, [ items ])
 
-    setBetAmount(value)
-  }
+  const changeBetAmount = useCallback((value: string) => {
+    setBetAmount(formatBetValue(value))
+  }, [])
 
-  const addItem = useCallback((itemProps: ItemProps) => {
+  const changeBatchBetAmount = useCallback((item: ChangeBatchBetAmountItem, value: string) => {
+    const { conditionId, outcomeId } = item
+    const key = `${conditionId}-${outcomeId}`
+
+    setBatchBetAmounts(amounts => {
+      return {
+        ...amounts,
+        [key]: formatBetValue(value),
+      }
+    })
+  }, [])
+
+  const addItem = useCallback((itemProps: AddItemProps) => {
     const { gameId, coreAddress, lpAddress } = itemProps
 
     let game: MainGameInfoFragment | null
@@ -235,8 +311,16 @@ export const BetslipProvider: React.FC<Props> = (props) => {
       // if cart contains outcome from same game as new item
       // then replace old item
       if (replaceIndex !== -1) {
-        newItems = [ ...items ]
-        newItems[replaceIndex] = item
+        if (isBatchBetWithSameGameEnabled) {
+          newItems = [ ...items, item ]
+
+          setBatch(true)
+          createInitialBatchAmounts(newItems)
+        }
+        else {
+          newItems = [ ...items ]
+          newItems[replaceIndex] = item
+        }
       }
       else {
         newItems = [ ...items, item ]
@@ -248,9 +332,41 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     })
   }, [])
 
-  const removeItem = useCallback((gameId: string) => {
+  const removeItem = useCallback((itemProps: RemoveItemProps) => {
+    const { conditionId, outcomeId } = itemProps
+
     setItems(items => {
-      const newItems = items.filter((item) => item.game.gameId !== gameId)
+      const newItems = items.filter((item) => !(
+        item.conditionId === conditionId
+        && item.outcomeId === outcomeId
+      ))
+
+      if (newItems.length < 2) {
+        setBatch(false)
+
+        setBatchBetAmounts(batchAmounts => {
+          const lastItem = newItems[0]
+
+          if (lastItem) {
+            const { conditionId, outcomeId } = lastItem
+            const amount = batchAmounts[`${conditionId}-${outcomeId}`]
+
+            if (amount) {
+              setBetAmount(amount)
+            }
+          }
+
+          return {}
+        })
+      }
+      else {
+        setBatchBetAmounts(batchAmounts => {
+          const newBatchAmounts = { ...batchAmounts }
+          delete newBatchAmounts[`${conditionId}-${outcomeId}`]
+
+          return newBatchAmounts
+        })
+      }
 
       localStorage.setItem(localStorageKeys.betslipItems, JSON.stringify(newItems))
 
@@ -260,6 +376,9 @@ export const BetslipProvider: React.FC<Props> = (props) => {
 
   const clear = useCallback(() => {
     setItems([])
+    setBatch(false)
+    setBatchBetAmounts({})
+    setBetAmount('')
     localStorage.setItem(localStorageKeys.betslipItems, JSON.stringify([]))
   }, [])
 
@@ -279,6 +398,12 @@ export const BetslipProvider: React.FC<Props> = (props) => {
       return
     }
 
+    const isDifferentGames = checkDifferentGames(storedItems)
+
+    if (!isDifferentGames) {
+      setBatch(true)
+      createInitialBatchAmounts(storedItems)
+    }
     setItems(storedItems)
   }, [])
 
@@ -295,7 +420,8 @@ export const BetslipProvider: React.FC<Props> = (props) => {
   ])
 
   const detailedValue = useMemo(() => ({
-    betAmount,
+    betAmount: totalBetAmount,
+    batchBetAmounts,
     odds,
     totalOdds,
     maxBet,
@@ -303,12 +429,16 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     statuses,
     disableReason,
     changeBetAmount,
+    changeBatchBetAmount,
+    changeBatch,
+    isBatch,
     isLiveBet,
     isStatusesFetching,
     isOddsFetching,
     isBetAllowed,
   }), [
-    betAmount,
+    totalBetAmount,
+    batchBetAmounts,
     odds,
     totalOdds,
     maxBet,
@@ -316,6 +446,9 @@ export const BetslipProvider: React.FC<Props> = (props) => {
     statuses,
     disableReason,
     changeBetAmount,
+    changeBatchBetAmount,
+    changeBatch,
+    isBatch,
     isLiveBet,
     isStatusesFetching,
     isOddsFetching,
