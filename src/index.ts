@@ -18,9 +18,30 @@ export {
   type BetsQueryResult as PrematchQueryResult,
   type BetsQueryVariables as PrematchQueryVariables,
 } from './docs/prematch/bets'
-export { LiveBetsDocument, type LiveBetsQuery, type LiveBetsQueryResult, type LiveBetsQueryVariables } from './docs/prematch/liveBets'
-export { ConditionsDocument, type ConditionsQuery, type ConditionsQueryResult, type ConditionsQueryVariables } from './docs/prematch/conditions'
-export { NavigationDocument, type NavigationQuery, type NavigationQueryResult, type NavigationQueryVariables } from './docs/prematch/navigation'
+export {
+  LiveBetsDocument,
+  type LiveBetsQuery,
+  type LiveBetsQueryResult,
+  type LiveBetsQueryVariables,
+} from './docs/prematch/liveBets'
+export {
+  ConditionsDocument,
+  type ConditionsQuery,
+  type ConditionsQueryResult,
+  type ConditionsQueryVariables,
+} from './docs/prematch/conditions'
+export {
+  NavigationDocument as SportsNavigation,
+  type NavigationQuery as SportsNavigationQuery,
+  type NavigationQueryResult as SportsNavigationQueryResult,
+  type NavigationQueryVariables as SportsNavigationQueryVariables,
+} from './docs/prematch/sportsNavigation'
+export {
+  NavigationDocument,
+  type NavigationQuery,
+  type NavigationQueryResult,
+  type NavigationQueryVariables,
+} from './docs/prematch/navigation'
 // utils
 export { calcMindOdds } from './utils/calcMindOdds'
 export { calcLiveOdds, calcPrematchOdds } from './utils/calcOdds'
@@ -42,6 +63,7 @@ export { useSports, type UseSportsProps } from './hooks/useSports'
 export { useGameStatus } from './hooks/useGameStatus'
 export { useNativeBalance } from './hooks/useNativeBalance'
 export { useSportsNavigation } from './hooks/useSportsNavigation'
+export { useNavigation } from './hooks/useNavigation'
 export { useWatchers } from './hooks/useWatchers'
 export { usePrepareBet } from './hooks/usePrepareBet'
 export { useLiveBetFee } from './hooks/useLiveBetFee'

@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 import { useQuery, type QueryHookOptions } from '@apollo/client'
 
-import type { NavigationQuery, NavigationQueryVariables } from '../docs/prematch/sportsNavigation'
-import { NavigationDocument } from '../docs/prematch/sportsNavigation'
+import type { NavigationQuery, NavigationQueryVariables } from '../docs/prematch/navigation'
+import { NavigationDocument } from '../docs/prematch/navigation'
 import { useApolloClients } from '../contexts/apollo'
 import { getGameStartsAtValue } from '../helpers'
 import { GameStatus } from '../docs/prematch/types'
@@ -13,7 +13,7 @@ type UseNavigationProps = {
   isLive?: boolean
 }
 
-export const useSportsNavigation = (props: UseNavigationProps = {}) => {
+export const useNavigation = (props: UseNavigationProps = {}) => {
   const { withGameCount = false, isLive } = props
 
   const { prematchClient, liveClient } = useApolloClients()
@@ -48,7 +48,7 @@ export const useSportsNavigation = (props: UseNavigationProps = {}) => {
   const { data, loading, error } = useQuery<NavigationQuery, NavigationQueryVariables>(NavigationDocument, options)
 
   return {
-    sports: data?.sports,
+    navigation: data?.sports,
     loading,
     error,
   }
