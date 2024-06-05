@@ -106,7 +106,7 @@ export const usePrepareBet = (props: Props) => {
     if (
       !betAmount
       || typeof allowanceTx?.data === 'undefined'
-      || typeof relayerFeeAmount === 'undefined'
+      || (isLiveBet && typeof relayerFeeAmount === 'undefined')
     ) {
       return false
     }
