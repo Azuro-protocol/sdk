@@ -114,7 +114,7 @@ export const usePrepareBet = (props: Props) => {
     let approveAmount = betAmount
 
     if (isLiveBet) {
-      approveAmount += +relayerFeeAmount
+      approveAmount += +relayerFeeAmount!
     }
 
     return allowanceTx.data < parseUnits(String(approveAmount), betToken.decimals)
