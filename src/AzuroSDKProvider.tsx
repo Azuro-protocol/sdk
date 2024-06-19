@@ -4,7 +4,7 @@ import { ChainProvider, type ChainProviderProps } from './contexts/chain'
 import { ApolloProvider } from './contexts/apollo'
 import { SocketProvider } from './contexts/socket'
 import { BetslipProvider, type BetslipProviderProps } from './contexts/betslip'
-import { useWatchers } from './hooks/useWatchers'
+import { useWatchers } from './hooks/watch/useWatchers'
 
 
 export function Watchers() {

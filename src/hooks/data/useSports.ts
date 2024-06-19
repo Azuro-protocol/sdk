@@ -1,16 +1,16 @@
 import { useMemo } from 'react'
 import { useQuery, type QueryHookOptions } from '@apollo/client'
 
-import { useChain } from '../contexts/chain'
-import { useApolloClients } from '../contexts/apollo'
-import { SportsDocument, type SportsQuery, type SportsQueryVariables } from '../docs/prematch/sports'
+import { useChain } from '../../contexts/chain'
+import { useApolloClients } from '../../contexts/apollo'
+import { SportsDocument, type SportsQuery, type SportsQueryVariables } from '../../docs/prematch/sports'
 import {
   GameStatus,
   Game_OrderBy,
   OrderDirection,
-} from '../docs/prematch/types'
-import { getGameStartsAtValue } from '../helpers'
-import type { SportHub } from '../global'
+} from '../../docs/prematch/types'
+import { getGameStartsAtValue } from '../../helpers'
+import type { SportHub } from '../../global'
 
 
 export type UseSportsProps = {
