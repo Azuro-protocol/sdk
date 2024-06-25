@@ -7,11 +7,11 @@
   "types": "dist/index.d.ts",
   "files": [
     "dist",
-    "utils",
+    "utils"
   ],
   "exports": {
     ".": "./dist/index.js",
-    "./utils": "./dist/utils.js",
+    "./utils": "./dist/utils.js"
   },
   "sideEffects": true,
   "scripts": {

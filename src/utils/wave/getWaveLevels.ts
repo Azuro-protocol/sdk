@@ -1,7 +1,9 @@
+import { polygon } from 'viem/chains'
+
 import { getApiUrl, type ChainId } from '../../config'
 
 
-export enum PointsLevelName {
+export enum WaveLevelName {
   Grey = 'Grey',
   Mist = 'Mist',
   Sky = 'Sky',
@@ -12,25 +14,25 @@ export enum PointsLevelName {
   Royal = 'Royal',
 }
 
-export type LevelData = {
+export type WaveLevelData = {
   level: number
-  name: PointsLevelName
+  name: WaveLevelName
   boost: string
   pointsNeeded: string
   comment: string
 }
 
-type LevelsResponse = LevelData[]
+export type WaveLevelsResponse = WaveLevelData[]
 
 type Props = {
-  chainId: ChainId
   waveId: number
+  chainId?: ChainId
 }
 
-export const getWaveLevels = async ({ chainId, waveId }: Props) => {
+export const getWaveLevels = async ({ waveId, chainId = polygon.id }: Props) => {
   const api = getApiUrl(chainId)
   const response = await fetch(`${api}/waves/${waveId}/levels`)
-  const data: LevelsResponse = await response.json()
+  const data: WaveLevelsResponse = await response.json()
 
   return [ ...data ].sort((a, b) => a.level - b.level)
 }

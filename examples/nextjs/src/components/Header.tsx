@@ -37,6 +37,14 @@ export function Header() {
         >
           Bets
         </ActiveLink>
+        <ActiveLink
+          className="text-zinc-500 hover:text-black transition ml-4"
+          activeClassName="!text-black font-semibold !cursor-default"
+          href="/wave"
+          regex="^\/wave"
+        >
+          Azuro Wave
+        </ActiveLink>
       </div>
       <div className="ml-auto flex items-center">
         <LiveSwitcher />

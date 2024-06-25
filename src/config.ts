@@ -1,5 +1,5 @@
 import { polygon, gnosis, polygonAmoy, chiliz, spicy, type Chain } from 'viem/chains'
-import { parseUnits, type Address } from 'viem'
+import { type Address } from 'viem'
 
 import { liveCoreAbi, lpAbi, prematchComboCoreAbi, prematchCoreAbi, proxyFrontAbi } from './abis'
 
@@ -47,7 +47,8 @@ export const getApiUrl = (chainId: ChainId) => {
     return 'https://dev-api.azuro.org/api/v1/public'
   }
 
-  return 'https://api.azuro.org/api/v1/public'
+  // return 'https://api.azuro.org/api/v1/public'
+  return 'https://dev-api.azuro.org/api/v1/public'
 }
 
 export const deBridgeUrl = 'https://api.dln.trade/v1.0'

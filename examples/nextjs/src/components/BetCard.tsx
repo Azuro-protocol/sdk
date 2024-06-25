@@ -1,6 +1,6 @@
 'use client'
 import { type Bet, useChain, useRedeemBet } from '@azuro-org/sdk'
-import {getBetStatus, getGameStatus, BetStatus, GameStatus} from '@azuro-org/sdk/utils';
+import { getBetStatus, getGameStatus, BetStatus, GameStatus } from '@azuro-org/sdk/utils';
 import dayjs from 'dayjs'
 import Link from 'next/link'
 import { useMemo } from 'react'

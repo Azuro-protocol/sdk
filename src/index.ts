@@ -52,8 +52,11 @@ export { useGameStatus } from './hooks/useGameStatus'
 export { useNativeBalance } from './hooks/useNativeBalance'
 
 // wave
-// export { getWaveLevels } from './utils/wave/getWaveLevels'
 export { useWaveLevels } from './hooks/wave/useWaveLevels'
+export { useWaveStats } from './hooks/wave/useWaveStats'
+export { useWavePeriods, type WavePeriod } from './hooks/wave/useWavePeriods'
+export { useWaveLeaderBoard } from './hooks/wave/useWaveLeaderBoard'
+export { useWaveActivation } from './hooks/wave/useWaveActivation'
 
 // deBridge
 export { useDeBridgeBet } from './hooks/deBridge/useDeBridgeBet'

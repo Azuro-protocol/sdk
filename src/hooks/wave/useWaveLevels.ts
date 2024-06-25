@@ -11,12 +11,12 @@ type Props = {
 export const useWaveLevels = ({ waveId }: Props) => {
   const { appChain, api } = useChain()
 
-  const queryFn = () => {
-    return getWaveLevels({
+  const queryFn = () => (
+    getWaveLevels({
       chainId: appChain.id,
       waveId,
     })
-  }
+  )
 
   return useQuery({
     queryKey: [ 'wave/levels', waveId, api ],

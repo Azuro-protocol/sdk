@@ -5,4 +5,10 @@ export { getPrematchBetDataBytes } from './utils/getPrematchBetDataBytes'
 export { getGameStatus, GameStatus } from './utils/getGameStatus'
 export { getBetStatus, BetStatus } from './utils/getBetStatus'
 export { getLiveBetFee, type LiveBetFeeResponse } from './utils/getLiveBetFee'
-export { getWaveLevels } from './utils/wave/getWaveLevels'
+
+// wave
+export { getWaveLevels, WaveLevelName, type WaveLevelData, type WaveLevelsResponse } from './utils/wave/getWaveLevels'
+export { getWaveStats, type WaveStatsResponse } from './utils/wave/getWaveStats'
+export { getWavePeriods, type WavePeriodsResponse } from './utils/wave/getWavePeriods'
+export { getWaveLeaderBoard, type WaveLeaderBoardItem } from './utils/wave/getWaveLeaderBoard'
+export { activateWave } from './utils/wave/activateWave'
