@@ -53,7 +53,6 @@ export function WaveLeaderBoard() {
     return 'Loading...'
   }
 
-  console.log('leaderboard', leaderBoard);
   const columnClassName = 'grid grid-cols-[40px_1fr_200px_200px] p-2'
   
   return (

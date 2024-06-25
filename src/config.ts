@@ -47,8 +47,7 @@ export const getApiUrl = (chainId: ChainId) => {
     return 'https://dev-api.azuro.org/api/v1/public'
   }
 
-  // return 'https://api.azuro.org/api/v1/public'
-  return 'https://dev-api.azuro.org/api/v1/public'
+  return 'https://api.azuro.org/api/v1/public'
 }
 
 export const deBridgeUrl = 'https://api.dln.trade/v1.0'
