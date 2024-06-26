@@ -50,11 +50,6 @@ export const getWaveStats = async ({ account, waveId = 'active', chainId = polyg
   }
 
   const data: WaveStatsResponse = await response.json()
-  const { address, multipliedPoints, levelActivated, ...rest } = data
 
-  return {
-    ...rest,
-    totalMultipliedPoints: multipliedPoints,
-    isActivated: levelActivated,
-  }
+  return data
 }

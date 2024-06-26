@@ -14,13 +14,24 @@ type Props = {
 export const useWaveStats = ({ account, waveId = 'active' }: Props) => {
   const { appChain, api } = useChain()
 
-  const queryFn = () => (
-    getWaveStats({
+  const queryFn = async () => {
+    const data = await getWaveStats({
       account,
       waveId,
       chainId: appChain.id,
     })
-  )
+
+    if (!data) {
+      return data
+    }
+
+    const { address, levelActivated, ...rest } = data
+
+    return {
+      ...rest,
+      isActivated: levelActivated,
+    }
+  }
 
   return useQuery({
     queryKey: [ 'wave/stats', waveId, api, account?.toLowerCase() ],
