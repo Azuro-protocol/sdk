@@ -3,7 +3,6 @@ import { useBaseBetslip, useBetTokenBalance, useChain, useDetailedBetslip, usePr
 import cx from 'clsx'
 import type { Address } from 'viem'
 
-
 export const BetButton: React.FC = () => {
   const { appChain, isRightNetwork } = useChain()
   const { items, clear } = useBaseBetslip()

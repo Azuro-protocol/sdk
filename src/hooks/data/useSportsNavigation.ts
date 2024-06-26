@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
 import { useQuery, type QueryHookOptions } from '@apollo/client'
 
-import type { NavigationQuery, NavigationQueryVariables } from '../docs/prematch/sportsNavigation'
-import { NavigationDocument } from '../docs/prematch/sportsNavigation'
-import { useApolloClients } from '../contexts/apollo'
-import { getGameStartsAtValue } from '../helpers'
-import { GameStatus } from '../docs/prematch/types'
+import type { NavigationQuery, NavigationQueryVariables } from '../../docs/prematch/sportsNavigation'
+import { NavigationDocument } from '../../docs/prematch/sportsNavigation'
+import { useApolloClients } from '../../contexts/apollo'
+import { getGameStartsAtValue } from '../../helpers'
+import { GameStatus } from '../../docs/prematch/types'
 
 
 type UseNavigationProps = {

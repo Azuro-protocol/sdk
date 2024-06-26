@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { deBridgeUrl } from '../config'
+import { deBridgeUrl } from '../../config'
 
 
 type SupportedChainsResponse = {

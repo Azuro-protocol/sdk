@@ -4,13 +4,13 @@ import {
   type Address, erc20Abi, type TransactionReceipt, type Hex, type TypedDataDomain } from 'viem'
 import { useMemo, useState } from 'react'
 
-import { calcMindOdds } from '../utils/calcMindOdds'
-import { getPrematchBetDataBytes } from '../utils/getPrematchBetDataBytes'
-import { useChain } from '../contexts/chain'
-import { DEFAULT_DEADLINE, ODDS_DECIMALS, liveHostAddress } from '../config'
-import { type Selection } from '../global'
-import { useBetsCache, type NewBetProps } from './useBetsCache'
-import { useLiveBetFee } from './useLiveBetFee'
+import { calcMindOdds } from '../../utils/calcMindOdds'
+import { getPrematchBetDataBytes } from '../../utils/getPrematchBetDataBytes'
+import { useChain } from '../../contexts/chain'
+import { DEFAULT_DEADLINE, ODDS_DECIMALS, liveHostAddress } from '../../config'
+import { type Selection } from '../../global'
+import { useBetsCache, type NewBetProps } from '../useBetsCache'
+import { useLiveBetFee } from '../data/useLiveBetFee'
 
 
 enum LiveOrderState {
@@ -106,7 +106,7 @@ export const usePrepareBet = (props: Props) => {
     if (
       !betAmount
       || typeof allowanceTx?.data === 'undefined'
-      || typeof relayerFeeAmount === 'undefined'
+      || (isLiveBet && typeof relayerFeeAmount === 'undefined')
     ) {
       return false
     }
@@ -114,7 +114,7 @@ export const usePrepareBet = (props: Props) => {
     let approveAmount = betAmount
 
     if (isLiveBet) {
-      approveAmount += +relayerFeeAmount
+      approveAmount += +relayerFeeAmount!
     }
 
     return allowanceTx.data < parseUnits(String(approveAmount), betToken.decimals)
