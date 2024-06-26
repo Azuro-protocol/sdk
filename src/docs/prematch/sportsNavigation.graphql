@@ -1,4 +1,4 @@
-query Navigation(
+query SportsNavigation(
   $first: Int,
   $where: Game_filter
   $withGameCount: Boolean!,

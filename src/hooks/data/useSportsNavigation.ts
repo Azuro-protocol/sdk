@@ -1,8 +1,7 @@
 import { useMemo } from 'react'
 import { useQuery, type QueryHookOptions } from '@apollo/client'
 
-import type { NavigationQuery, NavigationQueryVariables } from '../../docs/prematch/sportsNavigation'
-import { NavigationDocument } from '../../docs/prematch/sportsNavigation'
+import { SportsNavigationDocument, type SportsNavigationQuery, type SportsNavigationQueryVariables } from '../../docs/prematch/sportsNavigation'
 import { useApolloClients } from '../../contexts/apollo'
 import { getGameStartsAtValue } from '../../helpers'
 import { GameStatus } from '../../docs/prematch/types'
@@ -20,8 +19,8 @@ export const useSportsNavigation = (props: UseNavigationProps = {}) => {
 
   const startsAt = getGameStartsAtValue()
 
-  const options = useMemo<QueryHookOptions<NavigationQuery, NavigationQueryVariables>>(() => {
-    const variables: NavigationQueryVariables = {
+  const options = useMemo<QueryHookOptions<SportsNavigationQuery, SportsNavigationQueryVariables>>(() => {
+    const variables: SportsNavigationQueryVariables = {
       first: 1000,
       withGameCount,
       where: {
@@ -45,7 +44,7 @@ export const useSportsNavigation = (props: UseNavigationProps = {}) => {
     }
   }, [ withGameCount, startsAt, isLive ])
 
-  const { data, loading, error } = useQuery<NavigationQuery, NavigationQueryVariables>(NavigationDocument, options)
+  const { data, loading, error } = useQuery<SportsNavigationQuery, SportsNavigationQueryVariables>(SportsNavigationDocument, options)
 
   return {
     sports: data?.sports,

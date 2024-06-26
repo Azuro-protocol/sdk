@@ -33,10 +33,10 @@ export {
   type ConditionsQueryVariables,
 } from './docs/prematch/conditions'
 export {
-  NavigationDocument as SportsNavigation,
-  type NavigationQuery as SportsNavigationQuery,
-  type NavigationQueryResult as SportsNavigationQueryResult,
-  type NavigationQueryVariables as SportsNavigationQueryVariables,
+  SportsNavigationDocument,
+  type SportsNavigationQuery,
+  type SportsNavigationQueryResult,
+  type SportsNavigationQueryVariables,
 } from './docs/prematch/sportsNavigation'
 export {
   NavigationDocument,
