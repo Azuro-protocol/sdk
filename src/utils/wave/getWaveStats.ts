@@ -40,6 +40,15 @@ export const getWaveStats = async ({ account, waveId = 'active', chainId = polyg
   const api = getApiUrl(chainId)
 
   const response = await fetch(`${api}/waves/${waveId}/participants/${account?.toLowerCase()}/stats`)
+
+  if (response.status === 404) {
+    return null
+  }
+
+  if (!response.ok) {
+    throw new Error(`Status ${response.status}: ${response.statusText}`)
+  }
+
   const data: WaveStatsResponse = await response.json()
   const { address, multipliedPoints, levelActivated, ...rest } = data
 
