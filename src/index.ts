@@ -20,9 +20,30 @@ export {
   type BetsQueryResult as PrematchQueryResult,
   type BetsQueryVariables as PrematchQueryVariables,
 } from './docs/prematch/bets'
-export { LiveBetsDocument, type LiveBetsQuery, type LiveBetsQueryResult, type LiveBetsQueryVariables } from './docs/prematch/liveBets'
-export { ConditionsDocument, type ConditionsQuery, type ConditionsQueryResult, type ConditionsQueryVariables } from './docs/prematch/conditions'
-export { NavigationDocument, type NavigationQuery, type NavigationQueryResult, type NavigationQueryVariables } from './docs/prematch/navigation'
+export {
+  LiveBetsDocument,
+  type LiveBetsQuery,
+  type LiveBetsQueryResult,
+  type LiveBetsQueryVariables,
+} from './docs/prematch/liveBets'
+export {
+  ConditionsDocument,
+  type ConditionsQuery,
+  type ConditionsQueryResult,
+  type ConditionsQueryVariables,
+} from './docs/prematch/conditions'
+export {
+  NavigationDocument as SportsNavigation,
+  type NavigationQuery as SportsNavigationQuery,
+  type NavigationQueryResult as SportsNavigationQueryResult,
+  type NavigationQueryVariables as SportsNavigationQueryVariables,
+} from './docs/prematch/sportsNavigation'
+export {
+  NavigationDocument,
+  type NavigationQuery,
+  type NavigationQueryResult,
+  type NavigationQueryVariables,
+} from './docs/prematch/navigation'
 
 // data hooks
 export { usePrematchBets, type UsePrematchBetsProps } from './hooks/data/usePrematchBets'
@@ -33,6 +54,7 @@ export { useGameMarkets, type GameMarkets, type Market, type Condition, type Mar
 export { useGames, type UseGamesProps } from './hooks/data/useGames'
 export { useSports, type UseSportsProps } from './hooks/data/useSports'
 export { useSportsNavigation } from './hooks/data/useSportsNavigation'
+export { useNavigation } from './hooks/data/useNavigation'
 export { useLiveBetFee } from './hooks/data/useLiveBetFee'
 export { useBetsSummary } from './hooks/data/useBetsSummary'
 
