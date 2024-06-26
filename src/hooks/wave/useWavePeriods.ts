@@ -26,6 +26,10 @@ export const useWavePeriods = ({ waveId }: Props = { waveId: 'active' }) => {
       chainId: appChain.id,
     })
 
+    if (!data) {
+      return data
+    }
+
     return [ ...data ].reverse().map<WavePeriod>(({ id, startsAt, endsAt, totalPoints }, index) => {
       const fromTimestamp = new Date(startsAt).getTime()
       const toTimestamp = new Date(endsAt).getTime() - 1000

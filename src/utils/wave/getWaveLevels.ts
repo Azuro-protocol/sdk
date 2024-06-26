@@ -33,6 +33,15 @@ type Props = {
 export const getWaveLevels = async ({ waveId = 'active', chainId = polygon.id }: Props) => {
   const api = getApiUrl(chainId)
   const response = await fetch(`${api}/waves/${waveId}/levels`)
+
+  if (response.status === 404) {
+    return null
+  }
+
+  if (!response.ok) {
+    throw new Error(`Status ${response.status}: ${response.statusText}`)
+  }
+
   const data: WaveLevelsResponse = await response.json()
 
   return [ ...data ].sort((a, b) => a.level - b.level)

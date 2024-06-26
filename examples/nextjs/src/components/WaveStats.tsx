@@ -7,11 +7,10 @@ import cx from 'clsx'
 
 
 export function WaveStats() {
-  const waveId = 1
   const { address } = useAccount()
-  const { data: stats } = useWaveStats({ account: address!, waveId })
-  const { activate, isPending: isActivating } = useWaveActivation({ account: address!, waveId })
-  const { data: levels } = useWaveLevels({ waveId })
+  const { data: stats } = useWaveStats({ account: address! })
+  const { activate, isPending: isActivating } = useWaveActivation({ account: address! })
+  const { data: levels } = useWaveLevels()
 
   const nextLevelData = useMemo(() => {
     if (!levels || !stats) {

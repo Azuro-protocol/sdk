@@ -50,6 +50,15 @@ export const getWaveLeaderBoard = async ({ waveId = 'active', account, startsAt,
   }
 
   const response = await fetch(endpoint)
+
+  if (response.status === 404) {
+    return null
+  }
+
+  if (!response.ok) {
+    throw new Error(`Status ${response.status}: ${response.statusText}`)
+  }
+
   const data: (LeaderBoardTotalApiItem | LeaderBoardPeriodApiItem)[] = await response.json()
 
   if (startsAt) {

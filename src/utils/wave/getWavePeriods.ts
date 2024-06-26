@@ -25,6 +25,15 @@ export const getWavePeriods = async ({ waveId = 'active', chainId = polygon.id }
   const api = getApiUrl(chainId)
 
   const response = await fetch(`${api}/waves/${waveId}/periods`)
+
+  if (response.status === 404) {
+    return null
+  }
+
+  if (!response.ok) {
+    throw new Error(`Status ${response.status}: ${response.statusText}`)
+  }
+
   const data: WavePeriodsResponse = await response.json()
 
   return data

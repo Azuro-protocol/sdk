@@ -17,7 +17,7 @@ export function WaveLeaderBoard() {
   const { address } = useAccount()
   const [ activeTabIndex, setActiveTabIndex ] = useState(0)
 
-  const { data: periods, isFetching: isPeriodsFetching } = useWavePeriods({ waveId: 1 })
+  const { data: periods, isFetching: isPeriodsFetching } = useWavePeriods()
 
   const tabs = useMemo<Tabs>(() => {
     if (!periods) {
@@ -43,7 +43,6 @@ export function WaveLeaderBoard() {
   const activeTab = tabs?.[activeTabIndex]
 
   const { data: leaderBoard, isFetching: isLeaderBoardFetching } = useWaveLeaderBoard({
-    waveId: 1,
     account: address,
     startsAt: activeTab?.startsAt,
     enabled: Boolean(activeTab),
@@ -51,6 +50,10 @@ export function WaveLeaderBoard() {
 
   if (isPeriodsFetching) {
     return 'Loading...'
+  }
+
+  if (!leaderBoard) {
+    return null
   }
 
   const columnClassName = 'grid grid-cols-[40px_1fr_200px_200px] p-2'
@@ -79,10 +82,10 @@ export function WaveLeaderBoard() {
                 <div className="">#</div>
                 <div className="">Wallet Address</div>
                 <div className="">
-                  {activeTab.title === 'Total' ? 'Status' : 'Wave Points'}
+                  {activeTab?.title === 'Total' ? 'Status' : 'Wave Points'}
                 </div>
                 <div className="">
-                  {activeTab.title === 'Total' ? 'Wave Points' : 'Bonus Points'}
+                  {activeTab?.title === 'Total' ? 'Wave Points' : 'Bonus Points'}
                 </div>
               </div>
               {
@@ -96,12 +99,12 @@ export function WaveLeaderBoard() {
                       <div className="">{walletAddress}</div>
                       <div className="">
                         {
-                          activeTab.title === 'Total' ? levelDescription?.name : points
+                          activeTab?.title === 'Total' ? levelDescription?.name : points
                         }
                       </div>
                       <div className="">
                         {
-                          activeTab.title === 'Total' ? points : totalMultipliedPoints
+                          activeTab?.title === 'Total' ? points : totalMultipliedPoints
                         }
                       </div>
                     </div>
