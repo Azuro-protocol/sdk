@@ -30,8 +30,8 @@ type Props = {
   chainId?: ChainId
 }
 
-export const getWaveLevels = async ({ waveId = 'active', chainId = polygon.id }: Props) => {
-  const api = getApiUrl(chainId)
+export const getWaveLevels = async ({ waveId, chainId }: Props = { waveId: 'active', chainId: polygon.id }) => {
+  const api = getApiUrl(chainId!)
   const response = await fetch(`${api}/waves/${waveId}/levels`)
 
   if (response.status === 404) {

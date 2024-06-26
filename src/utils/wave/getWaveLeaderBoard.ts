@@ -38,8 +38,9 @@ type Props = {
   chainId?: ChainId
 }
 
-export const getWaveLeaderBoard = async ({ waveId = 'active', account, startsAt, chainId = polygon.id }: Props) => {
-  const api = getApiUrl(chainId)
+export const getWaveLeaderBoard = async (props: Props = { waveId: 'active', chainId: polygon.id }) => {
+  const { waveId, account, startsAt, chainId } = props
+  const api = getApiUrl(chainId!)
   const baseUrl = `${api}/waves/${waveId}`
   let endpoint = startsAt
     ? `${baseUrl}/periods/${startsAt}/leaderboard`
