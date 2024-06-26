@@ -1,6 +1,7 @@
 'use client'
 import { useParams } from 'next/navigation'
-import { useGame, useGameMarkets, type GameQuery, useGameStatus, GameStatus } from '@azuro-org/sdk'
+import { useGame, useGameMarkets, type GameQuery, useGameStatus } from '@azuro-org/sdk'
+import { GameStatus } from '@azuro-org/sdk/utils';
 import { GameInfo, GameMarkets } from '@/components'
 
 

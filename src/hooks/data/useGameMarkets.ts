@@ -6,12 +6,12 @@ import { type ConditionsQuery } from './useConditions'
 import { useConditions } from './useConditions'
 import {
   type ConditionsQuery as PrematchConditionsQuery,
-} from '../docs/prematch/conditions'
-import type { ConditionStatus } from '../docs/prematch/types'
-import type { Selection } from '../global'
-import { liveHostAddress } from '../config'
-import { GameStatus } from '../utils/getGameStatus'
-import { useChain } from '../contexts/chain'
+} from '../../docs/prematch/conditions'
+import type { ConditionStatus } from '../../docs/prematch/types'
+import type { Selection } from '../../global'
+import { liveHostAddress } from '../../config'
+import { GameStatus } from '../../utils/getGameStatus'
+import { useChain } from '../../contexts/chain'
 
 
 export type Condition = {

@@ -46,3 +46,5 @@ export type Bet = {
   isCanceled: boolean
   isLive: boolean
 }
+
+export type WaveId = number | 'active'

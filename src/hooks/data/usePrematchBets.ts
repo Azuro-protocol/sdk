@@ -3,10 +3,10 @@ import { useQuery } from '@apollo/client'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 import { type Address } from 'viem'
 
-import { type BetsQuery, type BetsQueryVariables, BetsDocument } from '../docs/prematch/bets'
-import { Bet_OrderBy, OrderDirection, BetResult, BetStatus, SelectionResult, ConditionStatus, GameStatus as GraphGameStatus } from '../docs/prematch/types'
-import { useApolloClients } from '../contexts/apollo'
-import { type BetOutcome, type Bet } from '../global'
+import { type BetsQuery, type BetsQueryVariables, BetsDocument } from '../../docs/prematch/bets'
+import { Bet_OrderBy, OrderDirection, BetResult, BetStatus, SelectionResult, ConditionStatus, GameStatus as GraphGameStatus } from '../../docs/prematch/types'
+import { useApolloClients } from '../../contexts/apollo'
+import { type BetOutcome, type Bet } from '../../global'
 
 
 export type UsePrematchBetsProps = {

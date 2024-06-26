@@ -1,5 +1,5 @@
 import { polygon, gnosis, polygonAmoy, chiliz, spicy, type Chain } from 'viem/chains'
-import { parseUnits, type Address } from 'viem'
+import { type Address } from 'viem'
 
 import { liveCoreAbi, lpAbi, prematchComboCoreAbi, prematchCoreAbi, proxyFrontAbi } from './abis'
 

@@ -7,14 +7,14 @@ import {
   ConditionsDocument as PrematchConditionsDocument,
   type ConditionsQuery as PrematchConditionsQuery,
   type ConditionsQueryVariables as PrematchConditionsQueryVariables,
-} from '../docs/prematch/conditions'
+} from '../../docs/prematch/conditions'
 import {
   ConditionsDocument as LiveConditionsDocument,
   type ConditionsQuery as LiveConditionsQuery,
   type ConditionsQueryVariables as LiveConditionsQueryVariables,
-} from '../docs/live/conditions'
-import { useApolloClients } from '../contexts/apollo'
-import { useChain } from '../contexts/chain'
+} from '../../docs/live/conditions'
+import { useApolloClients } from '../../contexts/apollo'
+import { useChain } from '../../contexts/chain'
 
 
 export type ConditionsQuery = PrematchConditionsQuery | LiveConditionsQuery

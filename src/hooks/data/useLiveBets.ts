@@ -3,13 +3,13 @@ import { useQuery } from '@apollo/client'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 import { type Address } from 'viem'
 
-import { type LiveBetsQuery, type LiveBetsQueryVariables, LiveBetsDocument } from '../docs/prematch/liveBets'
-import { Bet_OrderBy, OrderDirection, BetResult, BetStatus, SelectionResult, ConditionStatus } from '../docs/prematch/types'
-import { MainGameInfoFragmentDoc, type MainGameInfoFragment } from '../docs/prematch/fragments/mainGameInfo'
-import { type GamesQuery, GamesDocument } from '../docs/prematch/games'
-import { type GameQuery } from '../docs/prematch/game'
-import { useApolloClients } from '../contexts/apollo'
-import { type Selection, type Bet } from '../global'
+import { type LiveBetsQuery, type LiveBetsQueryVariables, LiveBetsDocument } from '../../docs/prematch/liveBets'
+import { Bet_OrderBy, OrderDirection, BetResult, BetStatus, SelectionResult, ConditionStatus } from '../../docs/prematch/types'
+import { MainGameInfoFragmentDoc, type MainGameInfoFragment } from '../../docs/prematch/fragments/mainGameInfo'
+import { type GamesQuery, GamesDocument } from '../../docs/prematch/games'
+import { type GameQuery } from '../../docs/prematch/game'
+import { useApolloClients } from '../../contexts/apollo'
+import { type Selection, type Bet } from '../../global'
 
 
 type LiveBetOutcome = {

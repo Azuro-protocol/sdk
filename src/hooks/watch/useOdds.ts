@@ -1,16 +1,16 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { useConfig } from 'wagmi'
 
-import { liveHostAddress } from '../config'
-import { useChain } from '../contexts/chain'
-import type { OddsChangedData } from '../contexts/socket'
-import { useSocket } from '../contexts/socket'
-import { formatToFixed } from '../helpers'
-import { type Selection } from '../global'
-import { calcLiveOdds, calcPrematchOdds } from '../utils/calcOdds'
-import useIsMounted from '../hooks/useIsMounted'
-import { oddsWatcher } from '../modules/oddsWatcher'
-import { debounce } from '../helpers/debounce'
+import { liveHostAddress } from '../../config'
+import { useChain } from '../../contexts/chain'
+import type { OddsChangedData } from '../../contexts/socket'
+import { useSocket } from '../../contexts/socket'
+import { formatToFixed } from '../../helpers'
+import { type Selection } from '../../global'
+import { calcLiveOdds, calcPrematchOdds } from '../../utils/calcOdds'
+import useIsMounted from '../../helpers/hooks/useIsMounted'
+import { oddsWatcher } from '../../modules/oddsWatcher'
+import { debounce } from '../../helpers/debounce'
 
 
 type CalcOddsProps = {
