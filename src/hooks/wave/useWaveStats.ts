@@ -3,14 +3,15 @@ import { useQuery } from '@tanstack/react-query'
 
 import { getWaveStats } from '../../utils/wave/getWaveStats'
 import { useChain } from '../../contexts/chain'
+import { type WaveId } from '../../global'
 
 
 type Props = {
   account: Address
-  waveId: number
+  waveId?: WaveId
 }
 
-export const useWaveStats = ({ account, waveId }: Props) => {
+export const useWaveStats = ({ account, waveId = 'active' }: Props) => {
   const { appChain, api } = useChain()
 
   const queryFn = () => (

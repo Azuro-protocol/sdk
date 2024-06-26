@@ -1,6 +1,7 @@
 import { polygon } from 'viem/chains'
 
 import { getApiUrl, type ChainId } from '../../config'
+import { type WaveId } from '../../global'
 
 
 type Period = {
@@ -16,11 +17,11 @@ type Period = {
 export type WavePeriodsResponse = Period[]
 
 type Props = {
-  waveId: number
+  waveId?: WaveId
   chainId?: ChainId
 }
 
-export const getWavePeriods = async ({ waveId, chainId = polygon.id }: Props) => {
+export const getWavePeriods = async ({ waveId = 'active', chainId = polygon.id }: Props) => {
   const api = getApiUrl(chainId)
 
   const response = await fetch(`${api}/waves/${waveId}/periods`)

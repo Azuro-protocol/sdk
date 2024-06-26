@@ -3,16 +3,17 @@ import { useQuery } from '@tanstack/react-query'
 
 import { getWaveLeaderBoard } from '../../utils/wave/getWaveLeaderBoard'
 import { useChain } from '../../contexts/chain'
+import { type WaveId } from '../../global'
 
 
 type Props = {
-  waveId: number
+  waveId?: WaveId
   account?: Address
   startsAt?: number
   enabled?: boolean
 }
 
-export const useWaveLeaderBoard = ({ waveId, account, startsAt, enabled }: Props) => {
+export const useWaveLeaderBoard = ({ waveId = 'active', account, startsAt, enabled }: Props) => {
   const { appChain, api } = useChain()
 
   const queryFn = () => (

@@ -3,14 +3,15 @@ import { type Address } from 'viem'
 
 import { activateWave } from '../../utils/wave/activateWave'
 import { useChain } from '../../contexts/chain'
+import { type WaveId } from '../../global'
 
 
 type Props = {
   account: Address
-  waveId: number
+  waveId?: WaveId
 }
 
-export const useWaveActivation = ({ waveId, account }: Props) => {
+export const useWaveActivation = ({ account, waveId = 'active' }: Props) => {
   const queryClient = useQueryClient()
   const { appChain, api } = useChain()
 

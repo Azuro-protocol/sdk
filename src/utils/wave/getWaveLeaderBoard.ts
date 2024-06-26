@@ -2,6 +2,7 @@ import { polygon } from 'viem/chains'
 import { formatUnits, parseUnits, type Address } from 'viem'
 
 import { getApiUrl, type ChainId } from '../../config'
+import { type WaveId } from '../../global'
 import { type WaveStatsResponse } from './getWaveStats'
 import { type WaveLevelData } from './getWaveLevels'
 
@@ -31,13 +32,13 @@ export type WaveLeaderBoardItem = {
 }
 
 type Props = {
-  waveId: number
+  waveId?: WaveId
   account?: Address
   startsAt?: number
   chainId?: ChainId
 }
 
-export const getWaveLeaderBoard = async ({ waveId, account, startsAt, chainId = polygon.id }: Props) => {
+export const getWaveLeaderBoard = async ({ waveId = 'active', account, startsAt, chainId = polygon.id }: Props) => {
   const api = getApiUrl(chainId)
   const baseUrl = `${api}/waves/${waveId}`
   let endpoint = startsAt
