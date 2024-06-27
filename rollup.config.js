@@ -1,6 +1,4 @@
 import typescript from '@rollup/plugin-typescript'
-// // https://www.misha.wtf/blog/rollup-server-components
-// import preserverDirectives from 'rollup-plugin-preserve-directives'
 
 /**
  * @type {import('rollup').RollupOptions}
@@ -8,6 +6,7 @@ import typescript from '@rollup/plugin-typescript'
 export default {
   input: {
     'index': 'src/index.ts',
+    'utils': 'src/utils.ts'
   },
   output: {
     dir: 'dist',
@@ -32,7 +31,6 @@ export default {
     typescript({
       tsconfig: './tsconfig.json',
     }),
-    // preserverDirectives(),
   ],
   onwarn: (warning, warn) => {
     if (warning.code !== 'MODULE_LEVEL_DIRECTIVE') {

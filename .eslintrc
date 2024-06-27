@@ -15,7 +15,8 @@
     "src/docs/*",
     "examples/**",
     "*.json",
-    "codegen.ts",
+    "codegen.ts"
+    // "./dist"
   ],
   "settings": {
     "import/parsers": {

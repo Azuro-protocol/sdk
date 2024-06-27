@@ -1,19 +1,17 @@
 {
   "name": "@azuro-org/sdk",
-  "version": "4.0.1",
+  "version": "4.1.0",
   "author": "Azuro",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist",
-    "react",
-    "nextjs"
+    "utils"
   ],
   "exports": {
     ".": "./dist/index.js",
-    "./react/apollo": "./dist/react/apollo.js",
-    "./nextjs/apollo": "./dist/nextjs/apollo.js"
+    "./utils": "./dist/utils.js"
   },
   "sideEffects": true,
   "scripts": {
@@ -29,7 +27,7 @@
   },
   "peerDependencies": {
     "@apollo/client": "^3.8.0-beta.7",
-    "@azuro-org/dictionaries": "^3.0.11",
+    "@azuro-org/dictionaries": "^3.0.12",
     "graphql": "^16.8.1",
     "react": "^18.2.0",
     "viem": "^2.7.9",

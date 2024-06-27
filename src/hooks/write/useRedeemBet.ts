@@ -1,9 +1,9 @@
 import { useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi'
 import type { Address } from 'viem'
 
-import { useChain } from '../contexts/chain'
-import { useBetsCache } from './useBetsCache'
-import { type Bet } from '../global'
+import { useChain } from '../../contexts/chain'
+import { useBetsCache } from '../useBetsCache'
+import { type Bet } from '../../global'
 
 
 type SubmitProps = {

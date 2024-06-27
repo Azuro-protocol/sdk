@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { useChain } from '../contexts/chain'
-import { getLiveBetFee } from '../utils/getLiveBetFee'
+import { useChain } from '../../contexts/chain'
+import { getLiveBetFee } from '../../utils/getLiveBetFee'
 
 
 type Props = {

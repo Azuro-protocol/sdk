@@ -1,9 +1,9 @@
 import { useWatchContractEvent } from 'wagmi'
 
-import { useChain } from '../contexts/chain'
-import { oddsWatcher } from '../modules/oddsWatcher'
-import { conditionStatusWatcher } from '../modules/conditionStatusWatcher'
-import { ConditionStatus } from '../docs/prematch/types'
+import { useChain } from '../../contexts/chain'
+import { oddsWatcher } from '../../modules/oddsWatcher'
+import { conditionStatusWatcher } from '../../modules/conditionStatusWatcher'
+import { ConditionStatus } from '../../docs/prematch/types'
 
 
 export const useWatchers = () => {

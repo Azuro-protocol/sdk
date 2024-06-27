@@ -3,12 +3,22 @@ query Navigation(
   $where: Game_filter
   $withGameCount: Boolean!,
 ) {
-  sports {
+  sports(subgraphError: allow) {
     id
     slug
     name
-    games(first: $first, where: $where) @include(if: $withGameCount) {
+    countries(where: { hasActiveLeagues: true }) {
       id
+      slug
+      name
+      leagues(where: { games_: $gameFilter }) {
+        id
+        slug
+        name
+        games(first: $first, where: $where) @include(if: $withGameCount) {
+          id
+        }
+      }
     }
   }
 }
