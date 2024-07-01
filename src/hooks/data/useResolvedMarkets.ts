@@ -1,21 +1,24 @@
 import { useMemo } from 'react'
 
-import { useResolvedConditions } from './useResolvedConditions'
+import { useConditions } from './useConditions'
 import { groupConditionsByMarket } from '../../utils/groupConditionsByMarket'
+import { ConditionStatus } from '../../docs/prematch/types'
 
 
 type Props = {
   gameId: string
 }
 
-export const useActiveMarkets = (props: Props) => {
+export const useResolvedMarkets = (props: Props) => {
   const { gameId } = props
 
-  const { loading, liveConditions, prematchConditions, error } = useResolvedConditions({
+  const { loading, liveConditions, prematchConditions, error } = useConditions({
     gameId,
+    filter: {
+      status: ConditionStatus.Resolved,
+    },
   })
 
-  // generate unique key for memo deps
   const prematchConditionIds = prematchConditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('_')
   const liveConditionIds = liveConditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('_')
 

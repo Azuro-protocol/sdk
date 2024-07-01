@@ -13,19 +13,30 @@ import {
   type ConditionsQuery as LiveConditionsQuery,
   type ConditionsQueryVariables as LiveConditionsQueryVariables,
 } from '../../docs/live/conditions'
-import { ConditionStatus } from '../../docs/prematch/types'
+import { type Condition_Filter } from '../../docs/prematch/types'
 import { useApolloClients } from '../../contexts/apollo'
 import { useChain } from '../../contexts/chain'
 
 
-export type ConditionsQuery = PrematchConditionsQuery | LiveConditionsQuery
+type QueryProps = {
+  pollInterval?: number
+  skip?: boolean
+}
 
 type UseConditionsProps = {
   gameId: string | bigint
+  filter?: Condition_Filter
+  prematchQuery?: QueryProps
+  liveQuery?: QueryProps
 }
 
-export const useResolvedConditions = (props: UseConditionsProps) => {
-  const { gameId } = props
+const defaultQueryProps: QueryProps = {
+  pollInterval: undefined,
+  skip: false,
+}
+
+export const useConditions = (props: UseConditionsProps) => {
+  const { gameId, filter, prematchQuery = defaultQueryProps, liveQuery = defaultQueryProps } = props
   const { prematchClient, liveClient } = useApolloClients()
   const { appChain } = useChain()
 
@@ -35,12 +46,12 @@ export const useResolvedConditions = (props: UseConditionsProps) => {
         game_: {
           gameId,
         },
-        status: ConditionStatus.Resolved,
+        ...(filter || {}),
       },
     }
 
     return vars
-  }, [ gameId ])
+  }, [ gameId, filter ])
 
   const {
     data: prematchData,
@@ -51,6 +62,7 @@ export const useResolvedConditions = (props: UseConditionsProps) => {
     ssr: false,
     client: prematchClient!,
     notifyOnNetworkStatusChange: true,
+    ...prematchQuery,
   })
   const {
     data: liveData,
@@ -60,7 +72,8 @@ export const useResolvedConditions = (props: UseConditionsProps) => {
     variables: variables as LiveConditionsQueryVariables,
     ssr: false,
     client: liveClient!,
-    skip: !liveSupportedChains.includes(appChain.id),
+    ...liveQuery,
+    skip: liveQuery.skip || !liveSupportedChains.includes(appChain.id),
   })
 
   return {

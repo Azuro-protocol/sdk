@@ -1,5 +1,6 @@
 export { calcMindOdds } from './utils/calcMindOdds'
 export { groupByConditionId } from './utils/groupByConditionId'
+export { groupConditionsByMarket, type GameMarkets, type MarketOutcome, type Market } from './utils/groupConditionsByMarket'
 export { calcLiveOdds, calcPrematchOdds } from './utils/calcOdds'
 export { setGamesCacheTime } from './utils/setGamesCacheTime'
 export { getPrematchBetDataBytes } from './utils/getPrematchBetDataBytes'

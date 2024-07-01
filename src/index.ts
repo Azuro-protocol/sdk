@@ -48,9 +48,11 @@ export {
 // data hooks
 export { usePrematchBets, type UsePrematchBetsProps } from './hooks/data/usePrematchBets'
 export { useLiveBets, type UseLiveBetsProps } from './hooks/data/useLiveBets'
+export { useConditions } from './hooks/data/useConditions'
 export { useActiveConditions } from './hooks/data/useActiveConditions'
 export { useGame } from './hooks/data/useGame'
 export { useActiveMarkets } from './hooks/data/useActiveMarkets'
+export { useResolvedMarkets } from './hooks/data/useResolvedMarkets'
 export { useGames, type UseGamesProps } from './hooks/data/useGames'
 export { useSports, type UseSportsProps } from './hooks/data/useSports'
 export { useSportsNavigation } from './hooks/data/useSportsNavigation'

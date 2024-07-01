@@ -1,17 +1,52 @@
 'use client'
 import { useParams } from 'next/navigation'
-import { useGame, useGameMarkets, type GameQuery, useGameStatus } from '@azuro-org/sdk'
+import { useGame, useActiveMarkets, useResolvedMarkets, type GameQuery, useGameStatus } from '@azuro-org/sdk'
 import { GameStatus } from '@azuro-org/sdk/utils';
-import { GameInfo, GameMarkets } from '@/components'
 
+import { GameInfo, GameMarkets } from '@/components'
 
 type MarketsProps = {
   gameId: string
   gameStatus: GameStatus
 }
 
-const Markets: React.FC<MarketsProps> = ({ gameId, gameStatus }) => {
-  const { loading, markets } = useGameMarkets({
+const ResolvedMarkets: React.FC<Pick<MarketsProps, 'gameId'>> = ({ gameId }) => {
+  const { prematchMarkets, liveMarkets, loading } = useResolvedMarkets({ gameId })
+
+  if (loading) {
+    return <div>Loading...</div>
+  }
+
+  if (!prematchMarkets?.length && !liveMarkets?.length) {
+    return <div>Empty</div>
+  }
+
+  console.log(prematchMarkets, liveMarkets);
+
+  return (
+    <div className="space-y-10 mt-12">
+      {
+        Boolean(prematchMarkets?.length) && (
+          <div>
+            <div className="text-center text-xl font-bold mb-2">Prematch Results</div>
+            <GameMarkets markets={prematchMarkets} isResult />
+          </div>
+        )
+      }
+      {
+        Boolean(liveMarkets?.length) && (
+          <div>
+            <div className="text-center text-xl font-bold mb-2">Live Results</div>
+            <GameMarkets markets={liveMarkets} isResult />
+          </div>
+        )
+      }
+    </div>
+  )
+}
+
+const ActiveMarkets: React.FC<MarketsProps> = ({ gameId, gameStatus }) => {
+  const { loading, markets } = useActiveMarkets({
     gameId,
     gameStatus,
     livePollInterval: 10000,
@@ -22,10 +57,24 @@ const Markets: React.FC<MarketsProps> = ({ gameId, gameStatus }) => {
   }
 
   if (!markets) {
-    return null
+    return <div>Empty</div>
   }
 
-  return <GameMarkets markets={markets} gameStatus={gameStatus} />
+  return <GameMarkets markets={markets} />
+}
+
+const Markets: React.FC<MarketsProps> = (props) => {
+  const { gameId, gameStatus } = props
+
+  if (gameStatus === GameStatus.Resolved) {
+    return <ResolvedMarkets gameId={gameId} />
+  }
+
+  return (
+    <div className="mt-12">
+      <ActiveMarkets {...props} /> 
+    </div>
+  )
 }
 
 type ContentProps = {

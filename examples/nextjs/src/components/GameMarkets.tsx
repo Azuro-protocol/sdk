@@ -1,23 +1,20 @@
 'use client'
-import { type GameMarkets } from '@azuro-org/sdk'
-import { GameStatus } from '@azuro-org/sdk/utils';
+import { GameStatus, type GameMarkets } from '@azuro-org/sdk/utils';
 import { OutcomeButton, OutcomeResult } from '@/components'
 
 
 type GameMarketsProps = {
   markets: GameMarkets
-  gameStatus: GameStatus
+  isResult?: boolean
 }
 
 export function GameMarkets(props: GameMarketsProps) {
-  const { markets, gameStatus } = props
-
-  console.log(gameStatus, 'gameStatus');
+  const { markets, isResult } = props
 
   return (
-    <div className="max-w-[600px] mx-auto mt-12 space-y-6">
+    <div className="max-w-[600px] mx-auto space-y-6">
       {
-        markets.map(({ name, description, outcomeRows }) => (
+        markets.map(({ name, outcomeRows }) => (
           <div key={name} className="">
             <div className="mb-2 text-lg font-semibold">{name}</div>
             <div className="space-y-1">
@@ -27,7 +24,7 @@ export function GameMarkets(props: GameMarketsProps) {
                     <div className="flex gap-2 w-full">
                       {
                         outcomes.map((outcome) => {
-                          if (gameStatus === GameStatus.Resolved) {
+                          if (isResult) {
                             return (
                               <OutcomeResult 
                                 key={outcome.outcomeId}
