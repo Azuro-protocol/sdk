@@ -1,22 +1,18 @@
-import { useMemo } from 'react'
 import { dictionaries, getMarketKey, getMarketName, getMarketDescription, getSelectionName } from '@azuro-org/dictionaries'
-import type { Address } from 'viem'
 
-import { type ConditionsQuery } from './useConditions'
-import { useConditions } from './useConditions'
+import type { ConditionStatus } from '../docs/prematch/types'
 import {
   type ConditionsQuery as PrematchConditionsQuery,
-} from '../../docs/prematch/conditions'
-import type { ConditionStatus } from '../../docs/prematch/types'
-import type { Selection } from '../../global'
-import { liveHostAddress } from '../../config'
-import { GameStatus } from '../../utils/getGameStatus'
-import { useChain } from '../../contexts/chain'
+} from '../docs/prematch/conditions'
+import {
+  type ConditionsQuery as LiveConditionsQuery,
+} from '../docs/live/conditions'
+import { liveHostAddress } from '../config'
+import type { Selection } from '../global'
+import { groupByConditionId } from './groupByConditionId'
 
 
-export type Condition = {
-  conditionId: string
-}
+export type ConditionsQuery = PrematchConditionsQuery | LiveConditionsQuery
 
 export type MarketOutcome = {
   selectionName: string
@@ -26,6 +22,7 @@ export type MarketOutcome = {
   status: ConditionStatus
   gameId: string
   isExpressForbidden: boolean
+  isWon?: boolean
 } & Selection
 
 export type Market = {
@@ -35,34 +32,20 @@ export type Market = {
   outcomeRows: MarketOutcome[][]
 }
 
-const groupDataByConditionId = <T extends Condition>(data: T[]): Record<string, T[]> => {
-  return data.reduce<Record<string, T[]>>((acc, item) => {
-    const { conditionId } = item
-    const key = String(conditionId)
-
-    if (!acc[key]) {
-      acc[key] = []
-    }
-
-    acc[key]!.push(item)
-
-    return acc
-  }, {})
-}
-
 type OutcomesByMarkets = Record<string, MarketOutcome[]>
 type OutcomeRowsByMarket = Record<string, Market>
 
 export type GameMarkets = Market[]
 
-const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string, lpAddress: Address): GameMarkets => {
+export const groupConditionsByMarket = (conditions: ConditionsQuery['conditions']): GameMarkets => {
   const outcomesByMarkets: OutcomesByMarkets = {}
   const result: OutcomeRowsByMarket = {}
   const sportId = conditions[0]!.game.sport.sportId
 
   conditions.forEach((condition) => {
-    const { conditionId, outcomes: rawOutcomes, status } = condition
+    const { conditionId, outcomes: rawOutcomes, status, game: { gameId }, wonOutcomeIds } = condition
     const coreAddress = (condition as PrematchConditionsQuery['conditions'][0]).core?.address || liveHostAddress
+    const lpAddress = (condition as PrematchConditionsQuery['conditions'][0]).core?.liquidityPool?.address || ''
     const isExpressForbidden = (condition as PrematchConditionsQuery['conditions'][0]).isExpressForbidden ?? true
 
     rawOutcomes.forEach((rawOutcome) => {
@@ -89,6 +72,10 @@ const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string,
         status,
         gameId,
         isExpressForbidden,
+      }
+
+      if (Array.isArray(wonOutcomeIds)) {
+        outcome.isWon = wonOutcomeIds.includes(outcomeId)
       }
 
       if (odds) {
@@ -158,7 +145,7 @@ const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string,
     // Over (1.5)   Under (1.5)
     //
     else {
-      const conditionsByConditionId = groupDataByConditionId<MarketOutcome>(outcomes)
+      const conditionsByConditionId = groupByConditionId<MarketOutcome>(outcomes)
 
       result[marketKey]!.outcomeRows = Object.values(conditionsByConditionId).sort((a, b) => {
         const { points, outcomes: dictionaryOutcomes } = dictionaries
@@ -208,42 +195,4 @@ const groupMarkets = (conditions: ConditionsQuery['conditions'], gameId: string,
 
     return 0
   })
-}
-
-type Props = {
-  gameId: string
-  gameStatus: GameStatus
-  filter?: {
-    outcomeIds?: string[]
-  }
-  livePollInterval?: number
-}
-
-export const useGameMarkets = (props: Props) => {
-  const { gameId, gameStatus, filter, livePollInterval } = props
-
-  const { contracts } = useChain()
-  const { loading, conditions, error } = useConditions({
-    gameId,
-    filter,
-    isLive: gameStatus === GameStatus.Live,
-    livePollInterval,
-  })
-
-  // generate unique key for memo deps
-  const conditionIds = conditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('_')
-
-  const markets = useMemo(() => {
-    if (!conditions?.length) {
-      return []
-    }
-
-    return groupMarkets(conditions, gameId, contracts.lp.address)
-  }, [ conditionIds ])
-
-  return {
-    loading,
-    markets,
-    error,
-  }
 }

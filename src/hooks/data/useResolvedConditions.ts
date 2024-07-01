@@ -13,6 +13,7 @@ import {
   type ConditionsQuery as LiveConditionsQuery,
   type ConditionsQueryVariables as LiveConditionsQueryVariables,
 } from '../../docs/live/conditions'
+import { ConditionStatus } from '../../docs/prematch/types'
 import { useApolloClients } from '../../contexts/apollo'
 import { useChain } from '../../contexts/chain'
 
@@ -21,15 +22,10 @@ export type ConditionsQuery = PrematchConditionsQuery | LiveConditionsQuery
 
 type UseConditionsProps = {
   gameId: string | bigint
-  isLive: boolean
-  livePollInterval?: number
-  filter?: {
-    outcomeIds?: string[]
-  }
 }
 
-export const useConditions = (props: UseConditionsProps) => {
-  const { gameId, isLive, livePollInterval, filter } = props
+export const useResolvedConditions = (props: UseConditionsProps) => {
+  const { gameId } = props
   const { prematchClient, liveClient } = useApolloClients()
   const { appChain } = useChain()
 
@@ -39,15 +35,12 @@ export const useConditions = (props: UseConditionsProps) => {
         game_: {
           gameId,
         },
+        status: ConditionStatus.Resolved,
       },
     }
 
-    if (filter?.outcomeIds) {
-      vars.where.outcomesIds_contains = filter.outcomeIds
-    }
-
     return vars
-  }, [ gameId, filter?.outcomeIds?.join(',') ])
+  }, [ gameId ])
 
   const {
     data: prematchData,
@@ -57,7 +50,6 @@ export const useConditions = (props: UseConditionsProps) => {
     variables: variables as PrematchConditionsQueryVariables,
     ssr: false,
     client: prematchClient!,
-    skip: isLive,
     notifyOnNetworkStatusChange: true,
   })
   const {
@@ -68,14 +60,12 @@ export const useConditions = (props: UseConditionsProps) => {
     variables: variables as LiveConditionsQueryVariables,
     ssr: false,
     client: liveClient!,
-    skip: !isLive || !liveSupportedChains.includes(appChain.id),
-    pollInterval: livePollInterval,
+    skip: !liveSupportedChains.includes(appChain.id),
   })
 
-  const data = (isLive ? liveData : prematchData) || {} as ConditionsQuery
-
   return {
-    conditions: data?.conditions,
+    prematchConditions: prematchData?.conditions,
+    liveConditions: liveData?.conditions,
     loading: isPrematchLoading || isLiveLoading,
     error: prematchError || liveError,
   }

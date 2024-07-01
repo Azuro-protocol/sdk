@@ -25,7 +25,7 @@ const Markets: React.FC<MarketsProps> = ({ gameId, gameStatus }) => {
     return null
   }
 
-  return <GameMarkets markets={markets} />
+  return <GameMarkets markets={markets} gameStatus={gameStatus} />
 }
 
 type ContentProps = {

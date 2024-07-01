@@ -1,14 +1,18 @@
 'use client'
 import { type GameMarkets } from '@azuro-org/sdk'
-import { OutcomeButton } from '@/components'
+import { GameStatus } from '@azuro-org/sdk/utils';
+import { OutcomeButton, OutcomeResult } from '@/components'
 
 
 type GameMarketsProps = {
   markets: GameMarkets
+  gameStatus: GameStatus
 }
 
 export function GameMarkets(props: GameMarketsProps) {
-  const { markets } = props
+  const { markets, gameStatus } = props
+
+  console.log(gameStatus, 'gameStatus');
 
   return (
     <div className="max-w-[600px] mx-auto mt-12 space-y-6">
@@ -22,12 +26,23 @@ export function GameMarkets(props: GameMarketsProps) {
                   <div key={index} className="flex justify-between">
                     <div className="flex gap-2 w-full">
                       {
-                        outcomes.map((outcome) => (
-                          <OutcomeButton
-                            key={outcome.outcomeId}
-                            outcome={outcome}
-                          />
-                        ))
+                        outcomes.map((outcome) => {
+                          if (gameStatus === GameStatus.Resolved) {
+                            return (
+                              <OutcomeResult 
+                                key={outcome.outcomeId}
+                                outcome={outcome}
+                              />
+                            )
+                          }
+
+                          return (
+                            <OutcomeButton
+                              key={outcome.outcomeId}
+                              outcome={outcome}
+                            />
+                          )
+                        })
                       }
                     </div>
                   </div>
