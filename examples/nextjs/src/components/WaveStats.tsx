@@ -76,7 +76,7 @@ export function WaveStats() {
         }
         <div className={cx(cardBaseClassName, 'rounded-r-3')}>
           <p className="text-slate-300">Wave Points</p>
-          <p>{stats?.totalMultipliedPoints || 0}</p>
+          <p>{stats?.multipliedPoints || 0}</p>
         </div>
       </div>
     </div>
