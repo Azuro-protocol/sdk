@@ -49,14 +49,17 @@ export {
 export { usePrematchBets, type UsePrematchBetsProps } from './hooks/data/usePrematchBets'
 export { useLiveBets, type UseLiveBetsProps } from './hooks/data/useLiveBets'
 export { useConditions } from './hooks/data/useConditions'
+export { useActiveConditions } from './hooks/data/useActiveConditions'
 export { useGame } from './hooks/data/useGame'
-export { useGameMarkets, type GameMarkets, type Market, type Condition, type MarketOutcome } from './hooks/data/useGameMarkets'
+export { useActiveMarkets } from './hooks/data/useActiveMarkets'
+export { useResolvedMarkets } from './hooks/data/useResolvedMarkets'
 export { useGames, type UseGamesProps } from './hooks/data/useGames'
 export { useSports, type UseSportsProps } from './hooks/data/useSports'
 export { useSportsNavigation } from './hooks/data/useSportsNavigation'
 export { useNavigation } from './hooks/data/useNavigation'
 export { useLiveBetFee } from './hooks/data/useLiveBetFee'
 export { useBetsSummary } from './hooks/data/useBetsSummary'
+export { useBetsSummaryBySelection, type BetsSummaryBySelection } from './hooks/data/useBetsSummaryBySelection'
 
 // write hooks
 export { useRedeemBet } from './hooks/write/useRedeemBet'
