@@ -1,46 +1,36 @@
 'use client'
 import { useParams } from 'next/navigation'
-import { useGame, useActiveMarkets, useResolvedMarkets, type GameQuery, useGameStatus } from '@azuro-org/sdk'
+import { useGame, useActiveMarkets, useResolvedMarkets, type GameQuery, useGameStatus, useBetsSummaryBySelection } from '@azuro-org/sdk'
 import { GameStatus } from '@azuro-org/sdk/utils';
 
 import { GameInfo, GameMarkets } from '@/components'
+import { useAccount } from 'wagmi';
 
 type MarketsProps = {
   gameId: string
   gameStatus: GameStatus
 }
 
-const ResolvedMarkets: React.FC<Pick<MarketsProps, 'gameId'>> = ({ gameId }) => {
-  const { prematchMarkets, liveMarkets, loading } = useResolvedMarkets({ gameId })
+const ResolvedMarkets: React.FC<MarketsProps> = ({ gameId, gameStatus }) => {
+  const { address } = useAccount()
+  const { groupedMarkets, loading } = useResolvedMarkets({ gameId })
+  const { betsSummary } = useBetsSummaryBySelection({
+    account: address!,
+    gameId,
+    gameStatus,
+  })
 
   if (loading) {
     return <div>Loading...</div>
   }
 
-  if (!prematchMarkets?.length && !liveMarkets?.length) {
+  if (!groupedMarkets?.length) {
     return <div>Empty</div>
   }
 
-  console.log(prematchMarkets, liveMarkets);
-
   return (
-    <div className="space-y-10 mt-12">
-      {
-        Boolean(prematchMarkets?.length) && (
-          <div>
-            <div className="text-center text-xl font-bold mb-2">Prematch Results</div>
-            <GameMarkets markets={prematchMarkets} isResult />
-          </div>
-        )
-      }
-      {
-        Boolean(liveMarkets?.length) && (
-          <div>
-            <div className="text-center text-xl font-bold mb-2">Live Results</div>
-            <GameMarkets markets={liveMarkets} isResult />
-          </div>
-        )
-      }
+    <div className="mt-12">
+      <GameMarkets markets={groupedMarkets} betsSummary={betsSummary} isResult />
     </div>
   )
 }
@@ -67,7 +57,7 @@ const Markets: React.FC<MarketsProps> = (props) => {
   const { gameId, gameStatus } = props
 
   if (gameStatus === GameStatus.Resolved) {
-    return <ResolvedMarkets gameId={gameId} />
+    return <ResolvedMarkets {...props} />
   }
 
   return (

@@ -5,11 +5,12 @@ import { OutcomeButton, OutcomeResult } from '@/components'
 
 type GameMarketsProps = {
   markets: GameMarkets
+  betsSummary?: Record<string, string>
   isResult?: boolean
 }
 
 export function GameMarkets(props: GameMarketsProps) {
-  const { markets, isResult } = props
+  const { markets, betsSummary, isResult } = props
 
   return (
     <div className="max-w-[600px] mx-auto space-y-6">
@@ -24,18 +25,21 @@ export function GameMarkets(props: GameMarketsProps) {
                     <div className="flex gap-2 w-full">
                       {
                         outcomes.map((outcome) => {
+                          const key = outcome.outcomeId
+
                           if (isResult) {
                             return (
                               <OutcomeResult 
-                                key={outcome.outcomeId}
+                                key={key}
                                 outcome={outcome}
+                                summary={betsSummary?.[key]}
                               />
                             )
                           }
 
                           return (
                             <OutcomeButton
-                              key={outcome.outcomeId}
+                              key={key}
                               outcome={outcome}
                             />
                           )

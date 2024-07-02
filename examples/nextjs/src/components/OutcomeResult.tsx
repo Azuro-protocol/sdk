@@ -1,16 +1,18 @@
 'use client'
-import { ConditionStatus } from '@azuro-org/sdk'
+import { ConditionStatus, useChain } from '@azuro-org/sdk'
 import { type MarketOutcome } from '@azuro-org/sdk/utils'
 import cx from 'clsx';
 
 type OutcomeProps = {
   className?: string
   outcome: MarketOutcome
+  summary?: string
 }
 
 export function OutcomeResult(props: OutcomeProps) {
-  const { className, outcome } = props
+  const { className, outcome, summary } = props
   const { status, isWon } = outcome
+  const { betToken } = useChain()
 
   const isCanceled = status === ConditionStatus.Canceled
 
@@ -32,11 +34,11 @@ export function OutcomeResult(props: OutcomeProps) {
           <div className="">Refunded</div>
         )
       }
-      {/* {
-        Boolean(!isCanceled && betSummaryTitle) && (
-          <div className={betsSummaryClassName}>{`${formatToFixed(betSummaryTitle, 2)} ${betToken.symbol}`}</div>
+      {
+        Boolean(!isCanceled && summary) && (
+          <div>{`${(+summary!).toFixed(3)} ${betToken.symbol}`}</div>
         )
-      } */}
+      }
     </div>
   )
 }

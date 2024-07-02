@@ -170,7 +170,7 @@ export const groupConditionsByMarket = (conditions: ConditionsQuery['conditions'
     }
   })
 
-  let markets = Object.values(result)
+  const markets = Object.values(result)
   const orderedMarketKeys = dictionaries.marketOrders?.[sportId]
 
   if (!orderedMarketKeys) {

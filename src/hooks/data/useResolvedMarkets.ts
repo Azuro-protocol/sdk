@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 
 import { useConditions } from './useConditions'
-import { groupConditionsByMarket } from '../../utils/groupConditionsByMarket'
+import { type Market, groupConditionsByMarket } from '../../utils/groupConditionsByMarket'
 import { ConditionStatus } from '../../docs/prematch/types'
 
 
@@ -38,7 +38,30 @@ export const useResolvedMarkets = (props: Props) => {
     return groupConditionsByMarket(liveConditions)
   }, [ liveConditionIds ])
 
+  const groupedMarkets = useMemo(() => {
+    if (!prematchMarkets?.length || liveMarkets?.length) {
+      if (prematchMarkets?.length) {
+        return prematchMarkets
+      }
+
+      if (liveMarkets?.length) {
+        return liveMarkets
+      }
+    }
+
+    return Object.values([ ...liveMarkets, ...prematchMarkets ].reduce((acc, market) => {
+      const { marketKey } = market
+
+      if (!acc[marketKey]) {
+        acc[marketKey] = market
+      }
+
+      return acc
+    }, {} as Record<string, Market>))
+  }, [ prematchMarkets, liveMarkets ])
+
   return {
+    groupedMarkets,
     prematchMarkets,
     liveMarkets,
     loading,
