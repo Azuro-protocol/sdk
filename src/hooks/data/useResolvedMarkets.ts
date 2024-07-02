@@ -39,7 +39,7 @@ export const useResolvedMarkets = (props: Props) => {
   }, [ liveConditionIds ])
 
   const groupedMarkets = useMemo(() => {
-    if (!prematchMarkets?.length || liveMarkets?.length) {
+    if (!prematchMarkets?.length || !liveMarkets?.length) {
       if (prematchMarkets?.length) {
         return prematchMarkets
       }
