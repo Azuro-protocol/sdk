@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import { getGameStatus, type GameStatus } from '@azuro-org/toolkit'
 
-import { getGameStatus, type GameStatus } from '../utils/getGameStatus'
 import type { GameStatus as LiveGameStatus } from '../docs/live/types'
 import type { GameStatus as PrematchGameStatus } from '../docs/prematch/types'
 

@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-
-import { deBridgeUrl } from 'src/config'
+import { deBridgeUrl } from '@azuro-org/toolkit'
 
 
 type SupportedTokensResponse = {

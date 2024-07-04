@@ -1,9 +1,8 @@
 import { type Address } from 'viem'
 import { useQuery } from '@tanstack/react-query'
+import { type WaveId, getWaveStats } from '@azuro-org/toolkit'
 
-import { getWaveStats } from '../../utils/wave/getWaveStats'
 import { useChain } from '../../contexts/chain'
-import { type WaveId } from '../../global'
 
 
 type Props = {

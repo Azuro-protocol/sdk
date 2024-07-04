@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { chainsData } from '@azuro-org/toolkit'
 
 import { createBatch } from '../helpers'
-import { chainsData } from '../config'
 import { conditionStatusWatcher } from '../modules/conditionStatusWatcher'
 import { oddsWatcher } from '../modules/oddsWatcher'
 import { type ConditionStatus } from '../docs/prematch/types'

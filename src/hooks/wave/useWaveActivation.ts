@@ -1,9 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { type Address } from 'viem'
+import { type WaveId, activateWave } from '@azuro-org/toolkit'
 
-import { activateWave } from '../../utils/wave/activateWave'
 import { useChain } from '../../contexts/chain'
-import { type WaveId } from '../../global'
 
 
 type Props = {

@@ -6,7 +6,6 @@ import typescript from '@rollup/plugin-typescript'
 export default {
   input: {
     'index': 'src/index.ts',
-    'utils': 'src/utils.ts'
   },
   output: {
     dir: 'dist',

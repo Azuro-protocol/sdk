@@ -1,14 +1,9 @@
 import type { Address } from 'viem'
+import { type Selection } from '@azuro-org/toolkit'
 
 import { type BetStatus } from './docs/prematch/types'
 import { type GameQuery } from './docs/prematch/game'
 
-
-export type Selection = {
-  outcomeId: string
-  conditionId: string
-  coreAddress: string
-}
 
 export enum SportHub {
   Sports = 'sports',
@@ -46,5 +41,3 @@ export type Bet = {
   isCanceled: boolean
   isLive: boolean
 }
-
-export type WaveId = number | 'active'

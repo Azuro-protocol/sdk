@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@apollo/client'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
+import { type Selection } from '@azuro-org/toolkit'
 import { type Address } from 'viem'
 
 import { type LiveBetsQuery, type LiveBetsQueryVariables, LiveBetsDocument } from '../../docs/prematch/liveBets'
@@ -9,7 +10,7 @@ import { MainGameInfoFragmentDoc, type MainGameInfoFragment } from '../../docs/p
 import { type GamesQuery, GamesDocument } from '../../docs/prematch/games'
 import { type GameQuery } from '../../docs/prematch/game'
 import { useApolloClients } from '../../contexts/apollo'
-import { type Selection, type Bet } from '../../global'
+import { type Bet } from '../../global'
 
 
 type LiveBetOutcome = {
@@ -227,7 +228,7 @@ export const useLiveBets = (props: UseLiveBetsProps) => {
             } ],
           }
         }
-      }).filter(Boolean) as Array<Bet>
+      }).filter(Boolean) as unknown as Array<Bet>
 
       setGamesFetching(false)
       setBets(betsWithGames)

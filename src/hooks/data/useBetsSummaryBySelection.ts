@@ -1,13 +1,12 @@
 import { useMemo } from 'react'
 import { useQuery } from '@apollo/client'
 import { type Address, formatUnits, parseUnits } from 'viem'
+import { ODDS_DECIMALS, GameStatus } from '@azuro-org/toolkit'
 
 import { useApolloClients } from '../../contexts/apollo'
-import { GameStatus } from '../../utils/getGameStatus'
 import { GameBetsDocument, type GameBetsQuery, type GameBetsQueryVariables } from '../../docs/prematch/gameBets'
 import { BetResult } from '../../docs/prematch/types'
 import { useChain } from '../../contexts/chain'
-import { ODDS_DECIMALS } from '../../config'
 
 
 export type BetsSummaryBySelection = Record<string, string>

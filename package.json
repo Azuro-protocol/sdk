@@ -6,12 +6,10 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist",
-    "utils"
+    "dist"
   ],
   "exports": {
-    ".": "./dist/index.js",
-    "./utils": "./dist/utils.js"
+    ".": "./dist/index.js"
   },
   "sideEffects": true,
   "scripts": {
@@ -49,5 +47,8 @@
     "rollup-plugin-preserve-directives": "^0.2.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "@azuro-org/toolkit": "^3.0.0"
   }
 }

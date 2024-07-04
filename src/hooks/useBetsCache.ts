@@ -1,5 +1,6 @@
 import { type TransactionReceipt, type Address, formatUnits, parseUnits } from 'viem'
 import { useAccount } from 'wagmi'
+import { type Selection, ODDS_DECIMALS, liveHostAddress, liveCoreAbi } from '@azuro-org/toolkit'
 
 import { BetFragmentDoc as PrematchBetFragmentDoc, type BetFragment as PrematchBetFragment } from '../docs/prematch/fragments/bet'
 import { LiveBetFragmentDoc, type LiveBetFragment } from '../docs/prematch/fragments/liveBet'
@@ -26,9 +27,6 @@ import { ConditionStatus, BetStatus } from '../docs/prematch/types'
 import { useApolloClients } from '../contexts/apollo'
 import { getEventArgsFromTxReceipt } from '../helpers'
 import { useChain } from '../contexts/chain'
-import { ODDS_DECIMALS, liveHostAddress } from '../config'
-import type { Selection } from '../global'
-import { liveCoreAbi } from '../abis'
 
 
 type UpdateBetProps = {

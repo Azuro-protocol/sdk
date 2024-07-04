@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { useQuery } from '@apollo/client'
-
-import { liveSupportedChains } from 'src/config'
+import { liveSupportedChains } from '@azuro-org/toolkit'
 
 import {
   ConditionsDocument as PrematchConditionsDocument,

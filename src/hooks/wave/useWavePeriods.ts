@@ -1,8 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
+import { type WaveId, getWavePeriods } from '@azuro-org/toolkit'
 
-import { getWavePeriods } from '../../utils/wave/getWavePeriods'
 import { useChain } from '../../contexts/chain'
-import { type WaveId } from '../../global'
 
 
 export type WavePeriod = {
