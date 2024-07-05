@@ -6,6 +6,12 @@
 npm install @azuro-org/sdk
 ```
 
+#### Dependencies
+
+```
+@azuro-org/toolkit@^4.0.0
+```
+
 #### Peer Dependencies
 
 ```
