@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getGameStatus, type GameStatus } from '@azuro-org/toolkit'
+import { getGameStatus, type GameStatus, type LiveGraphGameStatus } from '@azuro-org/toolkit'
 
-import type { GameStatus as LiveGameStatus } from '../docs/live/types'
-import type { GameStatus as PrematchGameStatus } from '../docs/prematch/types'
 
+type GraphGameStatus = LiveGraphGameStatus
 
 type Props = {
   startsAt: number
-  graphStatus: LiveGameStatus | PrematchGameStatus
+  graphStatus: GraphGameStatus
   isGameExistInLive: boolean
 }
 

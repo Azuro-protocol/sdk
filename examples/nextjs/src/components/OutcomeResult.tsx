@@ -1,6 +1,6 @@
 'use client'
-import { ConditionStatus, useChain } from '@azuro-org/sdk'
-import { type MarketOutcome } from '@azuro-org/sdk/utils'
+import { useChain } from '@azuro-org/sdk'
+import { type MarketOutcome, ConditionStatus } from '@azuro-org/toolkit'
 import cx from 'clsx';
 
 type OutcomeProps = {

@@ -1,13 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { deBridgeUrl } from '@azuro-org/toolkit'
+import { getDeBridgeSupportedChains } from '@azuro-org/toolkit'
 
-
-type SupportedChainsResponse = {
-  chains: {
-    chainId: number
-    chainName: string
-  }[]
-}
 
 type Props = {
   enabled?: boolean
@@ -15,9 +8,11 @@ type Props = {
 
 export const useDeBridgeSupportedChains = ({ enabled }: Props = { enabled: true }) => {
   const queryFn = async () => {
-    const response = await fetch(`${deBridgeUrl}/supported-chains-info`)
-    const { chains }: SupportedChainsResponse = await response.json()
+    const chains = await getDeBridgeSupportedChains()
 
+    if (!chains) {
+      return chains
+    }
 
     const chainIds = chains.map(({ chainId }) => chainId)
 

@@ -1,6 +1,6 @@
 'use client'
 import { useSelection, useBaseBetslip } from '@azuro-org/sdk'
-import { type MarketOutcome } from '@azuro-org/sdk/utils'
+import { type MarketOutcome } from '@azuro-org/toolkit'
 import cx from 'clsx';
 
 type OutcomeProps = {

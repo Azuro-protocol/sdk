@@ -1,4 +1,5 @@
-import { ConditionStatus } from '../../docs/prematch/types'
+import { ConditionStatus } from '@azuro-org/toolkit'
+
 import { useConditions } from './useConditions'
 
 

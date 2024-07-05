@@ -1,14 +1,28 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@apollo/client'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
-import { type Selection } from '@azuro-org/toolkit'
 import { type Address } from 'viem'
+import {
+  type Selection,
+  Bet_OrderBy,
+  OrderDirection,
+  BetResult,
+  GraphBetStatus,
+  SelectionResult,
+  ConditionStatus,
 
-import { type LiveBetsQuery, type LiveBetsQueryVariables, LiveBetsDocument } from '../../docs/prematch/liveBets'
-import { Bet_OrderBy, OrderDirection, BetResult, BetStatus, SelectionResult, ConditionStatus } from '../../docs/prematch/types'
-import { MainGameInfoFragmentDoc, type MainGameInfoFragment } from '../../docs/prematch/fragments/mainGameInfo'
-import { type GamesQuery, GamesDocument } from '../../docs/prematch/games'
-import { type GameQuery } from '../../docs/prematch/game'
+  type LiveBetsQuery,
+  type LiveBetsQueryVariables,
+  LiveBetsDocument,
+
+  type MainGameInfoFragment,
+  MainGameInfoFragmentDoc,
+
+  type GameQuery,
+  type GamesQuery,
+  GamesDocument,
+} from '@azuro-org/toolkit'
+
 import { useApolloClients } from '../../contexts/apollo'
 import { type Bet } from '../../global'
 
@@ -30,7 +44,7 @@ type LiveBet = {
   lpAddress: Address
   outcomes: LiveBetOutcome[]
   txHash: string
-  status: BetStatus
+  status: GraphBetStatus
   amount: string
   possibleWin: number
   payout: number | null
@@ -108,7 +122,7 @@ export const useLiveBets = (props: UseLiveBetsProps) => {
 
       const isWin = result === BetResult.Won
       const isLose = result === BetResult.Lost
-      const isCanceled = status === BetStatus.Canceled
+      const isCanceled = status === GraphBetStatus.Canceled
       // express bets have a specific feature - protocol redeems LOST expresses to release liquidity,
       // so we should validate it by "win"/"canceled" statuses
       const isRedeemed = (isWin || isCanceled) && _isRedeemed

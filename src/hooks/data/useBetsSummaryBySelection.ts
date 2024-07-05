@@ -1,11 +1,17 @@
 import { useMemo } from 'react'
 import { useQuery } from '@apollo/client'
 import { type Address, formatUnits, parseUnits } from 'viem'
-import { ODDS_DECIMALS, GameStatus } from '@azuro-org/toolkit'
+import {
+  ODDS_DECIMALS,
+  GameStatus,
+  BetResult,
+
+  type GameBetsQuery,
+  type GameBetsQueryVariables,
+  GameBetsDocument,
+} from '@azuro-org/toolkit'
 
 import { useApolloClients } from '../../contexts/apollo'
-import { GameBetsDocument, type GameBetsQuery, type GameBetsQueryVariables } from '../../docs/prematch/gameBets'
-import { BetResult } from '../../docs/prematch/types'
 import { useChain } from '../../contexts/chain'
 
 

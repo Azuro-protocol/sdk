@@ -9,42 +9,6 @@ export * from './contexts/apollo'
 export { SocketProvider } from './contexts/socket'
 export * from './contexts/betslip'
 
-// docs
-export { Game_OrderBy, Bet_OrderBy, ConditionStatus, OrderDirection, GameStatus as GraphGameStatus } from './docs/prematch/types'
-export { GamesDocument, type GamesQuery, type GamesQueryResult, type GamesQueryVariables } from './docs/prematch/games'
-export { GameDocument, type GameQuery, type GameQueryResult, type GameQueryVariables } from './docs/prematch/game'
-export { SportsDocument, type SportsQuery, type SportsQueryResult, type SportsQueryVariables } from './docs/prematch/sports'
-export {
-  BetsDocument as PrematchBetsDocument,
-  type BetsQuery as PrematchBetsQuery,
-  type BetsQueryResult as PrematchQueryResult,
-  type BetsQueryVariables as PrematchQueryVariables,
-} from './docs/prematch/bets'
-export {
-  LiveBetsDocument,
-  type LiveBetsQuery,
-  type LiveBetsQueryResult,
-  type LiveBetsQueryVariables,
-} from './docs/prematch/liveBets'
-export {
-  ConditionsDocument,
-  type ConditionsQuery,
-  type ConditionsQueryResult,
-  type ConditionsQueryVariables,
-} from './docs/prematch/conditions'
-export {
-  SportsNavigationDocument,
-  type SportsNavigationQuery,
-  type SportsNavigationQueryResult,
-  type SportsNavigationQueryVariables,
-} from './docs/prematch/sportsNavigation'
-export {
-  NavigationDocument,
-  type NavigationQuery,
-  type NavigationQueryResult,
-  type NavigationQueryVariables,
-} from './docs/prematch/navigation'
-
 // data hooks
 export { usePrematchBets, type UsePrematchBetsProps } from './hooks/data/usePrematchBets'
 export { useLiveBets, type UseLiveBetsProps } from './hooks/data/useLiveBets'

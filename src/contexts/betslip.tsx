@@ -1,14 +1,20 @@
 import React, { useContext, createContext, useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import type { ApolloCache, NormalizedCacheObject } from '@apollo/client'
+import {
+  type Selection,
+  ConditionStatus,
+  MIN_LIVE_BET_AMOUNT,
+  liveHostAddress,
+
+  type MainGameInfoFragment,
+  MainGameInfoFragmentDoc,
+} from '@azuro-org/toolkit'
 
 import { useApolloClients } from './apollo'
-import { MainGameInfoFragmentDoc, type MainGameInfoFragment } from '../docs/prematch/fragments/mainGameInfo'
-import { minLiveBetAmount, liveHostAddress, localStorageKeys } from '../config'
+import { localStorageKeys } from '../config'
 import { useChain } from './chain'
 import { useOdds } from '../hooks/watch/useOdds'
 import { useStatuses } from '../hooks/watch/useStatuses'
-import { ConditionStatus } from '../docs/live/types'
-import { type Selection } from '../global'
 import { formatBetValue } from '../helpers/formatBetValue'
 
 
@@ -168,7 +174,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     })
   }, [ items ])
 
-  const minBet = isLiveBet && !appChain?.testnet ? minLiveBetAmount : undefined
+  const minBet = isLiveBet && !appChain?.testnet ? MIN_LIVE_BET_AMOUNT : undefined
 
   const isAmountLowerThanMaxBet = Boolean(betAmount) && typeof maxBet !== 'undefined' ? +betAmount <= maxBet : true
   const isAmountBiggerThanMinBet = Boolean(betAmount) && typeof minBet !== 'undefined' ? +betAmount >= minBet : true

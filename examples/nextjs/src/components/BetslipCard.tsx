@@ -1,7 +1,8 @@
 'use client'
 
 import { getMarketName, getSelectionName } from "@azuro-org/dictionaries"
-import { type BetslipItem, ConditionStatus } from "@azuro-org/sdk"
+import { type BetslipItem } from "@azuro-org/sdk"
+import { ConditionStatus } from '@azuro-org/toolkit';
 import dayjs from "dayjs"
 import React from "react"
 

@@ -1,5 +1,6 @@
 'use client'
-import { GamesQuery, SportsQuery, useGameStatus, useActiveMarkets, useLive } from '@azuro-org/sdk'
+import { useGameStatus, useActiveMarkets, useLive } from '@azuro-org/sdk'
+import { type GamesQuery, type SportsQuery } from '@azuro-org/toolkit';
 import Link from 'next/link'
 import cx from 'clsx'
 import { useParams } from 'next/navigation'

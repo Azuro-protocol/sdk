@@ -1,9 +1,8 @@
 import { useMemo } from 'react'
 import { type QueryHookOptions, useQuery } from '@apollo/client'
 import { formatUnits } from 'viem'
+import { type BettorsQuery, type BettorsQueryVariables, BettorsDocument } from '@azuro-org/toolkit'
 
-import type { BettorsQuery, BettorsQueryVariables } from '../../docs/prematch/bettors'
-import { BettorsDocument } from '../../docs/prematch/bettors'
 import { useApolloClients } from '../../contexts/apollo'
 import { useChain } from '../../contexts/chain'
 

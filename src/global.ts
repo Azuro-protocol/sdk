@@ -1,8 +1,5 @@
 import type { Address } from 'viem'
-import { type Selection } from '@azuro-org/toolkit'
-
-import { type BetStatus } from './docs/prematch/types'
-import { type GameQuery } from './docs/prematch/game'
+import { type Selection, type GraphBetStatus, type GameQuery } from '@azuro-org/toolkit'
 
 
 export enum SportHub {
@@ -29,7 +26,7 @@ export type Bet = {
   lpAddress: Address
   outcomes: BetOutcome[]
   txHash: string
-  status: BetStatus
+  status: GraphBetStatus
   amount: string
   possibleWin: number
   payout: number | null
