@@ -1,7 +1,10 @@
 import { type ApolloClient } from '@apollo/client'
+import {
+  type ConditionStatus,
+  type PrematchConditionsBatchQuery,
+  PrematchConditionsBatchDocument,
+} from '@azuro-org/toolkit'
 
-import { type ConditionsBatchQuery, ConditionsBatchDocument } from '../docs/prematch/conditionsBatch'
-import type { ConditionStatus } from '../docs/prematch/types'
 import { createBatch } from './createBatch'
 
 
@@ -13,8 +16,8 @@ type OutcomeData = {
 type Result = Record<string, OutcomeData>
 
 const getOutcomes = async (conditionEntityIds: string[], client: ApolloClient<object>) => {
-  const result = await client.query<ConditionsBatchQuery>({
-    query: ConditionsBatchDocument,
+  const result = await client.query<PrematchConditionsBatchQuery>({
+    query: PrematchConditionsBatchDocument,
     variables: {
       conditionFilter: {
         id_in: conditionEntityIds,

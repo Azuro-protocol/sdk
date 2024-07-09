@@ -3,12 +3,10 @@ import {
   parseUnits, maxUint256,
   type Address, erc20Abi, type TransactionReceipt, type Hex, type TypedDataDomain } from 'viem'
 import { useMemo, useState } from 'react'
+import { type Selection, ODDS_DECIMALS, liveHostAddress, calcMindOdds, getPrematchBetDataBytes } from '@azuro-org/toolkit'
 
-import { calcMindOdds } from '../../utils/calcMindOdds'
-import { getPrematchBetDataBytes } from '../../utils/getPrematchBetDataBytes'
 import { useChain } from '../../contexts/chain'
-import { DEFAULT_DEADLINE, ODDS_DECIMALS, liveHostAddress } from '../../config'
-import { type Selection } from '../../global'
+import { DEFAULT_DEADLINE } from '../../config'
 import { useBetsCache, type NewBetProps } from '../useBetsCache'
 import { useLiveBetFee } from '../data/useLiveBetFee'
 

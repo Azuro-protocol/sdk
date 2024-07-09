@@ -1,4 +1,4 @@
-import { GamesQuery } from '@azuro-org/sdk'
+import { GamesQuery } from '@azuro-org/toolkit'
 import Link from 'next/link'
 import dayjs from 'dayjs'
 

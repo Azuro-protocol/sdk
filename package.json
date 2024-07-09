@@ -6,19 +6,14 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist",
-    "utils"
+    "dist"
   ],
   "exports": {
-    ".": "./dist/index.js",
-    "./utils": "./dist/utils.js"
+    ".": "./dist/index.js"
   },
   "sideEffects": true,
   "scripts": {
-    "gql:cleanup": "rimraf src/docs/**/*.ts src/docs/**/**/*.ts",
-    "gql": "npm run gql:cleanup & graphql-codegen",
-    "build-pure": "rimraf dist && rollup -c",
-    "build": "npm run gql && npm run build-pure",
+    "build": "rimraf dist && rollup -c",
     "prepublishOnly": "npm run build",
     "------------------  Lint --------------------------------------------------------------------------------": "",
     "lint": "next lint && tsc --noEmit",
@@ -34,10 +29,6 @@
     "wagmi": "^2.5.7"
   },
   "devDependencies": {
-    "@graphql-codegen/cli": "^4.0.1",
-    "@graphql-codegen/client-preset": "^4.0.0",
-    "@graphql-codegen/near-operation-file-preset": "^2.5.0",
-    "@graphql-codegen/typescript-react-apollo": "^3.3.7",
     "@rollup/plugin-typescript": "^11.1.2",
     "@types/react": "^18.0.0",
     "@typescript-eslint/eslint-plugin": "^6.19.1",
@@ -49,5 +40,8 @@
     "rollup-plugin-preserve-directives": "^0.2.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "@azuro-org/toolkit": "^3.0.0"
   }
 }

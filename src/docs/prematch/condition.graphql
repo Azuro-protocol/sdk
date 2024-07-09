@@ -1,5 +1,0 @@
-query Condition($id: String!) {
-  condition(id: $id, subgraphError: allow) {
-    ...Condition
-  }
-}

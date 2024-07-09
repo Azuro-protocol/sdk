@@ -1,6 +1,6 @@
 'use client'
 import { type Bet, useChain, useRedeemBet } from '@azuro-org/sdk'
-import { getBetStatus, getGameStatus, BetStatus, GameStatus } from '@azuro-org/sdk/utils';
+import { getBetStatus, getGameStatus, BetStatus, GameStatus } from '@azuro-org/toolkit';
 import dayjs from 'dayjs'
 import Link from 'next/link'
 import { useMemo } from 'react'
@@ -102,7 +102,7 @@ export function BetCard(props: Props) {
                 <p>{GameStatusText[getGameStatus({ graphStatus: gameStatus, startsAt: +startsAt, isGameInLive: isLive })]}</p>
               </div>
               <div className="flex items-center">
-                <Link href={`/events/${sportSlug}/${gameId}`} className="flex items-center mr-4">
+                <Link href={`/event/${gameId}`} className="flex items-center mr-4">
                     {
                       participants.map(({ image, name }) => (
                         <div key={name} className="flex items-center ml-2 first-of-type:ml-0">
