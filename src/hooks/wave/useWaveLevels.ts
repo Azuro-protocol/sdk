@@ -1,8 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
+import { type WaveId, getWaveLevels } from '@azuro-org/toolkit'
 
-import { getWaveLevels } from '../../utils/wave/getWaveLevels'
 import { useChain } from '../../contexts/chain'
-import { type WaveId } from '../../global'
 
 
 type Props = {

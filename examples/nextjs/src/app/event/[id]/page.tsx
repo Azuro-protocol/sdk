@@ -1,7 +1,7 @@
 'use client'
 import { useParams } from 'next/navigation'
-import { useGame, useActiveMarkets, useResolvedMarkets, type GameQuery, useGameStatus, useBetsSummaryBySelection } from '@azuro-org/sdk'
-import { GameStatus } from '@azuro-org/sdk/utils';
+import { useGame, useActiveMarkets, useResolvedMarkets, useGameStatus, useBetsSummaryBySelection } from '@azuro-org/sdk'
+import { type GameQuery, GameStatus } from '@azuro-org/toolkit';
 
 import { GameInfo, GameMarkets } from '@/components'
 import { useAccount } from 'wagmi';

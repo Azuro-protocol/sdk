@@ -1,103 +1,26 @@
-import { parseUnits, encodeFunctionData, erc20Abi, zeroAddress } from 'viem'
+import { parseUnits, erc20Abi, zeroAddress } from 'viem'
 import { type TransactionReceipt, type Address, type Hex, maxUint256 } from 'viem'
 import { getTransactionReceipt } from '@wagmi/core'
 import { useQuery } from '@tanstack/react-query'
 import { useAccount, useConfig, usePublicClient, useReadContract, useSendTransaction, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
 import { useState } from 'react'
+import {
+  type Selection,
+  liveHostAddress,
 
-import { DEFAULT_DEADLINE, ODDS_DECIMALS, deBridgeTxUrl, deBridgeUrl, liveHostAddress } from '../../config'
+  DeBridgeOrderStatus,
+  DeBridgeExternalCallStatus,
+  createDeBridgeBet,
+  getDeBridgeOrder,
+} from '@azuro-org/toolkit'
+
 import { useApolloClients } from '../../contexts/apollo'
 import { useChain } from '../../contexts/chain'
-import { type Selection } from '../../global'
-import { getPrematchBetDataBytes } from '../../utils/getPrematchBetDataBytes'
 import useDebounce from '../../helpers/hooks/useDebounce'
-import { calcMindOdds } from '../../utils/calcMindOdds'
 import { useBetsCache } from '../useBetsCache'
 import { useDeBridgeSupportedChains } from './useDeBridgeSupportedChains'
 import { useDeBridgeSupportedTokens } from './useDeBridgeSupportedTokens'
 
-
-type DeBridgeCreateTxResponse = {
-  orderId: Hex
-  estimation: {
-    srcChainTokenIn: {
-      address: Address
-      name: string
-      symbol: string
-      decimals: number
-      amount: string
-      approximateOperatingExpense: string
-      mutatedWithOperatingExpense: boolean
-    },
-    srcChainTokenOut: {
-      address: Address
-      name: string
-      symbol: string
-      decimals: number
-      amount: string
-      maxRefundAmount: string
-    }
-    dstChainTokenOut: {
-      address: Address
-      name: string
-      symbol: string
-      decimals: number
-      amount: string
-      recommendedAmount: string
-      withoutAdditionalTakerRewardsAmount: string
-      maxTheoreticalAmount: string
-    },
-    recommendedSlippage: number
-    costsDetails: [ string ]
-  }
-  tx: {
-    to: Address
-    data: Hex
-    value: bigint
-  }
-  order: {
-    approximateFulfillmentDelay: number
-  },
-  prependedOperatingExpenseCost: string
-  fixFee: string
-  userPoints: number
-  integratorPoints: number
-}
-
-enum DeBridgeOrderStatus {
-  None = 'None',
-  Created = 'Created',
-  Fulfilled = 'Fulfilled',
-  SentUnlock = 'SentUnlock',
-  OrderCancelled = 'OrderCancelled',
-  SentOrderCancel = 'SentOrderCancel',
-  ClaimedUnlock = 'ClaimedUnlock',
-  ClaimedOrderCancel = 'ClaimedOrderCancel',
-}
-
-enum DeBridgeExternalCallStatus {
-  NoExtCall = 'NoExtCall',
-  AwaitingOrderFulfillment = 'AwaitingOrderFulfillment',
-  AwaitingExecution = 'AwaitingExecution',
-  Executing = 'Executing',
-  Completed = 'Completed',
-  Failed = 'Failed',
-  Cancelled = 'Cancelled',
-}
-
-type DeBridgeOrderStatusResponse = {
-  orderId: Hex
-  status: DeBridgeOrderStatus
-  externalCallState: DeBridgeExternalCallStatus
-}
-
-type DeBridgeOrderTxResponse = {
-  fulfilledDstEventMetadata: {
-    transactionHash: {
-      stringValue: string
-    }
-  }
-}
 
 type Props = {
   fromChainId: number
@@ -125,7 +48,7 @@ export const useDeBridgeBet = (props: Props) => {
   const publicClient = usePublicClient()
   const config = useConfig()
   const account = useAccount()
-  const { appChain, betToken, contracts } = useChain()
+  const { appChain, betToken } = useChain()
 
   const [ isBetPending, setBetPending ] = useState(false)
   const [ isBetProcessing, setBetProcessing ] = useState(false)
@@ -151,55 +74,21 @@ export const useDeBridgeBet = (props: Props) => {
     enabled: !isLiveBet && !isDeBridgeSupportedChainsFetching && (supportedChainIds || []).includes(fromChainId),
   })
 
-  const queryFn = async () => {
-    const fixedAmount = parseFloat(betAmount).toFixed(betToken.decimals)
-    const fixedMinOdds = calcMindOdds({ odds: totalOdds, slippage })
-    const coreAddress = selections.length > 1 ? contracts.prematchComboCore.address : contracts.prematchCore.address
-    const betData = getPrematchBetDataBytes(selections)
-
-    const rawAmount = parseUnits(fixedAmount, betToken.decimals)
-    const rawMinOdds = parseUnits(fixedMinOdds, ODDS_DECIMALS)
-    const rawDeadline = BigInt(Math.floor(Date.now() / 1000) + (deadline || DEFAULT_DEADLINE))
-
-    const params = new URLSearchParams({
-      dstChainId: String(appChain.id),
-      srcChainOrderAuthorityAddress: account.address as string,
-      prependOperatingExpenses: 'false',
-      srcChainId: String(fromChainId),
+  const queryFn = () => (
+    createDeBridgeBet({
+      account: account.address!,
+      betAmount,
+      dstChainId: appChain.id,
+      srcChainId: fromChainId,
       srcChainTokenIn: fromTokenAddress,
-      srcChainTokenInAmount: 'auto',
-      dstChainTokenOut: betToken.address as string,
-      dstChainTokenOutAmount: String(rawAmount),
-      dstChainTokenOutRecipient: account.address as string,
-      dstChainOrderAuthorityAddress: account.address as string,
-      externalCall: JSON.stringify({
-        version: 'evm_1',
-        fields: {
-          to: contracts.lp.address,
-          data: encodeFunctionData({
-            abi: contracts.lp.abi,
-            functionName: 'betFor',
-            args: [
-              account.address!,
-              coreAddress,
-              rawAmount,
-              rawDeadline,
-              {
-                affiliate,
-                minOdds: rawMinOdds,
-                data: betData,
-              },
-            ],
-          }),
-        },
-      }),
-      referralCode: String(referralCode),
+      selections,
+      totalOdds,
+      slippage,
+      deadline,
+      affiliate,
+      referralCode,
     })
-    const deBridgeCreateTxResponse = await fetch(`${deBridgeUrl}/dln/order/create-tx?${params}`)
-    const data: DeBridgeCreateTxResponse = await deBridgeCreateTxResponse.json()
-
-    return data
-  }
+  )
 
   const selectionsKey = selections.map(({ conditionId }) => conditionId).join('-')
 
@@ -293,21 +182,18 @@ export const useDeBridgeBet = (props: Props) => {
 
       const txHash = await new Promise<Hex>((res, rej) => {
         const interval = setInterval(async () => {
-          const orderResponse = await fetch(`${deBridgeUrl}/dln/order/${orderId}`)
-          const order: DeBridgeOrderStatusResponse = await orderResponse.json()
+          const order = await getDeBridgeOrder(orderId!)
           const {
-            status: orderStatus,
+            state: orderStatus,
             externalCallState: betPlacingStatus,
-          } = order
+            fulfilledDstEventMetadata,
+          } = order!
 
           const isBetPlaced = betPlacingStatus === DeBridgeExternalCallStatus.Completed
           const isOrderFulfilled = isBetPlaced || orderStatus === DeBridgeOrderStatus.Fulfilled || orderStatus === DeBridgeOrderStatus.ClaimedUnlock
 
           if (isOrderFulfilled) {
             clearInterval(interval)
-
-            const orderTxResponse = await fetch(`${deBridgeTxUrl}/orders/${orderId}`)
-            const { fulfilledDstEventMetadata }: DeBridgeOrderTxResponse = await orderTxResponse.json()
 
             res(fulfilledDstEventMetadata?.transactionHash?.stringValue as Hex)
           }

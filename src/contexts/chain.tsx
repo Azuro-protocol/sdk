@@ -1,8 +1,9 @@
 import React, { useState, useContext, createContext } from 'react'
 import { useAccount } from 'wagmi'
 import { type Chain } from 'viem'
+import { chainsData, type ChainId, type ChainData } from '@azuro-org/toolkit'
 
-import { chainsData, type ChainId, type ChainData, cookieKeys } from '../config'
+import { cookieKeys } from '../config'
 
 
 export type ChainContextValue = Omit<ChainData, 'chain'> & {

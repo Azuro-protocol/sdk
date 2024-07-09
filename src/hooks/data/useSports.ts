@@ -1,14 +1,17 @@
 import { useMemo } from 'react'
 import { useQuery, type QueryHookOptions } from '@apollo/client'
+import {
+  PrematchGraphGameStatus,
+  Game_OrderBy,
+  OrderDirection,
+
+  type SportsQuery,
+  type SportsQueryVariables,
+  SportsDocument,
+} from '@azuro-org/toolkit'
 
 import { useChain } from '../../contexts/chain'
 import { useApolloClients } from '../../contexts/apollo'
-import { SportsDocument, type SportsQuery, type SportsQueryVariables } from '../../docs/prematch/sports'
-import {
-  GameStatus,
-  Game_OrderBy,
-  OrderDirection,
-} from '../../docs/prematch/types'
 import { getGameStartsAtValue } from '../../helpers'
 import type { SportHub } from '../../global'
 
@@ -48,7 +51,7 @@ export const useSports = (props: UseSportsProps) => {
       leagueFilter: {},
       gameFilter: {
         hasActiveConditions: true,
-        status_in: [ GameStatus.Created, GameStatus.Paused ],
+        status_in: [ PrematchGraphGameStatus.Created, PrematchGraphGameStatus.Paused ],
       },
       gameOrderBy,
       gameOrderDirection: orderDir,

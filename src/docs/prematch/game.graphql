@@ -1,7 +1,0 @@
-query Game(
-  $gameId: BigInt!
-) {
-  games(where: {gameId: $gameId}) {
-    ...MainGameInfo
-  }
-}

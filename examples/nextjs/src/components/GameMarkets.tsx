@@ -1,5 +1,5 @@
 'use client'
-import { GameStatus, type GameMarkets } from '@azuro-org/sdk/utils';
+import { type GameMarkets } from '@azuro-org/toolkit';
 import { OutcomeButton, OutcomeResult } from '@/components'
 
 

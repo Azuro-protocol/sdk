@@ -1,11 +1,15 @@
 import { useMemo } from 'react'
 import { useQuery, type QueryHookOptions } from '@apollo/client'
+import {
+  PrematchGraphGameStatus,
 
-import type { NavigationQuery, NavigationQueryVariables } from '../../docs/prematch/navigation'
-import { NavigationDocument } from '../../docs/prematch/navigation'
+  type NavigationQuery,
+  type NavigationQueryVariables,
+  NavigationDocument,
+} from '@azuro-org/toolkit'
+
 import { useApolloClients } from '../../contexts/apollo'
 import { getGameStartsAtValue } from '../../helpers'
-import { GameStatus } from '../../docs/prematch/types'
 
 
 type UseNavigationProps = {
@@ -26,7 +30,7 @@ export const useNavigation = (props: UseNavigationProps = {}) => {
       withGameCount,
       where: {
         hasActiveConditions: true,
-        status_in: [ GameStatus.Created, GameStatus.Paused ],
+        status_in: [ PrematchGraphGameStatus.Created, PrematchGraphGameStatus.Paused ],
       },
     }
 

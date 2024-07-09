@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import { type GameQuery } from '@azuro-org/sdk'
+import { type GameQuery } from '@azuro-org/toolkit'
 import { ParticipantLogo } from '@/components'
 
 

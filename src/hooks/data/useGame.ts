@@ -1,8 +1,7 @@
 import { useMemo } from 'react'
 import { useQuery } from '@apollo/client'
+import { type GameQuery, type GameQueryVariables, GameDocument } from '@azuro-org/toolkit'
 
-import type { GameQuery, GameQueryVariables } from '../../docs/prematch/game'
-import { GameDocument } from '../../docs/prematch/game'
 import { useApolloClients } from '../../contexts/apollo'
 
 

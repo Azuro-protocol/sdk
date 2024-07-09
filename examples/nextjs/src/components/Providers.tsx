@@ -1,6 +1,7 @@
 'use client'
 import React from 'react'
-import { ChainId, AzuroSDKProvider, LiveProvider } from '@azuro-org/sdk'
+import { AzuroSDKProvider, LiveProvider } from '@azuro-org/sdk'
+import { ChainId } from '@azuro-org/toolkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RainbowKitProvider, getDefaultWallets, getDefaultConfig } from '@rainbow-me/rainbowkit'
 import { polygonAmoy, gnosis, polygon, chiliz, spicy } from 'wagmi/chains'

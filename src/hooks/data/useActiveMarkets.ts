@@ -1,8 +1,7 @@
 import { useMemo } from 'react'
+import { GameStatus, groupConditionsByMarket } from '@azuro-org/toolkit'
 
 import { useActiveConditions } from './useActiveConditions'
-import { GameStatus } from '../../utils/getGameStatus'
-import { groupConditionsByMarket } from '../../utils/groupConditionsByMarket'
 
 
 type Props = {

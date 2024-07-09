@@ -1,4 +1,4 @@
-import type { ConditionStatus } from '../docs/prematch/types'
+import { type ConditionStatus } from '@azuro-org/toolkit'
 
 
 type Cb = (status: ConditionStatus) => void

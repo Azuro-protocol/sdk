@@ -1,8 +1,7 @@
 import { useMemo } from 'react'
+import { type Market, groupConditionsByMarket, ConditionStatus } from '@azuro-org/toolkit'
 
 import { useConditions } from './useConditions'
-import { type Market, groupConditionsByMarket } from '../../utils/groupConditionsByMarket'
-import { ConditionStatus } from '../../docs/prematch/types'
 
 
 type Props = {

@@ -1,19 +1,18 @@
 import { useMemo } from 'react'
 import { useQuery } from '@apollo/client'
-
-import { liveSupportedChains } from 'src/config'
-
 import {
-  ConditionsDocument as PrematchConditionsDocument,
-  type ConditionsQuery as PrematchConditionsQuery,
-  type ConditionsQueryVariables as PrematchConditionsQueryVariables,
-} from '../../docs/prematch/conditions'
-import {
-  ConditionsDocument as LiveConditionsDocument,
-  type ConditionsQuery as LiveConditionsQuery,
-  type ConditionsQueryVariables as LiveConditionsQueryVariables,
-} from '../../docs/live/conditions'
-import { type Condition_Filter } from '../../docs/prematch/types'
+  liveSupportedChains,
+  type Condition_Filter,
+
+  type PrematchConditionsQuery,
+  type PrematchConditionsQueryVariables,
+  PrematchConditionsDocument,
+
+  type LiveConditionsQuery,
+  type LiveConditionsQueryVariables,
+  LiveConditionsDocument,
+} from '@azuro-org/toolkit'
+
 import { useApolloClients } from '../../contexts/apollo'
 import { useChain } from '../../contexts/chain'
 
