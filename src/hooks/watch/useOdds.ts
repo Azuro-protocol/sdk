@@ -40,7 +40,7 @@ export const useOdds = ({ selections, betAmount, batchBetAmounts }: CalcOddsProp
   }, [ selections ])
 
   const [ odds, setOdds ] = useState<Record<string, number>>({})
-  const [ totalOdds, setTotalOdds ] = useState<number>(1)
+  const [ totalOdds, setTotalOdds ] = useState<number>(0)
   const [ isPrematchOddsFetching, setPrematchOddsFetching ] = useState(Boolean(prematchItems.length))
 
   const oddsDataRef = useRef<Record<string, OddsChangedData>>({})

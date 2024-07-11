@@ -15,12 +15,14 @@ export function Watchers() {
 
 type AzuroSDKProviderProps = ChainProviderProps & BetslipProviderProps
 
-export const AzuroSDKProvider: React.FC<AzuroSDKProviderProps> = ({ children, initialChainId, isBatchBetWithSameGameEnabled }) => {
+export const AzuroSDKProvider: React.FC<AzuroSDKProviderProps> = (props) => {
+  const { children, initialChainId, affiliate, isBatchBetWithSameGameEnabled } = props
+
   return (
     <ChainProvider initialChainId={initialChainId}>
       <SocketProvider>
         <ApolloProvider>
-          <BetslipProvider isBatchBetWithSameGameEnabled={isBatchBetWithSameGameEnabled}>
+          <BetslipProvider isBatchBetWithSameGameEnabled={isBatchBetWithSameGameEnabled} affiliate={affiliate}>
             {children}
           </BetslipProvider>
         </ApolloProvider>

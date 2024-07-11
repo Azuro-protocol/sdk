@@ -48,6 +48,7 @@ export function BetCard(props: Props) {
   }, [])
 
   const isDisabled = isPending || isProcessing
+  const isFreeBet = Boolean(freebetId)
 
   let winAmount
   let buttonTitle
@@ -77,7 +78,10 @@ export function BetCard(props: Props) {
   return (
     <div className="p-4 bg-zinc-50 mt-2 first-of-type:mt-0 rounded-lg">
       <div className="flex items-center justify-between">
-        <p>{dayjs(+createdAt * 1000).format('DD.MM.YYYY, hh:mm A')}</p>
+        <p>
+          {dayjs(+createdAt * 1000).format('DD.MM.YYYY, hh:mm A')}
+          <span className='ml-2 text-blue-500'>{isFreeBet && 'FreeBet'}</span>
+        </p>
         <p>{BetStatusText[betStatus]}</p>
       </div>
       {
