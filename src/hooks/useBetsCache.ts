@@ -34,7 +34,6 @@ import {
 
   type GameQuery,
   GameDocument,
-  freeBetAbi,
 } from '@azuro-org/toolkit'
 
 import { useApolloClients } from '../contexts/apollo'
