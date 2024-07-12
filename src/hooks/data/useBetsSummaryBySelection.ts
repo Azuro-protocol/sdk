@@ -99,10 +99,10 @@ export const useBetsSummaryBySelection = ({ account, gameId, gameStatus, keyStru
           const rawSubBetOdds = parseUnits(String(BigInt(rawOdds) - rawOne), DIVIDER)
           const rawSubBetAmount = rawAmount * ( rawSubBetOdds / rawOddsSummary )
 
-          acc[key] += isWin ? rawSubBetAmount * BigInt(rawOdds) : -rawSubBetAmount
+          acc[key]! += isWin ? rawSubBetAmount * BigInt(rawOdds) : -rawSubBetAmount
         }
         else {
-          acc[key] += parseUnits(String(isWin ? rawPayout : -rawAmount), DIVIDER)
+          acc[key]! += parseUnits(String(isWin ? rawPayout : -rawAmount), DIVIDER)
         }
       })
 

@@ -12,6 +12,11 @@
     ".": "./dist/index.js"
   },
   "sideEffects": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Azuro-protocol/sdk"
+  },
+  "homepage": "https://github.com/Azuro-protocol/sdk#readme",
   "scripts": {
     "build": "rimraf dist && rollup -c",
     "prepublishOnly": "npm run build",
