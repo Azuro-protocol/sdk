@@ -12,6 +12,11 @@
     ".": "./dist/index.js"
   },
   "sideEffects": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Azuro-protocol/sdk"
+  },
+  "homepage": "https://github.com/Azuro-protocol/sdk#readme",
   "scripts": {
     "build": "rimraf dist && rollup -c",
     "prepublishOnly": "npm run build",
@@ -25,8 +30,8 @@
     "@azuro-org/dictionaries": "^3.0.12",
     "graphql": "^16.8.1",
     "react": "^18.2.0",
-    "viem": "^2.7.9",
-    "wagmi": "^2.5.7"
+    "viem": "^2.17.3",
+    "wagmi": "^2.10.9"
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.2",

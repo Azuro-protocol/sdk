@@ -122,7 +122,7 @@ export const useBetsCache = () => {
 
   const addBet = async (props: NewBetProps) => {
     const { bet, odds, affiliate, receipt } = props
-    const { rawAmount, selections } = bet
+    const { rawAmount, selections, freebetId } = bet
 
     const coreAddress = selections[0]!.coreAddress
     const isLive = coreAddress.toLowerCase() === liveHostAddress.toLowerCase()
@@ -235,36 +235,46 @@ export const useBetsCache = () => {
     }
 
     let tokenId: string
-    let rawOdds: bigint
+    let rawOdds: bigint = 0n
 
     if (isLive) {
       const receiptArgs = getEventArgsFromTxReceipt({ receipt, eventName: 'NewLiveBet', abi: liveCoreAbi })
 
-      tokenId = (receiptArgs?.tokenId).toString()
-      rawOdds = receiptArgs?.odds
+      tokenId = (receiptArgs?.tokenId!).toString()
+      rawOdds = receiptArgs?.odds!
     }
+    // we don't need additional for freeBet cause it triggers NewBet event on prematch core
     else {
       const isExpress = selections.length > 1
-      const abi = isExpress ? contracts.prematchComboCore.abi : contracts.prematchCore.abi
-      let eventParams
 
-      if (!isExpress) {
+      if (isExpress) {
+
+        const receiptArgs = getEventArgsFromTxReceipt({
+          receipt,
+          eventName: 'NewBet',
+          abi: contracts.prematchComboCore.abi,
+        })
+
+        tokenId = receiptArgs?.betId.toString()!
+        rawOdds = receiptArgs?.bet.odds!
+      }
+      else {
         const { conditionId, outcomeId } = selections[0]!
-        eventParams = {
+        const eventParams = {
           conditionId: BigInt(conditionId),
           outcomeId: BigInt(outcomeId),
         }
+
+        const receiptArgs = getEventArgsFromTxReceipt({
+          receipt,
+          eventName: 'NewBet',
+          abi: contracts.prematchCore.abi,
+          params: eventParams,
+        })
+
+        tokenId = receiptArgs?.tokenId.toString()!
+        rawOdds = receiptArgs?.odds!
       }
-
-      const receiptArgs = getEventArgsFromTxReceipt({
-        receipt,
-        eventName: 'NewBet',
-        abi,
-        params: eventParams,
-      })
-
-      tokenId = (isExpress ? receiptArgs?.betId : receiptArgs?.tokenId)?.toString()
-      rawOdds = isExpress ? receiptArgs?.bet.odds : receiptArgs?.odds
     }
 
     const rawPotentialPayout = rawAmount * rawOdds
