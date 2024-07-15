@@ -1,5 +1,6 @@
 'use client'
-import { usePrematchBets, useLiveBets, OrderDirection } from '@azuro-org/sdk'
+import { usePrematchBets, useLiveBets } from '@azuro-org/sdk'
+import { OrderDirection } from '@azuro-org/toolkit';
 import { useAccount } from 'wagmi';
 import { BetCard, RedeemAll } from '@/components';
 import { useMemo } from 'react';

@@ -1,6 +1,7 @@
 import React, { useContext, createContext, useState, useMemo } from 'react'
+import { liveSupportedChains } from '@azuro-org/toolkit'
 
-import { cookieKeys, liveSupportedChains } from '../config'
+import { cookieKeys } from '../config'
 import { useChain } from './chain'
 
 

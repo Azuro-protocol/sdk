@@ -1,18 +1,24 @@
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient, useWalletClient } from 'wagmi'
+import {
+  useAccount, useReadContract, useWriteContract,
+  useWaitForTransactionReceipt, usePublicClient, useWalletClient,
+} from 'wagmi'
 import {
   parseUnits, maxUint256,
   type Address, erc20Abi, type TransactionReceipt, type Hex, type TypedDataDomain,
   type WriteContractParameters,
 } from 'viem'
+import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
+import {
+  type Selection, ODDS_DECIMALS, liveHostAddress,
+  calcMindOdds, freeBetAbi, getPrematchBetDataBytes,
+} from '@azuro-org/toolkit'
 
-import { calcMindOdds } from '../../utils/calcMindOdds'
-import { getPrematchBetDataBytes } from '../../utils/getPrematchBetDataBytes'
 import { useChain } from '../../contexts/chain'
-import { DEFAULT_DEADLINE, ODDS_DECIMALS, liveHostAddress } from '../../config'
-import { type Selection } from '../../global'
+import { DEFAULT_DEADLINE } from '../../config'
 import { useBetsCache, type NewBetProps } from '../useBetsCache'
 import { useLiveBetFee } from '../data/useLiveBetFee'
+import { type FreeBet } from '../data/useFreeBets'
 
 
 enum LiveOrderState {
@@ -42,6 +48,7 @@ type Props = {
   selections: Selection[]
   odds: Record<string, number>
   totalOdds: number
+  freeBet?: FreeBet
   betGas?: Pick<WriteContractParameters, 'gas' | 'gasPrice'>
   liveEIP712Attention?: string
   deadline?: number
@@ -52,15 +59,18 @@ type Props = {
 export const usePrepareBet = (props: Props) => {
   const {
     betAmount: _betAmount, slippage, deadline, affiliate, selections, odds,
-    totalOdds, betGas, liveEIP712Attention, onSuccess, onError,
+    totalOdds, freeBet, betGas, liveEIP712Attention, onSuccess, onError,
   } = props
 
   const isLiveBet = useMemo(() => {
     return selections.some(({ coreAddress }) => coreAddress === liveHostAddress)
   }, [ selections ])
-  const isBatch = !isLiveBet && typeof _betAmount === 'object'
+  const isCombo = !isLiveBet && selections.length > 1
+  const isBatch = isCombo && typeof _betAmount === 'object'
+  const isFreeBet = Boolean(freeBet) && !isCombo && !isBatch
 
   const account = useAccount()
+  const queryClient = useQueryClient()
   const publicClient = usePublicClient()
   const walletClient = useWalletClient()
   const { appChain, contracts, betToken, api, environment } = useChain()
@@ -87,7 +97,7 @@ export const usePrepareBet = (props: Props) => {
       approveAddress!,
     ],
     query: {
-      enabled: Boolean(account.address) && Boolean(approveAddress),
+      enabled: Boolean(account.address) && Boolean(approveAddress) && !isFreeBet,
     },
   })
 
@@ -278,10 +288,49 @@ export const usePrepareBet = (props: Props) => {
           throw Error(errorMessage)
         }
       }
+      else if (isFreeBet) {
+        const { coreAddress, conditionId, outcomeId } = selections[0]!
+        const { id, expiresAt, contractAddress, rawMinOdds, rawAmount, signature, chainId } = freeBet!
+
+        const fixedSelectionMinOdds = calcMindOdds({ odds: odds[`${conditionId}-${outcomeId}`]!, slippage })
+        const rawSelectionMinOdds = parseUnits(fixedSelectionMinOdds, ODDS_DECIMALS)
+        const rawFreeBetMinOdds = rawMinOdds > rawSelectionMinOdds ? rawMinOdds : rawSelectionMinOdds
+
+        bets.push({
+          rawAmount,
+          selections,
+          freebetContractAddress: contractAddress,
+          freebetId: String(id),
+        })
+
+        txHash = await betTx.writeContractAsync({
+          address: contractAddress,
+          account: account.address!,
+          abi: freeBetAbi,
+          functionName: 'bet',
+          args: [
+            {
+              chainId: BigInt(chainId),
+              expiresAt: BigInt(Math.floor(expiresAt / 1000)),
+              amount: rawAmount,
+              freeBetId: BigInt(id),
+              minOdds: rawMinOdds,
+              owner: account.address!,
+            },
+            signature,
+            coreAddress as Address,
+            BigInt(conditionId),
+            BigInt(outcomeId),
+            rawDeadline,
+            rawFreeBetMinOdds,
+          ],
+          ...(betGas || {}),
+        })
+      }
       else {
         let betData
 
-        if (selections.length > 1 && isBatch) {
+        if (isBatch) {
           betData = selections.map(selection => {
             const { conditionId, outcomeId } = selection
 
@@ -348,6 +397,19 @@ export const usePrepareBet = (props: Props) => {
       const receipt = await publicClient?.waitForTransactionReceipt({
         hash: txHash,
       })
+
+      if (isFreeBet) {
+        const queryKey = [ 'freebets', api, account.address!.toLowerCase(), affiliate.toLowerCase() ]
+        await queryClient.cancelQueries({ queryKey })
+
+        queryClient.setQueryData(queryKey, (oldFreeBets: FreeBet[]) => {
+          const newFreeBets = [ ...oldFreeBets ].filter(({ id, contractAddress }) => {
+            return contractAddress.toLowerCase() !== freeBet!.contractAddress.toLowerCase() || id !== freeBet!.id
+          })
+
+          return newFreeBets
+        })
+      }
 
       if (receipt) {
         bets.forEach((bet) => {

@@ -1,35 +1,41 @@
 import { useMemo } from 'react'
 import { useQuery } from '@apollo/client'
-
-import { liveSupportedChains } from 'src/config'
-
 import {
-  ConditionsDocument as PrematchConditionsDocument,
-  type ConditionsQuery as PrematchConditionsQuery,
-  type ConditionsQueryVariables as PrematchConditionsQueryVariables,
-} from '../../docs/prematch/conditions'
-import {
-  ConditionsDocument as LiveConditionsDocument,
-  type ConditionsQuery as LiveConditionsQuery,
-  type ConditionsQueryVariables as LiveConditionsQueryVariables,
-} from '../../docs/live/conditions'
+  liveSupportedChains,
+  type Condition_Filter,
+
+  type PrematchConditionsQuery,
+  type PrematchConditionsQueryVariables,
+  PrematchConditionsDocument,
+
+  type LiveConditionsQuery,
+  type LiveConditionsQueryVariables,
+  LiveConditionsDocument,
+} from '@azuro-org/toolkit'
+
 import { useApolloClients } from '../../contexts/apollo'
 import { useChain } from '../../contexts/chain'
 
 
-export type ConditionsQuery = PrematchConditionsQuery | LiveConditionsQuery
+type QueryProps = {
+  pollInterval?: number
+  skip?: boolean
+}
 
 type UseConditionsProps = {
   gameId: string | bigint
-  isLive: boolean
-  livePollInterval?: number
-  filter?: {
-    outcomeIds?: string[]
-  }
+  filter?: Condition_Filter
+  prematchQuery?: QueryProps
+  liveQuery?: QueryProps
+}
+
+const defaultQueryProps: QueryProps = {
+  pollInterval: undefined,
+  skip: false,
 }
 
 export const useConditions = (props: UseConditionsProps) => {
-  const { gameId, isLive, livePollInterval, filter } = props
+  const { gameId, filter, prematchQuery = defaultQueryProps, liveQuery = defaultQueryProps } = props
   const { prematchClient, liveClient } = useApolloClients()
   const { appChain } = useChain()
 
@@ -39,15 +45,12 @@ export const useConditions = (props: UseConditionsProps) => {
         game_: {
           gameId,
         },
+        ...(filter || {}),
       },
     }
 
-    if (filter?.outcomeIds) {
-      vars.where.outcomesIds_contains = filter.outcomeIds
-    }
-
     return vars
-  }, [ gameId, filter?.outcomeIds?.join(',') ])
+  }, [ gameId, filter ])
 
   const {
     data: prematchData,
@@ -57,8 +60,8 @@ export const useConditions = (props: UseConditionsProps) => {
     variables: variables as PrematchConditionsQueryVariables,
     ssr: false,
     client: prematchClient!,
-    skip: isLive,
     notifyOnNetworkStatusChange: true,
+    ...prematchQuery,
   })
   const {
     data: liveData,
@@ -68,14 +71,13 @@ export const useConditions = (props: UseConditionsProps) => {
     variables: variables as LiveConditionsQueryVariables,
     ssr: false,
     client: liveClient!,
-    skip: !isLive || !liveSupportedChains.includes(appChain.id),
-    pollInterval: livePollInterval,
+    ...liveQuery,
+    skip: liveQuery.skip || !liveSupportedChains.includes(appChain.id),
   })
 
-  const data = (isLive ? liveData : prematchData) || {} as ConditionsQuery
-
   return {
-    conditions: data?.conditions,
+    prematchConditions: prematchData?.conditions,
+    liveConditions: liveData?.conditions,
     loading: isPrematchLoading || isLiveLoading,
     error: prematchError || liveError,
   }

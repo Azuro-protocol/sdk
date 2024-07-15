@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
+import { type Selection, type ConditionStatus, liveHostAddress } from '@azuro-org/toolkit'
 
-import { liveHostAddress } from '../../config'
-import type { Selection } from '../../global'
 import { useSocket } from '../../contexts/socket'
 import { batchFetchConditions } from '../../helpers/batchFetchConditions'
 import { useApolloClients } from '../../contexts/apollo'
 import { conditionStatusWatcher } from '../../modules/conditionStatusWatcher'
-import type { ConditionStatus } from '../../docs/prematch/types'
 
 
 type ConditionsStatusesProps = {

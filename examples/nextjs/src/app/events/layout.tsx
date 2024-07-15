@@ -1,7 +1,8 @@
 'use client'
 import { SportsNavigation, Sport } from '@/components'
 import { useParams } from 'next/navigation'
-import { useSports, type UseSportsProps, Game_OrderBy, OrderDirection, useLive } from '@azuro-org/sdk'
+import { useSports, type UseSportsProps, useLive } from '@azuro-org/sdk'
+import { Game_OrderBy, OrderDirection } from '@azuro-org/toolkit';
 
 const useData = () => {
   const params = useParams()

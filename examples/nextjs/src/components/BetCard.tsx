@@ -1,6 +1,6 @@
 'use client'
 import { type Bet, useChain, useRedeemBet } from '@azuro-org/sdk'
-import { getBetStatus, getGameStatus, BetStatus, GameStatus } from '@azuro-org/sdk/utils';
+import { getBetStatus, getGameStatus, BetStatus, GameStatus } from '@azuro-org/toolkit';
 import dayjs from 'dayjs'
 import Link from 'next/link'
 import { useMemo } from 'react'
@@ -48,6 +48,7 @@ export function BetCard(props: Props) {
   }, [])
 
   const isDisabled = isPending || isProcessing
+  const isFreeBet = Boolean(freebetId)
 
   let winAmount
   let buttonTitle
@@ -77,7 +78,10 @@ export function BetCard(props: Props) {
   return (
     <div className="p-4 bg-zinc-50 mt-2 first-of-type:mt-0 rounded-lg">
       <div className="flex items-center justify-between">
-        <p>{dayjs(+createdAt * 1000).format('DD.MM.YYYY, hh:mm A')}</p>
+        <p>
+          {dayjs(+createdAt * 1000).format('DD.MM.YYYY, hh:mm A')}
+          <span className='ml-2 text-blue-500'>{isFreeBet && 'FreeBet'}</span>
+        </p>
         <p>{BetStatusText[betStatus]}</p>
       </div>
       {
@@ -102,7 +106,7 @@ export function BetCard(props: Props) {
                 <p>{GameStatusText[getGameStatus({ graphStatus: gameStatus, startsAt: +startsAt, isGameInLive: isLive })]}</p>
               </div>
               <div className="flex items-center">
-                <Link href={`/events/${sportSlug}/${gameId}`} className="flex items-center mr-4">
+                <Link href={`/event/${gameId}`} className="flex items-center mr-4">
                     {
                       participants.map(({ image, name }) => (
                         <div key={name} className="flex items-center ml-2 first-of-type:ml-0">

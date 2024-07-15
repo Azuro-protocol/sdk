@@ -1,12 +1,14 @@
 'use client'
 import React from 'react'
-import { ChainId, AzuroSDKProvider, LiveProvider } from '@azuro-org/sdk'
+import { AzuroSDKProvider, LiveProvider } from '@azuro-org/sdk'
+import { ChainId } from '@azuro-org/toolkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RainbowKitProvider, getDefaultWallets, getDefaultConfig } from '@rainbow-me/rainbowkit'
 import { polygonAmoy, gnosis, polygon, chiliz, spicy } from 'wagmi/chains'
 import { WagmiProvider } from 'wagmi'
 
 import { BetslipProvider } from '@/context/betslip'
+import { Address } from 'viem';
 
 
 const { wallets } = getDefaultWallets()
@@ -45,7 +47,7 @@ export function Providers(props: ProvidersProps) {
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
-          <AzuroSDKProvider initialChainId={chainId} isBatchBetWithSameGameEnabled>
+          <AzuroSDKProvider initialChainId={chainId} isBatchBetWithSameGameEnabled affiliate={process.env.NEXT_PUBLIC_AFFILIATE_ADDRESS as Address}>
             <BetslipProvider>
               <LiveProvider initialLiveState={initialLiveState}>
                 {children}

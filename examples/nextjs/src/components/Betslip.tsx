@@ -65,6 +65,49 @@ function AmountInput() {
   )
 }
 
+function FreeBets() {
+  const { freeBets, selectFreeBet, isFreeBetsFetching } = useDetailedBetslip()
+
+  if (isFreeBetsFetching || !freeBets?.length) {
+    return null
+  }
+
+  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = event.target.value
+    
+    if (!value) {
+      selectFreeBet(undefined)
+
+      return
+    }
+
+    const [id, contractAddress] = event.target.value.split('-')
+
+    const freeBet = freeBets.find(freeBet => freeBet.id === +id && freeBet.contractAddress === contractAddress)
+
+    selectFreeBet(freeBet!)
+  }
+
+  return (
+    <select className='mt-2 cursor-pointer w-full p-2' onChange={handleChange}>
+      <option value="">Select FreeBet</option>
+      {
+        freeBets.map(freeBet => {
+          const key = `${freeBet.id}-${freeBet.contractAddress}`
+
+          return (
+            <option key={key} value={key}>
+              <div>{freeBet.campaign} / </div>
+              <div>Amount: {freeBet.amount} / </div>
+              <div>Min odds: {freeBet.minOdds}</div>
+            </option>
+          )
+        })
+      }
+    </select>
+  )
+}
+
 const errorPerDisableReason = {
   [BetslipDisableReason.ComboWithForbiddenItem]: 'One or more conditions can\'t be used in combo',
   [BetslipDisableReason.BetAmountGreaterThanMaxBet]: 'Bet amount exceeds max bet',
@@ -74,13 +117,18 @@ const errorPerDisableReason = {
   [BetslipDisableReason.PrematchConditionInStartedGame]: 'Game has started',
   [BetslipDisableReason.ComboWithSameGame]: 'Combo with outcomes from same game prohibited, please use Batch bet',
   [BetslipDisableReason.BatchWithLive]: 'Live outcome can\'t be used in batch',
+  [BetslipDisableReason.FreeBetWithLive]: 'FreeBet can\'t be used for live',
+  [BetslipDisableReason.FreeBetWithCombo]: 'FreeBet can\'t be used for combo',
+  [BetslipDisableReason.FreeBetWithBatch]: 'FreeBet can\'t be used for batch',
+  [BetslipDisableReason.FreeBetExpired]: 'FreeBet is expired',
+  [BetslipDisableReason.FreeBetMinOdds]: 'Odds\'s too low for FreeBet',
 } as const
 
 function Content() {
   const account = useAccount()
   const { items, clear, removeItem } = useBaseBetslip()
   const { 
-    betAmount, batchBetAmounts, odds, totalOdds, statuses, disableReason, 
+    betAmount, batchBetAmounts, odds, totalOdds, statuses, selectedFreeBet, disableReason, 
     isBatch, isStatusesFetching, isOddsFetching, isLiveBet, changeBatch, changeBatchBetAmount
   } = useDetailedBetslip()
   const { appChain, betToken } = useChain()
@@ -91,6 +139,7 @@ function Content() {
   const [ isDeBridgeEnable, setDeBridgeEnable ] = useState(false)
 
   const isDeBridgeVisible = supportedChainIds?.includes(appChain.id)
+  const isFreeBet = Boolean(selectedFreeBet)
 
   const handleDeBridgeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setDeBridgeEnable(event.target.checked)
@@ -139,7 +188,7 @@ function Content() {
                       isOddsFetching={isOddsFetching}
                       onRemove={() => removeItem(item)}
                       onBatchAmountChange={(value) => changeBatchBetAmount(item, value)}
-                      isBatch={isBatch}
+                      isBatch={isBatch && !isFreeBet}
                     />
                   )
                  
@@ -206,12 +255,13 @@ function Content() {
               )
             }
             {
-              !isBatch && (
+              Boolean(!isBatch && !isFreeBet) && (
                 <AmountInput />
               )
             }
+              <FreeBets />
             {
-              Boolean(!isLiveBet && isDeBridgeVisible) && (
+              Boolean(!isLiveBet && !isFreeBet && isDeBridgeVisible) && (
                 <div className="flex items-center justify-between mt-4 border-t border-zinc-300 pt-4">
                   <label className="mr-2" htmlFor="deBridge">Bet from another blockchain</label>
                   <input id="deBridge" type="checkbox" checked={isDeBridgeEnable} onChange={handleDeBridgeChange} />

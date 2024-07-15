@@ -1,8 +1,8 @@
 import { createContext, useContext, useMemo, useRef } from 'react'
 import { ApolloClient, HttpLink, InMemoryCache, type NormalizedCacheObject } from '@apollo/client'
+import { type ChainId, chainsData } from '@azuro-org/toolkit'
 
 import { useChain } from '../contexts/chain'
-import { type ChainId, chainsData } from '../config'
 
 
 const getPrematchLink = (chainId: ChainId) => {

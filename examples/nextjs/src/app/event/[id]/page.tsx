@@ -1,17 +1,42 @@
 'use client'
 import { useParams } from 'next/navigation'
-import { useGame, useGameMarkets, type GameQuery, useGameStatus } from '@azuro-org/sdk'
-import { GameStatus } from '@azuro-org/sdk/utils';
-import { GameInfo, GameMarkets } from '@/components'
+import { useGame, useActiveMarkets, useResolvedMarkets, useGameStatus, useBetsSummaryBySelection } from '@azuro-org/sdk'
+import { type GameQuery, GameStatus } from '@azuro-org/toolkit';
 
+import { GameInfo, GameMarkets } from '@/components'
+import { useAccount } from 'wagmi';
 
 type MarketsProps = {
   gameId: string
   gameStatus: GameStatus
 }
 
-const Markets: React.FC<MarketsProps> = ({ gameId, gameStatus }) => {
-  const { loading, markets } = useGameMarkets({
+const ResolvedMarkets: React.FC<MarketsProps> = ({ gameId, gameStatus }) => {
+  const { address } = useAccount()
+  const { groupedMarkets, loading } = useResolvedMarkets({ gameId })
+  const { betsSummary } = useBetsSummaryBySelection({
+    account: address!,
+    gameId,
+    gameStatus,
+  })
+
+  if (loading) {
+    return <div>Loading...</div>
+  }
+
+  if (!groupedMarkets?.length) {
+    return <div>Empty</div>
+  }
+
+  return (
+    <div className="mt-12">
+      <GameMarkets markets={groupedMarkets} betsSummary={betsSummary} isResult />
+    </div>
+  )
+}
+
+const ActiveMarkets: React.FC<MarketsProps> = ({ gameId, gameStatus }) => {
+  const { loading, markets } = useActiveMarkets({
     gameId,
     gameStatus,
     livePollInterval: 10000,
@@ -22,10 +47,24 @@ const Markets: React.FC<MarketsProps> = ({ gameId, gameStatus }) => {
   }
 
   if (!markets) {
-    return null
+    return <div>Empty</div>
   }
 
   return <GameMarkets markets={markets} />
+}
+
+const Markets: React.FC<MarketsProps> = (props) => {
+  const { gameId, gameStatus } = props
+
+  if (gameStatus === GameStatus.Resolved) {
+    return <ResolvedMarkets {...props} />
+  }
+
+  return (
+    <div className="mt-12">
+      <ActiveMarkets {...props} /> 
+    </div>
+  )
 }
 
 type ContentProps = {

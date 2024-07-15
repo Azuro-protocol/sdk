@@ -6,7 +6,7 @@ import type { Address } from 'viem'
 export const BetButton: React.FC = () => {
   const { appChain, isRightNetwork } = useChain()
   const { items, clear } = useBaseBetslip()
-  const { betAmount, batchBetAmounts, odds, totalOdds, isBatch, isStatusesFetching, isOddsFetching, isBetAllowed } = useDetailedBetslip()
+  const { betAmount, batchBetAmounts, odds, totalOdds, selectedFreeBet, isBatch, isStatusesFetching, isOddsFetching, isBetAllowed } = useDetailedBetslip()
   const { loading: isBalanceFetching, balance } = useBetTokenBalance()
 
   const {
@@ -23,6 +23,7 @@ export const BetButton: React.FC = () => {
     selections: items,
     odds,
     totalOdds,
+    freeBet: selectedFreeBet,
     onSuccess: () => {
       clear()
     },

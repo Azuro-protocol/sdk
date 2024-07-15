@@ -1,5 +1,6 @@
 'use client'
-import { useChain, type ChainId } from '@azuro-org/sdk';
+import { useChain } from '@azuro-org/sdk';
+import { type ChainId } from '@azuro-org/toolkit';
 import { polygonAmoy, gnosis, polygon, chiliz, spicy } from 'viem/chains';
 
 export function SelectAppChain() {

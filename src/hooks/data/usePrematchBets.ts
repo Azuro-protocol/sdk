@@ -2,9 +2,20 @@ import { useMemo } from 'react'
 import { useQuery } from '@apollo/client'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 import { type Address } from 'viem'
+import {
+  Bet_OrderBy,
+  OrderDirection,
+  BetResult,
+  GraphBetStatus,
+  SelectionResult,
+  ConditionStatus,
+  PrematchGraphGameStatus,
 
-import { type BetsQuery, type BetsQueryVariables, BetsDocument } from '../../docs/prematch/bets'
-import { Bet_OrderBy, OrderDirection, BetResult, BetStatus, SelectionResult, ConditionStatus, GameStatus as GraphGameStatus } from '../../docs/prematch/types'
+  type PrematchBetsQuery,
+  type PrematchBetsQueryVariables,
+  PrematchBetsDocument,
+} from '@azuro-org/toolkit'
+
 import { useApolloClients } from '../../contexts/apollo'
 import { type BetOutcome, type Bet } from '../../global'
 
@@ -29,7 +40,7 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
   const { prematchClient } = useApolloClients()
 
   const options = useMemo(() => {
-    const variables: BetsQueryVariables = {
+    const variables: PrematchBetsQueryVariables = {
       first: filter.limit || 1000,
       skip: filter.offset,
       orderBy,
@@ -54,7 +65,7 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
     orderDir,
   ])
 
-  const { data, loading, error } = useQuery<BetsQuery, BetsQueryVariables>(BetsDocument, options)
+  const { data, loading, error } = useQuery<PrematchBetsQuery, PrematchBetsQueryVariables>(PrematchBetsDocument, options)
 
   const bets = useMemo(() => {
     if (!data?.bets?.length) {
@@ -69,7 +80,7 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
 
       const isWin = result === BetResult.Won
       const isLose = result === BetResult.Lost
-      const isCanceled = status === BetStatus.Canceled
+      const isCanceled = status === GraphBetStatus.Canceled
       // express bets have a specific feature - protocol redeems LOST expresses to release liquidity,
       // so we should validate it by "win"/"canceled" statuses
       const isRedeemed = (isWin || isCanceled) && _isRedeemed
@@ -89,7 +100,7 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
           const isLose = result ? result === SelectionResult.Lost : null
           const isCanceled = (
             conditionStatus === ConditionStatus.Canceled
-            || game.status === GraphGameStatus.Canceled
+            || game.status === PrematchGraphGameStatus.Canceled
           )
 
           const marketName = getMarketName({ outcomeId })

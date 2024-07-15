@@ -1,34 +1,44 @@
 import { type TransactionReceipt, type Address, formatUnits, parseUnits } from 'viem'
 import { useAccount } from 'wagmi'
+import {
+  type Selection,
+  ODDS_DECIMALS,
+  liveHostAddress,
+  liveCoreAbi,
+  ConditionStatus,
+  GraphBetStatus,
 
-import { BetFragmentDoc as PrematchBetFragmentDoc, type BetFragment as PrematchBetFragment } from '../docs/prematch/fragments/bet'
-import { LiveBetFragmentDoc, type LiveBetFragment } from '../docs/prematch/fragments/liveBet'
-import { MainGameInfoFragmentDoc, type MainGameInfoFragment } from '../docs/prematch/fragments/mainGameInfo'
-import { type BettorFragment, BettorFragmentDoc } from '../docs/prematch/fragments/bettor'
-import {
-  type ConditionFragment as PrematchConditionFragment,
-  ConditionFragmentDoc as PrematchConditionFragmentDoc,
-} from '../docs/prematch/fragments/condition'
-import {
-  type ConditionFragment as LiveConditionFragment,
-  ConditionFragmentDoc as LiveConditionFragmentDoc,
-} from '../docs/live/fragments/condition'
-import {
-  type ConditionQuery as LiveConditionQuery,
-  ConditionDocument as LiveConditionDocument,
-} from '../docs/live/condition'
-import {
-  type ConditionQuery as PrematchConditionQuery,
-  ConditionDocument as PrematchConditionDocument,
-} from '../docs/prematch/condition'
-import { GameDocument, type GameQuery } from '../docs/prematch/game'
-import { ConditionStatus, BetStatus } from '../docs/prematch/types'
+  type PrematchBetFragment,
+  PrematchBetFragmentDoc,
+
+  type LiveBetFragment,
+  LiveBetFragmentDoc,
+
+  type MainGameInfoFragment,
+  MainGameInfoFragmentDoc,
+
+  type BettorFragment,
+  BettorFragmentDoc,
+
+  type PrematchConditionFragment,
+  PrematchConditionFragmentDoc,
+
+  type LiveConditionFragment,
+  LiveConditionFragmentDoc,
+
+  type LiveConditionQuery,
+  LiveConditionDocument,
+
+  type PrematchConditionQuery,
+  PrematchConditionDocument,
+
+  type GameQuery,
+  GameDocument,
+} from '@azuro-org/toolkit'
+
 import { useApolloClients } from '../contexts/apollo'
 import { getEventArgsFromTxReceipt } from '../helpers'
 import { useChain } from '../contexts/chain'
-import { ODDS_DECIMALS, liveHostAddress } from '../config'
-import type { Selection } from '../global'
-import { liveCoreAbi } from '../abis'
 
 
 type UpdateBetProps = {
@@ -78,7 +88,7 @@ export const useBetsCache = () => {
       bet = cache.updateFragment<PrematchBetFragment>({
         id: cache.identify({ __typename: 'Bet', id: betEntityId }),
         fragment: PrematchBetFragmentDoc,
-        fragmentName: 'Bet',
+        fragmentName: 'PrematchBet',
       }, (data) => ({
         ...data as PrematchBetFragment,
         ...values as PrematchBetFragment,
@@ -112,7 +122,7 @@ export const useBetsCache = () => {
 
   const addBet = async (props: NewBetProps) => {
     const { bet, odds, affiliate, receipt } = props
-    const { rawAmount, selections } = bet
+    const { rawAmount, selections, freebetId } = bet
 
     const coreAddress = selections[0]!.coreAddress
     const isLive = coreAddress.toLowerCase() === liveHostAddress.toLowerCase()
@@ -129,7 +139,7 @@ export const useBetsCache = () => {
         let condition = cache.readFragment<LiveConditionFragment>({
           id: cache.identify({ __typename: 'Condition', id: conditionId }),
           fragment: LiveConditionFragmentDoc,
-          fragmentName: 'Condition',
+          fragmentName: 'LiveCondition',
         })
 
         if (!condition) {
@@ -168,7 +178,7 @@ export const useBetsCache = () => {
         let condition = cache.readFragment<PrematchConditionFragment>({
           id: cache.identify({ __typename: 'Condition', id: conditionEntityId }),
           fragment: PrematchConditionFragmentDoc,
-          fragmentName: 'Condition',
+          fragmentName: 'PrematchCondition',
         })
 
         if (!condition) {
@@ -225,36 +235,46 @@ export const useBetsCache = () => {
     }
 
     let tokenId: string
-    let rawOdds: bigint
+    let rawOdds: bigint = 0n
 
     if (isLive) {
       const receiptArgs = getEventArgsFromTxReceipt({ receipt, eventName: 'NewLiveBet', abi: liveCoreAbi })
 
-      tokenId = (receiptArgs?.tokenId).toString()
-      rawOdds = receiptArgs?.odds
+      tokenId = (receiptArgs?.tokenId!).toString()
+      rawOdds = receiptArgs?.odds!
     }
+    // we don't need additional for freeBet cause it triggers NewBet event on prematch core
     else {
       const isExpress = selections.length > 1
-      const abi = isExpress ? contracts.prematchComboCore.abi : contracts.prematchCore.abi
-      let eventParams
 
-      if (!isExpress) {
+      if (isExpress) {
+
+        const receiptArgs = getEventArgsFromTxReceipt({
+          receipt,
+          eventName: 'NewBet',
+          abi: contracts.prematchComboCore.abi,
+        })
+
+        tokenId = receiptArgs?.betId.toString()!
+        rawOdds = receiptArgs?.bet.odds!
+      }
+      else {
         const { conditionId, outcomeId } = selections[0]!
-        eventParams = {
+        const eventParams = {
           conditionId: BigInt(conditionId),
           outcomeId: BigInt(outcomeId),
         }
+
+        const receiptArgs = getEventArgsFromTxReceipt({
+          receipt,
+          eventName: 'NewBet',
+          abi: contracts.prematchCore.abi,
+          params: eventParams,
+        })
+
+        tokenId = receiptArgs?.tokenId.toString()!
+        rawOdds = receiptArgs?.odds!
       }
-
-      const receiptArgs = getEventArgsFromTxReceipt({
-        receipt,
-        eventName: 'NewBet',
-        abi,
-        params: eventParams,
-      })
-
-      tokenId = (isExpress ? receiptArgs?.betId : receiptArgs?.tokenId)?.toString()
-      rawOdds = isExpress ? receiptArgs?.bet.odds : receiptArgs?.odds
     }
 
     const rawPotentialPayout = rawAmount * rawOdds
@@ -280,7 +300,7 @@ export const useBetsCache = () => {
                   address: contracts.lp.address,
                 },
               },
-              status: BetStatus.Accepted,
+              status: GraphBetStatus.Accepted,
               amount,
               odds: finalOdds,
               settledOdds: null,
@@ -323,7 +343,7 @@ export const useBetsCache = () => {
                   address: contracts.lp.address,
                 },
               },
-              status: BetStatus.Accepted,
+              status: GraphBetStatus.Accepted,
               amount,
               odds: finalOdds,
               settledOdds: null,
@@ -344,7 +364,7 @@ export const useBetsCache = () => {
 
             const newBet = prematchClient!.cache.writeFragment<PrematchBetFragment>({
               fragment: PrematchBetFragmentDoc,
-              fragmentName: 'Bet',
+              fragmentName: 'PrematchBet',
               data,
             })
 

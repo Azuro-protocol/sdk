@@ -1,13 +1,11 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { useConfig } from 'wagmi'
+import { type Selection, liveHostAddress, calcLiveOdds, calcPrematchOdds } from '@azuro-org/toolkit'
 
-import { liveHostAddress } from '../../config'
 import { useChain } from '../../contexts/chain'
 import type { OddsChangedData } from '../../contexts/socket'
 import { useSocket } from '../../contexts/socket'
 import { formatToFixed } from '../../helpers'
-import { type Selection } from '../../global'
-import { calcLiveOdds, calcPrematchOdds } from '../../utils/calcOdds'
 import useIsMounted from '../../helpers/hooks/useIsMounted'
 import { oddsWatcher } from '../../modules/oddsWatcher'
 import { debounce } from '../../helpers/debounce'
@@ -42,7 +40,7 @@ export const useOdds = ({ selections, betAmount, batchBetAmounts }: CalcOddsProp
   }, [ selections ])
 
   const [ odds, setOdds ] = useState<Record<string, number>>({})
-  const [ totalOdds, setTotalOdds ] = useState<number>(1)
+  const [ totalOdds, setTotalOdds ] = useState<number>(0)
   const [ isPrematchOddsFetching, setPrematchOddsFetching ] = useState(Boolean(prematchItems.length))
 
   const oddsDataRef = useRef<Record<string, OddsChangedData>>({})

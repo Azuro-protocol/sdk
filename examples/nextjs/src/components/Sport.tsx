@@ -1,5 +1,5 @@
 'use client'
-import { SportsQuery } from '@azuro-org/sdk'
+import { SportsQuery } from '@azuro-org/toolkit'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import cx from 'clsx'

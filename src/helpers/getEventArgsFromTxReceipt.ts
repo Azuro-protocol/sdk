@@ -1,15 +1,19 @@
-import type { TransactionReceipt, Hex, DecodeEventLogReturnType } from 'viem'
 import { decodeEventLog } from 'viem'
+import type { TransactionReceipt, Hex, ContractEventArgsFromTopics, ContractEventName, DecodeEventLogReturnType } from 'viem'
+import type { Abi } from 'abitype'
 
 
-type Props = {
+type Props<AbiType, EventName> = {
   receipt: TransactionReceipt
-  eventName: string
-  abi: Parameters<typeof decodeEventLog>[0]['abi']
+  abi: AbiType
+  eventName: EventName
   params?: Record<any, any>
 }
 
-export const getEventArgsFromTxReceipt = <T = Record<string, any>>({ receipt, eventName, abi, params }: Props): T | undefined => {
+export const getEventArgsFromTxReceipt = <
+  AbiType extends Abi = Abi,
+  EventNameType extends ContractEventName<AbiType> = ContractEventName<AbiType>,
+>({ receipt, eventName, abi, params }: Props<AbiType, EventNameType>) => {
   const { logs } = receipt
   let result: DecodeEventLogReturnType<typeof abi> | undefined
 
@@ -48,6 +52,6 @@ export const getEventArgsFromTxReceipt = <T = Record<string, any>>({ receipt, ev
   }
 
   if (result?.args) {
-    return result?.args as T
+    return result?.args as ContractEventArgsFromTopics<AbiType, EventNameType>
   }
 }
