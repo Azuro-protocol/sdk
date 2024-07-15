@@ -5,6 +5,7 @@ import {
 import {
   parseUnits, maxUint256,
   type Address, erc20Abi, type TransactionReceipt, type Hex, type TypedDataDomain,
+  type WriteContractParameters,
 } from 'viem'
 import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
@@ -48,6 +49,7 @@ type Props = {
   odds: Record<string, number>
   totalOdds: number
   freeBet?: FreeBet
+  betGas?: Pick<WriteContractParameters, 'gas' | 'gasPrice'>
   liveEIP712Attention?: string
   deadline?: number
   onSuccess?(receipt?: TransactionReceipt): void
@@ -57,7 +59,7 @@ type Props = {
 export const usePrepareBet = (props: Props) => {
   const {
     betAmount: _betAmount, slippage, deadline, affiliate, selections, odds,
-    totalOdds, freeBet, liveEIP712Attention, onSuccess, onError,
+    totalOdds, freeBet, betGas, liveEIP712Attention, onSuccess, onError,
   } = props
 
   const isLiveBet = useMemo(() => {
@@ -322,6 +324,7 @@ export const usePrepareBet = (props: Props) => {
             rawDeadline,
             rawFreeBetMinOdds,
           ],
+          ...(betGas || {}),
         })
       }
       else {
@@ -387,6 +390,7 @@ export const usePrepareBet = (props: Props) => {
             contracts.lp.address,
             betData,
           ],
+          ...(betGas || {}),
         })
       }
 
