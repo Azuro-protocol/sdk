@@ -1,6 +1,6 @@
 {
   "name": "@azuro-org/sdk",
-  "version": "4.1.0",
+  "version": "5.0.0",
   "author": "Azuro",
   "type": "module",
   "main": "dist/index.js",
@@ -47,6 +47,6 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@azuro-org/toolkit": "^3.0.0"
+    "@azuro-org/toolkit": "^4.0.0"
   }
 }
