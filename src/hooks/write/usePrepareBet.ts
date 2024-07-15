@@ -1,7 +1,9 @@
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient, useWalletClient } from 'wagmi'
 import {
   parseUnits, maxUint256,
-  type Address, erc20Abi, type TransactionReceipt, type Hex, type TypedDataDomain } from 'viem'
+  type Address, erc20Abi, type TransactionReceipt, type Hex, type TypedDataDomain,
+  type WriteContractParameters,
+} from 'viem'
 import { useMemo, useState } from 'react'
 
 import { calcMindOdds } from '../../utils/calcMindOdds'
@@ -40,6 +42,7 @@ type Props = {
   selections: Selection[]
   odds: Record<string, number>
   totalOdds: number
+  betGas?: Pick<WriteContractParameters, 'gas' | 'gasPrice'>
   liveEIP712Attention?: string
   deadline?: number
   onSuccess?(receipt?: TransactionReceipt): void
@@ -49,7 +52,7 @@ type Props = {
 export const usePrepareBet = (props: Props) => {
   const {
     betAmount: _betAmount, slippage, deadline, affiliate, selections, odds,
-    totalOdds, liveEIP712Attention, onSuccess, onError,
+    totalOdds, betGas, liveEIP712Attention, onSuccess, onError,
   } = props
 
   const isLiveBet = useMemo(() => {
@@ -338,6 +341,7 @@ export const usePrepareBet = (props: Props) => {
             contracts.lp.address,
             betData,
           ],
+          ...(betGas || {}),
         })
       }
 
