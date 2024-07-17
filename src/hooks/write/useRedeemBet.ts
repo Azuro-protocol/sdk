@@ -1,5 +1,6 @@
 import { useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi'
 import type { Address } from 'viem'
+import { freeBetAbi } from '@azuro-org/toolkit'
 
 import { useChain } from '../../contexts/chain'
 import { useBetsCache } from '../useBetsCache'
@@ -7,7 +8,7 @@ import { type Bet } from '../../global'
 
 
 type SubmitProps = {
-  bets: Array<Pick<Bet, 'tokenId' | 'coreAddress'>>
+  bets: Array<Pick<Bet, 'tokenId' | 'coreAddress' | 'freebetContractAddress' | 'freebetId'>>
 }
 
 export const useRedeemBet = () => {
@@ -47,17 +48,27 @@ export const useRedeemBet = () => {
       })
     }
     else {
-      const { tokenId, coreAddress } = bets[0]!
+      const { tokenId, coreAddress, freebetContractAddress, freebetId } = bets[0]!
 
-      hash = await redeemTx.writeContractAsync({
-        address: contracts.lp.address,
-        abi: contracts.lp.abi,
-        functionName: 'withdrawPayout',
-        args: [
-          coreAddress,
-          BigInt(tokenId),
-        ],
-      })
+      if (freebetContractAddress && freebetId) {
+        hash = await redeemTx.writeContractAsync({
+          address: freebetContractAddress,
+          abi: freeBetAbi,
+          functionName: 'withdrawPayout',
+          args: [ BigInt(freebetId) ],
+        })
+      }
+      else {
+        hash = await redeemTx.writeContractAsync({
+          address: contracts.lp.address,
+          abi: contracts.lp.abi,
+          functionName: 'withdrawPayout',
+          args: [
+            coreAddress,
+            BigInt(tokenId),
+          ],
+        })
+      }
     }
 
     const receipt = await publicClient!.waitForTransactionReceipt({

@@ -104,7 +104,7 @@ export function WaveLeaderBoard() {
                       </div>
                       <div className="">
                         {
-                          activeTab?.title === 'Total' ? points : totalMultipliedPoints
+                          activeTab?.title === 'Total' ? totalMultipliedPoints : (Number(totalMultipliedPoints) - Number(points))
                         }
                       </div>
                     </div>
