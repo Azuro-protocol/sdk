@@ -1,11 +1,11 @@
 import {
-  useAccount, useReadContract, useWriteContract,
+  useAccount, useReadContract, useWriteContract, useSendTransaction,
   useWaitForTransactionReceipt, usePublicClient, useWalletClient,
 } from 'wagmi'
 import {
-  parseUnits, maxUint256,
+  parseUnits, maxUint256, encodeFunctionData,
   type Address, erc20Abi, type TransactionReceipt, type Hex, type TypedDataDomain,
-  type WriteContractParameters,
+  type SendTransactionParameters,
 } from 'viem'
 import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
@@ -49,7 +49,7 @@ type Props = {
   odds: Record<string, number>
   totalOdds: number
   freeBet?: FreeBet
-  betGas?: Pick<WriteContractParameters, 'gas' | 'gasPrice'>
+  betGas?: Pick<SendTransactionParameters, 'gas' | 'gasPrice' | 'maxFeePerGas' | 'maxFeePerBlobGas' | 'maxPriorityFeePerGas'>
   liveEIP712Attention?: string
   deadline?: number
   onSuccess?(receipt?: TransactionReceipt): void
@@ -149,7 +149,7 @@ export const usePrepareBet = (props: Props) => {
     allowanceTx.refetch()
   }
 
-  const betTx = useWriteContract()
+  const betTx = useSendTransaction()
 
   const betReceipt = useWaitForTransactionReceipt({
     hash: betTx.data,
@@ -303,27 +303,28 @@ export const usePrepareBet = (props: Props) => {
           freebetId: String(id),
         })
 
-        txHash = await betTx.writeContractAsync({
-          address: contractAddress,
-          account: account.address!,
-          abi: freeBetAbi,
-          functionName: 'bet',
-          args: [
-            {
-              chainId: BigInt(chainId),
-              expiresAt: BigInt(Math.floor(expiresAt / 1000)),
-              amount: rawAmount,
-              freeBetId: BigInt(id),
-              minOdds: rawMinOdds,
-              owner: account.address!,
-            },
-            signature,
-            coreAddress as Address,
-            BigInt(conditionId),
-            BigInt(outcomeId),
-            rawDeadline,
-            rawFreeBetMinOdds,
-          ],
+        txHash = await betTx.sendTransactionAsync({
+          to: contractAddress,
+          data: encodeFunctionData({
+            abi: freeBetAbi,
+            functionName: 'bet',
+            args: [
+              {
+                chainId: BigInt(chainId),
+                expiresAt: BigInt(Math.floor(expiresAt / 1000)),
+                amount: rawAmount,
+                freeBetId: BigInt(id),
+                minOdds: rawMinOdds,
+                owner: account.address!,
+              },
+              signature,
+              coreAddress as Address,
+              BigInt(conditionId),
+              BigInt(outcomeId),
+              rawDeadline,
+              rawFreeBetMinOdds,
+            ],
+          }),
           ...(betGas || {}),
         })
       }
@@ -382,14 +383,16 @@ export const usePrepareBet = (props: Props) => {
           ]
         }
 
-        txHash = await betTx.writeContractAsync({
-          address: contracts.proxyFront.address,
-          abi: contracts.proxyFront.abi,
-          functionName: 'bet',
-          args: [
-            contracts.lp.address,
-            betData,
-          ],
+        txHash = await betTx.sendTransactionAsync({
+          to: contracts.proxyFront.address,
+          data: encodeFunctionData({
+            abi: contracts.proxyFront.abi,
+            functionName: 'bet',
+            args: [
+              contracts.lp.address,
+              betData,
+            ],
+          }),
           ...(betGas || {}),
         })
       }
