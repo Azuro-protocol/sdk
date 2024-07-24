@@ -94,7 +94,20 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
 
       const outcomes: BetOutcome[] = selections
         .map((selection) => {
-          const { odds, result, outcome: { outcomeId, condition: { conditionId, status: conditionStatus, game } } } = selection
+          const {
+            odds,
+            result,
+            outcome: {
+              outcomeId,
+              title: customSelectionName,
+              condition: {
+                conditionId,
+                status: conditionStatus,
+                title: customMarketName,
+                game,
+              },
+            },
+          } = selection
 
           const isWin = result ? result === SelectionResult.Won : null
           const isLose = result ? result === SelectionResult.Lost : null
@@ -103,8 +116,8 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
             || game.status === PrematchGraphGameStatus.Canceled
           )
 
-          const marketName = getMarketName({ outcomeId })
-          const selectionName = getSelectionName({ outcomeId, withPoint: true })
+          const marketName = customMarketName || getMarketName({ outcomeId })
+          const selectionName = customSelectionName || getSelectionName({ outcomeId, withPoint: true })
 
           return {
             selectionName,

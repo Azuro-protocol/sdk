@@ -2,15 +2,18 @@ import React, { useContext, createContext, useState, useMemo, useCallback, useEf
 import type { ApolloCache, NormalizedCacheObject } from '@apollo/client'
 import {
   type Selection,
+  type MainGameInfoFragment,
+  type PrematchConditionFragment,
+
   ConditionStatus,
   MIN_LIVE_BET_AMOUNT,
   liveHostAddress,
-
-  type MainGameInfoFragment,
   MainGameInfoFragmentDoc,
+  PrematchConditionFragmentDoc,
 } from '@azuro-org/toolkit'
 import type { Address } from 'viem'
 import { useAccount } from 'wagmi'
+import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 
 import { useApolloClients } from './apollo'
 import { localStorageKeys } from '../config'
@@ -58,6 +61,8 @@ export type BetslipItem = {
   lpAddress: string
   game: Game
   isExpressForbidden: boolean
+  marketName: string
+  selectionName: string
 } & Selection
 
 type AddItemProps = {
@@ -315,7 +320,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
   }, [])
 
   const addItem = useCallback((itemProps: AddItemProps) => {
-    const { gameId, coreAddress, lpAddress } = itemProps
+    const { gameId, coreAddress, lpAddress, conditionId, outcomeId } = itemProps
 
     let game: MainGameInfoFragment | null
     let cache: ApolloCache<NormalizedCacheObject>
@@ -340,6 +345,28 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
       return
     }
 
+    let marketName = getMarketName({ outcomeId })
+    let selectionName = getSelectionName({ outcomeId, withPoint: true })
+
+    if (coreAddress !== liveHostAddress) {
+      const conditionEntityId = `${coreAddress.toLowerCase()}_${conditionId}`
+      const condition = cache.readFragment<PrematchConditionFragment>({
+        id: cache.identify({ __typename: 'Condition', id: conditionEntityId }),
+        fragment: PrematchConditionFragmentDoc,
+        fragmentName: 'PrematchCondition',
+      })
+
+      if (condition?.title) {
+        marketName = condition.title
+
+        const outcome = condition.outcomes.find(outcome => outcome.outcomeId === outcomeId)
+
+        if (outcome?.title) {
+          selectionName = outcome.title
+        }
+      }
+    }
+
     const {
       participants,
       startsAt: _startsAt,
@@ -360,6 +387,8 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
 
     const item = {
       ...itemProps,
+      marketName,
+      selectionName,
       game: {
         gameId,
         countryName,

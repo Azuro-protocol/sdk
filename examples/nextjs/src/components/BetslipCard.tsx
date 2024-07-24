@@ -1,6 +1,5 @@
 'use client'
 
-import { getMarketName, getSelectionName } from "@azuro-org/dictionaries"
 import { type BetslipItem } from "@azuro-org/sdk"
 import { ConditionStatus } from '@azuro-org/toolkit';
 import dayjs from "dayjs"
@@ -23,10 +22,7 @@ function BetslipCard(props: BetslipItemProps) {
     item, batchBetAmount, status, odds, 
     isStatusesFetching, isOddsFetching, isBatch, onRemove, onBatchAmountChange 
   } = props
-  const { game: { gameId, startsAt, sportName, leagueName, participants }, outcomeId } = item
-
-  const marketName = getMarketName({ outcomeId })
-  const selection = getSelectionName({ outcomeId, withPoint: true })
+  const { game: { gameId, startsAt, sportName, leagueName, participants }, outcomeId, marketName, selectionName } = item
 
   const isLock = !isStatusesFetching && status !== ConditionStatus.Created
 
@@ -62,7 +58,7 @@ function BetslipCard(props: BetslipItemProps) {
       </div>
       <div className="flex items-center justify-between mb-2">
         <span className="font-bold">Selection: </span> 
-        {selection}
+        {selectionName}
       </div>
       <div className="flex items-center justify-between mb-2">
         <span className="font-bold">Odds: </span>
