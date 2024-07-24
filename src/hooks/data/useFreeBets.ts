@@ -54,7 +54,7 @@ export const useFreeBets = ({ account, affiliate, enabled }: Props) => {
   }
 
   const { data, ...rest } = useQuery({
-    queryKey: [ 'freebets', api, account?.toLowerCase(), affiliate.toLowerCase() ],
+    queryKey: [ 'freebets', api, account?.toLowerCase(), affiliate?.toLowerCase() ],
     queryFn,
     refetchOnWindowFocus: false,
     enabled,
