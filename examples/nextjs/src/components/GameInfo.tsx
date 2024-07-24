@@ -8,7 +8,7 @@ type Props = {
 }
 
 export function GameInfo(props: Props) {
-  const { sport, league, participants, startsAt } = props.game
+  const { sport, title, league, participants, startsAt } = props.game
 
   return (
     <div className="flex flex-col items-center pt-6 pb-8 bg-zinc-50 rounded-[40px]">
@@ -16,6 +16,9 @@ export function GameInfo(props: Props) {
         <div>{sport.name}</div>
         <div className="mt-2 text-zinc-500">
           {league.country.name} &middot; {league.name}
+        </div>
+        <div className="mt-2 text-zinc-500">
+          {title}
         </div>
       </div>
       <div className="mt-5 grid grid-cols-[1fr_auto_1fr]">

@@ -1,6 +1,6 @@
 {
   "name": "@azuro-org/sdk",
-  "version": "5.0.2",
+  "version": "5.1.0",
   "author": "Azuro",
   "type": "module",
   "main": "dist/index.js",
@@ -27,7 +27,7 @@
   },
   "peerDependencies": {
     "@apollo/client": "^3.8.0-beta.7",
-    "@azuro-org/dictionaries": "^3.0.12",
+    "@azuro-org/dictionaries": "^3.0.16",
     "graphql": "^16.8.1",
     "react": "^18.2.0",
     "viem": "^2.17.3",
@@ -47,6 +47,6 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@azuro-org/toolkit": "^4.0.0"
+    "@azuro-org/toolkit": "^4.1.0"
   }
 }
