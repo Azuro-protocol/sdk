@@ -356,12 +356,12 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
         fragmentName: 'PrematchCondition',
       })
 
-      if (condition?.title) {
+      if (condition?.title && condition.title !== 'null') {
         marketName = condition.title
 
         const outcome = condition.outcomes.find(outcome => outcome.outcomeId === outcomeId)
 
-        if (outcome?.title) {
+        if (outcome?.title && outcome.title !== 'null') {
           selectionName = outcome.title
         }
       }

@@ -116,8 +116,8 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
             || game.status === PrematchGraphGameStatus.Canceled
           )
 
-          const marketName = customMarketName || getMarketName({ outcomeId })
-          const selectionName = customSelectionName || getSelectionName({ outcomeId, withPoint: true })
+          const marketName = customMarketName && customMarketName !== 'null' ? customMarketName : getMarketName({ outcomeId })
+          const selectionName = customSelectionName && customSelectionName !== 'null' ? customSelectionName : getSelectionName({ outcomeId, withPoint: true })
 
           return {
             selectionName,
