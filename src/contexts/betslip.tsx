@@ -43,6 +43,7 @@ export enum BetslipDisableReason {
 
 type Game = {
   gameId: string
+  title: string
   countryName: string
   countrySlug: string
   leagueName: string
@@ -370,6 +371,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     const {
       participants,
       startsAt: _startsAt,
+      title,
       sport: {
         sportId: _sportId,
         slug: sportSlug,
@@ -391,6 +393,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
       selectionName,
       game: {
         gameId,
+        title,
         countryName,
         countrySlug,
         leagueName,

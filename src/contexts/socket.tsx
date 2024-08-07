@@ -7,6 +7,10 @@ import { oddsWatcher } from '../modules/oddsWatcher'
 import { useChain } from './chain'
 
 
+enum SocketCloseReason {
+  ChainChanged = 3000
+}
+
 export type SocketContextValue = {
   isSocketReady: boolean
   subscribeToUpdates: (conditionIds: string[]) => void
@@ -114,6 +118,16 @@ export const SocketProvider: React.FC<any> = ({ children }) => {
       setSocketReady(true)
     }
 
+    socket.current.onclose = (event) => {
+      if (event.code === SocketCloseReason.ChainChanged) {
+        return
+      }
+
+      socket.current = undefined
+      setSocketReady(false)
+      connect()
+    }
+
     socket.current.onmessage = (message: MessageEvent<SocketData>) => {
       JSON.parse(message.data.toString()).forEach((data: SocketData[0]) => {
         const { id: conditionId, reinforcement, margin, winningOutcomesCount } = data
@@ -162,7 +176,7 @@ export const SocketProvider: React.FC<any> = ({ children }) => {
       && chainsData[prevChainId.current].socket !== chainsData[appChain.id].socket
     ) {
       unsubscribe(Object.keys(subscribers.current))
-      socket.current.close()
+      socket.current.close(SocketCloseReason.ChainChanged)
       socket.current = undefined
       setSocketReady(false)
     }

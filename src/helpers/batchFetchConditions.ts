@@ -6,12 +6,12 @@ import { createBatch } from './createBatch'
 
 type Result = ApolloQueryResult<PrematchConditionsBatchQuery>
 
-const getConditions = (conditionIds: string[], client: ApolloClient<object>) => {
+const getConditions = (conditionEntityIds: string[], client: ApolloClient<object>) => {
   return client.query<PrematchConditionsBatchQuery>({
     query: PrematchConditionsBatchDocument,
     variables: {
       conditionFilter: {
-        conditionId_in: conditionIds,
+        id_in: conditionEntityIds,
       },
     },
     fetchPolicy: 'network-only',

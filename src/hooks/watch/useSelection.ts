@@ -97,7 +97,7 @@ export const useSelection = ({ selection, initialOdds, initialStatus }: Props) =
 
     ;(async () => {
       const conditionEntityId = `${contracts.prematchCore.address.toLowerCase()}_${conditionId}`
-      const key = `${conditionEntityId}-${outcomeId}`
+      const key = `${conditionId}-${outcomeId}`
       const data = await batchFetchOutcomes([ conditionEntityId ], prematchClient!)
 
       if (!initialOdds) {

@@ -26,9 +26,9 @@ const getOutcomes = async (conditionEntityIds: string[], client: ApolloClient<ob
     fetchPolicy: 'network-only',
   })
 
-  return result?.data?.conditions.reduce<Result>((acc, { id: conditionEntityId, outcomes, status }) => {
+  return result?.data?.conditions.reduce<Result>((acc, { conditionId, outcomes, status }) => {
     outcomes.forEach(({ outcomeId, odds }) => {
-      const key = `${conditionEntityId}-${outcomeId}`
+      const key = `${conditionId}-${outcomeId}`
       acc[key] = {
         odds: +odds,
         status,

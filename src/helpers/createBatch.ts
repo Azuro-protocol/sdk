@@ -29,7 +29,7 @@ export const createBatch = <Result, T extends (ids: string[], ...rest: any) => P
         resolve(undefined)
       })
     }
-  }, 50)
+  }, 50, true)
 
   const batch = (ids: string[], ...rest: any) => {
     request(fn, ...rest)

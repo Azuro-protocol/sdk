@@ -36,6 +36,7 @@ export const useStatuses = ({ selections }: ConditionsStatusesProps) => {
   const [ isPrematchStatusesFetching, setPrematchStatusesFetching ] = useState(Boolean(prematchItems.length))
 
   const liveKey = liveItems.map(({ conditionId }) => conditionId).join('-')
+  const prematchKey = prematchItems.map(({ conditionId }) => conditionId).join('-')
   const selectionsKey = selections.map(({ conditionId }) => conditionId).join('-')
 
   const isLiveStatusesFetching = useMemo(() => {
@@ -87,7 +88,7 @@ export const useStatuses = ({ selections }: ConditionsStatusesProps) => {
     setPrematchStatusesFetching(true)
 
     ;(async () => {
-      const { data: { conditions } } = await batchFetchConditions(prematchItems.map(({ conditionId }) => conditionId), prematchClient!)
+      const { data: { conditions } } = await batchFetchConditions(prematchItems.map(({ conditionId, coreAddress }) => `${coreAddress.toLowerCase()}_${conditionId}`), prematchClient!)
 
       const prematchStatuses = conditions.reduce((acc, { conditionId, status }) => {
         acc[conditionId] = status
@@ -96,12 +97,9 @@ export const useStatuses = ({ selections }: ConditionsStatusesProps) => {
       }, {} as Record<string, ConditionStatus>)
 
       setPrematchStatusesFetching(false)
-      setStatuses(statuses => ({
-        ...statuses,
-        ...prematchStatuses,
-      }))
+      setStatuses(prematchStatuses)
     })()
-  }, [ prematchItems ])
+  }, [ prematchKey ])
 
   return {
     statuses,
