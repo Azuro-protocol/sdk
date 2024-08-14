@@ -192,6 +192,7 @@ export const useBetsCache = () => {
           condition = _condition!
         }
 
+        const outcome = condition.outcomes.find((outcome) => outcome.outcomeId === outcomeId)!
         const gameId = condition?.game.gameId
 
         const gameEntityId = `${contracts.lp.address.toLowerCase()}_${gameId}`
@@ -221,10 +222,12 @@ export const useBetsCache = () => {
           outcome: {
             __typename: 'Outcome',
             outcomeId: String(outcomeId),
+            title: outcome.title,
             condition: {
               __typename: 'Condition',
               conditionId,
               status: ConditionStatus.Created,
+              title: condition.title,
               game,
             },
           },
@@ -353,7 +356,7 @@ export const useBetsCache = () => {
               isRedeemed: false,
               isRedeemable: false,
               freebet: bet.freebetContractAddress ? {
-                freebetId: String(bet.freebetId),
+                freebetId: String(freebetId),
                 contractAddress: bet.freebetContractAddress,
               } : null,
               result: null,
