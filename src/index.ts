@@ -24,6 +24,7 @@ export { useNavigation } from './hooks/data/useNavigation'
 export { useLiveBetFee } from './hooks/data/useLiveBetFee'
 export { useBetsSummary } from './hooks/data/useBetsSummary'
 export { useBetsSummaryBySelection, type BetsSummaryBySelection } from './hooks/data/useBetsSummaryBySelection'
+export { useFreeBets, type FreeBet } from './hooks/data/useFreeBets'
 
 // write hooks
 export { useRedeemBet } from './hooks/write/useRedeemBet'
