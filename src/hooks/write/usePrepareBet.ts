@@ -1,6 +1,7 @@
 import {
   useAccount, useReadContract, useWriteContract, useSendTransaction,
   useWaitForTransactionReceipt, usePublicClient, useWalletClient,
+  useBalance,
 } from 'wagmi'
 import {
   parseUnits, maxUint256, encodeFunctionData,
@@ -82,6 +83,11 @@ export const usePrepareBet = (props: Props) => {
     enabled: isLiveBet,
   })
   const { addBet } = useBetsCache()
+  const { queryKey: balanceQueryKey } = useBalance({
+    chainId: appChain.id,
+    address: account.address,
+    token: betToken.address,
+  })
   const [ isLiveBetPending, setLiveBetPending ] = useState(false)
   const [ isLiveBetProcessing, setLiveBetProcessing ] = useState(false)
 
@@ -400,6 +406,8 @@ export const usePrepareBet = (props: Props) => {
       const receipt = await publicClient?.waitForTransactionReceipt({
         hash: txHash,
       })
+
+      queryClient.invalidateQueries({ queryKey: balanceQueryKey })
 
       if (isFreeBet) {
         const queryKey = [ 'freebets', api, account.address!.toLowerCase(), affiliate.toLowerCase() ]

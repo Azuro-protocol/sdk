@@ -17,12 +17,13 @@ import {
 } from '@azuro-org/toolkit'
 
 import { useApolloClients } from '../../contexts/apollo'
-import { type BetOutcome, type Bet } from '../../global'
+import { type BetOutcome, type Bet, BetType } from '../../global'
 
 
 export type UsePrematchBetsProps = {
   filter: {
     bettor: Address
+    type?: BetType
     limit?: number
     offset?: number
   }
@@ -50,6 +51,17 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
       },
     }
 
+    if (filter?.type === BetType.Unredeemed) {
+      variables.where.isRedeemable = true
+    }
+    else if (filter?.type === BetType.Accepted) {
+      variables.where.status = GraphBetStatus.Accepted
+    }
+    else if (filter?.type === BetType.Settled) {
+      variables.where.status_in = [ GraphBetStatus.Resolved, GraphBetStatus.Canceled ]
+      variables.where.isRedeemable = false
+    }
+
     return {
       variables,
       ssr: false,
@@ -61,6 +73,7 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
     filter.limit,
     filter.offset,
     filter.bettor,
+    filter.type,
     orderBy,
     orderDir,
   ])

@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, useRef } from 'react'
-import { ApolloClient, HttpLink, InMemoryCache, type NormalizedCacheObject } from '@apollo/client'
+import { ApolloClient, HttpLink, InMemoryCache, type NormalizedCacheObject, type TypePolicies } from '@apollo/client'
 import { type ChainId, chainsData } from '@azuro-org/toolkit'
 
 import { useChain } from '../contexts/chain'
@@ -16,13 +16,42 @@ const getLiveLink = (chainId: ChainId) => {
   })
 }
 
+const typePolicies: TypePolicies = {
+  Query: {
+    fields: {
+      bets: {
+        merge(existing, incoming, { args }) {
+
+          // in case of fetching first paginated portion, we should drop cache to avoid data mismatch/shifting
+          if (!args?.skip || !existing?.length) {
+            return incoming
+          }
+
+          return [ ...(existing || []), ...incoming ]
+        },
+      },
+      liveBets: {
+        merge(existing, incoming, { args }) {
+
+          // in case of fetching first paginated portion, we should drop cache to avoid data mismatch/shifting
+          if (!args?.skip || !existing?.length) {
+            return incoming
+          }
+
+          return [ ...(existing || []), ...incoming ]
+        },
+      },
+    },
+  },
+}
+
 const getPrematchApolloClient = (chainId: ChainId) => {
   const link = getPrematchLink(chainId)
 
   return new ApolloClient({
     link,
     ssrMode: typeof window === 'undefined',
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({ typePolicies }),
     connectToDevTools: true,
     assumeImmutableResults: true,
   })

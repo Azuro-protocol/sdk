@@ -1,5 +1,5 @@
 export { cookieKeys, localStorageKeys } from './config'
-export { type BetOutcome, type Bet, SportHub } from './global'
+export * from './global'
 export { AzuroSDKProvider, Watchers } from './AzuroSDKProvider'
 
 // contexts

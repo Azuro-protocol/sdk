@@ -290,7 +290,18 @@ export const useBetsCache = () => {
       prematchClient!.cache.modify({
         id: prematchClient!.cache.identify({ __typename: 'Query' }),
         fields: {
-          liveBets: (bets) => {
+          liveBets: (bets, { storeFieldName }) => {
+            const actorArg = `"actor":"${address!.toLowerCase()}"`
+
+            const isValidStorage = (
+              storeFieldName.includes(`{${actorArg}}`) // all live bets
+              || (storeFieldName.includes(actorArg) && storeFieldName.includes('"status":"Accepted"')) // BetType.Accepted
+            )
+
+            if (!isValidStorage) {
+              return bets
+            }
+
             const betEntityId = `${coreAddress.toLowerCase()}_${tokenId}`
 
             const data: LiveBetFragment = {
@@ -333,7 +344,17 @@ export const useBetsCache = () => {
       prematchClient!.cache.modify({
         id: prematchClient!.cache.identify({ __typename: 'Query' }),
         fields: {
-          bets: (bets) => {
+          bets: (bets, { storeFieldName }) => {
+            const actorArg = `"actor":"${address!.toLowerCase()}"`
+
+            const isValidStorage = (
+              storeFieldName.includes(`{${actorArg}}`) // all bets
+              || (storeFieldName.includes(actorArg) && storeFieldName.includes('"status":"Accepted"')) // BetType.Accepted
+            )
+
+            if (!isValidStorage) {
+              return bets
+            }
             const betEntityId = `${coreAddress.toLowerCase()}_${tokenId}`
 
             const data: PrematchBetFragment = {

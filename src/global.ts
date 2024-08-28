@@ -7,6 +7,12 @@ export enum SportHub {
   Esports = 'esports'
 }
 
+export enum BetType {
+  Unredeemed = 'unredeemed',
+  Accepted = 'accepted',
+  Settled = 'settled',
+}
+
 export type BetOutcome = {
   selectionName: string
   odds: number
