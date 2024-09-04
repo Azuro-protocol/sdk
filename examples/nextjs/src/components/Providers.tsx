@@ -18,7 +18,7 @@ const chains = [
   gnosis,
   polygon,
   chiliz,
-  spicy
+  spicy,
 ] as const
 
 const wagmiConfig = getDefaultConfig({

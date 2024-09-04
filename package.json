@@ -1,6 +1,6 @@
 {
   "name": "@azuro-org/sdk",
-  "version": "5.2.1",
+  "version": "5.2.2",
   "author": "Azuro",
   "type": "module",
   "main": "dist/index.js",
@@ -14,7 +14,7 @@
   "sideEffects": true,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Azuro-protocol/sdk"
+    "url": "git+https://github.com/Azuro-protocol/sdk.git"
   },
   "homepage": "https://github.com/Azuro-protocol/sdk#readme",
   "scripts": {
@@ -47,6 +47,6 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@azuro-org/toolkit": "^4.1.6"
+    "@azuro-org/toolkit": "^4.2.0"
   }
 }
