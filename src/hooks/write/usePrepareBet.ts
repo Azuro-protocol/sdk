@@ -9,7 +9,7 @@ import {
   type SendTransactionParameters,
 } from 'viem'
 import { useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useMemo, useReducer } from 'react'
 import {
   type Selection, ODDS_DECIMALS, liveHostAddress,
   calcMindOdds, freeBetAbi, getPrematchBetDataBytes,
@@ -57,6 +57,16 @@ type Props = {
   onError?(err?: Error): void
 }
 
+type LiveBetTxState = {
+  isPending: boolean
+  data: Hex | undefined
+}
+
+const simpleObjReducer = (state: LiveBetTxState, newState: Partial<LiveBetTxState>) => ({
+  ...state,
+  ...newState,
+})
+
 export const usePrepareBet = (props: Props) => {
   const {
     betAmount: _betAmount, slippage, deadline, affiliate, selections, odds,
@@ -88,8 +98,8 @@ export const usePrepareBet = (props: Props) => {
     address: account.address,
     token: betToken.address,
   })
-  const [ isLiveBetPending, setLiveBetPending ] = useState(false)
-  const [ isLiveBetProcessing, setLiveBetProcessing ] = useState(false)
+
+  const [ liveBetTx, updateLiveBetTx ] = useReducer(simpleObjReducer, { data: undefined, isPending: false })
 
   const approveAddress = isLiveBet ? contracts.liveRelayer?.address : contracts.proxyFront.address
 
@@ -158,7 +168,7 @@ export const usePrepareBet = (props: Props) => {
   const betTx = useSendTransaction()
 
   const betReceipt = useWaitForTransactionReceipt({
-    hash: betTx.data,
+    hash: betTx.data || liveBetTx.data,
   })
 
   const placeBet = async () => {
@@ -174,10 +184,17 @@ export const usePrepareBet = (props: Props) => {
 
     let txHash: Hex
 
+    if (isLiveBet) {
+      betTx.reset()
+    }
+
+    updateLiveBetTx({
+      data: undefined,
+      isPending: isLiveBet,
+    })
+
     try {
       if (isLiveBet) {
-        setLiveBetPending(true)
-
         const fixedMinOdds = calcMindOdds({ odds: totalOdds, slippage })
         const rawMinOdds = parseUnits(fixedMinOdds, ODDS_DECIMALS)
         const { conditionId, outcomeId } = selections[0]!
@@ -245,8 +262,6 @@ export const usePrepareBet = (props: Props) => {
             relayerFeeAmount: BigInt(order.bet.relayerFeeAmount),
           },
         })
-        setLiveBetPending(false)
-        setLiveBetProcessing(true)
 
         const signedBet = {
           environment,
@@ -288,7 +303,10 @@ export const usePrepareBet = (props: Props) => {
             }, 1000)
           })
 
-          setLiveBetProcessing(false)
+          updateLiveBetTx({
+            data: txHash,
+            isPending: false,
+          })
         }
         else {
           throw Error(errorMessage)
@@ -438,8 +456,11 @@ export const usePrepareBet = (props: Props) => {
       }
     }
     catch (err) {
-      setLiveBetPending(false)
-      setLiveBetProcessing(false)
+      if (isLiveBet) {
+        updateLiveBetTx({
+          isPending: false,
+        })
+      }
 
       if (onError) {
         onError(err as any)
@@ -462,8 +483,9 @@ export const usePrepareBet = (props: Props) => {
       isProcessing: approveReceipt.isLoading,
     },
     betTx: {
-      isPending: betTx.isPending || isLiveBetPending,
-      isProcessing: betReceipt.isLoading || isLiveBetProcessing,
+      data: betTx.data || liveBetTx.data,
+      isPending: betTx.isPending || liveBetTx.isPending,
+      isProcessing: betReceipt.isLoading,
     },
     relayerFeeAmount,
     isAllowanceLoading: allowanceTx.isLoading,
