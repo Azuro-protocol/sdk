@@ -91,8 +91,8 @@ export const useRedeemBet = () => {
   return {
     isPending: redeemTx.isPending || batchRedeemTx.isPending,
     isProcessing: receipt.isLoading || batchReceipt.isLoading,
-    data: redeemTx.data || batchReceipt.data,
-    error: redeemTx.error || batchReceipt.error,
+    data: redeemTx.data || batchRedeemTx.data,
+    error: redeemTx.error || batchRedeemTx.error,
     submit,
   }
 }
