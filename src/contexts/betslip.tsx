@@ -134,7 +134,18 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
   const [ selectedFreeBet, setFreeBet ] = useState<FreeBet>()
   const [ betAmount, setBetAmount ] = useState('')
   const [ batchBetAmounts, setBatchBetAmounts ] = useState<Record<string, string>>({})
-  const [ isBatch, setBatch ] = useState(false)
+  const [ isBatch, _setBatch ] = useState(false)
+  const isBatchRef = useRef(isBatch)
+  isBatchRef.current = isBatch
+
+  const setBatch = useCallback<typeof _setBatch>((value) => {
+    _setBatch((prevValue) => {
+      const newValue = typeof value === 'function' ? value(prevValue) : value
+      isBatchRef.current = newValue
+
+      return newValue
+    })
+  }, [])
 
   const { data: freeBets, isFetching: isFreeBetsFetching } = useFreeBets({
     account: account.address!,
@@ -154,14 +165,12 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
 
   const createInitialBatchAmounts = (items: BetslipItem[]) => {
     setBatchBetAmounts(batchAmounts => {
-      const newBatchAmounts = { ...batchAmounts }
+      const newBatchAmounts: Record<string, string> = {}
 
       items.forEach(({ conditionId, outcomeId }) => {
         const key = `${conditionId}-${outcomeId}`
 
-        if (typeof newBatchAmounts[key] === 'undefined') {
-          newBatchAmounts[key] = ''
-        }
+        newBatchAmounts[key] = batchAmounts[key] || ''
       })
 
       return newBatchAmounts
@@ -417,7 +426,6 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
           newItems = [ ...items, item ]
 
           setBatch(true)
-          createInitialBatchAmounts(newItems)
         }
         else {
           newItems = [ ...items ]
@@ -429,6 +437,10 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
       }
 
       localStorage.setItem(localStorageKeys.betslipItems, JSON.stringify(newItems))
+
+      if (isBatchRef.current) {
+        createInitialBatchAmounts(newItems)
+      }
 
       return newItems
     })
@@ -443,7 +455,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
         && item.outcomeId === outcomeId
       ))
 
-      if (newItems.length < 2) {
+      if (isBatchRef.current && newItems.length < 2) {
         setBatch(false)
 
         setBatchBetAmounts(batchAmounts => {
