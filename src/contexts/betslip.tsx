@@ -423,6 +423,13 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
       // then replace old item
       if (replaceIndex !== -1) {
         if (isBatchBetWithSameGameEnabled) {
+          const { conditionId, outcomeId } = items[replaceIndex]!
+
+          // if it's exactly the same outcome, don't change the state
+          if (conditionId === item.conditionId && outcomeId === item.outcomeId) {
+            return items
+          }
+
           newItems = [ ...items, item ]
 
           setBatch(true)
