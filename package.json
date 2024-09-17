@@ -1,6 +1,6 @@
 {
   "name": "@azuro-org/sdk",
-  "version": "5.2.5",
+  "version": "5.2.6",
   "author": "Azuro",
   "type": "module",
   "main": "dist/index.js",
@@ -30,8 +30,8 @@
     "@azuro-org/dictionaries": "^3.0.16",
     "graphql": "^16.8.1",
     "react": "^18.2.0",
-    "viem": "^2.17.3",
-    "wagmi": "^2.11.1"
+    "viem": "^2.21.7",
+    "wagmi": "^2.12.11"
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.2",

@@ -23,6 +23,7 @@ import { type BetOutcome, type Bet, BetType } from '../../global'
 export type UsePrematchBetsProps = {
   filter: {
     bettor: Address
+    affiliate?: string
     type?: BetType
     limit?: number
     offset?: number
@@ -51,15 +52,19 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
       },
     }
 
-    if (filter?.type === BetType.Unredeemed) {
+    if (filter.type === BetType.Unredeemed) {
       variables.where.isRedeemable = true
     }
-    else if (filter?.type === BetType.Accepted) {
+    else if (filter.type === BetType.Accepted) {
       variables.where.status = GraphBetStatus.Accepted
     }
-    else if (filter?.type === BetType.Settled) {
+    else if (filter.type === BetType.Settled) {
       variables.where.status_in = [ GraphBetStatus.Resolved, GraphBetStatus.Canceled ]
       variables.where.isRedeemable = false
+    }
+
+    if (filter.affiliate) {
+      variables.where.affiliate = filter.affiliate
     }
 
     return {
@@ -74,6 +79,7 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
     filter.offset,
     filter.bettor,
     filter.type,
+    filter.affiliate,
     orderBy,
     orderDir,
   ])
@@ -87,7 +93,8 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
 
     return data.bets.map((rawBet) => {
       const {
-        tokenId, status, amount, odds, settledOdds, createdAt, result, core: { address: coreAddress, liquidityPool: { address: lpAddress } },
+        tokenId, status, amount, odds, settledOdds, createdAt, result, affiliate,
+        core: { address: coreAddress, liquidityPool: { address: lpAddress } },
         payout: _payout, isRedeemed: _isRedeemed, isRedeemable, freebet, txHash, selections,
       } = rawBet
 
@@ -148,6 +155,7 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
         .sort((a, b) => +a.game.startsAt - +b.game.startsAt)
 
       const bet: Bet = {
+        affiliate: affiliate!,
         tokenId,
         freebetContractAddress: freebetContractAddress as Address,
         freebetId,

@@ -286,15 +286,17 @@ export const useBetsCache = () => {
     const finalOdds = formatUnits(rawOdds, ODDS_DECIMALS)
     const amount = formatUnits(rawAmount, betToken.decimals)
 
+    const actorArg = `"actor":"${address!.toLowerCase()}"`
+    const affiliateArg = `"affiliate":"${affiliate}"`
+
     if (isLive) {
       prematchClient!.cache.modify({
         id: prematchClient!.cache.identify({ __typename: 'Query' }),
         fields: {
           liveBets: (bets, { storeFieldName }) => {
-            const actorArg = `"actor":"${address!.toLowerCase()}"`
-
             const isValidStorage = (
-              storeFieldName.includes(`{${actorArg}}`) // all live bets
+              storeFieldName.includes(`{${actorArg}}`) // all bets
+              || storeFieldName.includes(`{${actorArg},${affiliateArg}}`) // all bets with affiliate
               || (storeFieldName.includes(actorArg) && storeFieldName.includes('"status":"Accepted"')) // BetType.Accepted
             )
 
@@ -345,10 +347,9 @@ export const useBetsCache = () => {
         id: prematchClient!.cache.identify({ __typename: 'Query' }),
         fields: {
           bets: (bets, { storeFieldName }) => {
-            const actorArg = `"actor":"${address!.toLowerCase()}"`
-
             const isValidStorage = (
               storeFieldName.includes(`{${actorArg}}`) // all bets
+              || storeFieldName.includes(`{${actorArg},${affiliateArg}}`) // all bets with affiliate
               || (storeFieldName.includes(actorArg) && storeFieldName.includes('"status":"Accepted"')) // BetType.Accepted
             )
 

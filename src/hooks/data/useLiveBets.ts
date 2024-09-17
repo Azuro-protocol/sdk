@@ -38,6 +38,7 @@ type LiveBetOutcome = {
 } & Selection
 
 type LiveBet = {
+  affiliate: string
   tokenId: string
   totalOdds: number
   coreAddress: Address
@@ -60,6 +61,7 @@ type LiveBet = {
 export type UseLiveBetsProps = {
   filter: {
     bettor: Address
+    affiliate?: string
     type?: BetType
     limit?: number
     offset?: number
@@ -91,15 +93,19 @@ export const useLiveBets = (props: UseLiveBetsProps) => {
       },
     }
 
-    if (filter?.type === BetType.Unredeemed) {
+    if (filter.type === BetType.Unredeemed) {
       variables.where.isRedeemable = true
     }
-    else if (filter?.type === BetType.Accepted) {
+    else if (filter.type === BetType.Accepted) {
       variables.where.status = GraphBetStatus.Accepted
     }
-    else if (filter?.type === BetType.Settled) {
+    else if (filter.type === BetType.Settled) {
       variables.where.status_in = [ GraphBetStatus.Resolved, GraphBetStatus.Canceled ]
       variables.where.isRedeemable = false
+    }
+
+    if (filter.affiliate) {
+      variables.where.affiliate = filter.affiliate
     }
 
     return {
@@ -114,6 +120,7 @@ export const useLiveBets = (props: UseLiveBetsProps) => {
     filter.offset,
     filter.bettor,
     filter.type,
+    filter.affiliate,
     orderBy,
     orderDir,
   ])
@@ -129,7 +136,8 @@ export const useLiveBets = (props: UseLiveBetsProps) => {
 
     return liveBets.map((rawBet) => {
       const {
-        tokenId, status, amount, odds, settledOdds, createdAt, result, core: { address: coreAddress, liquidityPool: { address: lpAddress } },
+        tokenId, status, amount, odds, settledOdds, createdAt, result, affiliate,
+        core: { address: coreAddress, liquidityPool: { address: lpAddress } },
         payout: _payout, isRedeemed: _isRedeemed, isRedeemable, txHash, selections,
       } = rawBet
 
@@ -169,6 +177,7 @@ export const useLiveBets = (props: UseLiveBetsProps) => {
         })
 
       const bet: LiveBet = {
+        affiliate: affiliate!,
         tokenId,
         txHash,
         totalOdds,

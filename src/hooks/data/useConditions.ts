@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useQuery } from '@apollo/client'
+import { type FetchPolicy, useQuery } from '@apollo/client'
 import {
   liveSupportedChains,
   type Condition_Filter,
@@ -20,6 +20,7 @@ import { useChain } from '../../contexts/chain'
 type QueryProps = {
   pollInterval?: number
   skip?: boolean
+  fetchPolicy?: FetchPolicy
 }
 
 type UseConditionsProps = {

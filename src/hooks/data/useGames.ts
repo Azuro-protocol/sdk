@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useQuery, type QueryHookOptions } from '@apollo/client'
+import { parseUnits } from 'viem'
 import {
   PrematchGraphGameStatus,
   Game_OrderBy,
@@ -8,6 +9,7 @@ import {
   type GamesQuery,
   type GamesQueryVariables,
   GamesDocument,
+  MARGIN_DECIMALS,
 } from '@azuro-org/toolkit'
 
 import { useApolloClients } from '../../contexts/apollo'
@@ -22,6 +24,7 @@ export type UseGamesProps = {
     sportHub?: SportHub
     sportSlug?: string
     leagueSlug?: string
+    maxMargin?: number
   }
   orderBy?: Game_OrderBy
   orderDir?: OrderDirection
@@ -84,6 +87,12 @@ export const useGames = (props?: UseGamesProps) => {
       }
     }
 
+    if (filter?.maxMargin) {
+      variables.where.conditions_ = {
+        margin_lte: parseUnits(String(filter.maxMargin), MARGIN_DECIMALS).toString(),
+      }
+    }
+
     return {
       variables,
       ssr: false,
@@ -96,6 +105,7 @@ export const useGames = (props?: UseGamesProps) => {
     filter?.sportSlug,
     filter?.sportHub,
     filter?.leagueSlug,
+    filter?.maxMargin,
     orderBy,
     orderDir,
     startsAt,

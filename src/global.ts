@@ -24,6 +24,7 @@ export type BetOutcome = {
 } & Selection
 
 export type Bet = {
+  affiliate: string
   tokenId: string
   freebetId?: string
   freebetContractAddress?: Address
