@@ -4,7 +4,8 @@ import { type Selection, type GraphBetStatus, type GameQuery } from '@azuro-org/
 
 export enum SportHub {
   Sports = 'sports',
-  Esports = 'esports'
+  Esports = 'esports',
+  Unique = 'unique'
 }
 
 export enum BetType {
