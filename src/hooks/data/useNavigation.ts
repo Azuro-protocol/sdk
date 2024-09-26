@@ -8,17 +8,21 @@ import {
   NavigationDocument,
 } from '@azuro-org/toolkit'
 
+import { type SportHub } from '../../global'
 import { useApolloClients } from '../../contexts/apollo'
 import { getGameStartsAtValue } from '../../helpers'
 
 
 type UseNavigationProps = {
+  filter?: {
+    sportHub?: SportHub
+  }
   withGameCount?: boolean
   isLive?: boolean
 }
 
 export const useNavigation = (props: UseNavigationProps = {}) => {
-  const { withGameCount = false, isLive } = props
+  const { filter, withGameCount = false, isLive } = props
 
   const { prematchClient, liveClient } = useApolloClients()
 
@@ -28,17 +32,22 @@ export const useNavigation = (props: UseNavigationProps = {}) => {
     const variables: NavigationQueryVariables = {
       first: 1000,
       withGameCount,
-      where: {
+      sportFilter: {},
+      gameFilter: {
         hasActiveConditions: true,
         status_in: [ PrematchGraphGameStatus.Created, PrematchGraphGameStatus.Paused ],
       },
     }
 
     if (isLive) {
-      variables.where!.startsAt_lt = startsAt
+      variables.gameFilter!.startsAt_lt = startsAt
     }
     else {
-      variables.where!.startsAt_gt = startsAt
+      variables.gameFilter!.startsAt_gt = startsAt
+    }
+
+    if (filter?.sportHub) {
+      variables.sportFilter!.sporthub = filter.sportHub
     }
 
     return {
@@ -47,7 +56,7 @@ export const useNavigation = (props: UseNavigationProps = {}) => {
       client: isLive ? liveClient! : prematchClient!,
       notifyOnNetworkStatusChange: true,
     }
-  }, [ withGameCount, startsAt, isLive ])
+  }, [ withGameCount, startsAt, isLive, filter?.sportHub ])
 
   const { data, loading, error } = useQuery<NavigationQuery, NavigationQueryVariables>(NavigationDocument, options)
 
