@@ -9,6 +9,7 @@ export function debounce<F extends Procedure>(func: F, wait: number, withMaxRequ
 
     const later = function () {
       timeout = undefined
+      requests = 0
 
       func.apply(context, args)
     }
