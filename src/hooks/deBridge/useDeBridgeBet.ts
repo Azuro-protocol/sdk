@@ -176,50 +176,55 @@ export const useDeBridgeBet = (props: Props) => {
       setBetPending(false)
       setBetProcessing(true)
 
-      await publicClient!.waitForTransactionReceipt({
-        hash,
-      })
+      if (publicClient?.chain?.id === fromChainId) {
+        await publicClient!.waitForTransactionReceipt({
+          hash,
+        })
+      }
 
       const txHash = await new Promise<Hex>((res, rej) => {
         const interval = setInterval(async () => {
-          const order = await getDeBridgeOrder(orderId!)
-          const {
-            state: orderStatus,
-            externalCallState: betPlacingStatus,
-            fulfilledDstEventMetadata,
-          } = order!
+          try {
+            const order = await getDeBridgeOrder(orderId!)
+            const {
+              state: orderStatus,
+              externalCallState: betPlacingStatus,
+              fulfilledDstEventMetadata,
+            } = order!
 
-          const isBetPlaced = betPlacingStatus === DeBridgeExternalCallStatus.Completed
-          const isOrderFulfilled = isBetPlaced || orderStatus === DeBridgeOrderStatus.Fulfilled || orderStatus === DeBridgeOrderStatus.ClaimedUnlock
+            const isBetPlaced = betPlacingStatus === DeBridgeExternalCallStatus.Completed
+            const isOrderFulfilled = isBetPlaced || orderStatus === DeBridgeOrderStatus.Fulfilled || orderStatus === DeBridgeOrderStatus.ClaimedUnlock
 
-          if (isOrderFulfilled) {
-            clearInterval(interval)
+            if (isOrderFulfilled) {
+              clearInterval(interval)
 
-            res(fulfilledDstEventMetadata?.transactionHash?.stringValue as Hex)
+              res(fulfilledDstEventMetadata?.transactionHash?.stringValue as Hex)
+            }
+
+            let error = ''
+
+            if (betPlacingStatus === DeBridgeExternalCallStatus.Cancelled) {
+              error = DeBridgeExternalCallStatus.Cancelled
+            }
+
+            if (betPlacingStatus === DeBridgeExternalCallStatus.Failed) {
+              error = DeBridgeExternalCallStatus.Failed
+            }
+
+            if (orderStatus === DeBridgeOrderStatus.SentOrderCancel) {
+              error = DeBridgeOrderStatus.SentOrderCancel
+            }
+
+            if (orderStatus === DeBridgeOrderStatus.OrderCancelled) {
+              error = DeBridgeOrderStatus.OrderCancelled
+            }
+
+            if (error) {
+              clearInterval(interval)
+              rej(error)
+            }
           }
-
-          let error = ''
-
-          if (betPlacingStatus === DeBridgeExternalCallStatus.Cancelled) {
-            error = DeBridgeExternalCallStatus.Cancelled
-          }
-
-          if (betPlacingStatus === DeBridgeExternalCallStatus.Failed) {
-            error = DeBridgeExternalCallStatus.Failed
-          }
-
-          if (orderStatus === DeBridgeOrderStatus.SentOrderCancel) {
-            error = DeBridgeOrderStatus.SentOrderCancel
-          }
-
-          if (orderStatus === DeBridgeOrderStatus.OrderCancelled) {
-            error = DeBridgeOrderStatus.OrderCancelled
-          }
-
-          if (error) {
-            clearInterval(interval)
-            rej(error)
-          }
+          catch {}
         }, 5000)
       })
 

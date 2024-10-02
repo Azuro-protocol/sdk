@@ -14,7 +14,7 @@ export const useDeBridgeSupportedChains = ({ enabled }: Props = { enabled: true 
       return chains
     }
 
-    const chainIds = chains.map(({ chainId }) => chainId)
+    const chainIds = chains.map(({ originalChainId }) => originalChainId)
 
     return {
       chains,
