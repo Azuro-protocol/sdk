@@ -5,11 +5,12 @@ import {
   PrematchGraphGameStatus,
   Game_OrderBy,
   OrderDirection,
-
-  type GamesQuery,
-  type GamesQueryVariables,
   GamesDocument,
   MARGIN_DECIMALS,
+
+  type ConditionStatus,
+  type GamesQuery,
+  type GamesQueryVariables,
 } from '@azuro-org/toolkit'
 
 import { useApolloClients } from '../../contexts/apollo'
@@ -25,6 +26,7 @@ export type UseGamesProps = {
     sportSlug?: string
     leagueSlug?: string
     maxMargin?: number
+    conditionsStatus?: ConditionStatus | ConditionStatus[]
   }
   orderBy?: Game_OrderBy
   orderDir?: OrderDirection
@@ -51,6 +53,7 @@ export const useGames = (props?: UseGamesProps) => {
       where: {
         hasActiveConditions: true,
         status_in: [ PrematchGraphGameStatus.Created, PrematchGraphGameStatus.Paused ],
+        conditions_: {},
       },
     }
 
@@ -88,8 +91,15 @@ export const useGames = (props?: UseGamesProps) => {
     }
 
     if (filter?.maxMargin) {
-      variables.where.conditions_ = {
-        margin_lte: parseUnits(String(filter.maxMargin), MARGIN_DECIMALS).toString(),
+      variables.where.conditions_!.margin_lte = parseUnits(String(filter.maxMargin), MARGIN_DECIMALS).toString()
+    }
+
+    if (filter?.conditionsStatus) {
+      if (typeof filter.conditionsStatus === 'string') {
+        variables.where.conditions_!.status = filter.conditionsStatus
+      }
+      else {
+        variables.where.conditions_!.status_in = filter.conditionsStatus
       }
     }
 
@@ -106,6 +116,7 @@ export const useGames = (props?: UseGamesProps) => {
     filter?.sportHub,
     filter?.leagueSlug,
     filter?.maxMargin,
+    filter?.conditionsStatus,
     orderBy,
     orderDir,
     startsAt,

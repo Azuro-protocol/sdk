@@ -31,6 +31,7 @@ export const useActiveConditions = (props: UseConditionsProps) => {
 
     if (filter?.maxMargin) {
       _filter.margin_lte = parseUnits(String(filter.maxMargin), MARGIN_DECIMALS).toString()
+      _filter.status = ConditionStatus.Created
     }
 
     return _filter
