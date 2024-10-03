@@ -40,7 +40,7 @@ export const BetButton: React.FC = () => {
     )
   }
 
-  const isEnoughBalance = isBalanceFetching || !Boolean(+betAmount) ? true : Boolean(+balance! > +betAmount)
+  const isEnoughBalance = isBalanceFetching || !Boolean(+betAmount) || Boolean(selectedFreeBet) || Boolean(+balance! > +betAmount)
 
   const isLoading = (
     isOddsFetching

@@ -24,3 +24,7 @@ wagmi@^2.11.1
 ```
 
 Package information can be found in our [Doc](https://gem.azuro.org/sdk/overview)
+
+
+#### Example
+Check our [example project](https://github.com/Azuro-protocol/example-app)
