@@ -25,14 +25,16 @@ export const useGame = (props: UseGameProps) => {
     skip: !gameId,
   })
 
+  const prematchGame = prematchData?.games?.[0]
+  const isPrematchGameStarted = prematchGame ? Date.now() >= +prematchGame.startsAt * 1000 : false
+
   const { data: liveData, loading: isLiveLoading, error: liveError } = useQuery<GameQuery, GameQueryVariables>(GameDocument, {
     variables,
     ssr: false,
     client: liveClient!,
-    skip: !gameId,
+    skip: !gameId || !isPrematchGameStarted,
   })
 
-  const prematchGame = prematchData?.games?.[0]
   const liveGame = liveData?.games?.[0]
 
   const game = liveGame || prematchGame
