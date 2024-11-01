@@ -46,6 +46,19 @@ export const useOdds = ({ selections, betAmount, batchBetAmounts }: CalcOddsProp
   const oddsDataRef = useRef<Record<string, OddsChangedData>>({})
   const betAmountRef = useRef(betAmount)
   const batchBetAmountsRef = useRef(batchBetAmounts)
+  const prevPrematchItemsRef = useRef(prematchItems)
+
+  if (
+    prematchItems.length && (
+      prematchItems !== prevPrematchItemsRef.current
+      || betAmount !== betAmountRef.current
+      || batchBetAmounts !== batchBetAmountsRef.current
+    )
+  ) {
+    setPrematchOddsFetching(true)
+  }
+
+  prevPrematchItemsRef.current = prematchItems
   betAmountRef.current = betAmount
   batchBetAmountsRef.current = batchBetAmounts
 
@@ -133,7 +146,6 @@ export const useOdds = ({ selections, betAmount, batchBetAmounts }: CalcOddsProp
   const fetchOdds = useCallback(debounce(() => {
     setOdds({})
     setTotalOdds(1)
-    setPrematchOddsFetching(Boolean(prematchItems.length))
 
     fetchPrematchOdds()
     fetchLiveOdds(liveItems)

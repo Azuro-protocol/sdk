@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { type Selection, type ConditionStatus, liveHostAddress } from '@azuro-org/toolkit'
 
 import { useSocket } from '../../contexts/socket'
@@ -38,6 +38,14 @@ export const useStatuses = ({ selections }: ConditionsStatusesProps) => {
   const liveKey = liveItems.map(({ conditionId }) => conditionId).join('-')
   const prematchKey = prematchItems.map(({ conditionId }) => conditionId).join('-')
   const selectionsKey = selections.map(({ conditionId }) => conditionId).join('-')
+
+  const prevPrematchKey = useRef(prematchKey)
+
+  if (prematchItems.length && prematchKey !== prevPrematchKey.current) {
+    setPrematchStatusesFetching(true)
+  }
+
+  prevPrematchKey.current = prematchKey
 
   const isLiveStatusesFetching = useMemo(() => {
     return !liveItems.every(({ conditionId }) => Boolean(statuses[conditionId]))
@@ -84,8 +92,6 @@ export const useStatuses = ({ selections }: ConditionsStatusesProps) => {
     if (!prematchItems.length) {
       return
     }
-
-    setPrematchStatusesFetching(true)
 
     ;(async () => {
       const { data: { conditions } } = await batchFetchConditions(prematchItems.map(({ conditionId, coreAddress }) => `${coreAddress.toLowerCase()}_${conditionId}`), prematchClient!)

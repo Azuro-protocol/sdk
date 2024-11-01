@@ -74,7 +74,6 @@ export const useSports = (props: UseSportsProps) => {
     }
     else {
       variables.gameFilter!.startsAt_gt = startsAt
-      variables.gameFilter!.liquidityPool = contracts.lp.address.toLowerCase()
     }
 
     variables.leagueFilter!.games_ = variables.gameFilter!
@@ -91,7 +90,6 @@ export const useSports = (props: UseSportsProps) => {
     }
   }, [
     isLive,
-    contracts.lp.address,
     gameOrderBy,
     orderDir,
     filter?.limit,
@@ -101,6 +99,10 @@ export const useSports = (props: UseSportsProps) => {
     filter?.leagueSlug,
     startsAt,
   ])
+
+  if (!isLive) {
+    options.variables!.gameFilter!.liquidityPool = contracts.lp.address.toLowerCase()
+  }
 
   const { data, loading, error } = useQuery<SportsQuery, SportsQueryVariables>(SportsDocument, options)
 
