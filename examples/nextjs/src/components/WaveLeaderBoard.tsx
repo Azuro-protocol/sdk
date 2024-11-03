@@ -57,14 +57,14 @@ export function WaveLeaderBoard() {
   }
 
   const columnClassName = 'grid grid-cols-[40px_1fr_200px_200px] p-2'
-  
+
   return (
     <div className='mt-2'>
       <div className="flex items-center space-x-1">
         {
           tabs.map(({ title }, index) => (
-            <div key={title} 
-              className={cx("p-1 bg-slate-200 cursor-pointer rounded-md", {'bg-slate-300': index === activeTabIndex})} 
+            <div key={title}
+              className={cx("p-1 bg-slate-200 cursor-pointer rounded-md", {'bg-slate-300': index === activeTabIndex})}
               onClick={() => setActiveTabIndex(index)}
             >
               {title}
