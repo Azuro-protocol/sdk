@@ -1,19 +1,9 @@
-import React, { useState, useContext, createContext } from 'react'
+import React, { useState, useContext } from 'react'
 import { useAccount } from 'wagmi'
-import { type Chain } from 'viem'
-import { chainsData, type ChainId, type ChainData } from '@azuro-org/toolkit'
+import { chainsData, type ChainId } from '@azuro-org/toolkit'
 
-import { cookieKeys } from '../config'
-
-
-export type ChainContextValue = Omit<ChainData, 'chain'> & {
-  appChain: Omit<Chain, 'id'> & { id: ChainId }
-  walletChain: Chain | undefined
-  isRightNetwork: boolean
-  setAppChainId: (chainId: ChainId) => void
-}
-
-const ChainContext = createContext<ChainContextValue | null>(null)
+import { cookieKeys } from '../../config'
+import { ChainContext, type ChainContextValue } from './config'
 
 export const useChain = () => {
   return useContext(ChainContext) as ChainContextValue

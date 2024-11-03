@@ -1,5 +1,4 @@
 import { type TransactionReceipt, type Address, formatUnits, parseUnits } from 'viem'
-import { useAccount } from 'wagmi'
 import {
   type Selection,
   ODDS_DECIMALS,
@@ -39,6 +38,7 @@ import {
 import { useApolloClients } from '../contexts/apollo'
 import { getEventArgsFromTxReceipt } from '../helpers'
 import { useChain } from '../contexts/chain'
+import { useExtendedAccount } from '../hooks/useAaConnector'
 
 
 type UpdateBetProps = {
@@ -61,7 +61,7 @@ export type NewBetProps = {
 export const useBetsCache = () => {
   const { prematchClient, liveClient } = useApolloClients()
   const { contracts, betToken } = useChain()
-  const { address } = useAccount()
+  const { address } = useExtendedAccount()
 
   const updateBetCache = (
     { coreAddress, tokenId }: UpdateBetProps,

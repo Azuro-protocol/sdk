@@ -2,8 +2,8 @@ import { parseUnits, erc20Abi, zeroAddress } from 'viem'
 import { type TransactionReceipt, type Address, type Hex, maxUint256 } from 'viem'
 import { getTransactionReceipt } from '@wagmi/core'
 import { useQuery } from '@tanstack/react-query'
-import { useAccount, useConfig, usePublicClient, useReadContract, useSendTransaction, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
-import { useState } from 'react'
+import { useConfig, usePublicClient, useReadContract, useSendTransaction, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
+import { useState, useEffect } from 'react'
 import {
   type Selection,
   liveHostAddress,
@@ -20,6 +20,7 @@ import useDebounce from '../../helpers/hooks/useDebounce'
 import { useBetsCache } from '../useBetsCache'
 import { useDeBridgeSupportedChains } from './useDeBridgeSupportedChains'
 import { useDeBridgeSupportedTokens } from './useDeBridgeSupportedTokens'
+import { useExtendedAccount } from '../useAaConnector'
 
 
 type Props = {
@@ -47,7 +48,7 @@ export const useDeBridgeBet = (props: Props) => {
   const { addBet } = useBetsCache()
   const publicClient = usePublicClient()
   const config = useConfig()
-  const account = useAccount()
+  const account = useExtendedAccount()
   const { appChain, betToken } = useChain()
 
   const [ isBetPending, setBetPending ] = useState(false)
@@ -58,6 +59,12 @@ export const useDeBridgeBet = (props: Props) => {
   const betAmount = useDebounce(_betAmount, 300)
   const fromChainId = useDebounce(_fromChainId, 300)
   const fromTokenAddress = useDebounce(_fromTokenAddress, 300)
+
+  useEffect(() => {
+    if (account.isAAWallet) {
+      console.warn('Azuro SDK: deBridge must not be used with AA wallets.')
+    }
+  }, [ account.isAAWallet ])
 
   const {
     supportedChainIds,
@@ -268,6 +275,10 @@ export const useDeBridgeBet = (props: Props) => {
   }
 
   const submit = () => {
+    if (account.isAAWallet) {
+      console.error('Azuro SDK: deBridge must not be used with AA wallets.')
+      return
+    }
     if (isApproveRequired) {
       return approve()
     }
