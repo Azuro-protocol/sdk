@@ -1,9 +1,9 @@
-import React, { useState, useContext, createContext } from 'react'
-import { useAccount } from 'wagmi'
+import React, { useState, useContext, createContext, useEffect } from 'react'
 import { type Chain } from 'viem'
 import { chainsData, type ChainId, type ChainData } from '@azuro-org/toolkit'
 
 import { cookieKeys } from '../config'
+import { useExtendedAccount, useAAWalletClient } from '../hooks/useAaConnector'
 
 
 export type ChainContextValue = Omit<ChainData, 'chain'> & {
@@ -28,7 +28,8 @@ export const ChainProvider: React.FC<ChainProviderProps> = (props) => {
   const { children, initialChainId } = props
 
   const [ appChainId, setAppChainId ] = useState<ChainId>(initialChainId)
-  const { chain: walletChain } = useAccount()
+  const { chain: walletChain, isAAWallet } = useExtendedAccount()
+  const aaWalletClient = useAAWalletClient()
 
   const walletChainId = walletChain?.id || null
 
@@ -41,6 +42,12 @@ export const ChainProvider: React.FC<ChainProviderProps> = (props) => {
 
     setAppChainId(chainId)
   }
+
+  useEffect(() => {
+    if (isAAWallet && aaWalletClient && aaWalletClient.chain.id !== appChainId) {
+      aaWalletClient.switchChain({ id: appChainId })
+    }
+  }, [ isAAWallet, aaWalletClient, appChainId ])
 
   const context: ChainContextValue = {
     appChain: chain,

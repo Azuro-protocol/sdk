@@ -212,7 +212,7 @@ export const usePrepareBet = (props: Props) => {
         })
 
         const signature = isAAWallet
-          ? await aaClient!.signTypedData(typedData)
+          ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account })
           : await walletClient!.data!.signTypedData(typedData)
 
         const createdOrder = await createLiveBet({
