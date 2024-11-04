@@ -4,7 +4,6 @@ export { AzuroSDKProvider, Watchers } from './AzuroSDKProvider'
 
 // contexts
 export * from './contexts/chain'
-export * from './contexts/chain/config'
 export * from './contexts/live'
 export * from './contexts/apollo'
 export { SocketProvider } from './contexts/socket'
