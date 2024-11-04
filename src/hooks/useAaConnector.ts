@@ -34,14 +34,14 @@ let _useAAWalletClient: typeof useAAWalletClientFn = () => useContext(DumbContex
 
 export const useExtendedAccount: typeof useAccountFn = () => {
   const account = useAccount()
-  const ready = useSyncExternalStore(readyStore.subscribe, readyStore.getSnapshot)
+  const ready = useSyncExternalStore(readyStore.subscribe, readyStore.getSnapshot, () => false)
   const accountWithAA = useAccountWithAA()
 
   return accountWithAA || { ...account, isAAWallet: false, ready }
 }
 
 export const useAAWalletClient: typeof useAAWalletClientFn = () => {
-  useSyncExternalStore(readyStore.subscribe, readyStore.getSnapshot)
+  useSyncExternalStore(readyStore.subscribe, readyStore.getSnapshot, () => false)
 
   return _useAAWalletClient()
 }
