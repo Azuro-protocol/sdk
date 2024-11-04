@@ -176,6 +176,10 @@ export const usePrepareBet = (props: Props) => {
       isPending: isLiveBet || isAAWallet,
     })
 
+    if (isAAWallet && aaClient) {
+      await aaClient.switchChain({ id: appChain.id })
+    }
+
     try {
       if (isLiveBet) {
         const fixedMinOdds = calcMindOdds({ odds: totalOdds, slippage })
@@ -207,7 +211,9 @@ export const usePrepareBet = (props: Props) => {
           bet: liveBet,
         })
 
-        const signature = isAAWallet ? await aaClient!.signTypedData(typedData) : await walletClient!.data!.signTypedData(typedData)
+        const signature = isAAWallet
+          ? await aaClient!.signTypedData(typedData)
+          : await walletClient!.data!.signTypedData(typedData)
 
         const createdOrder = await createLiveBet({
           account: account.address!,
