@@ -1,8 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { chainsData, type ConditionStatus } from '@azuro-org/toolkit'
 
-import { debounce } from 'src/helpers/debounce'
-
+import { debounce } from '../helpers/debounce'
 import { conditionStatusWatcher } from '../modules/conditionStatusWatcher'
 import { oddsWatcher } from '../modules/oddsWatcher'
 import { useChain } from './chain'
@@ -122,32 +121,31 @@ export const SocketProvider: React.FC<any> = ({ children }) => {
         actions.subscribe = []
         actions.unsubscribe = []
 
-        const weighs: Record<string, number> = {}
+        const weights: Record<string, number> = {}
 
         subscribeQueue.forEach(id => {
-          if (!weighs[id]) {
-            weighs[id] = 1
+          if (!weights[id]) {
+            weights[id] = 1
           }
           else {
-            weighs[id]++
+            weights[id]++
           }
         })
 
         unsubscribeQueue.forEach(id => {
-          if (!weighs[id]) {
-            weighs[id] = -1
+          if (!weights[id]) {
+            weights[id] = -1
           }
           else {
-            weighs[id]--
+            weights[id]--
           }
         })
 
-
-        const { shouldSubscribe, shouldUnsubscribe } = Object.keys(weighs).reduce((acc, id) => {
-          if (weighs[id]! > 0) {
+        const { shouldSubscribe, shouldUnsubscribe } = Object.keys(weights).reduce((acc, id) => {
+          if (weights[id]! > 0) {
             acc.shouldSubscribe.push(id)
           }
-          else if (weighs[id]! < 0) {
+          else if (weights[id]! < 0) {
             acc.shouldUnsubscribe.push(id)
           }
 
