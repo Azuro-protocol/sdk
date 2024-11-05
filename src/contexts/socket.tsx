@@ -1,7 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { chainsData, type ConditionStatus } from '@azuro-org/toolkit'
 
-import { createBatch } from '../helpers'
+import { debounce } from 'src/helpers/debounce'
+
 import { conditionStatusWatcher } from '../modules/conditionStatusWatcher'
 import { oddsWatcher } from '../modules/oddsWatcher'
 import { useChain } from './chain'
@@ -58,8 +59,8 @@ export const SocketProvider: React.FC<any> = ({ children }) => {
   const subscribers = useRef<Record<string, number>>({})
 
   const subscribe = useCallback((conditionIds: string[]) => {
-    if (!isSocketReady) {
-      throw Error('socket isn\'t ready')
+    if (socket.current?.readyState !== 1) {
+      return
     }
 
     conditionIds.forEach((conditionId) => {
@@ -74,11 +75,11 @@ export const SocketProvider: React.FC<any> = ({ children }) => {
       action: 'subscribe',
       conditionIds,
     }))
-  }, [ isSocketReady ])
+  }, [])
 
   const unsubscribe = useCallback((conditionIds: string[]) => {
-    if (!isSocketReady) {
-      throw Error('socket isn\'t ready')
+    if (socket.current?.readyState !== 1) {
+      return
     }
 
     // we mustn't unsubscribe for condition if it has more that 1 subscriber
@@ -104,12 +105,85 @@ export const SocketProvider: React.FC<any> = ({ children }) => {
       action: 'unsubscribe',
       conditionIds: newUnsubscribers,
     }))
-  }, [ isSocketReady ])
+  }, [])
 
-  const subscribeToUpdates = useCallback(createBatch(subscribe), [ subscribe ])
+  const actionList = () => {
+    const actions = {
+      subscribe: [] as string[],
+      unsubscribe: [] as string[],
+    }
 
-  const unsubscribeToUpdates = useCallback(createBatch(unsubscribe), [ unsubscribe ])
+    const run = (action: 'subscribe' | 'unsubscribe', conditionIds: string[]) => {
+      // group batch requests
+      const request = debounce(() => {
+        const subscribeQueue = [ ...actions.subscribe ]
+        const unsubscribeQueue = [ ...actions.unsubscribe ]
 
+        actions.subscribe = []
+        actions.unsubscribe = []
+
+        const weighs: Record<string, number> = {}
+
+        subscribeQueue.forEach(id => {
+          if (!weighs[id]) {
+            weighs[id] = 1
+          }
+          else {
+            weighs[id]++
+          }
+        })
+
+        unsubscribeQueue.forEach(id => {
+          if (!weighs[id]) {
+            weighs[id] = -1
+          }
+          else {
+            weighs[id]--
+          }
+        })
+
+
+        const { shouldSubscribe, shouldUnsubscribe } = Object.keys(weighs).reduce((acc, id) => {
+          if (weighs[id]! > 0) {
+            acc.shouldSubscribe.push(id)
+          }
+          else if (weighs[id]! < 0) {
+            acc.shouldUnsubscribe.push(id)
+          }
+
+          return acc
+        }, {
+          shouldSubscribe: [] as string[],
+          shouldUnsubscribe: [] as string[],
+        })
+
+        if (shouldSubscribe.length) {
+          subscribe(shouldSubscribe)
+        }
+
+        if (shouldUnsubscribe.length) {
+          unsubscribe(shouldUnsubscribe)
+        }
+      }, 50)
+
+      request()
+      conditionIds.forEach(id => {
+        actions[action].push(id)
+      })
+    }
+
+    return run
+  }
+
+  const runAction = actionList()
+
+  const subscribeToUpdates = useCallback((conditionIds: string[]) => {
+    runAction('subscribe', conditionIds)
+  }, [])
+
+  const unsubscribeToUpdates = useCallback((conditionIds: string[]) => {
+    runAction('unsubscribe', conditionIds)
+  }, [])
 
   const connect = () => {
     socket.current = new WebSocket(chainsData[appChain.id].socket)
