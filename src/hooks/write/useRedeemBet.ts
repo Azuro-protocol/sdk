@@ -1,37 +1,53 @@
-import { useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi'
-import type { Address } from 'viem'
+import { useWaitForTransactionReceipt, usePublicClient, useSendTransaction } from 'wagmi'
+import { type Address, type Hex, encodeFunctionData } from 'viem'
 import { freeBetAbi } from '@azuro-org/toolkit'
 
 import { useChain } from '../../contexts/chain'
 import { useBetsCache } from '../useBetsCache'
 import { type Bet } from '../../global'
+import { useExtendedAccount, useAAWalletClient } from 'src/hooks/useAaConnector'
+import { useState } from 'react'
 
 
 type SubmitProps = {
   bets: Array<Pick<Bet, 'tokenId' | 'coreAddress' | 'freebetContractAddress' | 'freebetId'>>
 }
 
+type AaTxState = {
+  isPending: boolean
+  data: Hex | undefined
+  error: any
+}
+
 export const useRedeemBet = () => {
   const publicClient = usePublicClient()
-  const { contracts } = useChain()
+  const { contracts, appChain } = useChain()
   const { updateBetCache } = useBetsCache()
 
-  const redeemTx = useWriteContract()
+  const redeemTx = useSendTransaction()
+  const account = useExtendedAccount()
+  const isAAWallet = Boolean(account.isAAWallet)
+  const aaClient = useAAWalletClient()
 
-  const batchRedeemTx = useWriteContract()
+  const [aaTxState, setAaTxState] = useState<AaTxState>({ isPending: false, data: undefined, error: null })
 
   const receipt = useWaitForTransactionReceipt({
-    hash: redeemTx.data,
-  })
-  const batchReceipt = useWaitForTransactionReceipt({
-    hash: batchRedeemTx.data,
+    hash: aaTxState.data || redeemTx.data,
   })
 
   const submit = async (props: SubmitProps) => {
     const { bets } = props
     const isBatch = bets.length > 1
 
-    let hash: Address
+    redeemTx.reset()
+    setAaTxState({
+      isPending: isAAWallet,
+      data: undefined,
+      error: null,
+    })
+
+    let data: Hex
+    let to: Address
 
     if (isBatch) {
       const betsData = bets.map(({ tokenId, coreAddress }) => ({
@@ -40,8 +56,8 @@ export const useRedeemBet = () => {
         isNative: false,
       }))
 
-      hash = await batchRedeemTx.writeContractAsync({
-        address: contracts.proxyFront.address,
+      to = contracts.proxyFront.address
+      data = encodeFunctionData({
         abi: contracts.proxyFront.abi,
         functionName: 'withdrawPayouts',
         args: [ betsData ],
@@ -51,16 +67,16 @@ export const useRedeemBet = () => {
       const { tokenId, coreAddress, freebetContractAddress, freebetId } = bets[0]!
 
       if (freebetContractAddress && freebetId) {
-        hash = await redeemTx.writeContractAsync({
-          address: freebetContractAddress,
+        to = freebetContractAddress
+        data = encodeFunctionData({
           abi: freeBetAbi,
           functionName: 'withdrawPayout',
           args: [ BigInt(freebetId) ],
         })
       }
       else {
-        hash = await redeemTx.writeContractAsync({
-          address: contracts.lp.address,
+        to = contracts.lp.address
+        data = encodeFunctionData({
           abi: contracts.lp.abi,
           functionName: 'withdrawPayout',
           args: [
@@ -69,6 +85,32 @@ export const useRedeemBet = () => {
           ],
         })
       }
+    }
+
+    let hash: Hex
+
+    if (isAAWallet) {
+      try {
+        hash = await aaClient!.sendTransaction({ to, data, chain: appChain })
+
+        setAaTxState({
+          data: hash,
+          isPending: false,
+          error: null,
+        })
+      }
+      catch (error: any) {
+        setAaTxState({
+          data: undefined,
+          isPending: false,
+          error,
+        })
+
+        throw error
+      }
+    }
+    else {
+      hash = await redeemTx.sendTransactionAsync({ to, data })
     }
 
     const receipt = await publicClient!.waitForTransactionReceipt({
@@ -89,10 +131,10 @@ export const useRedeemBet = () => {
   }
 
   return {
-    isPending: redeemTx.isPending || batchRedeemTx.isPending,
-    isProcessing: receipt.isLoading || batchReceipt.isLoading,
-    data: redeemTx.data || batchRedeemTx.data,
-    error: redeemTx.error || batchRedeemTx.error,
+    isPending: redeemTx.isPending || aaTxState.isPending,
+    isProcessing: receipt.isLoading,
+    data: redeemTx.data || aaTxState.data,
+    error: redeemTx.error || aaTxState.error,
     submit,
   }
 }

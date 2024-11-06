@@ -62,7 +62,7 @@ const Markets: React.FC<MarketsProps> = (props) => {
 
   return (
     <div className="mt-12">
-      <ActiveMarkets {...props} /> 
+      <ActiveMarkets {...props} />
     </div>
   )
 }

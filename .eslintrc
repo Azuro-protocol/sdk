@@ -123,10 +123,6 @@
             "group": "external"
           },
           {
-            "pattern": "cookies-next",
-            "group": "external"
-          },
-          {
             "pattern": "@apollo/**",
             "group": "external"
           }

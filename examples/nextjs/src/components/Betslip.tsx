@@ -1,10 +1,10 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { 
-  useBaseBetslip, 
-  useBetTokenBalance, 
-  useChain, 
-  useDetailedBetslip, 
+import {
+  useBaseBetslip,
+  useBetTokenBalance,
+  useChain,
+  useDetailedBetslip,
   BetslipDisableReason,
   useDeBridgeSupportedChains,
   useLiveBetFee,
@@ -74,7 +74,7 @@ function FreeBets() {
 
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const value = event.target.value
-    
+
     if (!value) {
       selectFreeBet(undefined)
 
@@ -127,8 +127,8 @@ const errorPerDisableReason = {
 function Content() {
   const account = useAccount()
   const { items, clear, removeItem } = useBaseBetslip()
-  const { 
-    betAmount, batchBetAmounts, odds, totalOdds, statuses, selectedFreeBet, disableReason, 
+  const {
+    betAmount, batchBetAmounts, odds, totalOdds, statuses, selectedFreeBet, disableReason,
     isBatch, isStatusesFetching, isOddsFetching, isLiveBet, changeBatch, changeBatchBetAmount
   } = useDetailedBetslip()
   const { appChain, betToken } = useChain()
@@ -176,11 +176,11 @@ function Content() {
               {
                 items.map(item => {
                   const { game: { gameId }, conditionId, outcomeId } = item
-                  
+
                   return (
-                    <BetslipCard 
+                    <BetslipCard
                       key={`${gameId}-${outcomeId}`}
-                      item={item} 
+                      item={item}
                       batchBetAmount={batchBetAmounts[`${conditionId}-${outcomeId}`]}
                       status={statuses[conditionId]}
                       odds={odds?.[`${conditionId}-${outcomeId}`]}
@@ -191,7 +191,7 @@ function Content() {
                       isBatch={isBatch && !isFreeBet}
                     />
                   )
-                 
+
                 })
               }
             </div>
@@ -312,7 +312,7 @@ export function Betslip() {
           <Content />
         )
       }
-      <button 
+      <button
         className="flex items-center py-2 px-4 bg-zinc-100 whitespace-nowrap rounded-full ml-auto"
         onClick={() => setOpen(!isOpen)}
       >

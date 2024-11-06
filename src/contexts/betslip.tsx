@@ -12,7 +12,6 @@ import {
   PrematchConditionFragmentDoc,
 } from '@azuro-org/toolkit'
 import type { Address } from 'viem'
-import { useAccount } from 'wagmi'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 
 import { useApolloClients } from './apollo'
@@ -23,6 +22,7 @@ import { useStatuses } from '../hooks/watch/useStatuses'
 import { type FreeBet, useFreeBets } from '../hooks/data/useFreeBets'
 import { formatBetValue } from '../helpers/formatBetValue'
 import useForceUpdate from '../helpers/hooks/useForceUpdate'
+import { useExtendedAccount } from '../hooks/useAaConnector'
 
 
 export enum BetslipDisableReason {
@@ -127,7 +127,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
 
   const { prematchClient, liveClient } = useApolloClients()
   const { appChain } = useChain()
-  const account = useAccount()
+  const account = useExtendedAccount()
   const { forceUpdate } = useForceUpdate()
 
   const [ items, setItems ] = useState<BetslipItem[]>([])

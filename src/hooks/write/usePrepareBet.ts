@@ -1,5 +1,5 @@
 import {
-  useAccount, useReadContract, useWriteContract, useSendTransaction,
+  useReadContract, useWriteContract, useSendTransaction,
   useWaitForTransactionReceipt, usePublicClient, useWalletClient,
   useBalance,
 } from 'wagmi'
@@ -23,6 +23,7 @@ import { DEFAULT_DEADLINE } from '../../config'
 import { useBetsCache, type NewBetProps } from '../useBetsCache'
 import { useLiveBetFee } from '../data/useLiveBetFee'
 import { type FreeBet } from '../data/useFreeBets'
+import { useAAWalletClient, useExtendedAccount } from '../useAaConnector'
 
 
 type Props = {
@@ -63,7 +64,10 @@ export const usePrepareBet = (props: Props) => {
   const isBatch = isCombo && typeof _betAmount === 'object'
   const isFreeBet = Boolean(freeBet) && !isCombo && !isBatch
 
-  const account = useAccount()
+  const account = useExtendedAccount()
+  const isAAWallet = Boolean(account.isAAWallet)
+  const aaClient = useAAWalletClient()
+
   const queryClient = useQueryClient()
   const publicClient = usePublicClient()
   const walletClient = useWalletClient()
@@ -82,7 +86,7 @@ export const usePrepareBet = (props: Props) => {
     token: betToken.address,
   })
 
-  const [ liveBetTx, updateLiveBetTx ] = useReducer(simpleObjReducer, { data: undefined, isPending: false })
+  const [ liveOrAABetTx, updateLiveOrAABetTx ] = useReducer(simpleObjReducer, { data: undefined, isPending: false })
 
   const approveAddress = isLiveBet ? contracts.liveRelayer?.address : contracts.proxyFront.address
 
@@ -101,7 +105,6 @@ export const usePrepareBet = (props: Props) => {
   })
 
   const approveTx = useWriteContract()
-
   const approveReceipt = useWaitForTransactionReceipt({
     hash: approveTx.data,
   })
@@ -151,7 +154,7 @@ export const usePrepareBet = (props: Props) => {
   const betTx = useSendTransaction()
 
   const betReceipt = useWaitForTransactionReceipt({
-    hash: betTx.data || liveBetTx.data,
+    hash: betTx.data || liveOrAABetTx.data,
   })
 
   const placeBet = async () => {
@@ -167,14 +170,15 @@ export const usePrepareBet = (props: Props) => {
 
     let txHash: Hex
 
-    if (isLiveBet) {
-      betTx.reset()
-    }
-
-    updateLiveBetTx({
+    betTx.reset()
+    updateLiveOrAABetTx({
       data: undefined,
-      isPending: isLiveBet,
+      isPending: isLiveBet || isAAWallet,
     })
+
+    if (isAAWallet && aaClient) {
+      await aaClient.switchChain({ id: appChain.id })
+    }
 
     try {
       if (isLiveBet) {
@@ -207,7 +211,9 @@ export const usePrepareBet = (props: Props) => {
           bet: liveBet,
         })
 
-        const signature = await walletClient!.data!.signTypedData(typedData)
+        const signature = isAAWallet
+          ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account })
+          : await walletClient!.data!.signTypedData(typedData)
 
         const createdOrder = await createLiveBet({
           account: account.address!,
@@ -244,7 +250,7 @@ export const usePrepareBet = (props: Props) => {
             }, 1000)
           })
 
-          updateLiveBetTx({
+          updateLiveOrAABetTx({
             data: txHash,
             isPending: false,
           })
@@ -268,28 +274,30 @@ export const usePrepareBet = (props: Props) => {
           freebetId: String(id),
         })
 
-        txHash = await betTx.sendTransactionAsync({
+        const data = encodeFunctionData({
+          abi: freeBetAbi,
+          functionName: 'bet',
+          args: [
+            {
+              chainId: BigInt(chainId),
+              expiresAt: BigInt(Math.floor(expiresAt / 1000)),
+              amount: rawAmount,
+              freeBetId: BigInt(id),
+              minOdds: rawMinOdds,
+              owner: account.address!,
+            },
+            signature,
+            coreAddress as Address,
+            BigInt(conditionId),
+            BigInt(outcomeId),
+            rawDeadline,
+            rawFreeBetMinOdds,
+          ],
+        })
+
+        txHash = isAAWallet ? await aaClient!.sendTransaction({ to: contractAddress, data, chain: appChain }) : await betTx.sendTransactionAsync({
           to: contractAddress,
-          data: encodeFunctionData({
-            abi: freeBetAbi,
-            functionName: 'bet',
-            args: [
-              {
-                chainId: BigInt(chainId),
-                expiresAt: BigInt(Math.floor(expiresAt / 1000)),
-                amount: rawAmount,
-                freeBetId: BigInt(id),
-                minOdds: rawMinOdds,
-                owner: account.address!,
-              },
-              signature,
-              coreAddress as Address,
-              BigInt(conditionId),
-              BigInt(outcomeId),
-              rawDeadline,
-              rawFreeBetMinOdds,
-            ],
-          }),
+          data,
           ...(betGas || {}),
         })
       }
@@ -348,7 +356,7 @@ export const usePrepareBet = (props: Props) => {
           ]
         }
 
-        txHash = await betTx.sendTransactionAsync({
+        const betTxDTO = {
           to: contracts.proxyFront.address,
           data: encodeFunctionData({
             abi: contracts.proxyFront.abi,
@@ -359,7 +367,38 @@ export const usePrepareBet = (props: Props) => {
             ],
           }),
           ...(betGas || {}),
-        })
+        }
+
+        if (isAAWallet) {
+          const calls = isApproveRequired ? [
+            {
+              to: betToken.address!,
+              data: encodeFunctionData({
+                abi: erc20Abi,
+                functionName: 'approve',
+                args: [
+                  approveAddress!,
+                  maxUint256,
+                ],
+              }),
+            },
+            betTxDTO,
+          ] : [
+            betTxDTO,
+          ]
+
+          txHash = await aaClient!.sendTransaction({
+            calls,
+          })
+
+          updateLiveOrAABetTx({
+            data: txHash,
+            isPending: false,
+          })
+        }
+        else {
+          txHash = await betTx.sendTransactionAsync(betTxDTO)
+        }
       }
 
       const receipt = await publicClient?.waitForTransactionReceipt({
@@ -367,6 +406,7 @@ export const usePrepareBet = (props: Props) => {
       })
 
       queryClient.invalidateQueries({ queryKey: balanceQueryKey })
+      allowanceTx.refetch()
 
       if (isFreeBet) {
         const queryKey = [ 'freebets', api, account.address!.toLowerCase(), affiliate.toLowerCase() ]
@@ -398,7 +438,7 @@ export const usePrepareBet = (props: Props) => {
     }
     catch (err) {
       if (isLiveBet) {
-        updateLiveBetTx({
+        updateLiveOrAABetTx({
           isPending: false,
         })
       }
@@ -410,7 +450,7 @@ export const usePrepareBet = (props: Props) => {
   }
 
   const submit = () => {
-    if (isApproveRequired) {
+    if (isApproveRequired && !isAAWallet) {
       return approve()
     }
 
@@ -424,13 +464,13 @@ export const usePrepareBet = (props: Props) => {
       isProcessing: approveReceipt.isLoading,
     },
     betTx: {
-      data: betTx.data || liveBetTx.data,
-      isPending: betTx.isPending || liveBetTx.isPending,
+      data: betTx.data || liveOrAABetTx.data,
+      isPending: betTx.isPending || liveOrAABetTx.isPending,
       isProcessing: betReceipt.isLoading,
     },
     relayerFeeAmount,
     isAllowanceLoading: allowanceTx.isLoading,
-    isApproveRequired,
+    isApproveRequired: isAAWallet ? false : isApproveRequired,
     isRelayerFeeLoading: isRelayerFeeFetching,
   }
 }

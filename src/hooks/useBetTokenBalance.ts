@@ -1,11 +1,12 @@
-import { useAccount, useBalance } from 'wagmi'
+import { useBalance } from 'wagmi'
 
 import { useChain } from '../contexts/chain'
+import { useExtendedAccount } from '../hooks/useAaConnector'
 
 
 export const useBetTokenBalance = () => {
   const { appChain, betToken } = useChain()
-  const { address } = useAccount()
+  const { address } = useExtendedAccount()
 
   const { isLoading, data, error } = useBalance({
     chainId: appChain.id,
