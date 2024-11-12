@@ -2,9 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { type Selection, type ConditionStatus, liveHostAddress } from '@azuro-org/toolkit'
 
 import { useSocket } from '../../contexts/socket'
-import { batchFetchConditions } from '../../helpers/batchFetchConditions'
 import { useApolloClients } from '../../contexts/apollo'
 import { conditionStatusWatcher } from '../../modules/conditionStatusWatcher'
+import { batchFetchOutcomes } from '../../helpers/batchFetchOutcomes'
 
 
 type ConditionsStatusesProps = {
@@ -35,9 +35,11 @@ export const useStatuses = ({ selections }: ConditionsStatusesProps) => {
 
   const [ isPrematchStatusesFetching, setPrematchStatusesFetching ] = useState(Boolean(prematchItems.length))
 
-  const liveKey = liveItems.map(({ conditionId }) => conditionId).join('-')
-  const prematchKey = prematchItems.map(({ conditionId }) => conditionId).join('-')
-  const selectionsKey = selections.map(({ conditionId }) => conditionId).join('-')
+  const selectionsKey = useMemo(() => selections.map(({ conditionId }) => conditionId).join('-'), [ selections ])
+  const liveKey = useMemo(() => liveItems.map(({ conditionId }) => conditionId).join('-'), [ liveItems ])
+  const prematchKey = useMemo(() => (
+    prematchItems.map(({ conditionId }) => conditionId).join('-')
+  ), [ prematchItems ])
 
   const prevPrematchKey = useRef(prematchKey)
 
@@ -94,13 +96,15 @@ export const useStatuses = ({ selections }: ConditionsStatusesProps) => {
     }
 
     ;(async () => {
-      const { data: { conditions } } = await batchFetchConditions(prematchItems.map(({ conditionId, coreAddress }) => `${coreAddress.toLowerCase()}_${conditionId}`), prematchClient!)
+      const data = await batchFetchOutcomes(prematchItems.map(({ conditionId, coreAddress }) => `${coreAddress.toLowerCase()}_${conditionId}`), prematchClient!)
 
-      const prematchStatuses = conditions.reduce((acc, { conditionId, status }) => {
+      const prematchStatuses = selections.reduce<Record<string, ConditionStatus>>((acc, { conditionId, outcomeId }) => {
+        const key = `${conditionId}-${outcomeId}`
+        const { status } = data?.[key]!
         acc[conditionId] = status
 
         return acc
-      }, {} as Record<string, ConditionStatus>)
+      }, {})
 
       setPrematchStatusesFetching(false)
       setStatuses(prematchStatuses)

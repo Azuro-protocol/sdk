@@ -277,8 +277,10 @@ export const useDeBridgeBet = (props: Props) => {
   const submit = () => {
     if (account.isAAWallet) {
       console.error('Azuro SDK: deBridge must not be used with AA wallets.')
+
       return
     }
+
     if (isApproveRequired) {
       return approve()
     }

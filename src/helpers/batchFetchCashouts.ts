@@ -1,0 +1,32 @@
+import { type ChainId, getPrecalculatedCashouts } from '@azuro-org/toolkit'
+
+import { createBatch } from './createBatch'
+import { type Cashout } from '../global'
+
+
+type Result = Record<string, Cashout>
+
+const getCashouts = async (conditionIds: string[], chainId: ChainId) => {
+  const data = await getPrecalculatedCashouts({
+    chainId,
+    conditionIds,
+  })
+
+  return data?.reduce<Result>((acc, { conditionId, available, outcomes }) => {
+    outcomes.forEach(({ outcomeId, multiplier }) => {
+      const key = `${conditionId}-${outcomeId}`
+      acc[key] = {
+        conditionId,
+        outcomeId: outcomeId.toString(),
+        available,
+        multiplier,
+      }
+    })
+
+    return acc
+  }, {})
+}
+
+type Func = typeof getCashouts
+
+export const batchFetchCashouts = createBatch<Result, Func>(getCashouts)
