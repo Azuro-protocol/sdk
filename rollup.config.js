@@ -23,7 +23,6 @@ export default {
     /react/,
     /viem/,
     /wagmi/,
-    /@privy-io/,
   ],
   plugins: [
     typescript({

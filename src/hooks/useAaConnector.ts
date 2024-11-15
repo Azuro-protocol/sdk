@@ -48,12 +48,20 @@ export const useAAWalletClient: typeof useAAWalletClientFn = () => {
   return _useAAWalletClient()
 }
 
-import('@azuro-org/sdk-social-aa-connector')
-  .then((pkg) => {
-    useAccountWithAA = pkg.useAccount
-    _useAAWalletClient = pkg.useAAWalletClient
+;(async () => {
+  try {
+    const pkg = await import('@azuro-org/sdk-social-aa-connector')
+
+    if (typeof pkg.useAccount === 'function') {
+      useAccountWithAA = pkg.useAccount
+    }
+    if (typeof pkg.useAAWalletClient === 'function') {
+      _useAAWalletClient = pkg.useAAWalletClient
+    }
+
     readyStore.setReady()
-  })
-  .catch(() => {
+  }
+  catch (e) {
     readyStore.setReady()
-  })
+  }
+})()
