@@ -46,8 +46,3 @@ export type Bet = {
   isCanceled: boolean
   isLive: boolean
 }
-
-export type Cashout = {
-  available: boolean
-  multiplier: string
-} & Omit<Selection, 'coreAddress'>

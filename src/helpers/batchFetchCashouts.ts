@@ -1,10 +1,10 @@
 import { type ChainId, getPrecalculatedCashouts } from '@azuro-org/toolkit'
 
 import { createBatch } from './createBatch'
-import { type Cashout } from '../global'
+import { type PrecalculatedCashout } from '../hooks/cashout/usePrecalculatedCashouts'
 
 
-type Result = Record<string, Cashout>
+type Result = Record<string, PrecalculatedCashout>
 
 const getCashouts = async (conditionIds: string[], chainId: ChainId) => {
   const data = await getPrecalculatedCashouts({
