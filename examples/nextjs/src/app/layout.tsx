@@ -4,9 +4,9 @@ import { Providers, Header, Betslip, BetsSummary } from '@/components'
 import { cookies } from 'next/headers'
 
 
-export default function RootLayout(props: { children: React.ReactNode }) {
+export default async function RootLayout(props: { children: React.ReactNode }) {
   const { children } = props
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
 
   const initialChainId = cookieStore.get('appChainId')?.value
   const initialLiveState = JSON.parse(cookieStore.get('live')?.value || 'false')
