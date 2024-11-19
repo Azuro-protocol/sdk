@@ -30,7 +30,7 @@ export const useLiveBetFee = ({ enabled }: Props = { enabled: true }) => {
     queryFn,
     enabled,
     refetchOnWindowFocus: false,
-    refetchInterval: 10000,
+    refetchInterval: 10_000,
   })
 
   if (!enabled) {

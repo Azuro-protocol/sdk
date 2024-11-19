@@ -18,7 +18,7 @@ const getCashouts = async (conditionIds: string[], chainId: ChainId) => {
       acc[key] = {
         conditionId,
         outcomeId: outcomeId.toString(),
-        available,
+        isAvailable: available,
         multiplier,
       }
     })

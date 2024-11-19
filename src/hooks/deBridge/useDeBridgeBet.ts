@@ -118,7 +118,7 @@ export const useDeBridgeBet = (props: Props) => {
       && (supportedTokenAddresses || []).includes(fromTokenAddress)
     ),
     refetchOnWindowFocus: false,
-    refetchInterval: 20000,
+    refetchInterval: 20_000,
   })
 
   const { orderId, estimation, tx: betTxData, fixFee } = data || {}
