@@ -134,18 +134,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
   const [ selectedFreeBet, setFreeBet ] = useState<FreeBet>()
   const [ betAmount, setBetAmount ] = useState('')
   const [ batchBetAmounts, setBatchBetAmounts ] = useState<Record<string, string>>({})
-  const [ isBatch, _setBatch ] = useState(false)
-  const isBatchRef = useRef(isBatch)
-  isBatchRef.current = isBatch
-
-  const setBatch = useCallback<typeof _setBatch>((value) => {
-    _setBatch((prevValue) => {
-      const newValue = typeof value === 'function' ? value(prevValue) : value
-      isBatchRef.current = newValue
-
-      return newValue
-    })
-  }, [])
+  const [ isBatch, setBatch ] = useState(false)
 
   const { data: freeBets, isFetching: isFreeBetsFetching } = useFreeBets({
     account: account.address!,
@@ -433,6 +422,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
           newItems = [ ...items, item ]
 
           setBatch(true)
+          createInitialBatchAmounts(newItems)
         }
         else {
           newItems = [ ...items ]
@@ -445,13 +435,13 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
 
       localStorage.setItem(localStorageKeys.betslipItems, JSON.stringify(newItems))
 
-      if (isBatchRef.current) {
+      if (isBatch) {
         createInitialBatchAmounts(newItems)
       }
 
       return newItems
     })
-  }, [])
+  }, [ isBatch ])
 
   const removeItem = useCallback((itemProps: RemoveItemProps) => {
     const { conditionId, outcomeId } = itemProps
@@ -462,10 +452,12 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
         && item.outcomeId === outcomeId
       ))
 
-      if (isBatchRef.current && newItems.length < 2) {
+      if (newItems.length < 2) {
         setBatch(false)
+      }
 
-        setBatchBetAmounts(batchAmounts => {
+      setBatchBetAmounts(batchAmounts => {
+        if (newItems.length < 2) {
           const lastItem = newItems[0]
 
           if (lastItem) {
@@ -478,16 +470,13 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
           }
 
           return {}
-        })
-      }
-      else {
-        setBatchBetAmounts(batchAmounts => {
-          const newBatchAmounts = { ...batchAmounts }
-          delete newBatchAmounts[`${conditionId}-${outcomeId}`]
+        }
 
-          return newBatchAmounts
-        })
-      }
+        const newBatchAmounts = { ...batchAmounts }
+        delete newBatchAmounts[`${conditionId}-${outcomeId}`]
+
+        return newBatchAmounts
+      })
 
       localStorage.setItem(localStorageKeys.betslipItems, JSON.stringify(newItems))
 
@@ -514,7 +503,6 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
 
   useEffect(() => {
     let storedItems: BetslipItem[] = JSON.parse(localStorage.getItem(localStorageKeys.betslipItems) || '[]')
-
 
     if (!Array.isArray(storedItems)) {
       return
