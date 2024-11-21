@@ -1,6 +1,6 @@
 {
   "name": "@azuro-org/sdk",
-  "version": "5.3.2",
+  "version": "5.3.3",
   "author": "Azuro",
   "type": "module",
   "main": "dist/index.js",
@@ -40,6 +40,7 @@
     }
   },
   "devDependencies": {
+    "@azuro-org/sdk-social-aa-connector": "^1.0.0",
     "@rollup/plugin-typescript": "^12.1.1",
     "@types/react": "^18.0.0",
     "@typescript-eslint/eslint-plugin": "^6.19.1",

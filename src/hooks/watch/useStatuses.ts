@@ -35,16 +35,28 @@ export const useStatuses = ({ selections }: ConditionsStatusesProps) => {
 
   const [ isPrematchStatusesFetching, setPrematchStatusesFetching ] = useState(Boolean(prematchItems.length))
 
-  const liveKey = liveItems.map(({ conditionId }) => conditionId).join('-')
-  const prematchKey = prematchItems.map(({ conditionId }) => conditionId).join('-')
-  const selectionsKey = selections.map(({ conditionId }) => conditionId).join('-')
+  const selectionsKey = useMemo(() => (
+    selections.map(({ conditionId }) => conditionId).join('-')
+  ), [ selections ])
+  const liveKey = useMemo(() => (
+    liveItems.map(({ conditionId }) => conditionId).join('-')
+  ), [ liveItems ])
+  const prematchKey = useMemo(() => (
+    prematchItems.map(({ conditionId }) => conditionId).join('-')
+  ), [ prematchItems ])
 
+  const prevSelectionsRef = useRef(selections)
   const prevPrematchKey = useRef(prematchKey)
 
   if (prematchItems.length && prematchKey !== prevPrematchKey.current) {
     setPrematchStatusesFetching(true)
   }
 
+  if (selections !== prevSelectionsRef.current) {
+    setStatuses({})
+  }
+
+  prevSelectionsRef.current = selections
   prevPrematchKey.current = prematchKey
 
   const isLiveStatusesFetching = useMemo(() => {
@@ -69,8 +81,6 @@ export const useStatuses = ({ selections }: ConditionsStatusesProps) => {
     if (!selections.length) {
       return
     }
-
-    setStatuses({})
 
     const unsubscribeList = selections.map(({ conditionId }) => {
       return conditionStatusWatcher.subscribe(conditionId, (newStatus) => {

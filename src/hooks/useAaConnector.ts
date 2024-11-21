@@ -2,6 +2,7 @@ import { useContext, createContext, useSyncExternalStore } from 'react'
 import type { useAccount as useAccountFn, useAAWalletClient as useAAWalletClientFn } from '@azuro-org/sdk-social-aa-connector'
 import { useAccount } from 'wagmi'
 
+
 const DumbContext = createContext(undefined)
 
 let ready = false
@@ -14,6 +15,7 @@ export const readyStore = {
   },
   subscribe(listener: Function) {
     listeners = [ ...listeners, listener ]
+
     return () => {
       listeners = listeners.filter(l => l !== listener)
     }
@@ -53,6 +55,7 @@ export const useAAWalletClient: typeof useAAWalletClientFn = () => {
     if (typeof pkg.useAccount === 'function') {
       useAccountWithAA = pkg.useAccount
     }
+
     if (typeof pkg.useAAWalletClient === 'function') {
       _useAAWalletClient = pkg.useAAWalletClient
     }

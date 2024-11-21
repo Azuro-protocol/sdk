@@ -16,7 +16,6 @@ import {
 
 import { useApolloClients } from '../../contexts/apollo'
 import { useChain } from '../../contexts/chain'
-import useDebounce from '../../helpers/hooks/useDebounce'
 import { useBetsCache } from '../useBetsCache'
 import { useDeBridgeSupportedChains } from './useDeBridgeSupportedChains'
 import { useDeBridgeSupportedTokens } from './useDeBridgeSupportedTokens'
@@ -40,7 +39,7 @@ type Props = {
 
 export const useDeBridgeBet = (props: Props) => {
   const {
-    fromChainId: _fromChainId, fromTokenAddress: _fromTokenAddress, betAmount: _betAmount,
+    fromChainId, fromTokenAddress, betAmount,
     slippage, deadline, referralCode, affiliate, selections, odds, totalOdds, onSuccess, onError,
   } = props
 
@@ -55,10 +54,6 @@ export const useDeBridgeBet = (props: Props) => {
   const [ isBetProcessing, setBetProcessing ] = useState(false)
 
   const isLiveBet = selections.some(({ coreAddress }) => coreAddress === liveHostAddress)
-
-  const betAmount = useDebounce(_betAmount, 300)
-  const fromChainId = useDebounce(_fromChainId, 300)
-  const fromTokenAddress = useDebounce(_fromTokenAddress, 300)
 
   useEffect(() => {
     if (account.isAAWallet) {
@@ -111,6 +106,7 @@ export const useDeBridgeBet = (props: Props) => {
       && Boolean(account)
       && Boolean(+betAmount)
       && Boolean(selections.length)
+      && Boolean(totalOdds) && totalOdds !== 1
       && !isDeBridgeSupportedChainsFetching
       && !isDeBridgeSupportedTokensFetching
       && (supportedChainIds || []).includes(appChain.id)

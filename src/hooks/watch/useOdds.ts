@@ -39,6 +39,16 @@ export const useOdds = ({ selections, betAmount, batchBetAmounts }: CalcOddsProp
     } as { liveItems: Selection[], prematchItems: Selection[] })
   }, [ selections ])
 
+  const selectionsKey = useMemo(() => (
+    selections.map(({ conditionId }) => conditionId).join('-')
+  ), [ selections ])
+  const liveKey = useMemo(() => (
+    liveItems.map(({ conditionId }) => conditionId).join('-')
+  ), [ liveItems ])
+  const prematchKey = useMemo(() => (
+    prematchItems.map(({ conditionId }) => conditionId).join('-')
+  ), [ prematchItems ])
+
   const [ odds, setOdds ] = useState<Record<string, number>>({})
   const [ totalOdds, setTotalOdds ] = useState<number>(0)
   const [ isPrematchOddsFetching, setPrematchOddsFetching ] = useState(Boolean(prematchItems.length))
@@ -46,11 +56,12 @@ export const useOdds = ({ selections, betAmount, batchBetAmounts }: CalcOddsProp
   const oddsDataRef = useRef<Record<string, OddsChangedData>>({})
   const betAmountRef = useRef(betAmount)
   const batchBetAmountsRef = useRef(batchBetAmounts)
-  const prevPrematchItemsRef = useRef(prematchItems)
+  const prevSelectionsKeyRef = useRef(selectionsKey)
+  const prevPrematchKeyRef = useRef(prematchKey)
 
   if (
     prematchItems.length && (
-      prematchItems !== prevPrematchItemsRef.current
+      prematchKey !== prevPrematchKeyRef.current
       || betAmount !== betAmountRef.current
       || batchBetAmounts !== batchBetAmountsRef.current
     )
@@ -58,11 +69,19 @@ export const useOdds = ({ selections, betAmount, batchBetAmounts }: CalcOddsProp
     setPrematchOddsFetching(true)
   }
 
-  prevPrematchItemsRef.current = prematchItems
+  if (
+    selectionsKey !== prevSelectionsKeyRef.current
+    || betAmount !== betAmountRef.current
+    || batchBetAmounts !== batchBetAmountsRef.current
+  ) {
+    setOdds({})
+    setTotalOdds(1)
+  }
+
+  prevSelectionsKeyRef.current = selectionsKey
+  prevPrematchKeyRef.current = prematchKey
   betAmountRef.current = betAmount
   batchBetAmountsRef.current = batchBetAmounts
-
-  const liveKey = liveItems.map(({ conditionId }) => conditionId).join('-')
 
   const isLiveOddsFetching = useMemo(() => {
     return !liveItems.every(({ conditionId, outcomeId }) => Boolean(odds[`${conditionId}-${outcomeId}`]))
@@ -144,12 +163,9 @@ export const useOdds = ({ selections, betAmount, batchBetAmounts }: CalcOddsProp
   }
 
   const fetchOdds = useCallback(debounce(() => {
-    setOdds({})
-    setTotalOdds(1)
-
     fetchPrematchOdds()
     fetchLiveOdds(liveItems)
-  }, 100), [ selections ])
+  }, 100), [ selectionsKey ])
 
   useEffect(() => {
     if (!isSocketReady || !liveItems.length) {
@@ -192,7 +208,7 @@ export const useOdds = ({ selections, betAmount, batchBetAmounts }: CalcOddsProp
         unsubscribe()
       })
     }
-  }, [ selections ])
+  }, [ selectionsKey ])
 
   return {
     odds,
