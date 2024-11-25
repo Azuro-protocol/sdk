@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { type Selection, type ConditionStatus, liveHostAddress } from '@azuro-org/toolkit'
 
-import { useSocket } from '../../contexts/socket'
+import { useOddsSocket } from '../../contexts/oddsSocket'
 import { batchFetchConditions } from '../../helpers/batchFetchConditions'
 import { useApolloClients } from '../../contexts/apollo'
 import { conditionStatusWatcher } from '../../modules/conditionStatusWatcher'
@@ -12,7 +12,7 @@ type ConditionsStatusesProps = {
 }
 
 export const useStatuses = ({ selections }: ConditionsStatusesProps) => {
-  const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useSocket()
+  const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useOddsSocket()
   const { prematchClient } = useApolloClients()
 
   const [ statuses, setStatuses ] = useState<Record<string, ConditionStatus>>({})

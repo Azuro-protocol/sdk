@@ -6,7 +6,7 @@ export { AzuroSDKProvider, Watchers } from './AzuroSDKProvider'
 export * from './contexts/chain'
 export * from './contexts/live'
 export * from './contexts/apollo'
-export { SocketProvider } from './contexts/socket'
+export { OddsSocketProvider } from './contexts/oddsSocket'
 export * from './contexts/betslip'
 
 // data hooks

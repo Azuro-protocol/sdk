@@ -18,7 +18,7 @@ export const useWatchers = () => {
       const log = logs[0]!
       const conditionId = log.args.conditionId!
 
-      oddsWatcher.dispatch(conditionId.toString())
+      oddsWatcher.dispatch(conditionId.toString(), undefined)
     },
   })
 
@@ -31,7 +31,7 @@ export const useWatchers = () => {
       const log = logs[0]!
       const conditionId = log.args.conditionId!
 
-      oddsWatcher.dispatch(conditionId.toString())
+      oddsWatcher.dispatch(conditionId.toString(), undefined)
     },
   })
 
