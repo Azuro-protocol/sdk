@@ -35,6 +35,7 @@ export { useOdds } from './hooks/watch/useOdds'
 export { useWatchers } from './hooks/watch/useWatchers'
 export { useSelection } from './hooks/watch/useSelection'
 export { useStatuses } from './hooks/watch/useStatuses'
+export { useLiveStatistics } from './hooks/watch/useLiveStatistics'
 
 // other hooks
 export { useBetTokenBalance } from './hooks/useBetTokenBalance'
