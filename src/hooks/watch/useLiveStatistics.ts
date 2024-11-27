@@ -8,16 +8,23 @@ import { LIVE_STATISTICS_SUPPORTED_SPORTS } from '../../config'
 
 type Props = {
   gameId: string
-  sportId: number
+  sportId: number | string
   gameStatus: GameStatus
+  enabled?: boolean
 }
 
-export const useLiveStatistics = ({ gameId, sportId, gameStatus }: Props) => {
-  const [ statistics, setStatistics ] = useState<LiveStatisticsData>()
+export const useLiveStatistics = ({ gameId, sportId, gameStatus, enabled = true }: Props) => {
+  const [ statistics, setStatistics ] = useState<LiveStatisticsData | null>()
   const { subscribeToUpdates, unsubscribeToUpdates, isSocketReady } = useLiveStatisticsSocket()
 
-  const skip = !LIVE_STATISTICS_SUPPORTED_SPORTS.includes(sportId) || gameStatus !== GameStatus.Live
-  const isFetching = !statistics
+  const skip = (
+    !enabled ||
+    !gameId ||
+    !sportId ||
+    !LIVE_STATISTICS_SUPPORTED_SPORTS.includes(+sportId) ||
+    gameStatus !== GameStatus.Live
+  )
+  const isFetching = !skip && !statistics && statistics !== null
 
   useEffect(() => {
     if (!isSocketReady || skip) {
@@ -39,8 +46,13 @@ export const useLiveStatistics = ({ gameId, sportId, gameStatus }: Props) => {
       return
     }
 
-    const unsubscribe = liveStatisticWatcher.subscribe(gameId, async (stats) => {
-      setStatistics(stats)
+    const unsubscribe = liveStatisticWatcher.subscribe(gameId, async (data) => {
+      if (data.stats === null) {
+        setStatistics(null)
+      }
+      else {
+        setStatistics(data)
+      }
     })
 
     return () => {

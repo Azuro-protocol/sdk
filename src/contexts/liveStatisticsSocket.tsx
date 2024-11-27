@@ -185,16 +185,16 @@ export type LiveStatisticSocketData = {
   id: string
   fixture: {
     status: Status,
-  }
+  } | null
   live: {
     scoreBoard: ScoreBoard | null
     stats: Stats | null
-  }
+  } | null
 }[]
 
 export type LiveStatisticsData = {
-  status: Status
-  stats: SoccerStatistic | BasketballStatistic | TennisStatistic | VolleyballStatistic
+  status: Status | null
+  stats: SoccerStatistic | BasketballStatistic | TennisStatistic | VolleyballStatistic | null
 }
 
 const LiveStatisticsSocketContext = createContext<LiveStatisticsSocket | null>(null)
@@ -345,28 +345,37 @@ export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
     }
 
     socket.current.onclose = (event) => {
+      subscribers.current = {}
+      socket.current = undefined
+      setSocketReady(false)
+
       if (event.code === SocketCloseReason.ChainChanged) {
         return
       }
 
-      socket.current = undefined
-      setSocketReady(false)
       connect()
     }
 
     socket.current.onmessage = (message: MessageEvent<LiveStatisticSocketData>) => {
       JSON.parse(message.data.toString()).forEach((data: LiveStatisticSocketData[0]) => {
-        const { id, fixture: { status }, live: { scoreBoard, stats } } = data
+        const { id, fixture, live } = data
 
-        if (scoreBoard || stats) {
-          liveStatisticWatcher.dispatch(id, {
-            status,
-            stats: {
-              ...(stats || {}),
-              ...(scoreBoard || {}),
-            } as LiveStatisticsData['stats'],
-          })
+        let statsData: LiveStatisticsData = {
+          status: null,
+          stats: null,
         }
+
+        if (live) {
+          statsData = {
+            status: fixture?.status || null,
+            stats: {
+              ...(live.stats || {}),
+              ...(live.scoreBoard || {}),
+            } as LiveStatisticsData['stats'],
+          }
+        }
+
+        liveStatisticWatcher.dispatch(id, statsData)
       })
     }
 
@@ -387,8 +396,6 @@ export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
     ) {
       unsubscribe(Object.keys(subscribers.current))
       socket.current.close(SocketCloseReason.ChainChanged)
-      socket.current = undefined
-      setSocketReady(false)
     }
     prevChainId.current = appChain.id
   }, [ appChain, isSocketReady ])

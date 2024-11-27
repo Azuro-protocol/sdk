@@ -191,12 +191,14 @@ export const OddsSocketProvider: React.FC<any> = ({ children }) => {
     }
 
     socket.current.onclose = (event) => {
+      subscribers.current = {}
+      socket.current = undefined
+      setSocketReady(false)
+
       if (event.code === SocketCloseReason.ChainChanged) {
         return
       }
 
-      socket.current = undefined
-      setSocketReady(false)
       connect()
     }
 
@@ -249,8 +251,6 @@ export const OddsSocketProvider: React.FC<any> = ({ children }) => {
     ) {
       unsubscribe(Object.keys(subscribers.current))
       socket.current.close(SocketCloseReason.ChainChanged)
-      socket.current = undefined
-      setSocketReady(false)
     }
     prevChainId.current = appChain.id
   }, [ appChain, isSocketReady ])
