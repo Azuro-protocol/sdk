@@ -6,8 +6,17 @@ export { AzuroSDKProvider, Watchers } from './AzuroSDKProvider'
 export * from './contexts/chain'
 export * from './contexts/live'
 export * from './contexts/apollo'
-export { OddsSocketProvider } from './contexts/oddsSocket'
 export * from './contexts/betslip'
+export { OddsSocketProvider } from './contexts/oddsSocket'
+export {
+  LiveStatisticsSocketProvider,
+
+  type LiveStatistics,
+  type SoccerStatistic,
+  type BasketballStatistic,
+  type TennisStatistic,
+  type VolleyballStatistic,
+} from './contexts/liveStatisticsSocket'
 
 // data hooks
 export { usePrematchBets, type UsePrematchBetsProps } from './hooks/data/usePrematchBets'

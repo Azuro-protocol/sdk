@@ -92,17 +92,6 @@ type VolleyballScoreBoard = {
   state: string
 }
 
-type CricketScoreBoard = {
-  cur_inning: number
-  over: number
-  delivery: number
-  i1: HomeGuest<string>
-  i2: HomeGuest<string>
-  runs: HomeGuest<number>
-  possession: HomeGuest<boolean>
-  state: string
-}
-
 type ScoreBoard = SoccerScoreBoard | BasketballScoreBoard | TennisScoreBoard | VolleyballScoreBoard | null
 
 type SoccerStats = {
@@ -181,7 +170,7 @@ export type BasketballStatistic = BasketballScoreBoard & BasketballStats
 export type TennisStatistic = TennisScoreBoard & TennisStats
 export type VolleyballStatistic = VolleyballScoreBoard & VolleyballStats
 
-export type LiveStatisticSocketData = {
+type LiveStatisticSocketData = {
   id: string
   fixture: {
     status: Status,
@@ -192,7 +181,7 @@ export type LiveStatisticSocketData = {
   } | null
 }[]
 
-export type LiveStatisticsData = {
+export type LiveStatistics = {
   status: Status | null
   stats: SoccerStatistic | BasketballStatistic | TennisStatistic | VolleyballStatistic | null
 }
@@ -293,7 +282,7 @@ export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
       JSON.parse(message.data.toString()).forEach((data: LiveStatisticSocketData[0]) => {
         const { id, fixture, live } = data
 
-        let statsData: LiveStatisticsData = {
+        let statsData: LiveStatistics = {
           status: null,
           stats: null,
         }
@@ -304,7 +293,7 @@ export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
             stats: {
               ...(live.stats || {}),
               ...(live.scoreBoard || {}),
-            } as LiveStatisticsData['stats'],
+            } as LiveStatistics['stats'],
           }
         }
 

@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { GameStatus } from '@azuro-org/toolkit'
 
-import { useLiveStatisticsSocket, type LiveStatisticsData } from '../../contexts/liveStatisticsSocket'
+import { useLiveStatisticsSocket, type LiveStatistics } from '../../contexts/liveStatisticsSocket'
 import { liveStatisticWatcher } from '../../modules/liveStatisticWatcher'
 import { LIVE_STATISTICS_SUPPORTED_SPORTS } from '../../config'
 
@@ -14,7 +14,7 @@ type Props = {
 }
 
 export const useLiveStatistics = ({ gameId, sportId, gameStatus, enabled = true }: Props) => {
-  const [ statistics, setStatistics ] = useState<LiveStatisticsData | null>()
+  const [ statistics, setStatistics ] = useState<LiveStatistics | null>()
   const { subscribeToUpdates, unsubscribeToUpdates, isSocketReady } = useLiveStatisticsSocket()
 
   const skip = (
@@ -24,7 +24,20 @@ export const useLiveStatistics = ({ gameId, sportId, gameStatus, enabled = true 
     !LIVE_STATISTICS_SUPPORTED_SPORTS.includes(+sportId) ||
     gameStatus !== GameStatus.Live
   )
-  const isFetching = !skip && !statistics && statistics !== null
+
+  let isFetching = !skip && !statistics && statistics !== null
+
+  const prevGameIdRef = useRef(gameId)
+
+  if (prevGameIdRef.current !== gameId) {
+    setStatistics(undefined)
+
+    if (!skip) {
+      isFetching = true
+    }
+  }
+
+  prevGameIdRef.current = gameId
 
   useEffect(() => {
     if (!isSocketReady || skip) {
@@ -40,8 +53,6 @@ export const useLiveStatistics = ({ gameId, sportId, gameStatus, enabled = true 
 
 
   useEffect(() => {
-    setStatistics(undefined)
-
     if (skip) {
       return
     }
