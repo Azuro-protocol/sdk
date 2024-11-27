@@ -55,6 +55,7 @@ export const useAAWalletClient: typeof useAAWalletClientFn = () => {
     if (typeof pkg.useAccount === 'function') {
       useAccountWithAA = pkg.useAccount
     }
+
     if (typeof pkg.useAAWalletClient === 'function') {
       _useAAWalletClient = pkg.useAAWalletClient
     }
