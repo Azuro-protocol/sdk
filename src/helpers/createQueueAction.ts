@@ -1,13 +1,15 @@
 import { debounce } from './debounce'
 
 
-const createQueueAction = () => {
+type Action = 'subscribe' | 'unsubscribe'
+
+export const createQueueAction = (subscribe: Function, unsubscribe: Function) => {
   const actions = {
     subscribe: [] as string[],
     unsubscribe: [] as string[],
   }
 
-  const run = (action: 'subscribe' | 'unsubscribe', gameIds: string[]) => {
+  const run = (action: Action, gameIds: string[]) => {
     // group batch requests
     const request = debounce(() => {
       const subscribeQueue = [ ...actions.subscribe ]
