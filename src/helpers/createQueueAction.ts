@@ -9,7 +9,7 @@ export const createQueueAction = (subscribe: Function, unsubscribe: Function) =>
     unsubscribe: [] as string[],
   }
 
-  const run = (action: Action, gameIds: string[]) => {
+  const run = (action: Action, values: string[]) => {
     // group batch requests
     const request = debounce(() => {
       const subscribeQueue = [ ...actions.subscribe ]
@@ -62,8 +62,8 @@ export const createQueueAction = (subscribe: Function, unsubscribe: Function) =>
     }, 50)
 
     request()
-    gameIds.forEach(id => {
-      actions[action].push(id)
+    values.forEach(value => {
+      actions[action].push(value)
     })
   }
 
