@@ -380,6 +380,7 @@ export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
     }
 
     socket.current.onerror = () => {
+      subscribers.current = {}
       socket.current = undefined
       setSocketReady(false)
 
