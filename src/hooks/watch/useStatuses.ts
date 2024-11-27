@@ -2,9 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { type Selection, type ConditionStatus, liveHostAddress } from '@azuro-org/toolkit'
 
 import { useOddsSocket } from '../../contexts/oddsSocket'
-import { batchFetchConditions } from '../../helpers/batchFetchConditions'
 import { useApolloClients } from '../../contexts/apollo'
 import { conditionStatusWatcher } from '../../modules/conditionStatusWatcher'
+import { batchFetchOutcomes } from '../../helpers/batchFetchOutcomes'
 
 
 type ConditionsStatusesProps = {
@@ -104,13 +104,15 @@ export const useStatuses = ({ selections }: ConditionsStatusesProps) => {
     }
 
     ;(async () => {
-      const { data: { conditions } } = await batchFetchConditions(prematchItems.map(({ conditionId, coreAddress }) => `${coreAddress.toLowerCase()}_${conditionId}`), prematchClient!)
+      const data = await batchFetchOutcomes(prematchItems.map(({ conditionId, coreAddress }) => `${coreAddress.toLowerCase()}_${conditionId}`), prematchClient!)
 
-      const prematchStatuses = conditions.reduce((acc, { conditionId, status }) => {
+      const prematchStatuses = selections.reduce<Record<string, ConditionStatus>>((acc, { conditionId, outcomeId }) => {
+        const key = `${conditionId}-${outcomeId}`
+        const { status } = data?.[key]!
         acc[conditionId] = status
 
         return acc
-      }, {} as Record<string, ConditionStatus>)
+      }, {})
 
       setPrematchStatusesFetching(false)
       setStatuses(prematchStatuses)
