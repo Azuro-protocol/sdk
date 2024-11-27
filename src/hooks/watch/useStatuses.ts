@@ -45,18 +45,18 @@ export const useStatuses = ({ selections }: ConditionsStatusesProps) => {
     prematchItems.map(({ conditionId }) => conditionId).join('-')
   ), [ prematchItems ])
 
-  const prevSelectionsRef = useRef(selections)
+  const prevSelectionsKeyRef = useRef(selectionsKey)
   const prevPrematchKey = useRef(prematchKey)
 
   if (prematchItems.length && prematchKey !== prevPrematchKey.current) {
     setPrematchStatusesFetching(true)
   }
 
-  if (selections !== prevSelectionsRef.current) {
+  if (selectionsKey !== prevSelectionsKeyRef.current) {
     setStatuses({})
   }
 
-  prevSelectionsRef.current = selections
+  prevSelectionsKeyRef.current = selectionsKey
   prevPrematchKey.current = prematchKey
 
   const isLiveStatusesFetching = useMemo(() => {
