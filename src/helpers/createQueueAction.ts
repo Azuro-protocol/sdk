@@ -38,7 +38,8 @@ export const createQueueAction = (subscribe: Function, unsubscribe: Function) =>
     })
 
     const { subscribeWeights, unsubscribeWeights } = Object.keys(weights).reduce((acc, id) => {
-      // ATTN: equal cause we need to fire subscribe for new elements and then trigger watcher (we don't have store)
+      // ATTN: equal cause we need to fire subscribe for new elements
+      // and then trigger watcher (we don't have store)
       if (weights[id]! >= 0) {
         acc.subscribeWeights[id] = weights[id]!
       }
