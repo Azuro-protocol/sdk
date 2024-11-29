@@ -1,5 +1,5 @@
 import { createWatcher } from '../helpers'
-import { type LiveStatisticsData } from '../contexts/liveStatisticsSocket'
+import { type LiveStatistics } from '../contexts/liveStatisticsSocket'
 
 
-export const liveStatisticWatcher = createWatcher<LiveStatisticsData>()
+export const liveStatisticWatcher = createWatcher<LiveStatistics>()

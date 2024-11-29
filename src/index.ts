@@ -1,4 +1,4 @@
-export { cookieKeys, localStorageKeys } from './config'
+export { cookieKeys, localStorageKeys, LIVE_STATISTICS_SUPPORTED_SPORTS } from './config'
 export * from './global'
 export { AzuroSDKProvider, Watchers } from './AzuroSDKProvider'
 
