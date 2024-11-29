@@ -200,26 +200,37 @@ export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
   const socket = useRef<WebSocket>()
   const subscribers = useRef<Record<string, number>>({})
 
-  const subscribe = useCallback((gameIds: string[]) => {
+  const subscribe = useCallback((weights: Record<string, number>) => {
     if (socket.current?.readyState !== 1) {
       return
     }
 
-    gameIds.forEach((gameId) => {
+    Object.keys(weights).forEach((gameId) => {
       if (typeof subscribers.current[gameId] === 'undefined') {
         subscribers.current[gameId] = 0
       }
 
-      subscribers.current[gameId] += 1
+      subscribers.current[gameId] += weights[gameId]!
     })
 
     socket.current!.send(JSON.stringify({
       action: 'subscribe',
-      gameIds,
+      gameIds: Object.keys(weights),
     }))
   }, [])
 
-  const unsubscribe = useCallback((gameIds: string[]) => {
+  const unsubscribeCall = (gameIds: string[]) => {
+    if (socket.current?.readyState !== 1) {
+      return
+    }
+
+    socket.current!.send(JSON.stringify({
+      action: 'unsubscribe',
+      gameIds,
+    }))
+  }
+
+  const unsubscribe = useCallback((weights: Record<string, number>) => {
     if (socket.current?.readyState !== 1) {
       return
     }
@@ -227,13 +238,12 @@ export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
     // we mustn't unsubscribe for condition if it has more that 1 subscriber
     const newUnsubscribers: string[] = []
 
-    gameIds.forEach((gameId) => {
+    Object.keys(weights).forEach((gameId) => {
       if (subscribers.current[gameId]) {
-        if (subscribers.current[gameId]! > 1) {
-          subscribers.current[gameId] -= 1
-        }
-        else {
-          subscribers.current[gameId] = 0
+        subscribers.current[gameId] += weights[gameId]!
+
+        if (subscribers.current[gameId] === 0) {
+          delete subscribers.current[gameId]
           newUnsubscribers.push(gameId)
         }
       }
@@ -243,10 +253,7 @@ export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
       return
     }
 
-    socket.current!.send(JSON.stringify({
-      action: 'unsubscribe',
-      gameIds: newUnsubscribers,
-    }))
+    unsubscribeCall(newUnsubscribers)
   }, [])
 
   const runAction = useCallback(createQueueAction(subscribe, unsubscribe), [])
@@ -317,19 +324,19 @@ export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
       && prevChainId.current !== appChain.id
       && chainsData[prevChainId.current].socket !== chainsData[appChain.id].socket
     ) {
-      unsubscribe(Object.keys(subscribers.current))
+      unsubscribeCall(Object.keys(subscribers.current))
       socket.current.close(SocketCloseReason.ChainChanged)
     }
     prevChainId.current = appChain.id
-  }, [ appChain, isSocketReady ])
+  }, [ chainsData[appChain.id].socket, isSocketReady ])
 
   useEffect(() => {
-    if (typeof socket.current !== 'undefined') {
+    if (typeof socket.current !== 'undefined' || isSocketReady) {
       return
     }
 
     connect()
-  }, [ appChain ])
+  }, [ chainsData[appChain.id].socket, isSocketReady ])
 
   const value: LiveStatisticsSocket = {
     isSocketReady,

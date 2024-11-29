@@ -1,7 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { chainsData, type ConditionStatus } from '@azuro-org/toolkit'
 
-import { debounce } from '../helpers/debounce'
 import { createQueueAction } from '../helpers/createQueueAction'
 import { conditionStatusWatcher } from '../modules/conditionStatusWatcher'
 import { oddsWatcher } from '../modules/oddsWatcher'
@@ -58,26 +57,37 @@ export const OddsSocketProvider: React.FC<any> = ({ children }) => {
   const socket = useRef<WebSocket>()
   const subscribers = useRef<Record<string, number>>({})
 
-  const subscribe = useCallback((conditionIds: string[]) => {
+  const subscribe = useCallback((weights: Record<string, number>) => {
     if (socket.current?.readyState !== 1) {
       return
     }
 
-    conditionIds.forEach((conditionId) => {
+    Object.keys(weights).forEach((conditionId) => {
       if (typeof subscribers.current[conditionId] === 'undefined') {
         subscribers.current[conditionId] = 0
       }
 
-      subscribers.current[conditionId] += 1
+      subscribers.current[conditionId] += weights[conditionId]!
     })
 
     socket.current!.send(JSON.stringify({
       action: 'subscribe',
-      conditionIds,
+      conditionIds: Object.keys(weights),
     }))
   }, [])
 
-  const unsubscribe = useCallback((conditionIds: string[]) => {
+  const unsubscribeCall = (conditionIds: string[]) => {
+    if (socket.current?.readyState !== 1) {
+      return
+    }
+
+    socket.current!.send(JSON.stringify({
+      action: 'unsubscribe',
+      conditionIds,
+    }))
+  }
+
+  const unsubscribe = useCallback((weights: Record<string, number>) => {
     if (socket.current?.readyState !== 1) {
       return
     }
@@ -85,13 +95,12 @@ export const OddsSocketProvider: React.FC<any> = ({ children }) => {
     // we mustn't unsubscribe for condition if it has more that 1 subscriber
     const newUnsubscribers: string[] = []
 
-    conditionIds.forEach((conditionId) => {
+    Object.keys(weights).forEach((conditionId) => {
       if (subscribers.current[conditionId]) {
-        if (subscribers.current[conditionId]! > 1) {
-          subscribers.current[conditionId] -= 1
-        }
-        else {
-          subscribers.current[conditionId] = 0
+        subscribers.current[conditionId] += weights[conditionId]!
+
+        if (subscribers.current[conditionId] === 0) {
+          delete subscribers.current[conditionId]
           newUnsubscribers.push(conditionId)
         }
       }
@@ -101,10 +110,7 @@ export const OddsSocketProvider: React.FC<any> = ({ children }) => {
       return
     }
 
-    socket.current!.send(JSON.stringify({
-      action: 'unsubscribe',
-      conditionIds: newUnsubscribers,
-    }))
+    unsubscribeCall(newUnsubscribers)
   }, [])
 
   const runAction = useCallback(createQueueAction(subscribe, unsubscribe), [])
@@ -184,19 +190,19 @@ export const OddsSocketProvider: React.FC<any> = ({ children }) => {
       && prevChainId.current !== appChain.id
       && chainsData[prevChainId.current].socket !== chainsData[appChain.id].socket
     ) {
-      unsubscribe(Object.keys(subscribers.current))
+      unsubscribeCall(Object.keys(subscribers.current))
       socket.current.close(SocketCloseReason.ChainChanged)
     }
     prevChainId.current = appChain.id
-  }, [ appChain, isSocketReady ])
+  }, [ chainsData[appChain.id].socket, isSocketReady ])
 
   useEffect(() => {
-    if (typeof socket.current !== 'undefined') {
+    if (typeof socket.current !== 'undefined' || isSocketReady) {
       return
     }
 
     connect()
-  }, [ appChain ])
+  }, [ chainsData[appChain.id].socket, isSocketReady ])
 
   const value: OddsSocketContextValue = {
     isSocketReady,
