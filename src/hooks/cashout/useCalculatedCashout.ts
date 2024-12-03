@@ -8,12 +8,12 @@ import { type PrecalculatedCashout } from './usePrecalculatedCashouts'
 
 type Props = {
   account: Address
-  betId: string
+  tokenId: string
   selections: Omit<Selection, 'coreAddress'>[]
   isLive: boolean
 }
 
-export const useCalculatedCashout = ({ account, betId, selections, isLive }: Props) => {
+export const useCalculatedCashout = ({ account, tokenId, selections, isLive }: Props) => {
   const queryClient = useQueryClient()
   const { appChain, api } = useChain()
 
@@ -21,13 +21,13 @@ export const useCalculatedCashout = ({ account, betId, selections, isLive }: Pro
     getCalculatedCashout({
       chainId: appChain.id,
       account,
-      betId,
+      tokenId,
       isLive,
     })
   )
 
   return useQuery({
-    queryKey: [ 'cashout/calculate', api, account?.toLowerCase(), betId, isLive ],
+    queryKey: [ 'cashout/calculate', api, account?.toLowerCase(), tokenId, isLive ],
     queryFn,
     refetchOnWindowFocus: false,
     retry: () => {

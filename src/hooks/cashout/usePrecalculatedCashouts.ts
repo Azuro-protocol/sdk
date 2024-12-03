@@ -43,6 +43,7 @@ export const usePrecalculatedCashouts = ({ selections, graphBetStatus }: Props) 
     gcTime: 0, // disable cache
     enabled: Boolean(selections.length) && graphBetStatus === GraphBetStatus.Accepted,
     refetchInterval: 60_000,
+    refetchOnWindowFocus: false,
   })
 
   const isCashoutAvailable = useMemo(() => {

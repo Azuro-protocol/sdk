@@ -80,7 +80,7 @@ export const usePrepareBet = (props: Props) => {
     enabled: isLiveBet,
   })
   const { addBet } = useBetsCache()
-  const { queryKey: balanceQueryKey } = useBalance({
+  const { refetch: refetchBalance } = useBalance({
     chainId: appChain.id,
     address: account.address,
     token: betToken.address,
@@ -236,11 +236,11 @@ export const usePrepareBet = (props: Props) => {
                 orderId,
               })
 
-              const { state, txHash } = order!
+              const { state, txHash, errorMessage } = order!
 
               if (state === LiveBetState.Rejected) {
                 clearInterval(interval)
-                rej()
+                rej(errorMessage)
               }
 
               if (txHash) {
@@ -405,7 +405,7 @@ export const usePrepareBet = (props: Props) => {
         hash: txHash,
       })
 
-      queryClient.invalidateQueries({ queryKey: balanceQueryKey })
+      refetchBalance()
       allowanceTx.refetch()
 
       if (isFreeBet) {
