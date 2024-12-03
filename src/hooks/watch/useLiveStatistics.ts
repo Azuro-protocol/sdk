@@ -13,6 +13,7 @@ type Props = {
   enabled?: boolean
 }
 
+// TODO: check provider id?
 export const useLiveStatistics = ({ gameId, sportId, gameStatus, enabled = true }: Props) => {
   const [ statistics, setStatistics ] = useState<LiveStatistics | null>()
   const { subscribeToUpdates, unsubscribeToUpdates, isSocketReady } = useLiveStatisticsSocket()
