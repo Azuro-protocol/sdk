@@ -1,5 +1,5 @@
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient, useWalletClient, useBalance } from 'wagmi'
-import { type Hex, type Address, type TransactionReceipt } from 'viem'
+import { type Hex, type Address, type TransactionReceipt, encodeFunctionData } from 'viem'
 import {
   type Selection,
   CashoutState,
@@ -88,6 +88,11 @@ export const useCashout = (props: Props) => {
 
   const isLive = selections[0]!.coreAddress.toLowerCase() === contracts.liveCore?.address.toLowerCase()
   const betCoreAddress = selections[0]!.coreAddress as Address
+  const betNftContractAddress = betCoreAddress.toLowerCase() === contracts.prematchComboCore.address.toLowerCase() ? (
+    contracts.prematchComboCore.address
+  ) : (
+    contracts.azuroBet.address
+  )
 
   const calculationQuery = useQuery({
     queryKey: [ 'cashout/calculate', api, account.address?.toLowerCase(), tokenId, isLive ],
@@ -110,11 +115,6 @@ export const useCashout = (props: Props) => {
   const { data: calculation } = calculationQuery
   const { id: calculationId, multiplier, expiredAt, approveExpiredAt } = calculation || {}
   const isCashoutAvailable = !isLive && Boolean(calculationId)
-  const betNftContractAddress = betCoreAddress.toLowerCase() === contracts.prematchComboCore.address.toLowerCase() ? (
-    contracts.prematchComboCore.address
-  ) : (
-    contracts.azuroBet.address
-  )
 
   const allowanceTx = useReadContract({
     chainId: appChain.id,
@@ -177,8 +177,25 @@ export const useCashout = (props: Props) => {
         isPending: true,
       })
 
+      // switch chain and approve
       if (isAAWallet && aaClient) {
         await aaClient.switchChain({ id: appChain.id })
+
+        const hash = await aaClient!.sendTransaction({
+          to: betNftContractAddress,
+          data: encodeFunctionData({
+            abi: contracts.azuroBet.abi,
+            functionName: 'setApprovalForAll',
+            args: [
+              contracts.cashout?.address!,
+              true,
+            ],
+          }),
+        })
+
+        await publicClient?.waitForTransactionReceipt({
+          hash,
+        })
       }
 
       const attention = EIP712Attention || 'By signing this transaction, I agree to cash out on \'Azuro SDK Example'
@@ -290,6 +307,7 @@ export const useCashout = (props: Props) => {
     },
     cashoutTx: {
       data: cashoutTx.data,
+      receipt: cashoutReceipt.data,
       isPending: cashoutTx.isPending,
       isProcessing: cashoutReceipt.isLoading,
     },

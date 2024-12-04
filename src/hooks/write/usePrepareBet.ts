@@ -295,11 +295,15 @@ export const usePrepareBet = (props: Props) => {
           ],
         })
 
-        txHash = isAAWallet ? await aaClient!.sendTransaction({ to: contractAddress, data, chain: appChain }) : await betTx.sendTransactionAsync({
-          to: contractAddress,
-          data,
-          ...(betGas || {}),
-        })
+        txHash = isAAWallet ? (
+          await aaClient!.sendTransaction({ to: contractAddress, data, chain: appChain })
+        ) : (
+          await betTx.sendTransactionAsync({
+            to: contractAddress,
+            data,
+            ...(betGas || {}),
+          })
+        )
       }
       else {
         let betData
@@ -461,6 +465,7 @@ export const usePrepareBet = (props: Props) => {
     },
     betTx: {
       data: betTx.data || liveOrAABetTx.data,
+      receipt: betReceipt.data,
       isPending: betTx.isPending || liveOrAABetTx.isPending,
       isProcessing: betReceipt.isLoading,
     },
