@@ -432,9 +432,7 @@ export const usePrepareBet = (props: Props) => {
         })
       }
 
-      if (onSuccess) {
-        onSuccess(receipt)
-      }
+      onSuccess?.(receipt)
     }
     catch (err) {
       if (isLiveBet) {
@@ -443,9 +441,7 @@ export const usePrepareBet = (props: Props) => {
         })
       }
 
-      if (onError) {
-        onError(err as any)
-      }
+      onError?.(err as any)
     }
   }
 

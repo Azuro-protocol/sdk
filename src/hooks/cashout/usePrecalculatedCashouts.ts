@@ -7,8 +7,9 @@ import { batchFetchCashouts } from '../../helpers/batchFetchCashouts'
 
 
 type Props = {
-  selections: Omit<Selection, 'coreAddress'>[]
+  selections: Selection[]
   graphBetStatus: GraphBetStatus
+  enabled?: boolean
 }
 
 export type PrecalculatedCashout = {
@@ -17,9 +18,10 @@ export type PrecalculatedCashout = {
 } & Omit<Selection, 'coreAddress'>
 
 
-export const usePrecalculatedCashouts = ({ selections, graphBetStatus }: Props) => {
-  const { appChain, api } = useChain()
+export const usePrecalculatedCashouts = ({ selections, graphBetStatus, enabled = true }: Props) => {
+  const { appChain, api, contracts } = useChain()
 
+  const isLive = selections[0]!.coreAddress === contracts.liveCore?.address
   const conditionsKey = useMemo(() => selections.map(({ conditionId }) => conditionId).join('-'), [ selections ])
 
   const queryFn = async () => {
@@ -41,9 +43,14 @@ export const usePrecalculatedCashouts = ({ selections, graphBetStatus }: Props) 
     queryKey: [ 'cashout/precalculate', api, conditionsKey ],
     queryFn,
     gcTime: 0, // disable cache
-    enabled: Boolean(selections.length) && graphBetStatus === GraphBetStatus.Accepted,
     refetchInterval: 60_000,
     refetchOnWindowFocus: false,
+    enabled: (
+      enabled &&
+      Boolean(selections.length) &&
+      graphBetStatus === GraphBetStatus.Accepted &&
+      !isLive
+    ),
   })
 
   const isCashoutAvailable = useMemo(() => {

@@ -12,6 +12,7 @@ export enum BetType {
   Unredeemed = 'unredeemed',
   Accepted = 'accepted',
   Settled = 'settled',
+  CashedOut = 'cashedOut',
 }
 
 export type BetOutcome = {
@@ -45,4 +46,5 @@ export type Bet = {
   isRedeemed: boolean
   isCanceled: boolean
   isLive: boolean
+  isCashedOut: boolean
 }

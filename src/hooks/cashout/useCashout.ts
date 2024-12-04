@@ -1,19 +1,28 @@
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient, useWalletClient, useBalance } from 'wagmi'
-import { type Hex, type Address } from 'viem'
-import { CashoutState, createCashout, getCashout, getCashoutTypedData } from '@azuro-org/toolkit'
+import { type Hex, type Address, type TransactionReceipt } from 'viem'
+import {
+  type Selection,
+  CashoutState,
+  createCashout,
+  getCalculatedCashout,
+  getCashout,
+  getCashoutTypedData,
+} from '@azuro-org/toolkit'
 import { useReducer } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { useChain } from '../../contexts/chain'
 import { useAAWalletClient, useExtendedAccount } from '../useAaConnector'
+import { useBetsCache } from '../useBetsCache'
+import { type PrecalculatedCashout } from './usePrecalculatedCashouts'
 
 
 type Props = {
   tokenId: string
-  betCoreAddress: Address
-  calculationId: string
-  multiplier: string
-  expiredAt: number
+  selections: Selection[]
   EIP712Attention?: string
+  onSuccess?(receipt?: TransactionReceipt): void
+  onError?(err?: Error): void
 }
 
 type CashoutTxState = {
@@ -27,9 +36,14 @@ const simpleObjReducer = (state: CashoutTxState, newState: Partial<CashoutTxStat
 })
 
 export const useCashout = (props: Props) => {
-  const { tokenId, betCoreAddress, calculationId, multiplier, expiredAt, EIP712Attention } = props
+  const {
+    tokenId, selections, EIP712Attention,
+    onSuccess, onError,
+  } = props
 
   const { appChain, contracts, api, betToken } = useChain()
+  const { updateBetCache } = useBetsCache()
+  const queryClient = useQueryClient()
   const account = useExtendedAccount()
   const isAAWallet = Boolean(account.isAAWallet)
   const aaClient = useAAWalletClient()
@@ -48,9 +62,63 @@ export const useCashout = (props: Props) => {
     }
   )
 
+  const updatePrecalculatedCache = () => {
+    const conditionsKey = selections.map(({ conditionId }) => conditionId).join('-')
+    const queryKey = [ 'cashout/precalculate', api, conditionsKey ]
+
+    // set precalculate query unavailable to cashout
+    queryClient.setQueryData(queryKey, (oldPrecalcCashouts: Record<string, PrecalculatedCashout>) => {
+      if (!oldPrecalcCashouts) {
+        return oldPrecalcCashouts
+      }
+
+      const newPrecalcCashouts = { ...oldPrecalcCashouts }
+
+      selections.forEach(({ conditionId, outcomeId }) => {
+        const key = `${conditionId}-${outcomeId}`
+        newPrecalcCashouts[key] = {
+          ...newPrecalcCashouts[key]!,
+          isAvailable: false,
+        }
+      })
+
+      return newPrecalcCashouts
+    })
+  }
+
+  const isLive = selections[0]!.coreAddress.toLowerCase() === contracts.liveCore?.address.toLowerCase()
+  const betCoreAddress = selections[0]!.coreAddress as Address
+
+  const calculationQuery = useQuery({
+    queryKey: [ 'cashout/calculate', api, account.address?.toLowerCase(), tokenId, isLive ],
+    queryFn: () => getCalculatedCashout({
+      chainId: appChain.id,
+      account: account.address!,
+      tokenId,
+      isLive,
+    }),
+    refetchOnWindowFocus: false,
+    retry: () => {
+      updatePrecalculatedCache()
+
+      return false // disable retries on error
+    },
+    gcTime: 0, // disable cache
+    enabled: !isLive && !!account.address,
+  })
+
+  const { data: calculation } = calculationQuery
+  const { id: calculationId, multiplier, expiredAt, approveExpiredAt } = calculation || {}
+  const isCashoutAvailable = !isLive && Boolean(calculationId)
+  const betNftContractAddress = betCoreAddress.toLowerCase() === contracts.prematchComboCore.address.toLowerCase() ? (
+    contracts.prematchComboCore.address
+  ) : (
+    contracts.azuroBet.address
+  )
+
   const allowanceTx = useReadContract({
     chainId: appChain.id,
-    address: contracts.azuroBet.address,
+    address: betNftContractAddress,
     abi: contracts.azuroBet.abi,
     functionName: 'isApprovedForAll',
     args: [
@@ -58,7 +126,11 @@ export const useCashout = (props: Props) => {
       contracts.cashout?.address!,
     ],
     query: {
-      enabled: Boolean(account.address) && Boolean(contracts.cashout?.address),
+      enabled: (
+        Boolean(account.address) &&
+        Boolean(contracts.cashout?.address) &&
+        isCashoutAvailable
+      ),
     },
   })
 
@@ -78,7 +150,7 @@ export const useCashout = (props: Props) => {
 
   const approve = async () => {
     const hash = await approveTx.writeContractAsync({
-      address: contracts.azuroBet.address,
+      address: betNftContractAddress,
       abi: contracts.azuroBet.abi,
       functionName: 'setApprovalForAll',
       args: [
@@ -95,16 +167,20 @@ export const useCashout = (props: Props) => {
   }
 
   const cashout = async () => {
-    updateCashoutTx({
-      data: undefined,
-      isPending: true,
-    })
-
-    if (isAAWallet && aaClient) {
-      await aaClient.switchChain({ id: appChain.id })
-    }
-
     try {
+      if (!isCashoutAvailable) {
+        throw new Error('cashout unavailable')
+      }
+
+      updateCashoutTx({
+        data: undefined,
+        isPending: true,
+      })
+
+      if (isAAWallet && aaClient) {
+        await aaClient.switchChain({ id: appChain.id })
+      }
+
       const attention = EIP712Attention || 'By signing this transaction, I agree to cash out on \'Azuro SDK Example'
 
       const typedData = getCashoutTypedData({
@@ -113,17 +189,21 @@ export const useCashout = (props: Props) => {
         attention,
         tokenId,
         betCoreAddress,
-        multiplier,
-        expiredAt,
+        multiplier: multiplier!,
+        expiredAt: expiredAt!,
       })
 
       const signature = isAAWallet
         ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account })
         : await walletClient!.data!.signTypedData(typedData)
 
+      if (Date.now() >= approveExpiredAt!) {
+        throw new Error('expired call')
+      }
+
       const createdCashout = await createCashout({
         chainId: appChain.id,
-        calculationId,
+        calculationId: calculationId!,
         betCoreAddress,
         attention,
         signature,
@@ -172,23 +252,24 @@ export const useCashout = (props: Props) => {
         hash: txHash,
       })
 
-      console.log(receipt, 'receipt')
-
       refetchBalance()
       allowanceTx.refetch()
+      updatePrecalculatedCache()
+      updateBetCache({
+        coreAddress: betCoreAddress,
+        tokenId,
+      }, {
+        isCashedOut: true,
+      })
 
-      // if (onSuccess) {
-      //   onSuccess(receipt)
-      // }
+      onSuccess?.(receipt)
     }
     catch (err) {
       updateCashoutTx({
         isPending: false,
       })
 
-      // if (onError) {
-      //   onError(err as any)
-      // }
+      onError?.(err as any)
     }
   }
 
@@ -202,6 +283,7 @@ export const useCashout = (props: Props) => {
 
   return {
     submit,
+    calculationQuery,
     approveTx: {
       isPending: approveTx.isPending,
       isProcessing: approveReceipt.isLoading,
@@ -212,6 +294,7 @@ export const useCashout = (props: Props) => {
       isProcessing: cashoutReceipt.isLoading,
     },
     isAllowanceFetching: allowanceTx.isLoading,
+    isCashoutAvailable,
     isApproveRequired,
   }
 }

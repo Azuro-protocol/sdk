@@ -43,7 +43,6 @@ export { useNativeBalance } from './hooks/useNativeBalance'
 
 // cashout
 export { usePrecalculatedCashouts } from './hooks/cashout/usePrecalculatedCashouts'
-export { useCalculatedCashout } from './hooks/cashout/useCalculatedCashout'
 export { useCashout } from './hooks/cashout/useCashout'
 
 // wave
