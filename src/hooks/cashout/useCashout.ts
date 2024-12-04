@@ -181,21 +181,23 @@ export const useCashout = (props: Props) => {
       if (isAAWallet && aaClient) {
         await aaClient.switchChain({ id: appChain.id })
 
-        const hash = await aaClient!.sendTransaction({
-          to: betNftContractAddress,
-          data: encodeFunctionData({
-            abi: contracts.azuroBet.abi,
-            functionName: 'setApprovalForAll',
-            args: [
-              contracts.cashout?.address!,
-              true,
-            ],
-          }),
-        })
+        if (isApproveRequired) {
+          const hash = await aaClient!.sendTransaction({
+            to: betNftContractAddress,
+            data: encodeFunctionData({
+              abi: contracts.azuroBet.abi,
+              functionName: 'setApprovalForAll',
+              args: [
+                contracts.cashout?.address!,
+                true,
+              ],
+            }),
+          })
 
-        await publicClient?.waitForTransactionReceipt({
-          hash,
-        })
+          await publicClient?.waitForTransactionReceipt({
+            hash,
+          })
+        }
       }
 
       const attention = EIP712Attention || 'By signing this transaction, I agree to cash out on \'Azuro SDK Example'
