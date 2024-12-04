@@ -113,7 +113,7 @@ export const useCashout = (props: Props) => {
   })
 
   const { data: calculation } = calculationQuery
-  const { id: calculationId, multiplier, expiredAt, approveExpiredAt } = calculation || {}
+  const { calculationId, multiplier, expiredAt, approveExpiredAt } = calculation || {}
   const isCashoutAvailable = !isLive && Boolean(calculationId)
 
   const allowanceTx = useReadContract({
