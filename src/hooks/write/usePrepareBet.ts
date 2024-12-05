@@ -80,7 +80,7 @@ export const usePrepareBet = (props: Props) => {
     enabled: isLiveBet,
   })
   const { addBet } = useBetsCache()
-  const { queryKey: balanceQueryKey } = useBalance({
+  const { refetch: refetchBalance } = useBalance({
     chainId: appChain.id,
     address: account.address,
     token: betToken.address,
@@ -236,11 +236,11 @@ export const usePrepareBet = (props: Props) => {
                 orderId,
               })
 
-              const { state, txHash } = order!
+              const { state, txHash, errorMessage } = order!
 
               if (state === LiveBetState.Rejected) {
                 clearInterval(interval)
-                rej()
+                rej(errorMessage)
               }
 
               if (txHash) {
@@ -295,11 +295,15 @@ export const usePrepareBet = (props: Props) => {
           ],
         })
 
-        txHash = isAAWallet ? await aaClient!.sendTransaction({ to: contractAddress, data, chain: appChain }) : await betTx.sendTransactionAsync({
-          to: contractAddress,
-          data,
-          ...(betGas || {}),
-        })
+        txHash = isAAWallet ? (
+          await aaClient!.sendTransaction({ to: contractAddress, data, chain: appChain })
+        ) : (
+          await betTx.sendTransactionAsync({
+            to: contractAddress,
+            data,
+            ...(betGas || {}),
+          })
+        )
       }
       else {
         let betData
@@ -405,7 +409,7 @@ export const usePrepareBet = (props: Props) => {
         hash: txHash,
       })
 
-      queryClient.invalidateQueries({ queryKey: balanceQueryKey })
+      refetchBalance()
       allowanceTx.refetch()
 
       if (isFreeBet) {
@@ -432,9 +436,7 @@ export const usePrepareBet = (props: Props) => {
         })
       }
 
-      if (onSuccess) {
-        onSuccess(receipt)
-      }
+      onSuccess?.(receipt)
     }
     catch (err) {
       if (isLiveBet) {
@@ -443,9 +445,7 @@ export const usePrepareBet = (props: Props) => {
         })
       }
 
-      if (onError) {
-        onError(err as any)
-      }
+      onError?.(err as any)
     }
   }
 
@@ -465,6 +465,7 @@ export const usePrepareBet = (props: Props) => {
     },
     betTx: {
       data: betTx.data || liveOrAABetTx.data,
+      receipt: betReceipt.data,
       isPending: betTx.isPending || liveOrAABetTx.isPending,
       isProcessing: betReceipt.isLoading,
     },

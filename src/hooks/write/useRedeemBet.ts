@@ -1,12 +1,12 @@
 import { useWaitForTransactionReceipt, usePublicClient, useSendTransaction } from 'wagmi'
 import { type Address, type Hex, encodeFunctionData } from 'viem'
 import { freeBetAbi } from '@azuro-org/toolkit'
+import { useState } from 'react'
 
 import { useChain } from '../../contexts/chain'
 import { useBetsCache } from '../useBetsCache'
 import { type Bet } from '../../global'
-import { useExtendedAccount, useAAWalletClient } from 'src/hooks/useAaConnector'
-import { useState } from 'react'
+import { useExtendedAccount, useAAWalletClient } from '../useAaConnector'
 
 
 type SubmitProps = {
@@ -29,7 +29,7 @@ export const useRedeemBet = () => {
   const isAAWallet = Boolean(account.isAAWallet)
   const aaClient = useAAWalletClient()
 
-  const [aaTxState, setAaTxState] = useState<AaTxState>({ isPending: false, data: undefined, error: null })
+  const [ aaTxState, setAaTxState ] = useState<AaTxState>({ isPending: false, data: undefined, error: null })
 
   const receipt = useWaitForTransactionReceipt({
     hash: aaTxState.data || redeemTx.data,
