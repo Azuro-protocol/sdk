@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 
 import { useChain } from '../../contexts/chain'
 import { batchFetchCashouts } from '../../helpers/batchFetchCashouts'
+import { getProviderFromConditionId } from '../../helpers/getProviderFromConditionId'
 
 
 type Props = {
@@ -23,6 +24,18 @@ export const usePrecalculatedCashouts = ({ selections, graphBetStatus, enabled =
 
   const isLive = selections[0]!.coreAddress === contracts.liveCore?.address
   const conditionsKey = useMemo(() => selections.map(({ conditionId }) => conditionId).join('-'), [ selections ])
+
+  const isConditionsFromDifferentProviders = useMemo(() => {
+    if (!conditionsKey) {
+      return false
+    }
+
+    const conditionIds = new Set(
+      selections.map(({ conditionId }) => getProviderFromConditionId(conditionId))
+    )
+
+    return conditionIds.size > 1
+  }, [ conditionsKey ])
 
   const queryFn = async () => {
     const data = await batchFetchCashouts(conditionsKey.split('-'), appChain.id)
@@ -47,6 +60,7 @@ export const usePrecalculatedCashouts = ({ selections, graphBetStatus, enabled =
     refetchOnWindowFocus: false,
     enabled: (
       enabled &&
+      !isConditionsFromDifferentProviders &&
       Boolean(selections.length) &&
       graphBetStatus === GraphBetStatus.Accepted &&
       !isLive
