@@ -30,11 +30,11 @@ export const usePrecalculatedCashouts = ({ selections, graphBetStatus, enabled =
       return false
     }
 
-    const conditionIds = new Set(
+    const providerIds = new Set(
       selections.map(({ conditionId }) => getProviderFromConditionId(conditionId))
     )
 
-    return conditionIds.size > 1
+    return providerIds.size > 1
   }, [ conditionsKey ])
 
   const queryFn = async () => {
