@@ -1,6 +1,6 @@
 {
   "name": "@azuro-org/sdk",
-  "version": "5.3.8",
+  "version": "5.4.0",
   "author": "Azuro",
   "type": "module",
   "main": "dist/index.js",
@@ -27,12 +27,12 @@
   },
   "peerDependencies": {
     "@apollo/client": "^3.11.10",
-    "@azuro-org/dictionaries": "^3.0.20",
-    "@azuro-org/sdk-social-aa-connector": "^1.0.0",
+    "@azuro-org/dictionaries": "^3.0.21",
+    "@azuro-org/sdk-social-aa-connector": "^1.0.4",
     "graphql": "^16.9.0",
-    "react": "^18.2.0",
+    "react": "^18.3.1",
     "viem": "^2.21.44",
-    "wagmi": "^2.12.30"
+    "wagmi": "^2.13.3"
   },
   "peerDependenciesMeta": {
     "@azuro-org/sdk-social-aa-connector": {

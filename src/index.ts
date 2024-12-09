@@ -41,6 +41,10 @@ export { useBetTokenBalance } from './hooks/useBetTokenBalance'
 export { useGameStatus } from './hooks/useGameStatus'
 export { useNativeBalance } from './hooks/useNativeBalance'
 
+// cashout
+export { usePrecalculatedCashouts } from './hooks/cashout/usePrecalculatedCashouts'
+export { useCashout } from './hooks/cashout/useCashout'
+
 // wave
 export { useWaveLevels } from './hooks/wave/useWaveLevels'
 export { useWaveStats } from './hooks/wave/useWaveStats'

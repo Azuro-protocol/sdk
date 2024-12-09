@@ -95,7 +95,7 @@ export const useBetsCache = () => {
       }))
     }
 
-    if (!bet) {
+    if (!bet || !bet.payout) {
       return
     }
 
@@ -295,9 +295,9 @@ export const useBetsCache = () => {
         fields: {
           liveBets: (bets, { storeFieldName }) => {
             const isValidStorage = (
-              storeFieldName.includes(`{${actorArg}}`) // all bets
-              || storeFieldName.includes(`{${actorArg},${affiliateArg}}`) // all bets with affiliate
-              || (storeFieldName.includes(actorArg) && storeFieldName.includes('"status":"Accepted"')) // BetType.Accepted
+              storeFieldName.includes(`{${actorArg}}`) || // all bets
+              storeFieldName.includes(`{${actorArg},${affiliateArg}}`) || // all bets with affiliate
+              (storeFieldName.includes(actorArg) && storeFieldName.includes('"status":"Accepted"')) // BetType.Accepted
             )
 
             if (!isValidStorage) {
@@ -323,12 +323,13 @@ export const useBetsCache = () => {
               createdAt: String(Math.floor(Date.now() / 1000)),
               payout: null,
               potentialPayout: potentialPayout,
-              isRedeemed: false,
-              isRedeemable: false,
               result: null,
               txHash: receipt.transactionHash,
               affiliate,
               selections: selectionFragments as LiveBetFragment['selections'],
+              isRedeemed: false,
+              isRedeemable: false,
+              isCashedOut: false,
             }
 
             const newBet = prematchClient!.cache.writeFragment<LiveBetFragment>({
@@ -348,9 +349,9 @@ export const useBetsCache = () => {
         fields: {
           bets: (bets, { storeFieldName }) => {
             const isValidStorage = (
-              storeFieldName.includes(`{${actorArg}}`) // all bets
-              || storeFieldName.includes(`{${actorArg},${affiliateArg}}`) // all bets with affiliate
-              || (storeFieldName.includes(actorArg) && storeFieldName.includes('"status":"Accepted"')) // BetType.Accepted
+              storeFieldName.includes(`{${actorArg}}`) || // all bets
+              storeFieldName.includes(`{${actorArg},${affiliateArg}}`) || // all bets with affiliate
+              (storeFieldName.includes(actorArg) && storeFieldName.includes('"status":"Accepted"')) // BetType.Accepted
             )
 
             if (!isValidStorage) {
@@ -375,8 +376,6 @@ export const useBetsCache = () => {
               createdAt: String(Math.floor(Date.now() / 1000)),
               payout: null,
               potentialPayout: potentialPayout,
-              isRedeemed: false,
-              isRedeemable: false,
               freebet: bet.freebetContractAddress ? {
                 freebetId: String(freebetId),
                 contractAddress: bet.freebetContractAddress,
@@ -385,6 +384,9 @@ export const useBetsCache = () => {
               txHash: receipt.transactionHash,
               affiliate,
               selections: selectionFragments as PrematchBetFragment['selections'],
+              isRedeemed: false,
+              isRedeemable: false,
+              isCashedOut: false,
             }
 
             const newBet = prematchClient!.cache.writeFragment<PrematchBetFragment>({
