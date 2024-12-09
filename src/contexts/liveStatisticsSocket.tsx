@@ -25,12 +25,12 @@ enum Status {
   Suspended = 'Suspended'
 }
 
-type HomeGuest<T> = {
+export type HomeGuest<T> = {
   h: T
   g: T
 }
 
-type SoccerScoreBoard = {
+export type SoccerScoreBoard = {
   time: string
   freeKicks: HomeGuest<number>
   goalKicks: HomeGuest<number>
@@ -56,7 +56,7 @@ type SoccerScoreBoard = {
   state: string
 }
 
-type BasketballScoreBoard = {
+export type BasketballScoreBoard = {
   time: string
   half: HomeGuest<number>
   q1: HomeGuest<number>
@@ -69,7 +69,7 @@ type BasketballScoreBoard = {
   state: string
 }
 
-type TennisScoreBoard = {
+export type TennisScoreBoard = {
   points: HomeGuest<number>
   s1: HomeGuest<number>
   s2: HomeGuest<number>
@@ -81,7 +81,7 @@ type TennisScoreBoard = {
   state: string
 }
 
-type VolleyballScoreBoard = {
+export type VolleyballScoreBoard = {
   s1: HomeGuest<number>
   s2: HomeGuest<number>
   s3: HomeGuest<number>
@@ -92,9 +92,9 @@ type VolleyballScoreBoard = {
   state: string
 }
 
-type ScoreBoard = SoccerScoreBoard | BasketballScoreBoard | TennisScoreBoard | VolleyballScoreBoard | null
+export type ScoreBoard = SoccerScoreBoard | BasketballScoreBoard | TennisScoreBoard | VolleyballScoreBoard
 
-type SoccerStats = {
+export type SoccerStats = {
   attacks: HomeGuest<number>
   dangerousAttacks: HomeGuest<number>
   goals: HomeGuest<number>
@@ -124,7 +124,7 @@ type SoccerStats = {
   kickoffs: HomeGuest<number>
 }
 
-type BasketballStats = {
+export type BasketballStats = {
   fouls: HomeGuest<number>
   freeThrows: HomeGuest<number>
   freeThrowsScoredPerc: HomeGuest<number>
@@ -143,7 +143,7 @@ type BasketballStats = {
   playersDisqualified: HomeGuest<number>
 }
 
-type TennisStats = {
+export type TennisStats = {
   serviceFaults: HomeGuest<number>
   doubleFaults: HomeGuest<number>
   aces: HomeGuest<number>
@@ -155,7 +155,7 @@ type TennisStats = {
   totalPointsWon: HomeGuest<number>
 }
 
-type VolleyballStats = {
+export type VolleyballStats = {
   longestStreak: HomeGuest<number>
   pointsWonOnOwnServe: HomeGuest<number>
   pointsWonOnOpponentServe: HomeGuest<number>
@@ -163,12 +163,24 @@ type VolleyballStats = {
   serviceErrors: HomeGuest<number>
 }
 
-type Stats = SoccerStats | BasketballStats | TennisStats | VolleyballStats | null
+export type Stats = SoccerStats | BasketballStats | TennisStats | VolleyballStats
 
-export type SoccerStatistic = SoccerScoreBoard & SoccerStats
-export type BasketballStatistic = BasketballScoreBoard & BasketballStats
-export type TennisStatistic = TennisScoreBoard & TennisStats
-export type VolleyballStatistic = VolleyballScoreBoard & VolleyballStats
+export type SoccerStatistic = {
+  scoreBoard: SoccerScoreBoard | null
+  stats: SoccerStats | null
+}
+export type BasketballStatistic = {
+  scoreBoard: BasketballScoreBoard | null
+  stats: BasketballStats | null
+}
+export type TennisStatistic = {
+  scoreBoard: TennisScoreBoard | null
+  stats: TennisStats | null
+}
+export type VolleyballStatistic = {
+  scoreBoard: VolleyballScoreBoard | null
+  stats: VolleyballStats | null
+}
 
 type LiveStatisticSocketData = {
   id: string
@@ -183,7 +195,8 @@ type LiveStatisticSocketData = {
 
 export type LiveStatistics = {
   status: Status | null
-  stats: SoccerStatistic | BasketballStatistic | TennisStatistic | VolleyballStatistic | null
+  scoreBoard: ScoreBoard | null
+  stats: Stats | null
 }
 
 const LiveStatisticsSocketContext = createContext<LiveStatisticsSocket | null>(null)
@@ -290,18 +303,9 @@ export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
         const { id, fixture, live } = data
 
         let statsData: LiveStatistics = {
-          status: null,
-          stats: null,
-        }
-
-        if (live) {
-          statsData = {
-            status: fixture?.status || null,
-            stats: {
-              ...(live.stats || {}),
-              ...(live.scoreBoard || {}),
-            } as LiveStatistics['stats'],
-          }
+          status: fixture?.status || null,
+          scoreBoard: live?.scoreBoard || null,
+          stats: live?.stats || null,
         }
 
         liveStatisticWatcher.dispatch(id, statsData)

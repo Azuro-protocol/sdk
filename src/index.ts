@@ -11,6 +11,20 @@ export { OddsSocketProvider } from './contexts/oddsSocket'
 export {
   LiveStatisticsSocketProvider,
 
+  type HomeGuest,
+
+  type SoccerScoreBoard,
+  type BasketballScoreBoard,
+  type TennisScoreBoard,
+  type VolleyballScoreBoard,
+  type ScoreBoard,
+
+  type SoccerStats,
+  type BasketballStats,
+  type TennisStats,
+  type VolleyballStats,
+  type Stats,
+
   type LiveStatistics,
   type SoccerStatistic,
   type BasketballStatistic,
