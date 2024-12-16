@@ -99,7 +99,7 @@ export const useCashout = (props: Props) => {
     queryFn: () => getCalculatedCashout({
       chainId: appChain.id,
       account: account.address!,
-      tokenId,
+      graphBetId: `${betCoreAddress.toLowerCase()}_${tokenId}`,
       isLive,
     }),
     refetchOnWindowFocus: false,
