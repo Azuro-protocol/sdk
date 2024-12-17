@@ -15,6 +15,7 @@ import { getGameStartsAtValue } from '../../helpers'
 type UseNavigationProps = {
   filter?: {
     sportHub?: SportHub
+    sportIds?: Array<string | number>
   }
   withGameCount?: boolean
   isLive?: boolean
@@ -49,13 +50,23 @@ export const useSportsNavigation = (props: UseNavigationProps = {}) => {
       variables.sportFilter!.sporthub = filter.sportHub
     }
 
+    if (filter?.sportIds?.length) {
+      variables.sportFilter!.sportId_in = filter?.sportIds
+    }
+
     return {
       variables,
       ssr: false,
       client: isLive ? liveClient! : prematchClient!,
       notifyOnNetworkStatusChange: true,
     }
-  }, [ withGameCount, startsAt, isLive, filter?.sportHub ])
+  }, [
+    withGameCount,
+    startsAt,
+    isLive,
+    filter?.sportHub,
+    filter?.sportIds?.join('-'),
+  ])
 
   const { data, loading, error } = useQuery<SportsNavigationQuery, SportsNavigationQueryVariables>(SportsNavigationDocument, options)
 

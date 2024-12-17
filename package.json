@@ -1,6 +1,6 @@
 {
   "name": "@azuro-org/sdk",
-  "version": "5.3.9",
+  "version": "5.3.10",
   "author": "Azuro",
   "type": "module",
   "main": "dist/index.js",
@@ -27,7 +27,7 @@
   },
   "peerDependencies": {
     "@apollo/client": "^3.11.10",
-    "@azuro-org/dictionaries": "^3.0.20",
+    "@azuro-org/dictionaries": "^3.0.25",
     "@azuro-org/sdk-social-aa-connector": "^1.0.0",
     "graphql": "^16.9.0",
     "react": "^18.2.0",
