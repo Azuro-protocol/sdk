@@ -186,6 +186,24 @@ export const usePrepareBet = (props: Props) => {
         const rawMinOdds = parseUnits(fixedMinOdds, ODDS_DECIMALS)
         const { conditionId, outcomeId } = selections[0]!
 
+        if (isAAWallet && isApproveRequired) {
+          const hash = await aaClient!.sendTransaction({
+            to: betToken.address!,
+            data: encodeFunctionData({
+              abi: erc20Abi,
+              functionName: 'approve',
+              args: [
+                approveAddress!,
+                maxUint256,
+              ],
+            }),
+          })
+          await publicClient?.waitForTransactionReceipt({
+            hash,
+            confirmations: 1,
+          })
+        }
+
         bets.push({
           rawAmount,
           selections,
