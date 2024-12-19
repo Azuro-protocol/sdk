@@ -176,6 +176,8 @@ export const useActiveMarket = ({ markets }: Props) => {
           if (nextConditionIndex) {
             setActiveConditionIndex(nextConditionIndex)
           }
+
+          setLiveConditionStatus(ConditionStatus.Created)
         }
         // refetch in timeout
         else {
