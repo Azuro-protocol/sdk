@@ -40,6 +40,7 @@ export { useStatuses } from './hooks/watch/useStatuses'
 export { useBetTokenBalance } from './hooks/useBetTokenBalance'
 export { useGameStatus } from './hooks/useGameStatus'
 export { useNativeBalance } from './hooks/useNativeBalance'
+export { useActiveMarket } from './hooks/useActiveMarket'
 
 // wave
 export { useWaveLevels } from './hooks/wave/useWaveLevels'
