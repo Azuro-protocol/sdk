@@ -25,7 +25,7 @@ export type UseGamesProps = {
     sportHub?: SportHub
     sportSlug?: string
     sportIds?: Array<string | number>
-    leagueSlug?: string
+    leagueSlug?: string | string[]
     maxMargin?: number
     conditionsStatus?: ConditionStatus | ConditionStatus[]
   }
@@ -56,6 +56,7 @@ export const useGames = (props?: UseGamesProps) => {
         status_in: [ PrematchGraphGameStatus.Created, PrematchGraphGameStatus.Paused ],
         conditions_: {},
         sport_: {},
+        league_: {},
       },
     }
 
@@ -87,9 +88,7 @@ export const useGames = (props?: UseGamesProps) => {
     }
 
     if (filter?.leagueSlug) {
-      variables.where.league_ = {
-        slug_ends_with_nocase: filter.leagueSlug,
-      }
+      variables.where.league_!.slug_in = typeof filter.leagueSlug === 'string' ? [ filter.leagueSlug ] : filter.leagueSlug
     }
 
     if (filter?.maxMargin) {
