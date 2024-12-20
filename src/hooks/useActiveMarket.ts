@@ -145,9 +145,9 @@ export const useActiveMarket = ({ markets }: Props) => {
 
     const getNextMarket = async () => {
       try {
-        const conditionIds = [ ...new Set(
-          selections.map(({ conditionId }) => conditionId)
-        ) ]
+        const conditionIds = [
+          ...new Set(selections.map(({ conditionId }) => conditionId)),
+        ]
 
         const data = await batchFetchLiveConditions(conditionIds, api)
 
