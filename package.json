@@ -1,6 +1,6 @@
 {
   "name": "@azuro-org/sdk",
-  "version": "5.3.11",
+  "version": "5.3.12",
   "author": "Azuro",
   "type": "module",
   "main": "dist/index.js",
