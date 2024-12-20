@@ -1,4 +1,6 @@
-import { useBalance } from 'wagmi'
+import { useReadContract } from 'wagmi'
+import { erc20Abi, formatUnits } from 'viem'
+import { useCallback } from 'react'
 
 import { useChain } from '../contexts/chain'
 import { useExtendedAccount } from '../hooks/useAaConnector'
@@ -8,16 +10,28 @@ export const useBetTokenBalance = () => {
   const { appChain, betToken } = useChain()
   const { address } = useExtendedAccount()
 
-  const { isLoading, data, error } = useBalance({
+  const formatBalance = useCallback((rawBalance: bigint) => ({
+    rawBalance,
+    balance: formatUnits(rawBalance, betToken.decimals),
+  }), [ betToken.decimals ])
+
+  const { data, isLoading, error, refetch } = useReadContract({
+    address: betToken.address,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
     chainId: appChain.id,
-    address,
-    token: betToken.address,
+    args: [ address! ],
+    query: {
+      enabled: Boolean(address),
+      select: formatBalance,
+    },
   })
 
   return {
+    refetch,
     loading: isLoading,
-    rawBalance: data?.value,
-    balance: data?.formatted,
+    rawBalance: data?.rawBalance,
+    balance: data?.balance,
     error,
   }
 }
