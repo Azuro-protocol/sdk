@@ -16,7 +16,7 @@ npm install @azuro-org/sdk
 
 ```
 @apollo/client@^3.11.10
-@azuro-org/dictionaries@^3.0.21
+@azuro-org/dictionaries@^3.0.25
 graphql@^16.9.0
 react@^18.3.1
 viem@^2.21.53

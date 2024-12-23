@@ -15,10 +15,31 @@ export const useWatchers = () => {
     eventName: 'NewBet',
     chainId: appChain.id,
     onLogs(logs) {
-      const log = logs[0]!
-      const conditionId = log.args.conditionId!
+      if (logs) {
+        logs.forEach(log => {
+          const conditionId = log.args.conditionId!
 
-      oddsWatcher.dispatch(conditionId.toString())
+          oddsWatcher.dispatch(conditionId.toString())
+        })
+      }
+    },
+  })
+
+  useWatchContractEvent({
+    address: contracts.prematchComboCore.address,
+    abi: contracts.prematchComboCore.abi,
+    eventName: 'NewBet',
+    chainId: appChain.id,
+    onLogs(logs) {
+      if (logs) {
+        logs.forEach(log => {
+          const { subBets } = log.args.bet!
+
+          subBets.forEach(({ conditionId }) => {
+            oddsWatcher.dispatch(conditionId.toString())
+          })
+        })
+      }
     },
   })
 
@@ -28,10 +49,13 @@ export const useWatchers = () => {
     eventName: 'OddsChanged',
     chainId: appChain.id,
     onLogs(logs) {
-      const log = logs[0]!
-      const conditionId = log.args.conditionId!
+      if (logs) {
+        logs.forEach(log => {
+          const conditionId = log.args.conditionId!
 
-      oddsWatcher.dispatch(conditionId.toString())
+          oddsWatcher.dispatch(conditionId.toString())
+        })
+      }
     },
   })
 
@@ -41,13 +65,16 @@ export const useWatchers = () => {
     eventName: 'ConditionStopped',
     chainId: appChain.id,
     onLogs(logs) {
-      const log = logs[0]!
-      const conditionId = log.args.conditionId!
-      const isStopped = log.args.flag!
+      if (logs) {
+        logs.forEach(log => {
+          const conditionId = log.args.conditionId!
+          const isStopped = log.args.flag!
 
-      const status = isStopped ? ConditionStatus.Paused : ConditionStatus.Created
+          const status = isStopped ? ConditionStatus.Paused : ConditionStatus.Created
 
-      conditionStatusWatcher.dispatch(conditionId.toString(), status)
+          conditionStatusWatcher.dispatch(conditionId.toString(), status)
+        })
+      }
     },
   })
 }

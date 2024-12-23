@@ -23,6 +23,7 @@ export type UseSportsProps = {
     sportSlug?: string
     countrySlug?: string
     leagueSlug?: string
+    sportIds?: Array<string | number>
   }
   gameOrderBy?: Game_OrderBy.Turnover | Game_OrderBy.StartsAt
   orderDir?: OrderDirection
@@ -65,6 +66,10 @@ export const useSports = (props: UseSportsProps) => {
       variables.sportFilter!.sporthub = filter.sportHub
     }
 
+    if (filter?.sportIds?.length) {
+      variables.sportFilter!.sportId_in = filter?.sportIds
+    }
+
     if (filter?.countrySlug) {
       variables.countryFilter!.slug = filter.countrySlug
     }
@@ -92,12 +97,13 @@ export const useSports = (props: UseSportsProps) => {
     isLive,
     gameOrderBy,
     orderDir,
+    startsAt,
     filter?.limit,
     filter?.sportHub,
     filter?.sportSlug,
     filter?.countrySlug,
     filter?.leagueSlug,
-    startsAt,
+    filter?.sportIds?.join('-'),
   ])
 
   if (!isLive) {

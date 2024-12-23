@@ -27,7 +27,7 @@
   },
   "peerDependencies": {
     "@apollo/client": "^3.11.10",
-    "@azuro-org/dictionaries": "^3.0.21",
+    "@azuro-org/dictionaries": "^3.0.25",
     "@azuro-org/sdk-social-aa-connector": "^1.0.4",
     "graphql": "^16.9.0",
     "react": "^18.3.1",
