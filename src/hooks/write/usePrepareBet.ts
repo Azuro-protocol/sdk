@@ -1,7 +1,6 @@
 import {
   useReadContract, useWriteContract, useSendTransaction,
   useWaitForTransactionReceipt, usePublicClient, useWalletClient,
-  useBalance,
 } from 'wagmi'
 import {
   parseUnits, maxUint256, encodeFunctionData,
@@ -24,6 +23,8 @@ import { useBetsCache, type NewBetProps } from '../useBetsCache'
 import { useLiveBetFee } from '../data/useLiveBetFee'
 import { type FreeBet } from '../data/useFreeBets'
 import { useAAWalletClient, useExtendedAccount } from '../useAaConnector'
+import { useBetTokenBalance } from '../useBetTokenBalance'
+import { useNativeBalance } from '../useNativeBalance'
 
 
 type Props = {
@@ -80,11 +81,8 @@ export const usePrepareBet = (props: Props) => {
     enabled: isLiveBet,
   })
   const { addBet } = useBetsCache()
-  const { queryKey: balanceQueryKey } = useBalance({
-    chainId: appChain.id,
-    address: account.address,
-    token: betToken.address,
-  })
+  const { refetch: refetchBetTokenBalance } = useBetTokenBalance()
+  const { refetch: refetchNativeBalance } = useNativeBalance()
 
   const [ liveOrAABetTx, updateLiveOrAABetTx ] = useReducer(simpleObjReducer, { data: undefined, isPending: false })
 
@@ -185,6 +183,24 @@ export const usePrepareBet = (props: Props) => {
         const fixedMinOdds = calcMindOdds({ odds: totalOdds, slippage })
         const rawMinOdds = parseUnits(fixedMinOdds, ODDS_DECIMALS)
         const { conditionId, outcomeId } = selections[0]!
+
+        if (isAAWallet && isApproveRequired) {
+          const hash = await aaClient!.sendTransaction({
+            to: betToken.address!,
+            data: encodeFunctionData({
+              abi: erc20Abi,
+              functionName: 'approve',
+              args: [
+                approveAddress!,
+                maxUint256,
+              ],
+            }),
+          })
+          await publicClient?.waitForTransactionReceipt({
+            hash,
+            confirmations: 1,
+          })
+        }
 
         bets.push({
           rawAmount,
@@ -405,7 +421,8 @@ export const usePrepareBet = (props: Props) => {
         hash: txHash,
       })
 
-      queryClient.invalidateQueries({ queryKey: balanceQueryKey })
+      refetchBetTokenBalance()
+      refetchNativeBalance()
       allowanceTx.refetch()
 
       if (isFreeBet) {
