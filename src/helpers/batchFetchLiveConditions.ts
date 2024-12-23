@@ -1,10 +1,10 @@
 import { createBatch } from './createBatch'
-import { type SocketData } from '../contexts/socket'
+import { type OddsSocketData } from '../contexts/oddsSocket'
 
 
-type Result = Record<string, SocketData[0]>
+type Result = Record<string, OddsSocketData[0]>
 
-const getConditions = async (conditionIds: string[], api: string): Promise<Record<string, SocketData[0]>> => {
+const getConditions = async (conditionIds: string[], api: string): Promise<Record<string, OddsSocketData[0]>> => {
   const response = await fetch(`${api}/conditions`, {
     method: 'POST',
     headers: {
@@ -16,13 +16,13 @@ const getConditions = async (conditionIds: string[], api: string): Promise<Recor
     }),
   })
 
-  const data: SocketData = await response.json()
+  const data: OddsSocketData = await response.json()
 
   if (response.status === 404 || !response.ok) {
     return {}
   }
 
-  return data?.reduce<Record<string, SocketData[0]>>((acc, condition) => {
+  return data?.reduce<Record<string, OddsSocketData[0]>>((acc, condition) => {
     const { id: conditionId } = condition
 
     acc[conditionId] = condition
