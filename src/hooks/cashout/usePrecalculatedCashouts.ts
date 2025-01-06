@@ -77,11 +77,11 @@ export const usePrecalculatedCashouts = ({ selections, graphBetStatus, enabled =
 
   const totalMultiplier = useMemo(() => {
     if (!cashouts || !Object.keys(cashouts).length) {
-      return '1'
+      return 1
     }
 
     if (Object.keys(cashouts).length === 1) {
-      return Object.values(cashouts)[0]!.multiplier
+      return +Object.values(cashouts)[0]!.multiplier
     }
 
     return Object.values(cashouts).reduce((acc, { multiplier }) => acc *= +multiplier, 1)
