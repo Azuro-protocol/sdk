@@ -3,8 +3,7 @@ import { useConfig } from 'wagmi'
 import { type Selection, liveHostAddress, calcLiveOdds, calcPrematchOdds } from '@azuro-org/toolkit'
 
 import { useChain } from '../../contexts/chain'
-import type { OddsChangedData } from '../../contexts/socket'
-import { useSocket } from '../../contexts/socket'
+import { useOddsSocket, type OddsChangedData } from '../../contexts/oddsSocket'
 import { formatToFixed } from '../../helpers'
 import useIsMounted from '../../helpers/hooks/useIsMounted'
 import { oddsWatcher } from '../../modules/oddsWatcher'
@@ -18,7 +17,7 @@ type CalcOddsProps = {
 }
 
 export const useOdds = ({ selections, betAmount, batchBetAmounts }: CalcOddsProps) => {
-  const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useSocket()
+  const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useOddsSocket()
   const { appChain } = useChain()
   const config = useConfig()
   const isMounted = useIsMounted()
@@ -190,8 +189,8 @@ export const useOdds = ({ selections, betAmount, batchBetAmounts }: CalcOddsProp
       return
     }
 
-    const unsubscribeList = selections.map(({ conditionId, outcomeId }) => {
-      return oddsWatcher.subscribe(`${conditionId}`, `${outcomeId}`, (oddsData?: OddsChangedData) => {
+    const unsubscribeList = selections.map(({ conditionId }) => {
+      return oddsWatcher.subscribe(`${conditionId}`, (oddsData?: OddsChangedData) => {
         if (oddsData) {
           const item = liveItems.find(item => item.conditionId === oddsData.conditionId)
           fetchLiveOdds([ item! ], oddsData)

@@ -11,13 +11,13 @@ enum SocketCloseReason {
   ChainChanged = 3000
 }
 
-export type SocketContextValue = {
+export type OddsSocketContextValue = {
   isSocketReady: boolean
   subscribeToUpdates: (conditionIds: string[]) => void
   unsubscribeToUpdates: (conditionIds: string[]) => void
 }
 
-export type SocketData = {
+export type OddsSocketData = {
   id: string
   state?: ConditionStatus
   margin: number
@@ -43,13 +43,13 @@ export type OddsChangedData = {
   }>
 }
 
-const SocketContext = createContext<SocketContextValue | null>(null)
+const OddsSocketContext = createContext<OddsSocketContextValue | null>(null)
 
-export const useSocket = () => {
-  return useContext(SocketContext) as SocketContextValue
+export const useOddsSocket = () => {
+  return useContext(OddsSocketContext) as OddsSocketContextValue
 }
 
-export const SocketProvider: React.FC<any> = ({ children }) => {
+export const OddsSocketProvider: React.FC<any> = ({ children }) => {
   const { appChain } = useChain()
   const [ isSocketReady, setSocketReady ] = useState(false)
 
@@ -124,7 +124,7 @@ export const SocketProvider: React.FC<any> = ({ children }) => {
   }, [])
 
   const connect = () => {
-    socket.current = new WebSocket(chainsData[appChain.id].socket)
+    socket.current = new WebSocket(`${chainsData[appChain.id].socket}/conditions`)
 
     socket.current.onopen = () => {
       setSocketReady(true)
@@ -142,8 +142,8 @@ export const SocketProvider: React.FC<any> = ({ children }) => {
       connect()
     }
 
-    socket.current.onmessage = (message: MessageEvent<SocketData>) => {
-      JSON.parse(message.data.toString()).forEach((data: SocketData[0]) => {
+    socket.current.onmessage = (message: MessageEvent<OddsSocketData>) => {
+      JSON.parse(message.data.toString()).forEach((data: OddsSocketData[0]) => {
         const { id: conditionId, reinforcement, margin, winningOutcomesCount } = data
 
         if (data.outcomes) {
@@ -204,15 +204,15 @@ export const SocketProvider: React.FC<any> = ({ children }) => {
     connect()
   }, [ chainsData[appChain.id].socket, isSocketReady ])
 
-  const value: SocketContextValue = {
+  const value: OddsSocketContextValue = {
     isSocketReady,
     subscribeToUpdates,
     unsubscribeToUpdates,
   }
 
   return (
-    <SocketContext.Provider value={value}>
+    <OddsSocketContext.Provider value={value}>
       {children}
-    </SocketContext.Provider>
+    </OddsSocketContext.Provider>
   )
 }

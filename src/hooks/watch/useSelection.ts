@@ -7,7 +7,7 @@ import { type Selection, ConditionStatus, ODDS_DECIMALS, liveHostAddress } from 
 import { oddsWatcher } from '../../modules/oddsWatcher'
 import { useChain } from '../../contexts/chain'
 import { useApolloClients } from '../../contexts/apollo'
-import { useSocket, type OddsChangedData } from '../../contexts/socket'
+import { useOddsSocket, type OddsChangedData } from '../../contexts/oddsSocket'
 import { conditionStatusWatcher } from '../../modules/conditionStatusWatcher'
 import { batchFetchOutcomes } from '../../helpers/batchFetchOutcomes'
 
@@ -23,7 +23,7 @@ export const useSelection = ({ selection, initialOdds, initialStatus }: Props) =
 
   const { appChain, contracts } = useChain()
   const { prematchClient } = useApolloClients()
-  const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useSocket()
+  const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useOddsSocket()
   const config = useConfig()
 
   const isLive = coreAddress.toLowerCase() === liveHostAddress.toLowerCase()
@@ -49,7 +49,7 @@ export const useSelection = ({ selection, initialOdds, initialStatus }: Props) =
   }, [ isSocketReady ])
 
   useEffect(() => {
-    const unsubscribe = oddsWatcher.subscribe(`${conditionId}`, `${outcomeId}`, async (oddsData?: OddsChangedData) => {
+    const unsubscribe = oddsWatcher.subscribe(`${conditionId}`, async (oddsData) => {
       let odds: string | number | undefined = oddsData?.outcomes?.[String(outcomeId)]?.odds
 
       if (!odds) {

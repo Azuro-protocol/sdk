@@ -19,7 +19,7 @@ export const useWatchers = () => {
         logs.forEach(log => {
           const conditionId = log.args.conditionId!
 
-          oddsWatcher.dispatch(conditionId.toString())
+          oddsWatcher.dispatch(conditionId.toString(), undefined)
         })
       }
     },
@@ -36,7 +36,7 @@ export const useWatchers = () => {
           const { subBets } = log.args.bet!
 
           subBets.forEach(({ conditionId }) => {
-            oddsWatcher.dispatch(conditionId.toString())
+            oddsWatcher.dispatch(conditionId.toString(), undefined)
           })
         })
       }
@@ -53,7 +53,7 @@ export const useWatchers = () => {
         logs.forEach(log => {
           const conditionId = log.args.conditionId!
 
-          oddsWatcher.dispatch(conditionId.toString())
+          oddsWatcher.dispatch(conditionId.toString(), undefined)
         })
       }
     },
