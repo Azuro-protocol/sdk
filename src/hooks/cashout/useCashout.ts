@@ -109,12 +109,18 @@ export const useCashout = (props: Props) => {
       return false // disable retries on error
     },
     gcTime: 0, // disable cache
-    enabled: !isLive && !!account.address,
+    enabled: (
+      // !isLive &&
+      !!account.address
+    ),
   })
 
   const { data: calculation } = calculationQuery
   const { calculationId, multiplier, expiredAt, approveExpiredAt } = calculation || {}
-  const isCashoutAvailable = !isLive && Boolean(calculationId)
+  const isCashoutAvailable = (
+    // !isLive &&
+    Boolean(calculationId)
+  )
 
   const allowanceTx = useReadContract({
     chainId: appChain.id,

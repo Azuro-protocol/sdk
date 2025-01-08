@@ -1,10 +1,9 @@
-import { type Selection, GraphBetStatus } from '@azuro-org/toolkit'
+import { type Selection, getProviderFromId, GraphBetStatus } from '@azuro-org/toolkit'
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
 import { useChain } from '../../contexts/chain'
 import { batchFetchCashouts } from '../../helpers/batchFetchCashouts'
-import { getProviderFromConditionId } from '../../helpers/getProviderFromConditionId'
 
 
 type Props = {
@@ -22,7 +21,7 @@ export type PrecalculatedCashout = {
 export const usePrecalculatedCashouts = ({ selections, graphBetStatus, enabled = true }: Props) => {
   const { appChain, api, contracts } = useChain()
 
-  const isLive = selections[0]!.coreAddress === contracts.liveCore?.address
+  // const isLive = selections[0]!.coreAddress === contracts.liveCore?.address
   const conditionsKey = useMemo(() => selections.map(({ conditionId }) => conditionId).join('-'), [ selections ])
 
   const isConditionsFromDifferentProviders = useMemo(() => {
@@ -31,7 +30,7 @@ export const usePrecalculatedCashouts = ({ selections, graphBetStatus, enabled =
     }
 
     const providerIds = new Set(
-      selections.map(({ conditionId }) => getProviderFromConditionId(conditionId))
+      selections.map(({ conditionId }) => getProviderFromId(conditionId))
     )
 
     return providerIds.size > 1
@@ -62,8 +61,8 @@ export const usePrecalculatedCashouts = ({ selections, graphBetStatus, enabled =
       enabled &&
       !isConditionsFromDifferentProviders &&
       Boolean(selections.length) &&
-      graphBetStatus === GraphBetStatus.Accepted &&
-      !isLive
+      graphBetStatus === GraphBetStatus.Accepted
+      // !isLive
     ),
   })
 

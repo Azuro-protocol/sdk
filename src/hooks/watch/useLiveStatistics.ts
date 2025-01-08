@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { GameStatus } from '@azuro-org/toolkit'
+import { GameStatus, getProviderFromId } from '@azuro-org/toolkit'
 
 import { useLiveStatisticsSocket, type LiveStatistics } from '../../contexts/liveStatisticsSocket'
 import { liveStatisticWatcher } from '../../modules/liveStatisticWatcher'
-import { LIVE_STATISTICS_SUPPORTED_SPORTS } from '../../config'
+import { LIVE_STATISTICS_SUPPORTED_PROVIDERS, LIVE_STATISTICS_SUPPORTED_SPORTS } from '../../config'
 
 
 type Props = {
@@ -13,18 +13,23 @@ type Props = {
   enabled?: boolean
 }
 
-// TODO: check provider id?
 export const useLiveStatistics = ({ gameId, sportId, gameStatus, enabled = true }: Props) => {
   const [ statistics, setStatistics ] = useState<LiveStatistics | null>()
   const { subscribeToUpdates, unsubscribeToUpdates, isSocketReady } = useLiveStatisticsSocket()
 
+  const providerId = getProviderFromId(gameId)
+  const isSportAllowed = LIVE_STATISTICS_SUPPORTED_SPORTS.includes(+sportId)
+  const isProviderAllowed = LIVE_STATISTICS_SUPPORTED_PROVIDERS.includes(providerId)
+  const isGameInLive = gameStatus === GameStatus.Live
   const skip = (
     !enabled ||
     !gameId ||
     !sportId ||
-    !LIVE_STATISTICS_SUPPORTED_SPORTS.includes(+sportId) ||
-    gameStatus !== GameStatus.Live
+    !isSportAllowed ||
+    !isProviderAllowed ||
+    !isGameInLive
   )
+  const isAvailable = isSportAllowed && isGameInLive && isProviderAllowed
 
   let isFetching = !skip && !statistics && statistics !== null
 
@@ -75,5 +80,6 @@ export const useLiveStatistics = ({ gameId, sportId, gameStatus, enabled = true 
   return {
     statistics,
     isFetching,
+    isAvailable,
   }
 }
