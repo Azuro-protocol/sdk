@@ -64,8 +64,8 @@ export const useCashout = (props: Props) => {
   )
 
   const updatePrecalculatedCache = () => {
-    const conditionsKey = selections.map(({ conditionId }) => conditionId).join('-')
-    const queryKey = [ 'cashout/precalculate', api, conditionsKey ]
+    const conditionsKey = selections.map(({ conditionId, outcomeId }) => `${conditionId}/${outcomeId}`).join('-')
+    const queryKey = [ 'cashout/precalculate', api, tokenId, conditionsKey ]
 
     // set precalculate query unavailable to cashout
     queryClient.setQueryData(queryKey, (oldPrecalcCashouts: Record<string, PrecalculatedCashout>) => {
