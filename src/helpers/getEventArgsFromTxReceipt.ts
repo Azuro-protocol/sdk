@@ -36,7 +36,18 @@ export const getEventArgsFromTxReceipt = <
 
       if (params && result?.args) {
         const isMatchByParams = Object.keys(params).every(paramKey => {
-          return (result!.args as any)[paramKey] === params[paramKey]
+          const argsParam = typeof params[paramKey] === 'string' ? (
+            (result!.args as any)[paramKey]?.toLowerCase()
+          ) : (
+            (result!.args as any)[paramKey]
+          )
+          const paramsParam = typeof params[paramKey] === 'string' ? (
+            params[paramKey].toLowerCase()
+          ) : (
+            params[paramKey]
+          )
+
+          return argsParam === paramsParam
         })
 
         if (!isMatchByParams) {

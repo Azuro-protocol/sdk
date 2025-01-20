@@ -1,5 +1,5 @@
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient, useWalletClient, useBalance } from 'wagmi'
-import { type Hex, type Address, type TransactionReceipt, encodeFunctionData } from 'viem'
+import { type Hex, type Address, type TransactionReceipt, encodeFunctionData, erc20Abi, formatUnits } from 'viem'
 import {
   type Selection,
   CashoutState,
@@ -11,6 +11,7 @@ import {
 import { useReducer } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
+import { getEventArgsFromTxReceipt } from '../../helpers'
 import { useChain } from '../../contexts/chain'
 import { useAAWalletClient, useExtendedAccount } from '../useAaConnector'
 import { useBetsCache } from '../useBetsCache'
@@ -277,14 +278,28 @@ export const useCashout = (props: Props) => {
         hash: txHash,
       })
 
+      const receiptArgs = getEventArgsFromTxReceipt({
+        receipt,
+        eventName: 'Transfer',
+        abi: erc20Abi,
+        params: {
+          to: account.address,
+        },
+      })
+
       refetchBalance()
       allowanceTx.refetch()
       updatePrecalculatedCache()
+
       updateBetCache({
         coreAddress: betCoreAddress,
         tokenId,
       }, {
         isCashedOut: true,
+        cashout: {
+          __typename: 'Cashout',
+          payout: formatUnits(receiptArgs?.value || 0n, betToken.decimals),
+        },
       })
 
       onSuccess?.(receipt)
