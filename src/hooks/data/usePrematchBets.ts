@@ -100,7 +100,7 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
     return data.bets.map((rawBet) => {
       const {
         tokenId, status, amount, odds, settledOdds, createdAt, result, affiliate,
-        core: { address: coreAddress, liquidityPool: { address: lpAddress } }, isCashedOut,
+        core: { address: coreAddress, liquidityPool: { address: lpAddress } }, cashout: _cashout, isCashedOut,
         payout: _payout, isRedeemed: _isRedeemed, isRedeemable, freebet, txHash, selections,
       } = rawBet
 
@@ -117,6 +117,7 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
       const betDiff = isFreebet ? amount : 0 // for freebet we must exclude bonus value from possible win
       const totalOdds = settledOdds ? +settledOdds : +odds
       const possibleWin = +amount * totalOdds - +betDiff
+      const cashout = isCashedOut ? _cashout?.payout : undefined
 
       const outcomes: BetOutcome[] = selections
         .map((selection) => {
@@ -172,6 +173,7 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
         possibleWin,
         payout,
         createdAt: +createdAt,
+        cashout,
         isWin,
         isLose,
         isRedeemable,

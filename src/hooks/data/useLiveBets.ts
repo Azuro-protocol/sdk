@@ -50,6 +50,7 @@ type LiveBet = {
   possibleWin: number
   payout: number | null
   createdAt: number
+  cashout?: string
   isWin: boolean
   isLose: boolean
   isRedeemable: boolean
@@ -144,7 +145,7 @@ export const useLiveBets = (props: UseLiveBetsProps) => {
     return liveBets.map((rawBet) => {
       const {
         tokenId, status, amount, odds, settledOdds, createdAt, result, affiliate,
-        core: { address: coreAddress, liquidityPool: { address: lpAddress } }, isCashedOut,
+        core: { address: coreAddress, liquidityPool: { address: lpAddress } }, cashout: _cashout, isCashedOut,
         payout: _payout, isRedeemed: _isRedeemed, isRedeemable, txHash, selections,
       } = rawBet
 
@@ -157,6 +158,7 @@ export const useLiveBets = (props: UseLiveBetsProps) => {
       const payout = isRedeemable && isWin ? +_payout! : null
       const totalOdds = settledOdds ? +settledOdds : +odds
       const possibleWin = +amount * totalOdds
+      const cashout = isCashedOut ? _cashout?.payout : undefined
 
       const outcomes: LiveBetOutcome[] = selections
         .map((selection) => {
@@ -193,6 +195,7 @@ export const useLiveBets = (props: UseLiveBetsProps) => {
         possibleWin,
         payout,
         createdAt: +createdAt,
+        cashout,
         isWin,
         isLose,
         isRedeemable,

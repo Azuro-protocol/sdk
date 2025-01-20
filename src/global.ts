@@ -40,6 +40,7 @@ export type Bet = {
   possibleWin: number
   payout: number | null
   createdAt: number
+  cashout?: string
   isWin: boolean
   isLose: boolean
   isRedeemable: boolean
