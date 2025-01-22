@@ -2,7 +2,8 @@ import React from 'react'
 
 import { ChainProvider, type ChainProviderProps } from './contexts/chain'
 import { ApolloProvider } from './contexts/apollo'
-import { SocketProvider } from './contexts/socket'
+import { OddsSocketProvider } from './contexts/oddsSocket'
+import { LiveStatisticsSocketProvider } from './contexts/liveStatisticsSocket'
 import { BetslipProvider, type BetslipProviderProps } from './contexts/betslip'
 import { useWatchers } from './hooks/watch/useWatchers'
 
@@ -20,14 +21,19 @@ export const AzuroSDKProvider: React.FC<AzuroSDKProviderProps> = (props) => {
 
   return (
     <ChainProvider initialChainId={initialChainId}>
-      <SocketProvider>
-        <ApolloProvider>
-          <BetslipProvider isBatchBetWithSameGameEnabled={isBatchBetWithSameGameEnabled} affiliate={affiliate}>
-            {children}
-          </BetslipProvider>
-        </ApolloProvider>
-        <Watchers />
-      </SocketProvider>
+      <OddsSocketProvider>
+        <LiveStatisticsSocketProvider>
+          <ApolloProvider>
+            <BetslipProvider
+              isBatchBetWithSameGameEnabled={isBatchBetWithSameGameEnabled}
+              affiliate={affiliate}
+            >
+              {children}
+            </BetslipProvider>
+          </ApolloProvider>
+          <Watchers />
+        </LiveStatisticsSocketProvider>
+      </OddsSocketProvider>
     </ChainProvider>
   )
 }

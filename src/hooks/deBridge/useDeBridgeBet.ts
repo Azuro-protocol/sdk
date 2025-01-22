@@ -114,7 +114,7 @@ export const useDeBridgeBet = (props: Props) => {
       && (supportedTokenAddresses || []).includes(fromTokenAddress)
     ),
     refetchOnWindowFocus: false,
-    refetchInterval: 20000,
+    refetchInterval: 20_000,
   })
 
   const { orderId, estimation, tx: betTxData, fixFee } = data || {}
@@ -273,8 +273,10 @@ export const useDeBridgeBet = (props: Props) => {
   const submit = () => {
     if (account.isAAWallet) {
       console.error('Azuro SDK: deBridge must not be used with AA wallets.')
+
       return
     }
+
     if (isApproveRequired) {
       return approve()
     }

@@ -12,6 +12,7 @@ export enum BetType {
   Unredeemed = 'unredeemed',
   Accepted = 'accepted',
   Settled = 'settled',
+  CashedOut = 'cashedOut',
 }
 
 export type BetOutcome = {
@@ -39,10 +40,12 @@ export type Bet = {
   possibleWin: number
   payout: number | null
   createdAt: number
+  cashout?: string
   isWin: boolean
   isLose: boolean
   isRedeemable: boolean
   isRedeemed: boolean
   isCanceled: boolean
   isLive: boolean
+  isCashedOut: boolean
 }

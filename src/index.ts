@@ -1,4 +1,4 @@
-export { cookieKeys, localStorageKeys } from './config'
+export { cookieKeys, localStorageKeys, LIVE_STATISTICS_SUPPORTED_SPORTS, LIVE_STATISTICS_SUPPORTED_PROVIDERS } from './config'
 export * from './global'
 export { AzuroSDKProvider, Watchers } from './AzuroSDKProvider'
 
@@ -6,8 +6,31 @@ export { AzuroSDKProvider, Watchers } from './AzuroSDKProvider'
 export * from './contexts/chain'
 export * from './contexts/live'
 export * from './contexts/apollo'
-export { SocketProvider } from './contexts/socket'
 export * from './contexts/betslip'
+export { OddsSocketProvider } from './contexts/oddsSocket'
+export {
+  LiveStatisticsSocketProvider,
+
+  type HomeGuest,
+
+  type SoccerScoreBoard,
+  type BasketballScoreBoard,
+  type TennisScoreBoard,
+  type VolleyballScoreBoard,
+  type ScoreBoard,
+
+  type SoccerStats,
+  type BasketballStats,
+  type TennisStats,
+  type VolleyballStats,
+  type Stats,
+
+  type LiveStatistics,
+  type SoccerStatistic,
+  type BasketballStatistic,
+  type TennisStatistic,
+  type VolleyballStatistic,
+} from './contexts/liveStatisticsSocket'
 
 // data hooks
 export { usePrematchBets, type UsePrematchBetsProps } from './hooks/data/usePrematchBets'
@@ -35,12 +58,17 @@ export { useOdds } from './hooks/watch/useOdds'
 export { useWatchers } from './hooks/watch/useWatchers'
 export { useSelection } from './hooks/watch/useSelection'
 export { useStatuses } from './hooks/watch/useStatuses'
+export { useLiveStatistics } from './hooks/watch/useLiveStatistics'
 
 // other hooks
 export { useBetTokenBalance } from './hooks/useBetTokenBalance'
 export { useGameStatus } from './hooks/useGameStatus'
 export { useNativeBalance } from './hooks/useNativeBalance'
 export { useActiveMarket } from './hooks/useActiveMarket'
+
+// cashout
+export { usePrecalculatedCashouts } from './hooks/cashout/usePrecalculatedCashouts'
+export { useCashout } from './hooks/cashout/useCashout'
 
 // wave
 export { useWaveLevels } from './hooks/wave/useWaveLevels'

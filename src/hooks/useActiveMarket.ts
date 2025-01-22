@@ -1,7 +1,7 @@
 import { ConditionStatus, liveHostAddress, type GameMarkets, type Selection } from '@azuro-org/toolkit'
 import { useEffect, useMemo, useState } from 'react'
 
-import { useSocket } from '../contexts/socket'
+import { useOddsSocket } from '../contexts/oddsSocket'
 import { useChain } from '../contexts/chain'
 import { useStatuses } from './watch/useStatuses'
 import { conditionStatusWatcher } from '../modules/conditionStatusWatcher'
@@ -17,7 +17,7 @@ type Props = {
 export const useActiveMarket = ({ markets }: Props) => {
   const { api } = useChain()
   const isMounted = useIsMounted()
-  const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useSocket()
+  const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useOddsSocket()
 
   const { sortedMarketKeys, marketsByKey } = useMemo(() => {
     const defaultValue = {
