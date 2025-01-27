@@ -83,6 +83,24 @@ export const useBetsCache = () => {
         ...values as LiveBetFragment,
       }))
 
+      if (values.isCashedOut) {
+        prematchClient!.cache.modify({
+          id: prematchClient!.cache.identify({ __typename: 'Query' }),
+          fields: {
+            liveBets: (bets, { storeFieldName, toReference }) => {
+              const isValidStorage = (
+                values.isCashedOut && storeFieldName.includes('"isCashedOut":true') // BetType.CashedOut
+              )
+
+              if (!isValidStorage) {
+                return bets
+              }
+
+              return [ toReference(bet!), ...bets ]
+            },
+          },
+        })
+      }
     }
     else {
       bet = cache.updateFragment<PrematchBetFragment>({
@@ -93,6 +111,25 @@ export const useBetsCache = () => {
         ...data as PrematchBetFragment,
         ...values as PrematchBetFragment,
       }))
+
+      if (values.isCashedOut) {
+        prematchClient!.cache.modify({
+          id: prematchClient!.cache.identify({ __typename: 'Query' }),
+          fields: {
+            bets: (bets, { storeFieldName, toReference }) => {
+              const isValidStorage = (
+                values.isCashedOut && storeFieldName.includes('"isCashedOut":true') // BetType.CashedOut
+              )
+
+              if (!isValidStorage) {
+                return bets
+              }
+
+              return [ toReference(bet!), ...bets ]
+            },
+          },
+        })
+      }
     }
 
     if (!bet || !bet.payout) {
@@ -324,6 +361,7 @@ export const useBetsCache = () => {
               payout: null,
               potentialPayout: potentialPayout,
               result: null,
+              cashout: null,
               txHash: receipt.transactionHash,
               affiliate,
               selections: selectionFragments as LiveBetFragment['selections'],
@@ -357,6 +395,7 @@ export const useBetsCache = () => {
             if (!isValidStorage) {
               return bets
             }
+
             const betEntityId = `${coreAddress.toLowerCase()}_${tokenId}`
 
             const data: PrematchBetFragment = {
@@ -375,6 +414,7 @@ export const useBetsCache = () => {
               settledOdds: null,
               createdAt: String(Math.floor(Date.now() / 1000)),
               payout: null,
+              cashout: null,
               potentialPayout: potentialPayout,
               freebet: bet.freebetContractAddress ? {
                 freebetId: String(freebetId),

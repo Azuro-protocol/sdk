@@ -58,11 +58,11 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
 
     if (filter.type === BetType.Accepted) {
       variables.where.status = GraphBetStatus.Accepted
+      variables.where.isCashedOut = false
     }
 
     if (filter.type === BetType.Settled) {
       variables.where.status_in = [ GraphBetStatus.Resolved, GraphBetStatus.Canceled ]
-      variables.where.isRedeemable = false
     }
 
     if (filter.type === BetType.CashedOut) {
