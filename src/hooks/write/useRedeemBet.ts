@@ -33,6 +33,9 @@ export const useRedeemBet = () => {
 
   const receipt = useWaitForTransactionReceipt({
     hash: aaTxState.data || redeemTx.data,
+    query: {
+      enabled: Boolean(aaTxState.data) || Boolean(redeemTx.data),
+    },
   })
 
   const submit = async (props: SubmitProps) => {
@@ -116,6 +119,16 @@ export const useRedeemBet = () => {
     const receipt = await publicClient!.waitForTransactionReceipt({
       hash,
     })
+
+    if (receipt?.status === 'reverted') {
+      redeemTx.reset()
+      setAaTxState({
+        isPending: false,
+        data: undefined,
+        error: null,
+      })
+      throw new Error(`transaction ${receipt.transactionHash} was reverted`)
+    }
 
     bets.forEach(({ tokenId, coreAddress }) => {
       updateBetCache({

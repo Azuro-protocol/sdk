@@ -147,6 +147,9 @@ export const useDeBridgeBet = (props: Props) => {
 
   const approveReceipt = useWaitForTransactionReceipt({
     hash: approveTx.data,
+    query: {
+      enabled: Boolean(approveTx.data),
+    },
   })
 
   const approve = async () => {
@@ -238,6 +241,11 @@ export const useDeBridgeBet = (props: Props) => {
           hash: txHash,
           chainId: appChain.id,
         })
+
+        if (receipt?.status === 'reverted') {
+          betTx.reset()
+          throw new Error(`transaction ${receipt.transactionHash} was reverted`)
+        }
 
         if (receipt) {
           const fixedAmount = parseFloat(betAmount).toFixed(betToken.decimals)

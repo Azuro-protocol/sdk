@@ -105,6 +105,9 @@ export const usePrepareBet = (props: Props) => {
   const approveTx = useWriteContract()
   const approveReceipt = useWaitForTransactionReceipt({
     hash: approveTx.data,
+    query: {
+      enabled: Boolean(approveTx.data),
+    },
   })
 
   const betAmount = useMemo(() => {
@@ -153,6 +156,9 @@ export const usePrepareBet = (props: Props) => {
 
   const betReceipt = useWaitForTransactionReceipt({
     hash: betTx.data || liveOrAABetTx.data,
+    query: {
+      enabled: Boolean(betTx.data) || Boolean(liveOrAABetTx.data),
+    },
   })
 
   const placeBet = async () => {
@@ -440,6 +446,15 @@ export const usePrepareBet = (props: Props) => {
 
           return newFreeBets
         })
+      }
+
+      if (receipt?.status === 'reverted') {
+        betTx.reset()
+        updateLiveOrAABetTx({
+          data: undefined,
+          isPending: false,
+        })
+        throw new Error(`transaction ${receipt.transactionHash} was reverted`)
       }
 
       if (receipt) {

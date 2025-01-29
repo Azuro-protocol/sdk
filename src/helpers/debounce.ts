@@ -18,16 +18,15 @@ export function debounce<F extends Procedure>(func: F, wait: number, withMaxRequ
       requests++
     }
 
-    if (timeout !== undefined) {
-      clearTimeout(timeout)
-    }
-
     if (requests > 10) {
       requests = 0
       func.apply(context, args)
     }
-    else {
-      timeout = setTimeout(later, wait)
+
+    if (timeout !== undefined) {
+      clearTimeout(timeout)
     }
+
+    timeout = setTimeout(later, wait)
   }
 }
