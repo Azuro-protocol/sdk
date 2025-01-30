@@ -1,5 +1,7 @@
 import React, { useContext, createContext, useState, useMemo } from 'react'
-import { liveSupportedChains } from '@azuro-org/toolkit'
+import { useChains } from 'wagmi'
+import type { ChainId } from '@azuro-org/toolkit'
+import { chainsData } from '@azuro-org/toolkit'
 
 import { cookieKeys } from '../config'
 import { useChain } from './chain'
@@ -24,11 +26,14 @@ export type LiveProviderProps = {
 export const LiveProvider: React.FC<LiveProviderProps> = (props) => {
   const { children, initialLiveState } = props
 
-  const { appChain, setAppChainId } = useChain()
-  const [ isLive, setLive ] = useState(liveSupportedChains.includes(appChain.id) && Boolean(initialLiveState))
+  const { appChain, setAppChainId, contracts } = useChain()
+  const chains = useChains()
+
+  const isLiveExist = Boolean(contracts.liveCore)
+  const [ isLive, setLive ] = useState(isLiveExist && Boolean(initialLiveState))
 
   useMemo(() => {
-    if (!liveSupportedChains.includes(appChain.id) && isLive) {
+    if (!isLiveExist && isLive) {
       setLive(false)
       document.cookie = `${cookieKeys.live}=false;path=/;`
     }
@@ -37,8 +42,12 @@ export const LiveProvider: React.FC<LiveProviderProps> = (props) => {
   const handleChangeLive = (value: boolean) => {
     document.cookie = `${cookieKeys.live}=${value};path=/;`
 
-    if (value && !liveSupportedChains.includes(appChain.id)) {
-      setAppChainId(liveSupportedChains[0]!)
+    if (value && !isLiveExist) {
+      const chainWithLive = chains.find(({ id }) => Boolean(chainsData[id as ChainId]?.contracts?.liveCore))
+
+      if (chainWithLive) {
+        setAppChainId(chainWithLive.id as ChainId)
+      }
     }
     setLive(value)
   }

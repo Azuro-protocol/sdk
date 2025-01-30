@@ -9,7 +9,7 @@ npm install @azuro-org/sdk
 #### Dependencies
 
 ```
-@azuro-org/toolkit@^4.4.1
+@azuro-org/toolkit@^4.5.3
 ```
 
 #### Peer Dependencies
