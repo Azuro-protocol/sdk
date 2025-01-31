@@ -113,7 +113,7 @@ export const useOdds = ({ selections, betAmount, batchBetAmounts }: CalcOddsProp
       if (isMounted()) {
         setOdds(odds => {
           const newOdds = { ...odds, ...prematchOdds }
-          const newTotalOdds = formatToFixed(Object.keys(newOdds).reduce((acc, key) => acc * +newOdds[key]!, 1), 5)
+          const newTotalOdds = +formatToFixed(Object.keys(newOdds).reduce((acc, key) => acc * +newOdds[key]!, 1), 5)
 
           setTotalOdds(newTotalOdds)
 
@@ -153,7 +153,7 @@ export const useOdds = ({ selections, betAmount, batchBetAmounts }: CalcOddsProp
 
     setOdds(odds => {
       const newOdds = { ...odds, ...liveOdds }
-      const newTotalOdds = formatToFixed(Object.keys(newOdds).reduce((acc, key) => acc * +newOdds[key]!, 1), 3)
+      const newTotalOdds = +formatToFixed(Object.keys(newOdds).reduce((acc, key) => acc * +newOdds[key]!, 1), 3)
 
       setTotalOdds(newTotalOdds)
 

@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { type FetchPolicy, useQuery } from '@apollo/client'
 import {
-  liveSupportedChains,
   type Condition_Filter,
 
   type PrematchConditionsQuery,
@@ -38,7 +37,7 @@ const defaultQueryProps: QueryProps = {
 export const useConditions = (props: UseConditionsProps) => {
   const { gameId, filter, prematchQuery = defaultQueryProps, liveQuery = defaultQueryProps } = props
   const { prematchClient, liveClient } = useApolloClients()
-  const { appChain } = useChain()
+  const { contracts } = useChain()
 
   const variables = useMemo<PrematchConditionsQueryVariables | LiveConditionsQueryVariables>(() => {
     const vars: PrematchConditionsQueryVariables | LiveConditionsQueryVariables = {
@@ -73,7 +72,7 @@ export const useConditions = (props: UseConditionsProps) => {
     ssr: false,
     client: liveClient!,
     ...liveQuery,
-    skip: liveQuery.skip || !liveSupportedChains.includes(appChain.id),
+    skip: liveQuery.skip || !contracts.liveCore,
   })
 
   return {

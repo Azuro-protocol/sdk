@@ -19,6 +19,7 @@ import {
 
 import { useChain } from '../../contexts/chain'
 import { DEFAULT_DEADLINE } from '../../config'
+import { formatToFixed } from '../../helpers'
 import { useBetsCache, type NewBetProps } from '../useBetsCache'
 import { useLiveBetFee } from '../data/useLiveBetFee'
 import { type FreeBet } from '../data/useFreeBets'
@@ -168,7 +169,7 @@ export const usePrepareBet = (props: Props) => {
 
     let bets: NewBetProps['bet'][] = []
 
-    const fixedAmount = parseFloat(String(betAmount)).toFixed(betToken.decimals)
+    const fixedAmount = formatToFixed(betAmount, betToken.decimals)
     const rawAmount = parseUnits(fixedAmount, betToken.decimals)
     const rawDeadline = BigInt(Math.floor(Date.now() / 1000) + (deadline || DEFAULT_DEADLINE))
 
