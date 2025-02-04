@@ -106,10 +106,13 @@ export const useStatuses = ({ selections }: ConditionsStatusesProps) => {
     ;(async () => {
       const data = await batchFetchOutcomes(prematchItems.map(({ conditionId, coreAddress }) => `${coreAddress.toLowerCase()}_${conditionId}`), prematchClient!)
 
-      const prematchStatuses = selections.reduce<Record<string, ConditionStatus>>((acc, { conditionId, outcomeId }) => {
+      const prematchStatuses = (selections || []).reduce<Record<string, ConditionStatus>>((acc, selection) => {
+        const { conditionId, outcomeId } = selection || {}
         const key = `${conditionId}-${outcomeId}`
-        const { status } = data?.[key]!
-        acc[conditionId] = status
+
+        if (conditionId && data?.[key]) {
+          acc[conditionId] = data[key].status
+        }
 
         return acc
       }, {})
