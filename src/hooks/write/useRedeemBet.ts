@@ -26,7 +26,6 @@ export const useRedeemBet = () => {
 
   const redeemTx = useSendTransaction()
   const account = useExtendedAccount()
-  const isAAWallet = Boolean(account.isAAWallet)
   const aaClient = useAAWalletClient()
 
   const [ aaTxState, setAaTxState ] = useState<AaTxState>({ isPending: false, data: undefined, error: null })
@@ -37,6 +36,8 @@ export const useRedeemBet = () => {
       enabled: Boolean(aaTxState.data) || Boolean(redeemTx.data),
     },
   })
+
+  const isAAWallet = Boolean(account.isAAWallet)
 
   const submit = async (props: SubmitProps) => {
     const { bets } = props

@@ -65,6 +65,7 @@ export { useBetTokenBalance } from './hooks/useBetTokenBalance'
 export { useGameStatus } from './hooks/useGameStatus'
 export { useNativeBalance } from './hooks/useNativeBalance'
 export { useActiveMarket } from './hooks/useActiveMarket'
+export { useWrapTokens, WRAP_CHAINS } from './hooks/useWrapTokens'
 
 // cashout
 export { usePrecalculatedCashouts } from './hooks/cashout/usePrecalculatedCashouts'
