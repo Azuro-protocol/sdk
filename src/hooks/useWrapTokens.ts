@@ -1,7 +1,8 @@
-import { usePublicClient, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi'
+import { useConfig, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi'
 import { useState } from 'react'
 import { encodeFunctionData, type Hex, parseUnits } from 'viem'
 import { base, baseSepolia, gnosis } from 'viem/chains'
+import { waitForTransactionReceipt } from 'wagmi/actions'
 
 import { useChain } from '../contexts/chain'
 import { formatToFixed } from '../helpers'
@@ -44,12 +45,12 @@ type AaTxState = {
 }
 
 export const useWrapTokens = () => {
+  const { appChain, betToken } = useChain()
   const account = useExtendedAccount()
   const aaClient = useAAWalletClient()
-  const publicClient = usePublicClient()
+  const wagmiConfig = useConfig()
   const depositTx = useSendTransaction()
   const withdrawTx = useSendTransaction()
-  const { appChain, betToken } = useChain()
   const { refetch: refetchBetTokenBalance } = useBetTokenBalance()
   const { refetch: refetchNativeBalance } = useNativeBalance()
 
@@ -126,8 +127,9 @@ export const useWrapTokens = () => {
       hash = await depositTx.sendTransactionAsync(tx)
     }
 
-    const receipt = await publicClient!.waitForTransactionReceipt({
+    const receipt = await waitForTransactionReceipt(wagmiConfig, {
       hash,
+      chainId: appChain.id,
     })
 
     refetchBetTokenBalance()
@@ -183,8 +185,9 @@ export const useWrapTokens = () => {
       hash = await withdrawTx.sendTransactionAsync(tx)
     }
 
-    const receipt = await publicClient!.waitForTransactionReceipt({
+    const receipt = await waitForTransactionReceipt(wagmiConfig, {
       hash,
+      chainId: appChain.id,
     })
 
     refetchBetTokenBalance()

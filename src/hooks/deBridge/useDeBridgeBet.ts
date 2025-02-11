@@ -1,8 +1,7 @@
-import { parseUnits, erc20Abi, zeroAddress } from 'viem'
-import { type TransactionReceipt, type Address, type Hex, maxUint256 } from 'viem'
-import { getTransactionReceipt } from '@wagmi/core'
+import { type TransactionReceipt, type Address, type Hex, maxUint256, parseUnits, erc20Abi, zeroAddress } from 'viem'
+import { waitForTransactionReceipt, getTransactionReceipt } from 'wagmi/actions'
 import { useQuery } from '@tanstack/react-query'
-import { useConfig, usePublicClient, useReadContract, useSendTransaction, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
+import { useConfig, useReadContract, useSendTransaction, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
 import { useState, useEffect } from 'react'
 import {
   type Selection,
@@ -43,12 +42,11 @@ export const useDeBridgeBet = (props: Props) => {
     slippage, deadline, referralCode, affiliate, selections, odds, totalOdds, onSuccess, onError,
   } = props
 
+  const { appChain, betToken } = useChain()
   const { prematchClient } = useApolloClients()
   const { addBet } = useBetsCache()
-  const publicClient = usePublicClient()
-  const config = useConfig()
+  const wagmiConfig = useConfig()
   const account = useExtendedAccount()
-  const { appChain, betToken } = useChain()
 
   const [ isBetPending, setBetPending ] = useState(false)
   const [ isBetProcessing, setBetProcessing ] = useState(false)
@@ -164,9 +162,12 @@ export const useDeBridgeBet = (props: Props) => {
           maxUint256,
         ],
       })
-      await publicClient!.waitForTransactionReceipt({
+
+      await waitForTransactionReceipt(wagmiConfig, {
         hash,
+        chainId: appChain.id,
       })
+
       allowanceTx.refetch()
     }
     catch (err: any) {
@@ -177,16 +178,10 @@ export const useDeBridgeBet = (props: Props) => {
   const placeBet = async () => {
     try {
       setBetPending(true)
-      const hash = await betTx.sendTransactionAsync(betTxData!)
+      await betTx.sendTransactionAsync(betTxData!)
 
       setBetPending(false)
       setBetProcessing(true)
-
-      if (publicClient?.chain?.id === fromChainId) {
-        await publicClient!.waitForTransactionReceipt({
-          hash,
-        })
-      }
 
       const txHash = await new Promise<Hex>((res, rej) => {
         const interval = setInterval(async () => {
@@ -237,7 +232,7 @@ export const useDeBridgeBet = (props: Props) => {
       let receipt: TransactionReceipt | undefined
 
       if (txHash) {
-        receipt = await getTransactionReceipt(config, {
+        receipt = await getTransactionReceipt(wagmiConfig, {
           hash: txHash,
           chainId: appChain.id,
         })

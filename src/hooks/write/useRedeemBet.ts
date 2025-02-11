@@ -1,4 +1,5 @@
-import { useWaitForTransactionReceipt, usePublicClient, useSendTransaction } from 'wagmi'
+import { useWaitForTransactionReceipt, useSendTransaction, useConfig } from 'wagmi'
+import { waitForTransactionReceipt } from 'wagmi/actions'
 import { type Address, type Hex, encodeFunctionData } from 'viem'
 import { freeBetAbi } from '@azuro-org/toolkit'
 import { useState } from 'react'
@@ -20,8 +21,8 @@ type AaTxState = {
 }
 
 export const useRedeemBet = () => {
-  const publicClient = usePublicClient()
   const { contracts, appChain } = useChain()
+  const wagmiConfig = useConfig()
   const { updateBetCache } = useBetsCache()
 
   const redeemTx = useSendTransaction()
@@ -117,8 +118,9 @@ export const useRedeemBet = () => {
       hash = await redeemTx.sendTransactionAsync({ to, data })
     }
 
-    const receipt = await publicClient!.waitForTransactionReceipt({
+    const receipt = await waitForTransactionReceipt(wagmiConfig, {
       hash,
+      chainId: appChain.id,
     })
 
     if (receipt?.status === 'reverted') {

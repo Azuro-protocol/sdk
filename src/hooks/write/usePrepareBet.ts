@@ -1,7 +1,8 @@
 import {
   useReadContract, useWriteContract, useSendTransaction,
-  useWaitForTransactionReceipt, usePublicClient, useWalletClient,
+  useWaitForTransactionReceipt, useWalletClient, useConfig,
 } from 'wagmi'
+import { waitForTransactionReceipt } from 'wagmi/actions'
 import {
   parseUnits, maxUint256, encodeFunctionData,
   type Address, erc20Abi, type TransactionReceipt, type Hex,
@@ -70,10 +71,10 @@ export const usePrepareBet = (props: Props) => {
   const isAAWallet = Boolean(account.isAAWallet)
   const aaClient = useAAWalletClient()
 
-  const queryClient = useQueryClient()
-  const publicClient = usePublicClient()
-  const walletClient = useWalletClient()
   const { appChain, contracts, betToken, api } = useChain()
+  const queryClient = useQueryClient()
+  const wagmiConfig = useConfig()
+  const walletClient = useWalletClient()
   const {
     relayerFeeAmount: rawRelayerFeeAmount,
     formattedRelayerFeeAmount: relayerFeeAmount,
@@ -147,8 +148,10 @@ export const usePrepareBet = (props: Props) => {
         maxUint256,
       ],
     })
-    await publicClient!.waitForTransactionReceipt({
+
+    await waitForTransactionReceipt(wagmiConfig, {
       hash,
+      chainId: appChain.id,
     })
     allowanceTx.refetch()
   }
@@ -203,8 +206,10 @@ export const usePrepareBet = (props: Props) => {
               ],
             }),
           })
-          await publicClient?.waitForTransactionReceipt({
+
+          await waitForTransactionReceipt(wagmiConfig, {
             hash,
+            chainId: appChain.id,
             confirmations: 1,
           })
         }
@@ -428,8 +433,9 @@ export const usePrepareBet = (props: Props) => {
         }
       }
 
-      const receipt = await publicClient?.waitForTransactionReceipt({
+      const receipt = await waitForTransactionReceipt(wagmiConfig, {
         hash: txHash,
+        chainId: appChain.id,
       })
 
       refetchBetTokenBalance()

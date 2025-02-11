@@ -11,16 +11,17 @@ import {
   MainGameInfoFragmentDoc,
   PrematchConditionFragmentDoc,
 } from '@azuro-org/toolkit'
-import type { Address } from 'viem'
+import { type Address } from 'viem'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
+import { base, baseSepolia } from 'viem/chains'
 
 import { useApolloClients } from './apollo'
 import { localStorageKeys } from '../config'
 import { useChain } from './chain'
+import { formatToFixed } from '../helpers'
 import { useOdds } from '../hooks/watch/useOdds'
 import { useStatuses } from '../hooks/watch/useStatuses'
 import { type FreeBet, useFreeBets } from '../hooks/data/useFreeBets'
-import { formatBetValue } from '../helpers/formatBetValue'
 import useForceUpdate from '../helpers/hooks/useForceUpdate'
 import { useExtendedAccount } from '../hooks/useAaConnector'
 
@@ -303,20 +304,23 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
   }, [ items ])
 
   const changeBetAmount = useCallback((value: string) => {
-    setBetAmount(formatBetValue(value))
-  }, [])
+    const decimals = ([ base.id, baseSepolia.id ] as number[]).includes(appChain.id) ? 4 : 2
+
+    setBetAmount(formatToFixed(value, decimals))
+  }, [ appChain ])
 
   const changeBatchBetAmount = useCallback((item: ChangeBatchBetAmountItem, value: string) => {
     const { conditionId, outcomeId } = item
     const key = `${conditionId}-${outcomeId}`
+    const decimals = ([ base.id, baseSepolia.id ] as number[]).includes(appChain.id) ? 4 : 2
 
     setBatchBetAmounts(amounts => {
       return {
         ...amounts,
-        [key]: formatBetValue(value),
+        [key]: formatToFixed(value, decimals),
       }
     })
-  }, [])
+  }, [ appChain ])
 
   const addItem = useCallback((itemProps: AddItemProps) => {
     const { gameId, coreAddress, lpAddress, conditionId, outcomeId } = itemProps

@@ -1,4 +1,5 @@
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient, useWalletClient, useBalance } from 'wagmi'
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useWalletClient, useBalance, useConfig } from 'wagmi'
+import { waitForTransactionReceipt } from 'wagmi/actions'
 import { type Hex, type Address, type TransactionReceipt, encodeFunctionData, erc20Abi, formatUnits } from 'viem'
 import {
   type Selection,
@@ -49,7 +50,7 @@ export const useCashout = (props: Props) => {
   const isAAWallet = Boolean(account.isAAWallet)
   const aaClient = useAAWalletClient()
   const walletClient = useWalletClient()
-  const publicClient = usePublicClient()
+  const wagmiConfig = useConfig()
   const { refetch: refetchBalance } = useBalance({
     chainId: appChain.id,
     address: account.address,
@@ -166,8 +167,9 @@ export const useCashout = (props: Props) => {
       ],
     })
 
-    await publicClient!.waitForTransactionReceipt({
+    await waitForTransactionReceipt(wagmiConfig, {
       hash,
+      chainId: appChain.id,
     })
 
     allowanceTx.refetch()
@@ -201,8 +203,9 @@ export const useCashout = (props: Props) => {
             }),
           })
 
-          await publicClient?.waitForTransactionReceipt({
+          await waitForTransactionReceipt(wagmiConfig, {
             hash,
+            chainId: appChain.id,
           })
         }
       }
@@ -274,8 +277,9 @@ export const useCashout = (props: Props) => {
         isPending: false,
       })
 
-      const receipt = await publicClient!.waitForTransactionReceipt({
+      const receipt = await waitForTransactionReceipt(wagmiConfig, {
         hash: txHash,
+        chainId: appChain.id,
       })
 
       const receiptArgs = getEventArgsFromTxReceipt({
