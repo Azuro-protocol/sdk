@@ -56,6 +56,7 @@ export const OddsSocketProvider: React.FC<any> = ({ children }) => {
   const prevChainId = useRef(appChain.id)
   const socket = useRef<WebSocket>()
   const subscribers = useRef<Record<string, number>>({})
+  const reconnectTimerRef = useRef<NodeJS.Timeout | undefined>(undefined)
 
   const subscribe = useCallback((weights: Record<string, number>) => {
     if (socket.current?.readyState !== 1) {
@@ -139,7 +140,9 @@ export const OddsSocketProvider: React.FC<any> = ({ children }) => {
         return
       }
 
-      connect()
+      if (!reconnectTimerRef.current) {
+        reconnectTimerRef.current = setTimeout(connect, 500)
+      }
     }
 
     socket.current.onmessage = (message: MessageEvent<OddsSocketData>) => {
@@ -179,7 +182,9 @@ export const OddsSocketProvider: React.FC<any> = ({ children }) => {
       socket.current = undefined
       setSocketReady(false)
 
-      setTimeout(connect, 1000)
+      if (!reconnectTimerRef.current) {
+        reconnectTimerRef.current = setTimeout(connect, 1000)
+      }
     }
   }
 
