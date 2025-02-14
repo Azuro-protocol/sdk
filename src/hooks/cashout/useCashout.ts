@@ -17,6 +17,8 @@ import { useChain } from '../../contexts/chain'
 import { useAAWalletClient, useExtendedAccount } from '../useAaConnector'
 import { useBetsCache } from '../useBetsCache'
 import { type PrecalculatedCashout } from './usePrecalculatedCashouts'
+import { useBetTokenBalance } from '../useBetTokenBalance'
+import { useNativeBalance } from '../useNativeBalance'
 
 
 type Props = {
@@ -44,6 +46,8 @@ export const useCashout = (props: Props) => {
   } = props
 
   const { appChain, contracts, api, betToken } = useChain()
+  const { refetch: refetchBetTokenBalance } = useBetTokenBalance()
+  const { refetch: refetchNativeBalance } = useNativeBalance()
   const { updateBetCache } = useBetsCache()
   const queryClient = useQueryClient()
   const account = useExtendedAccount()
@@ -51,11 +55,6 @@ export const useCashout = (props: Props) => {
   const aaClient = useAAWalletClient()
   const walletClient = useWalletClient()
   const wagmiConfig = useConfig()
-  const { refetch: refetchBalance } = useBalance({
-    chainId: appChain.id,
-    address: account.address,
-    token: betToken.address,
-  })
 
   const [ cashoutTx, updateCashoutTx ] = useReducer(
     simpleObjReducer,
@@ -282,6 +281,14 @@ export const useCashout = (props: Props) => {
         chainId: appChain.id,
       })
 
+      if (receipt?.status === 'reverted') {
+        updateCashoutTx({
+          isPending: false,
+          data: undefined,
+        })
+        throw new Error(`transaction ${receipt.transactionHash} was reverted`)
+      }
+
       const receiptArgs = getEventArgsFromTxReceipt({
         receipt,
         eventName: 'Transfer',
@@ -291,7 +298,8 @@ export const useCashout = (props: Props) => {
         },
       })
 
-      refetchBalance()
+      refetchBetTokenBalance()
+      refetchNativeBalance()
       allowanceTx.refetch()
       updatePrecalculatedCache()
 

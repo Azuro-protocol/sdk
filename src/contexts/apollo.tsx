@@ -109,7 +109,7 @@ export const ApolloProvider = (props: Props) => {
   const { children } = props
 
   const { appChain } = useChain()
-  const prevAppChainIdRef = useRef(appChain.id)
+  const prevAppChainIdRef = useRef<ChainId>(appChain.id)
   const apolloClientsRef = useRef<Record<number, ApolloClients>>({
     [appChain.id]: getApolloClients(appChain.id),
   })
