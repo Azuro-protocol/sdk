@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useRef } from 'react'
+import { createContext, useContext, useMemo } from 'react'
 import { ApolloClient, HttpLink, InMemoryCache, type NormalizedCacheObject, type TypePolicies } from '@apollo/client'
 import { type ChainId, chainsData } from '@azuro-org/toolkit'
 
@@ -69,9 +69,12 @@ const getLiveApolloClient = (chainId: ChainId) => {
   })
 }
 
+// liveClient is shareable between chains, so keep it separately
+const liveClientsByEndpoint: Record<string, ApolloClient<NormalizedCacheObject>> = {}
+
 const apolloClients: Record<number, ApolloClients> = {}
 
-export const getApolloClients = (chainId: ChainId, prevChainId?: ChainId): ApolloClients => {
+export const getApolloClients = (chainId: ChainId): ApolloClients => {
   if (typeof window === 'undefined') {
     return {
       prematchClient: getPrematchApolloClient(chainId),
@@ -80,15 +83,15 @@ export const getApolloClients = (chainId: ChainId, prevChainId?: ChainId): Apoll
   }
 
   if (!apolloClients[chainId]) {
-    const shouldReusePrevLive = Boolean(
-      prevChainId
-      && apolloClients[prevChainId]?.liveClient
-      && chainsData[prevChainId].graphql.live === chainsData[chainId].graphql.live
-    )
+    const key = chainsData[chainId].graphql.live
+
+    if (!liveClientsByEndpoint[key]) {
+      liveClientsByEndpoint[key] = getLiveApolloClient(chainId)
+    }
 
     apolloClients[chainId] = {
       prematchClient: getPrematchApolloClient(chainId),
-      liveClient: shouldReusePrevLive ? apolloClients[prevChainId!]!.liveClient : getLiveApolloClient(chainId),
+      liveClient: liveClientsByEndpoint[key],
     }
   }
 
@@ -112,17 +115,10 @@ type Props = {
 
 export const ApolloProvider = (props: Props) => {
   const { children } = props
-
   const { appChain } = useChain()
-  const prevAppChainIdRef = useRef<ChainId>(appChain.id)
 
-  // set new link before render for send requests with new one
   const clientsByChainId = useMemo(() => {
-    const clients = getApolloClients(appChain.id, prevAppChainIdRef.current)
-
-    prevAppChainIdRef.current = appChain.id
-
-    return clients
+    return getApolloClients(appChain.id)
   }, [ appChain.id ])
 
   return (
