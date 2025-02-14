@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useRef } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef } from 'react'
 import { ApolloClient, HttpLink, InMemoryCache, type NormalizedCacheObject, type TypePolicies } from '@apollo/client'
 import { type ChainId, chainsData } from '@azuro-org/toolkit'
 
@@ -48,13 +48,18 @@ const typePolicies: TypePolicies = {
 const getPrematchApolloClient = (chainId: ChainId) => {
   const link = getPrematchLink(chainId)
 
-  return new ApolloClient({
+  const client = new ApolloClient({
     link,
     ssrMode: typeof window === 'undefined',
     cache: new InMemoryCache({ typePolicies }),
     connectToDevTools: true,
     assumeImmutableResults: true,
   })
+
+  // @ts-ignore
+  client.chainId = chainId
+
+  return client
 }
 
 const getLiveApolloClient = (chainId: ChainId) => {
@@ -69,12 +74,9 @@ const getLiveApolloClient = (chainId: ChainId) => {
   })
 }
 
-const apolloClients: ApolloClients = {
-  prematchClient: null as any,
-  liveClient: null as any,
-}
+const apolloClients: Record<number, ApolloClients> = {}
 
-export const getApolloClients = (chainId: ChainId): ApolloClients => {
+export const getApolloClients = (chainId: ChainId, prevChainId?: ChainId): ApolloClients => {
   if (typeof window === 'undefined') {
     return {
       prematchClient: getPrematchApolloClient(chainId),
@@ -82,12 +84,20 @@ export const getApolloClients = (chainId: ChainId): ApolloClients => {
     }
   }
 
-  if (!apolloClients.prematchClient) {
-    apolloClients.prematchClient = getPrematchApolloClient(chainId)
-    apolloClients.liveClient = getLiveApolloClient(chainId)
+  if (!apolloClients[chainId]) {
+    const shouldReusePrevLive = Boolean(
+      prevChainId
+      && apolloClients[prevChainId]?.liveClient
+      && chainsData[prevChainId].graphql.live === chainsData[chainId].graphql.live
+    )
+
+    apolloClients[chainId] = {
+      prematchClient: getPrematchApolloClient(chainId),
+      liveClient: shouldReusePrevLive ? apolloClients[prevChainId!]!.liveClient : getLiveApolloClient(chainId),
+    }
   }
 
-  return apolloClients
+  return apolloClients[chainId]
 }
 
 export type ApolloClients = {
@@ -110,45 +120,20 @@ export const ApolloProvider = (props: Props) => {
 
   const { appChain } = useChain()
   const prevAppChainIdRef = useRef<ChainId>(appChain.id)
-  const apolloClientsRef = useRef<Record<number, ApolloClients>>({
-    [appChain.id]: getApolloClients(appChain.id),
-  })
 
   // set new link before render for send requests with new one
   const clientsByChainId = useMemo(() => {
-    const isLiveDifferent = chainsData[prevAppChainIdRef.current].graphql.live !== chainsData[appChain.id].graphql.live
-
-    if (!apolloClientsRef.current[appChain.id]) {
-      const prematchClient = getPrematchApolloClient(appChain.id)
-      const liveClient = isLiveDifferent || !apolloClients.liveClient ? getLiveApolloClient(appChain.id) : apolloClients.liveClient
-
-      apolloClientsRef.current[appChain.id] = {
-        prematchClient,
-        liveClient,
-      }
-
-      // we don't want breaking changes here, so we need to update apolloClients with active chain id
-      apolloClients.prematchClient = prematchClient
-      apolloClients.liveClient = liveClient
-    }
+    const clients = getApolloClients(appChain.id, prevAppChainIdRef.current)
 
     prevAppChainIdRef.current = appChain.id
 
-    const { prematchClient, liveClient } = apolloClientsRef.current[appChain.id]!
-
-    setTimeout(() => {
-      prematchClient.reFetchObservableQueries()
-
-      if (isLiveDifferent) {
-        liveClient.reFetchObservableQueries()
-      }
-    })
-
-    return {
-      prematchClient,
-      liveClient,
-    }
+    return clients
   }, [ appChain.id ])
+
+  useEffect(() => {
+    // @ts-ignore
+    window.__azuroSDKCurrentApolloClients = clientsByChainId
+  }, [ clientsByChainId ])
 
   return (
     <Context.Provider value={clientsByChainId}>
