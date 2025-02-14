@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useRef } from 'react'
+import { createContext, useContext, useMemo, useRef } from 'react'
 import { ApolloClient, HttpLink, InMemoryCache, type NormalizedCacheObject, type TypePolicies } from '@apollo/client'
 import { type ChainId, chainsData } from '@azuro-org/toolkit'
 
@@ -48,18 +48,13 @@ const typePolicies: TypePolicies = {
 const getPrematchApolloClient = (chainId: ChainId) => {
   const link = getPrematchLink(chainId)
 
-  const client = new ApolloClient({
+  return new ApolloClient({
     link,
     ssrMode: typeof window === 'undefined',
     cache: new InMemoryCache({ typePolicies }),
     connectToDevTools: true,
     assumeImmutableResults: true,
   })
-
-  // @ts-ignore
-  client.chainId = chainId
-
-  return client
 }
 
 const getLiveApolloClient = (chainId: ChainId) => {
@@ -129,11 +124,6 @@ export const ApolloProvider = (props: Props) => {
 
     return clients
   }, [ appChain.id ])
-
-  useEffect(() => {
-    // @ts-ignore
-    window.__azuroSDKCurrentApolloClients = clientsByChainId
-  }, [ clientsByChainId ])
 
   return (
     <Context.Provider value={clientsByChainId}>
