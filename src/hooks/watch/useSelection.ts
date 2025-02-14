@@ -49,7 +49,7 @@ export const useSelection = ({ selection, initialOdds, initialStatus }: Props) =
   }, [ isSocketReady ])
 
   useEffect(() => {
-    const unsubscribe = oddsWatcher.subscribe(`${conditionId}`, async (oddsData) => {
+    const unsubscribe = oddsWatcher.subscribe(conditionId, async (oddsData) => {
       let odds: string | number | undefined = oddsData?.outcomes?.[String(outcomeId)]?.odds
 
       if (!odds) {
@@ -77,10 +77,10 @@ export const useSelection = ({ selection, initialOdds, initialStatus }: Props) =
     return () => {
       unsubscribe()
     }
-  }, [ config ])
+  }, [ config, conditionId, contracts.prematchCore.address ])
 
   useEffect(() => {
-    const unsubscribe = conditionStatusWatcher.subscribe(`${conditionId}`, (newStatus: ConditionStatus) => {
+    const unsubscribe = conditionStatusWatcher.subscribe(conditionId, (newStatus: ConditionStatus) => {
       setStatusFetching(false)
       setStatus(newStatus)
     })
@@ -88,7 +88,9 @@ export const useSelection = ({ selection, initialOdds, initialStatus }: Props) =
     return () => {
       unsubscribe()
     }
-  }, [])
+  }, [ conditionId ])
+
+  const conditionEntityId = `${contracts.prematchCore.address.toLowerCase()}_${conditionId}`
 
   useEffect(() => {
     if (isLive || (initialOdds && initialStatus)) {
@@ -96,7 +98,6 @@ export const useSelection = ({ selection, initialOdds, initialStatus }: Props) =
     }
 
     ;(async () => {
-      const conditionEntityId = `${contracts.prematchCore.address.toLowerCase()}_${conditionId}`
       const key = `${conditionId}-${outcomeId}`
       const data = await batchFetchOutcomes([ conditionEntityId ], prematchClient!)
 
@@ -110,7 +111,7 @@ export const useSelection = ({ selection, initialOdds, initialStatus }: Props) =
         setStatusFetching(false)
       }
     })()
-  }, [ prematchClient ])
+  }, [ prematchClient, conditionEntityId ])
 
   return {
     odds,

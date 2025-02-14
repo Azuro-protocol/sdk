@@ -445,7 +445,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
 
       return newItems
     })
-  }, [ isBatch ])
+  }, [ isBatch, prematchClient, liveClient ])
 
   const removeItem = useCallback((itemProps: RemoveItemProps) => {
     const { conditionId, outcomeId } = itemProps

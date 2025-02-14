@@ -120,7 +120,7 @@ export const useStatuses = ({ selections }: ConditionsStatusesProps) => {
       setPrematchStatusesFetching(false)
       setStatuses(prematchStatuses)
     })()
-  }, [ prematchKey ])
+  }, [ prematchKey, prematchClient ])
 
   return {
     statuses,

@@ -84,7 +84,7 @@ export const useLiveBets = (props: UseLiveBetsProps) => {
   const [ bets, setBets ] = useState<Array<Bet>>([])
   const [ isGamesFetching, setGamesFetching ] = useState(true)
 
-  const options = useMemo(() => {
+  const variables = useMemo(() => {
     const variables: LiveBetsQueryVariables = {
       first: filter.limit || 1000,
       skip: filter.offset,
@@ -116,13 +116,7 @@ export const useLiveBets = (props: UseLiveBetsProps) => {
       variables.where.affiliate = filter.affiliate
     }
 
-    return {
-      variables,
-      ssr: false,
-      client: prematchClient!,
-      skip: !filter.bettor,
-      notifyOnNetworkStatusChange: true,
-    } as const
+    return variables
   }, [
     filter.limit,
     filter.offset,
@@ -133,7 +127,13 @@ export const useLiveBets = (props: UseLiveBetsProps) => {
     orderDir,
   ])
 
-  const { data, loading: isBetsFetching, error } = useQuery<LiveBetsQuery, LiveBetsQueryVariables>(LiveBetsDocument, options)
+  const { data, loading: isBetsFetching, error } = useQuery<LiveBetsQuery, LiveBetsQueryVariables>(LiveBetsDocument, {
+    variables,
+    ssr: false,
+    client: prematchClient!,
+    skip: !filter.bettor,
+    notifyOnNetworkStatusChange: true,
+  })
 
   const { liveBets } = data || { liveBets: [] }
 

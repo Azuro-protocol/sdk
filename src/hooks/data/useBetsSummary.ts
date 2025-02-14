@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { type QueryHookOptions, useQuery } from '@apollo/client'
+import { useQuery } from '@apollo/client'
 import { formatUnits } from 'viem'
 import { type BettorsQuery, type BettorsQueryVariables, BettorsDocument } from '@azuro-org/toolkit'
 
@@ -18,7 +18,7 @@ export const useBetsSummary = (props: Props) => {
   const { betToken } = useChain()
   const { prematchClient } = useApolloClients()
 
-  const options = useMemo<QueryHookOptions<BettorsQuery, BettorsQueryVariables>>(() => {
+  const variables = useMemo<BettorsQueryVariables>(() => {
     const variables: BettorsQueryVariables = {
       where: {
         address: account?.toLowerCase(),
@@ -29,19 +29,19 @@ export const useBetsSummary = (props: Props) => {
       variables.where.affiliate_in = affiliates.map(affiliate => affiliate.toLowerCase())
     }
 
-    return {
-      variables,
-      ssr: false,
-      client: prematchClient!,
-      notifyOnNetworkStatusChange: true,
-      skip: !account,
-    } as const
+    return variables
   }, [
     account,
     affiliates?.join('-'),
   ])
 
-  const { data, loading, error } = useQuery<BettorsQuery, BettorsQueryVariables>(BettorsDocument, options)
+  const { data, loading, error } = useQuery<BettorsQuery, BettorsQueryVariables>(BettorsDocument, {
+    variables,
+    ssr: false,
+    client: prematchClient!,
+    notifyOnNetworkStatusChange: true,
+    skip: !account,
+  })
 
   const { bettors } = data || { bettors: [] }
 

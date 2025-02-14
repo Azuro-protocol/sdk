@@ -110,31 +110,48 @@ export const ApolloProvider = (props: Props) => {
 
   const { appChain } = useChain()
   const prevAppChainIdRef = useRef(appChain.id)
-  const apolloClientsRef = useRef<ApolloClients>(getApolloClients(appChain.id))
+  const apolloClientsRef = useRef<Record<number, ApolloClients>>({
+    [appChain.id]: getApolloClients(appChain.id),
+  })
 
   // set new link before render for send requests with new one
-  useMemo(() => {
-    if (appChain.id !== prevAppChainIdRef.current) {
-      const { prematchClient, liveClient } = apolloClientsRef.current
+  const clientsByChainId = useMemo(() => {
+    const isLiveDifferent = chainsData[prevAppChainIdRef.current].graphql.live !== chainsData[appChain.id].graphql.live
 
-      const prematchLink = getPrematchLink(appChain.id)
+    if (!apolloClientsRef.current[appChain.id]) {
+      const prematchClient = getPrematchApolloClient(appChain.id)
+      const liveClient = isLiveDifferent || !apolloClients.liveClient ? getLiveApolloClient(appChain.id) : apolloClients.liveClient
 
-      prematchClient!.setLink(prematchLink)
-      prematchClient!.resetStore()
-
-      if (chainsData[prevAppChainIdRef.current].graphql.live !== chainsData[appChain.id].graphql.live) {
-        const liveLink = getLiveLink(appChain.id)
-
-        liveClient!.setLink(liveLink)
-        liveClient!.resetStore()
+      apolloClientsRef.current[appChain.id] = {
+        prematchClient,
+        liveClient,
       }
 
-      prevAppChainIdRef.current = appChain.id
+      // we don't want breaking changes here, so we need to update apolloClients with active chain id
+      apolloClients.prematchClient = prematchClient
+      apolloClients.liveClient = liveClient
+    }
+
+    prevAppChainIdRef.current = appChain.id
+
+    const { prematchClient, liveClient } = apolloClientsRef.current[appChain.id]!
+
+    setTimeout(() => {
+      prematchClient.reFetchObservableQueries()
+
+      if (isLiveDifferent) {
+        liveClient.reFetchObservableQueries()
+      }
+    })
+
+    return {
+      prematchClient,
+      liveClient,
     }
   }, [ appChain.id ])
 
   return (
-    <Context.Provider value={apolloClientsRef.current}>
+    <Context.Provider value={clientsByChainId}>
       {children}
     </Context.Provider>
   )

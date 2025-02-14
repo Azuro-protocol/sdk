@@ -41,7 +41,7 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
 
   const { prematchClient } = useApolloClients()
 
-  const options = useMemo(() => {
+  const variables = useMemo(() => {
     const variables: PrematchBetsQueryVariables = {
       first: filter.limit || 1000,
       skip: filter.offset,
@@ -73,13 +73,7 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
       variables.where.affiliate = filter.affiliate
     }
 
-    return {
-      variables,
-      ssr: false,
-      client: prematchClient!,
-      skip: !filter.bettor,
-      notifyOnNetworkStatusChange: true,
-    } as const
+    return variables
   }, [
     filter.limit,
     filter.offset,
@@ -90,7 +84,13 @@ export const usePrematchBets = (props: UsePrematchBetsProps) => {
     orderDir,
   ])
 
-  const { data, loading, error } = useQuery<PrematchBetsQuery, PrematchBetsQueryVariables>(PrematchBetsDocument, options)
+  const { data, loading, error } = useQuery<PrematchBetsQuery, PrematchBetsQueryVariables>(PrematchBetsDocument, {
+    variables,
+    ssr: false,
+    client: prematchClient!,
+    skip: !filter.bettor,
+    notifyOnNetworkStatusChange: true,
+  })
 
   const bets = useMemo(() => {
     if (!data?.bets?.length) {
