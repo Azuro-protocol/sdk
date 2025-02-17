@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { type Hex, type Address } from 'viem'
 import { useConfig, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi'
+import type { CashbackTransaction } from '@azuro-org/toolkit'
 import { createCashbackTransaction } from '@azuro-org/toolkit'
 import { waitForTransactionReceipt } from 'wagmi/actions'
 
@@ -23,6 +24,7 @@ type Props = {
 
 export const useCashback = ({ affiliate }: Props) => {
   const [ aaTxState, setAaTxState ] = useState<AaTxState>({ isPending: false, data: undefined, error: null })
+  const [ isTxFetching, setTxFetching ] = useState(false)
 
   const { refetch: refetchCashbackBalance } = useCashbackBalance({ affiliate })
   const { refetch: refetchBetTokenBalance } = useBetTokenBalance()
@@ -44,6 +46,7 @@ export const useCashback = ({ affiliate }: Props) => {
   })
 
   const submit = async () => {
+    setTxFetching(true)
     cashbackTx.reset()
     setAaTxState({
       isPending: isAAWallet,
@@ -51,12 +54,21 @@ export const useCashback = ({ affiliate }: Props) => {
       error: null,
     })
 
-    const tx = await createCashbackTransaction({
-      account: account.address!,
-      affiliate,
-      expiresAt: Math.floor(Date.now() / 1000) + 2000,
-      chainId: appChain.id,
-    })
+    let tx: CashbackTransaction | null
+
+    try {
+      tx = await createCashbackTransaction({
+        account: account.address!,
+        affiliate,
+        expiresAt: Math.floor(Date.now() / 1000) + 2000,
+        chainId: appChain.id,
+      })
+    }
+    catch (error) {
+      setTxFetching(false)
+
+      throw error
+    }
 
     let hash: Hex
 
@@ -107,7 +119,7 @@ export const useCashback = ({ affiliate }: Props) => {
   }
 
   return {
-    isPending: cashbackTx.isPending || aaTxState.isPending,
+    isPending: isTxFetching || cashbackTx.isPending || aaTxState.isPending,
     isProcessing: receipt.isLoading,
     data: cashbackTx.data || aaTxState.data,
     error: cashbackTx.error || aaTxState.error,

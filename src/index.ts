@@ -74,6 +74,10 @@ export { useWrapTokens, WRAP_CHAINS } from './hooks/useWrapTokens'
 export { usePrecalculatedCashouts } from './hooks/cashout/usePrecalculatedCashouts'
 export { useCashout } from './hooks/cashout/useCashout'
 
+// cashout
+export { useCashbackBalance } from './hooks/cashback/useCashbackBalance'
+export { useCashback } from './hooks/cashback/useCashback'
+
 // wave
 export { useWaveLevels } from './hooks/wave/useWaveLevels'
 export { useWaveStats } from './hooks/wave/useWaveStats'
