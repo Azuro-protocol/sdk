@@ -24,11 +24,10 @@ type AaTxState = {
 
 export const useRedeemBet = () => {
   const { contracts, appChain } = useChain()
-  const wagmiConfig = useConfig()
   const { updateBetCache } = useBetsCache()
-
   const { refetch: refetchBetTokenBalance } = useBetTokenBalance()
   const { refetch: refetchNativeBalance } = useNativeBalance()
+  const wagmiConfig = useConfig()
   const redeemTx = useSendTransaction()
   const account = useExtendedAccount()
   const aaClient = useAAWalletClient()

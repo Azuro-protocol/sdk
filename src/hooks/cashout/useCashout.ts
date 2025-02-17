@@ -1,4 +1,4 @@
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useWalletClient, useBalance, useConfig } from 'wagmi'
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useWalletClient, useConfig } from 'wagmi'
 import { waitForTransactionReceipt } from 'wagmi/actions'
 import { type Hex, type Address, type TransactionReceipt, encodeFunctionData, erc20Abi, formatUnits } from 'viem'
 import {
