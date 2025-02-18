@@ -93,7 +93,14 @@ export const useCashback = ({ affiliate }: Props) => {
       }
     }
     else {
-      hash = await cashbackTx.sendTransactionAsync(tx!)
+      try {
+        hash = await cashbackTx.sendTransactionAsync(tx!)
+      }
+      catch (error) {
+        cashbackTx.reset()
+
+        throw error
+      }
     }
 
     const receipt = await waitForTransactionReceipt(wagmiConfig, {
