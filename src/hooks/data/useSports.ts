@@ -41,10 +41,9 @@ export const useSports = (props: UseSportsProps) => {
   const { contracts, graphql } = useChain()
 
   const startsAt = getGameStartsAtValue()
-
   const gqlLink = isLive ? graphql.live : graphql.prematch
 
-  const { data: sports, ...rest } = useQuery({
+  const { data, ...rest } = useQuery({
     queryKey: [
       'sports',
       gqlLink,
@@ -103,7 +102,7 @@ export const useSports = (props: UseSportsProps) => {
       }
 
       const { sports } = await request<SportsQuery, SportsQueryVariables>({
-        url: isLive ? graphql.live : graphql.prematch,
+        url: gqlLink,
         document: SportsDocument,
         variables,
       })
@@ -113,11 +112,11 @@ export const useSports = (props: UseSportsProps) => {
   })
 
   const formattedSports = useMemo(() => {
-    if (!sports?.length) {
+    if (!data?.length) {
       return []
     }
 
-    const filteredSports = sports.map(sport => {
+    const filteredSports = data.map(sport => {
       const { countries } = sport
 
       const filteredCountries = countries.filter(({ leagues }) => leagues.length)
@@ -168,7 +167,7 @@ export const useSports = (props: UseSportsProps) => {
     }
 
     return filteredSports
-  }, [ sports ])
+  }, [ data ])
 
   return {
     data: formattedSports,
