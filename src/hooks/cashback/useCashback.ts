@@ -65,9 +65,10 @@ export const useCashback = ({ affiliate }: Props) => {
       })
     }
     catch (error) {
-      setTxFetching(false)
-
       throw error
+    }
+    finally {
+      setTxFetching(false)
     }
 
     let hash: Hex
