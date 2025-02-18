@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { useQuery, type QueryHookOptions } from '@apollo/client'
 import {
   PrematchGraphGameStatus,
   Game_OrderBy,
@@ -9,9 +8,10 @@ import {
   type SportsQueryVariables,
   SportsDocument,
 } from '@azuro-org/toolkit'
+import { useQuery } from '@tanstack/react-query'
+import { request } from 'graphql-request'
 
 import { useChain } from '../../contexts/chain'
-import { useApolloClients } from '../../contexts/apollo'
 import { getGameStartsAtValue } from '../../helpers'
 import type { SportHub } from '../../global'
 
@@ -38,84 +38,82 @@ export const useSports = (props: UseSportsProps) => {
     isLive,
   } = props || {}
 
-  const { prematchClient, liveClient } = useApolloClients()
-  const { contracts } = useChain()
-
+  const { contracts, graphql } = useChain()
 
   const startsAt = getGameStartsAtValue()
 
-  const options = useMemo<QueryHookOptions<SportsQuery, SportsQueryVariables>>(() => {
-    const variables: SportsQueryVariables = {
-      first: filter?.limit || 1000,
-      sportFilter: {},
-      countryFilter: {},
-      leagueFilter: {},
-      gameFilter: {
-        hasActiveConditions: true,
-        status_in: [ PrematchGraphGameStatus.Created, PrematchGraphGameStatus.Paused ],
-      },
+  const gqlLink = isLive ? graphql.live : graphql.prematch
+
+  const { data: sports, ...rest } = useQuery({
+    queryKey: [
+      'sports',
+      gqlLink,
       gameOrderBy,
-      gameOrderDirection: orderDir,
-    }
+      orderDir,
+      startsAt,
+      filter?.limit,
+      filter?.sportHub,
+      filter?.sportSlug,
+      filter?.countrySlug,
+      filter?.leagueSlug,
+      filter?.sportIds?.join('-'),
+    ],
+    queryFn: async () => {
+      const variables: SportsQueryVariables = {
+        first: filter?.limit || 1000,
+        sportFilter: {},
+        countryFilter: {},
+        leagueFilter: {},
+        gameFilter: {
+          hasActiveConditions: true,
+          status_in: [ PrematchGraphGameStatus.Created, PrematchGraphGameStatus.Paused ],
+        },
+        gameOrderBy,
+        gameOrderDirection: orderDir,
+      }
 
-    if (filter?.sportSlug) {
-      variables.sportFilter!.slug = filter.sportSlug
-    }
+      if (filter?.sportSlug) {
+        variables.sportFilter!.slug = filter.sportSlug
+      }
 
-    if (filter?.sportHub) {
-      variables.sportFilter!.sporthub = filter.sportHub
-    }
+      if (filter?.sportHub) {
+        variables.sportFilter!.sporthub = filter.sportHub
+      }
 
-    if (filter?.sportIds?.length) {
-      variables.sportFilter!.sportId_in = filter?.sportIds
-    }
+      if (filter?.sportIds?.length) {
+        variables.sportFilter!.sportId_in = filter?.sportIds
+      }
 
-    if (filter?.countrySlug) {
-      variables.countryFilter!.slug = filter.countrySlug
-    }
+      if (filter?.countrySlug) {
+        variables.countryFilter!.slug = filter.countrySlug
+      }
 
-    if (isLive) {
-      variables.gameFilter!.startsAt_lt = startsAt
-    }
-    else {
-      variables.gameFilter!.startsAt_gt = startsAt
-    }
+      if (isLive) {
+        variables.gameFilter!.startsAt_lt = startsAt
+      }
+      else {
+        variables.gameFilter!.startsAt_gt = startsAt
+        variables.gameFilter!.liquidityPool = contracts.lp.address.toLowerCase()
+      }
 
-    variables.leagueFilter!.games_ = variables.gameFilter!
+      variables.leagueFilter!.games_ = variables.gameFilter!
 
-    if (filter?.leagueSlug) {
-      variables.leagueFilter!.slug = filter.leagueSlug
-    }
+      if (filter?.leagueSlug) {
+        variables.leagueFilter!.slug = filter.leagueSlug
+      }
 
-    return {
-      variables,
-      ssr: false,
-      client: isLive ? liveClient! : prematchClient!,
-      notifyOnNetworkStatusChange: true,
-    }
-  }, [
-    isLive,
-    gameOrderBy,
-    orderDir,
-    startsAt,
-    filter?.limit,
-    filter?.sportHub,
-    filter?.sportSlug,
-    filter?.countrySlug,
-    filter?.leagueSlug,
-    filter?.sportIds?.join('-'),
-  ])
+      const { sports } = await request<SportsQuery, SportsQueryVariables>({
+        url: isLive ? graphql.live : graphql.prematch,
+        document: SportsDocument,
+        variables,
+      })
 
-  if (!isLive) {
-    options.variables!.gameFilter!.liquidityPool = contracts.lp.address.toLowerCase()
-  }
-
-  const { data, loading, error } = useQuery<SportsQuery, SportsQueryVariables>(SportsDocument, options)
-
-  const { sports } = data || { sports: [] }
+      return sports
+    },
+  })
 
   const formattedSports = useMemo(() => {
-    if (!sports.length) {
+    if (!sports?.length) {
       return []
     }
 
@@ -173,8 +171,7 @@ export const useSports = (props: UseSportsProps) => {
   }, [ sports ])
 
   return {
-    loading,
-    sports: formattedSports,
-    error,
+    data: formattedSports,
+    ...rest,
   }
 }

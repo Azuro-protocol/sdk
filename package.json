@@ -54,6 +54,7 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@azuro-org/toolkit": "4.5.4"
+    "@azuro-org/toolkit": "4.5.4",
+    "graphql-request": "^7.1.2"
   }
 }
