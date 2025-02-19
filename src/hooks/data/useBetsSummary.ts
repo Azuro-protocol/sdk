@@ -1,9 +1,9 @@
 import { useMemo } from 'react'
-import { type QueryHookOptions, useQuery } from '@apollo/client'
 import { formatUnits } from 'viem'
 import { type BettorsQuery, type BettorsQueryVariables, BettorsDocument } from '@azuro-org/toolkit'
+import { useQuery } from '@tanstack/react-query'
+import { request } from 'graphql-request'
 
-import { useApolloClients } from '../../contexts/apollo'
 import { useChain } from '../../contexts/chain'
 
 
@@ -15,38 +15,40 @@ type Props = {
 export const useBetsSummary = (props: Props) => {
   const { account, affiliates } = props
 
-  const { betToken } = useChain()
-  const { prematchClient } = useApolloClients()
+  const { betToken, graphql } = useChain()
 
-  const options = useMemo<QueryHookOptions<BettorsQuery, BettorsQueryVariables>>(() => {
-    const variables: BettorsQueryVariables = {
-      where: {
-        address: account?.toLowerCase(),
-      },
-    }
+  const gqlLink = graphql.prematch
 
-    if (affiliates?.length) {
-      variables.where.affiliate_in = affiliates.map(affiliate => affiliate.toLowerCase())
-    }
+  const { data, ...rest } = useQuery({
+    queryKey: [
+      'bets-summary',
+      gqlLink,
+      account,
+      affiliates?.join('-'),
+    ],
+    queryFn: async () => {
+      const variables: BettorsQueryVariables = {
+        where: {
+          address: account?.toLowerCase(),
+        },
+      }
 
-    return {
-      variables,
-      ssr: false,
-      client: prematchClient!,
-      notifyOnNetworkStatusChange: true,
-      skip: !account,
-    } as const
-  }, [
-    account,
-    affiliates?.join('-'),
-  ])
+      if (affiliates?.length) {
+        variables.where.affiliate_in = affiliates.map(affiliate => affiliate.toLowerCase())
+      }
 
-  const { data, loading, error } = useQuery<BettorsQuery, BettorsQueryVariables>(BettorsDocument, options)
+      const { bettors } = await request<BettorsQuery, BettorsQueryVariables>({
+        url: gqlLink,
+        document: BettorsDocument,
+        variables,
+      })
 
-  const { bettors } = data || { bettors: [] }
+      return bettors
+    },
+  })
 
   const formattedData = useMemo(() => {
-    if (!bettors.length) {
+    if (!data?.length) {
       return {
         toPayout: '0',
         inBets: '0',
@@ -66,7 +68,7 @@ export const useBetsSummary = (props: Props) => {
       betsCount,
       wonBetsCount,
       lostBetsCount,
-    } = bettors.reduce((acc, bettor) => {
+    } = data.reduce((acc, bettor) => {
       const { rawToPayout, rawInBets, rawTotalPayout, rawTotalProfit, betsCount, wonBetsCount, lostBetsCount } = bettor
 
       acc.rawToPayout += BigInt(rawToPayout)
@@ -100,8 +102,7 @@ export const useBetsSummary = (props: Props) => {
   }, [ data ])
 
   return {
-    ...formattedData,
-    loading,
-    error,
+    data: formattedData,
+    ...rest,
   }
 }

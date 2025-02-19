@@ -1,17 +1,18 @@
 import { useMemo } from 'react'
-import { useQuery } from '@apollo/client'
 import { type Address, formatUnits, parseUnits } from 'viem'
 import {
   ODDS_DECIMALS,
-  GameStatus,
   BetResult,
+  GameBetsDocument } from '@azuro-org/toolkit'
+import {
+  GameStatus,
 
   type GameBetsQuery,
   type GameBetsQueryVariables,
-  GameBetsDocument,
 } from '@azuro-org/toolkit'
+import { useQuery } from '@tanstack/react-query'
+import { request } from 'graphql-request'
 
-import { useApolloClients } from '../../contexts/apollo'
 import { useChain } from '../../contexts/chain'
 
 
@@ -27,19 +28,32 @@ type Props = {
 const DIVIDER = 18
 
 export const useBetsSummaryBySelection = ({ account, gameId, gameStatus, keyStruct = 'outcomeId' }: Props) => {
-  const { prematchClient } = useApolloClients()
-  const { betToken } = useChain()
+  const { betToken, graphql } = useChain()
 
-  const variables = useMemo<GameBetsQueryVariables>(() => ({
-    actor: account?.toLowerCase(),
-    gameId,
-  }), [ account, gameId ])
+  const gqlLink = graphql.prematch
 
-  const { data, loading, error } = useQuery<GameBetsQuery, GameBetsQueryVariables>(GameBetsDocument, {
-    variables,
-    ssr: false,
-    client: prematchClient!,
-    skip: !account || gameStatus !== GameStatus.Resolved,
+  const { data, ...rest } = useQuery({
+    queryKey: [
+      'bets-summary-by-selection',
+      gqlLink,
+      account,
+      gameId,
+    ],
+    queryFn: async () => {
+      const variables: GameBetsQueryVariables = {
+        actor: account?.toLowerCase(),
+        gameId,
+      }
+
+      const data = await request<GameBetsQuery, GameBetsQueryVariables>({
+        url: gqlLink,
+        document: GameBetsDocument,
+        variables,
+      })
+
+      return data
+    },
+    enabled: Boolean(account) && gameStatus === GameStatus.Resolved,
   })
 
   const { bets: prematchBets, liveBets } = data || {}
@@ -117,8 +131,7 @@ export const useBetsSummaryBySelection = ({ account, gameId, gameStatus, keyStru
   }, [ prematchBets, liveBets ])
 
   return {
-    betsSummary,
-    loading,
-    error,
+    data: betsSummary,
+    ...rest,
   }
 }

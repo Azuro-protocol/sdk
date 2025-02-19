@@ -1,8 +1,8 @@
-import { useMemo } from 'react'
-import { useQuery } from '@apollo/client'
 import { type GameQuery, type GameQueryVariables, GameDocument } from '@azuro-org/toolkit'
+import { useQuery } from '@tanstack/react-query'
+import { request } from 'graphql-request'
 
-import { useApolloClients } from '../../contexts/apollo'
+import { useChain } from '../../contexts/chain'
 
 
 type UseGameProps = {
@@ -12,40 +12,48 @@ type UseGameProps = {
 export const useGame = (props: UseGameProps) => {
   const { gameId } = props
 
-  const { prematchClient, liveClient } = useApolloClients()
+  const { graphql, appChain } = useChain()
 
-  const variables = useMemo<GameQueryVariables>(() => ({
-    gameId: gameId!,
-  }), [ gameId ])
+  return useQuery({
+    queryKey: [
+      'game',
+      appChain.id,
+      gameId,
+    ],
+    queryFn: async () => {
+      const variables: GameQueryVariables = {
+        gameId: gameId!,
+      }
 
-  const { data: prematchData, loading: isPrematchLoading, error: prematchError } = useQuery<GameQuery, GameQueryVariables>(GameDocument, {
-    variables,
-    ssr: false,
-    client: prematchClient!,
-    skip: !gameId,
+      let game: GameQuery['games'][0] | undefined
+
+      const prematchData = await request<GameQuery, GameQueryVariables>({
+        url: graphql.prematch,
+        document: GameDocument,
+        variables,
+      })
+
+      game = prematchData?.games?.[0]
+
+      const shouldGetLive = !game || Date.now() >= +game.startsAt * 1000
+
+      if (shouldGetLive) {
+        const liveData = await request<GameQuery, GameQueryVariables>({
+          url: graphql.live,
+          document: GameDocument,
+          variables,
+        })
+
+        if (liveData?.games?.[0]) {
+          game = liveData?.games?.[0]
+        }
+      }
+
+      return {
+        game,
+        isGameInLive: game?.gameId === gameId,
+      }
+    },
+    enabled: Boolean(gameId),
   })
-
-  const prematchGame = prematchData?.games?.[0]
-  const isPrematchGameStarted = prematchGame ? (
-    Date.now() >= +prematchGame.startsAt * 1000
-  ) : !isPrematchLoading
-
-  const { data: liveData, loading: isLiveLoading, error: liveError } = useQuery<GameQuery, GameQueryVariables>(GameDocument, {
-    variables,
-    ssr: false,
-    client: liveClient!,
-    skip: !gameId || !isPrematchGameStarted,
-  })
-
-  const liveGame = liveData?.games?.[0]
-
-  const game = liveGame || prematchGame
-  const isGameInLive = Boolean(liveGame)
-
-  return {
-    game,
-    loading: isPrematchLoading || isLiveLoading,
-    error: prematchError || liveError,
-    isGameInLive,
-  }
 }

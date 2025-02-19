@@ -7,8 +7,10 @@ import {
   type SportsQuery,
   type SportsQueryVariables,
   SportsDocument,
+  type ChainId,
+  chainsData,
 } from '@azuro-org/toolkit'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, queryOptions } from '@tanstack/react-query'
 import { request } from 'graphql-request'
 
 import { useChain } from '../../contexts/chain'
@@ -30,20 +32,22 @@ export type UseSportsProps = {
   isLive?: boolean
 }
 
-export const useSports = (props: UseSportsProps) => {
+const getSportsOptions = (props: UseSportsProps & { chainId: ChainId, startsAt?: number }) => {
   const {
+    chainId,
+    startsAt: _startsAt,
     filter,
     gameOrderBy = Game_OrderBy.StartsAt,
     orderDir = OrderDirection.Asc,
     isLive,
   } = props || {}
 
-  const { contracts, graphql } = useChain()
+  const { graphql, contracts } = chainsData[chainId]
 
-  const startsAt = getGameStartsAtValue()
   const gqlLink = isLive ? graphql.live : graphql.prematch
+  const startsAt = _startsAt || Math.floor(Date.now() / 1000)
 
-  const { data, ...rest } = useQuery({
+  return queryOptions({
     queryKey: [
       'sports',
       gqlLink,
@@ -110,6 +114,16 @@ export const useSports = (props: UseSportsProps) => {
       return sports
     },
   })
+}
+
+export const useSports = (props: UseSportsProps) => {
+  const { gameOrderBy = Game_OrderBy.StartsAt } = props || {}
+
+  const { appChain } = useChain()
+
+  const startsAt = getGameStartsAtValue()
+
+  const { data, ...rest } = useQuery(getSportsOptions({ ...props, chainId: appChain.id, startsAt }))
 
   const formattedSports = useMemo(() => {
     if (!data?.length) {
