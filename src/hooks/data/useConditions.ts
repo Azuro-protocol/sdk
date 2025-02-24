@@ -1,5 +1,3 @@
-import { useMemo } from 'react'
-import { type FetchPolicy, useQuery } from '@apollo/client'
 import {
   type Condition_Filter,
 
@@ -11,74 +9,93 @@ import {
   type LiveConditionsQueryVariables,
   LiveConditionsDocument,
 } from '@azuro-org/toolkit'
+import { useQuery } from '@tanstack/react-query'
+import { request } from 'graphql-request'
 
-import { useApolloClients } from '../../contexts/apollo'
 import { useChain } from '../../contexts/chain'
 
 
 type QueryProps = {
-  pollInterval?: number
-  skip?: boolean
-  fetchPolicy?: FetchPolicy
+  refetchInterval?: number
+  enabled?: boolean
 }
 
 type UseConditionsProps = {
   gameId: string | bigint
   filter?: Condition_Filter
-  prematchQuery?: QueryProps
-  liveQuery?: QueryProps
+  prematchQueryProps?: QueryProps
+  liveQueryProps?: QueryProps
 }
 
 const defaultQueryProps: QueryProps = {
-  pollInterval: undefined,
-  skip: false,
+  refetchInterval: undefined,
+  enabled: true,
 }
 
 export const useConditions = (props: UseConditionsProps) => {
-  const { gameId, filter, prematchQuery = defaultQueryProps, liveQuery = defaultQueryProps } = props
-  const { prematchClient, liveClient } = useApolloClients()
-  const { contracts } = useChain()
+  const { gameId, filter, prematchQueryProps = defaultQueryProps, liveQueryProps = defaultQueryProps } = props
+  const { appChain, contracts, graphql } = useChain()
 
-  const variables = useMemo<PrematchConditionsQueryVariables | LiveConditionsQueryVariables>(() => {
-    const vars: PrematchConditionsQueryVariables | LiveConditionsQueryVariables = {
-      where: {
-        game_: {
-          gameId,
+  const prematchQuery = useQuery({
+    queryKey: [
+      'prematch-conditions',
+      appChain.id,
+      gameId,
+      filter,
+    ],
+    queryFn: async () => {
+      const variables: PrematchConditionsQueryVariables = {
+        where: {
+          ...(filter || {}),
+          game_: {
+            gameId,
+          },
         },
-        ...(filter || {}),
-      },
-    }
+      }
 
-    return vars
-  }, [ gameId, filter ])
+      const { conditions } = await request<PrematchConditionsQuery, PrematchConditionsQueryVariables>({
+        url: graphql.prematch,
+        document: PrematchConditionsDocument,
+        variables,
+      })
 
-  const {
-    data: prematchData,
-    loading: isPrematchLoading,
-    error: prematchError,
-  } = useQuery<PrematchConditionsQuery, PrematchConditionsQueryVariables>(PrematchConditionsDocument, {
-    variables: variables as PrematchConditionsQueryVariables,
-    ssr: false,
-    client: prematchClient!,
-    notifyOnNetworkStatusChange: true,
-    ...prematchQuery,
+      return conditions
+    },
+    enabled: Boolean(gameId) && (prematchQueryProps.enabled ?? true),
+    refetchInterval: prematchQueryProps?.refetchInterval,
   })
-  const {
-    data: liveData,
-    loading: isLiveLoading,
-    error: liveError,
-  } = useQuery<LiveConditionsQuery, LiveConditionsQueryVariables>(LiveConditionsDocument, {
-    variables: variables as LiveConditionsQueryVariables,
-    ssr: false,
-    client: liveClient!,
-    ...liveQuery,
-    skip: liveQuery.skip || !contracts.liveCore,
+
+  const liveQuery = useQuery({
+    queryKey: [
+      'live-conditions',
+      appChain.id,
+      gameId,
+      filter,
+    ],
+    queryFn: async () => {
+      const variables: LiveConditionsQueryVariables = {
+        where: {
+          ...(filter as any || {}),
+          game_: {
+            gameId,
+          },
+        },
+      }
+
+      const { conditions } = await request<LiveConditionsQuery, LiveConditionsQueryVariables>({
+        url: graphql.prematch,
+        document: LiveConditionsDocument,
+        variables,
+      })
+
+      return conditions
+    },
+    enabled: Boolean(gameId) && (liveQueryProps.enabled ?? true),
+    refetchInterval: liveQueryProps?.refetchInterval,
   })
 
   return {
-    prematchConditions: prematchData?.conditions,
-    liveConditions: liveData?.conditions,
-    loading: isPrematchLoading || isLiveLoading,
-    error: prematchError || liveError,
+    prematchQuery,
+    liveQuery,
   }
 }

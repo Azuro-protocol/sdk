@@ -11,12 +11,15 @@ type Props = {
 export const useResolvedMarkets = (props: Props) => {
   const { gameId } = props
 
-  const { loading, liveConditions, prematchConditions, error } = useConditions({
+  const { prematchQuery, liveQuery } = useConditions({
     gameId,
     filter: {
       status: ConditionStatus.Resolved,
     },
   })
+
+  const { data: prematchConditions } = prematchQuery
+  const { data: liveConditions } = liveQuery
 
   const prematchConditionIds = prematchConditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('_')
   const liveConditionIds = liveConditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('_')
@@ -60,10 +63,11 @@ export const useResolvedMarkets = (props: Props) => {
   }, [ prematchMarkets, liveMarkets ])
 
   return {
-    groupedMarkets,
-    prematchMarkets,
-    liveMarkets,
-    loading,
-    error,
+    data: {
+      groupedMarkets,
+      prematchMarkets,
+      liveMarkets,
+    },
+    isFetching: prematchQuery.isFetching || liveQuery.isFetching,
   }
 }
