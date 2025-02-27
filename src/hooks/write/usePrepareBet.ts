@@ -438,6 +438,15 @@ export const usePrepareBet = (props: Props) => {
         chainId: appChain.id,
       })
 
+      if (receipt?.status === 'reverted') {
+        betTx.reset()
+        updateLiveOrAABetTx({
+          data: undefined,
+          isPending: false,
+        })
+        throw new Error(`transaction ${receipt.transactionHash} was reverted`)
+      }
+
       refetchBetTokenBalance()
       refetchNativeBalance()
       allowanceTx.refetch()
@@ -453,15 +462,6 @@ export const usePrepareBet = (props: Props) => {
 
           return newFreeBets
         })
-      }
-
-      if (receipt?.status === 'reverted') {
-        betTx.reset()
-        updateLiveOrAABetTx({
-          data: undefined,
-          isPending: false,
-        })
-        throw new Error(`transaction ${receipt.transactionHash} was reverted`)
       }
 
       if (receipt) {

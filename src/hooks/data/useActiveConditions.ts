@@ -1,7 +1,9 @@
-import { type Condition_Filter, ConditionStatus, MARGIN_DECIMALS } from '@azuro-org/toolkit'
+import { type FetchPolicy } from '@apollo/client'
+import {
+  type Condition_Filter, ConditionStatus, MARGIN_DECIMALS, type OrderDirection, type PrematchConditionOrderBy,
+} from '@azuro-org/toolkit'
 import { useMemo } from 'react'
 import { parseUnits } from 'viem'
-import { type FetchPolicy } from '@apollo/client'
 
 import { useConditions } from './useConditions'
 
@@ -10,6 +12,8 @@ type UseConditionsProps = {
   gameId: string | bigint
   isLive: boolean
   livePollInterval?: number
+  orderBy?: PrematchConditionOrderBy
+  orderDirection?: OrderDirection
   filter?: {
     outcomeIds?: string[]
     maxMargin?: number
@@ -18,7 +22,7 @@ type UseConditionsProps = {
 }
 
 export const useActiveConditions = (props: UseConditionsProps) => {
-  const { gameId, isLive, livePollInterval, filter, fetchPolicy } = props
+  const { gameId, isLive, livePollInterval, filter, fetchPolicy, orderBy, orderDirection } = props
 
   const conditionsFilter = useMemo<Condition_Filter>(() => {
     const _filter: Condition_Filter = {
@@ -40,6 +44,8 @@ export const useActiveConditions = (props: UseConditionsProps) => {
   const { prematchConditions, liveConditions, loading, error } = useConditions({
     gameId,
     filter: conditionsFilter,
+    orderBy,
+    orderDirection,
     prematchQuery: {
       skip: isLive,
       fetchPolicy,

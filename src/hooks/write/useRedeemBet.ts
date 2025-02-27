@@ -8,6 +8,8 @@ import { useChain } from '../../contexts/chain'
 import { useBetsCache } from '../useBetsCache'
 import { type Bet } from '../../global'
 import { useExtendedAccount, useAAWalletClient } from '../useAaConnector'
+import { useBetTokenBalance } from '../useBetTokenBalance'
+import { useNativeBalance } from '../useNativeBalance'
 
 
 type SubmitProps = {
@@ -22,9 +24,10 @@ type AaTxState = {
 
 export const useRedeemBet = () => {
   const { contracts, appChain } = useChain()
-  const wagmiConfig = useConfig()
   const { updateBetCache } = useBetsCache()
-
+  const { refetch: refetchBetTokenBalance } = useBetTokenBalance()
+  const { refetch: refetchNativeBalance } = useNativeBalance()
+  const wagmiConfig = useConfig()
   const redeemTx = useSendTransaction()
   const account = useExtendedAccount()
   const aaClient = useAAWalletClient()
@@ -132,6 +135,9 @@ export const useRedeemBet = () => {
       })
       throw new Error(`transaction ${receipt.transactionHash} was reverted`)
     }
+
+    refetchBetTokenBalance()
+    refetchNativeBalance()
 
     bets.forEach(({ tokenId, coreAddress }) => {
       updateBetCache({

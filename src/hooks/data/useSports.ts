@@ -44,7 +44,7 @@ export const useSports = (props: UseSportsProps) => {
 
   const startsAt = getGameStartsAtValue()
 
-  const options = useMemo<QueryHookOptions<SportsQuery, SportsQueryVariables>>(() => {
+  const variables = useMemo<SportsQueryVariables>(() => {
     const variables: SportsQueryVariables = {
       first: filter?.limit || 1000,
       sportFilter: {},
@@ -79,6 +79,7 @@ export const useSports = (props: UseSportsProps) => {
     }
     else {
       variables.gameFilter!.startsAt_gt = startsAt
+      variables.gameFilter!.liquidityPool = contracts.lp.address.toLowerCase()
     }
 
     variables.leagueFilter!.games_ = variables.gameFilter!
@@ -87,12 +88,7 @@ export const useSports = (props: UseSportsProps) => {
       variables.leagueFilter!.slug = filter.leagueSlug
     }
 
-    return {
-      variables,
-      ssr: false,
-      client: isLive ? liveClient! : prematchClient!,
-      notifyOnNetworkStatusChange: true,
-    }
+    return variables
   }, [
     isLive,
     gameOrderBy,
@@ -104,13 +100,15 @@ export const useSports = (props: UseSportsProps) => {
     filter?.countrySlug,
     filter?.leagueSlug,
     filter?.sportIds?.join('-'),
+    contracts.lp.address.toLowerCase(),
   ])
 
-  if (!isLive) {
-    options.variables!.gameFilter!.liquidityPool = contracts.lp.address.toLowerCase()
-  }
-
-  const { data, loading, error } = useQuery<SportsQuery, SportsQueryVariables>(SportsDocument, options)
+  const { data, loading, error } = useQuery<SportsQuery, SportsQueryVariables>(SportsDocument, {
+    variables,
+    ssr: false,
+    client: isLive ? liveClient! : prematchClient!,
+    notifyOnNetworkStatusChange: true,
+  })
 
   const { sports } = data || { sports: [] }
 

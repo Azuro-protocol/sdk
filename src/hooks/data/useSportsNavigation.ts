@@ -17,18 +17,20 @@ type UseNavigationProps = {
     sportHub?: SportHub
     sportIds?: Array<string | number>
   }
+  pollInterval?: number
+  notifyOnNetworkStatusChange?: boolean
   withGameCount?: boolean
   isLive?: boolean
 }
 
 export const useSportsNavigation = (props: UseNavigationProps = {}) => {
-  const { filter, withGameCount = false, isLive } = props
+  const { filter, withGameCount = false, isLive, pollInterval, notifyOnNetworkStatusChange = true } = props
 
   const { prematchClient, liveClient } = useApolloClients()
 
   const startsAt = getGameStartsAtValue()
 
-  const options = useMemo<QueryHookOptions<SportsNavigationQuery, SportsNavigationQueryVariables>>(() => {
+  const variables = useMemo<SportsNavigationQueryVariables>(() => {
     const variables: SportsNavigationQueryVariables = {
       first: 1000,
       withGameCount,
@@ -54,12 +56,7 @@ export const useSportsNavigation = (props: UseNavigationProps = {}) => {
       variables.sportFilter!.sportId_in = filter?.sportIds
     }
 
-    return {
-      variables,
-      ssr: false,
-      client: isLive ? liveClient! : prematchClient!,
-      notifyOnNetworkStatusChange: true,
-    }
+    return variables
   }, [
     withGameCount,
     startsAt,
@@ -68,7 +65,13 @@ export const useSportsNavigation = (props: UseNavigationProps = {}) => {
     filter?.sportIds?.join('-'),
   ])
 
-  const { data, loading, error } = useQuery<SportsNavigationQuery, SportsNavigationQueryVariables>(SportsNavigationDocument, options)
+  const { data, loading, error } = useQuery<SportsNavigationQuery, SportsNavigationQueryVariables>(SportsNavigationDocument, {
+    variables,
+    ssr: false,
+    client: isLive ? liveClient! : prematchClient!,
+    notifyOnNetworkStatusChange,
+    pollInterval,
+  })
 
   return {
     sports: data?.sports,
