@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { GameStatus, groupConditionsByMarket } from '@azuro-org/toolkit'
+import { GameStatus, groupConditionsByMarket, type OrderDirection, type PrematchConditionOrderBy } from '@azuro-org/toolkit'
 import { type FetchPolicy } from '@apollo/client'
 
 import { useActiveConditions } from './useActiveConditions'
@@ -14,10 +14,12 @@ type Props = {
   }
   livePollInterval?: number
   fetchPolicy?: FetchPolicy
+  orderBy?: PrematchConditionOrderBy
+  orderDirection?: OrderDirection
 }
 
 export const useActiveMarkets = (props: Props) => {
-  const { gameId, gameStatus, filter, livePollInterval, fetchPolicy } = props
+  const { gameId, gameStatus, filter, livePollInterval, fetchPolicy, orderDirection, orderBy } = props
 
   const { loading, conditions, error } = useActiveConditions({
     gameId,
@@ -25,6 +27,8 @@ export const useActiveMarkets = (props: Props) => {
     isLive: gameStatus === GameStatus.Live,
     livePollInterval,
     fetchPolicy,
+    orderBy,
+    orderDirection,
   })
 
   // generate unique key for memo deps

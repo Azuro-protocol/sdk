@@ -46,7 +46,7 @@ export const useGames = (props?: UseGamesProps) => {
 
   const startsAt = getGameStartsAtValue()
 
-  const options = useMemo<QueryHookOptions<GamesQuery, GamesQueryVariables>>(() => {
+  const variables = useMemo<GamesQueryVariables>(() => {
     const variables: GamesQueryVariables = {
       first: 1000,
       orderBy,
@@ -104,12 +104,7 @@ export const useGames = (props?: UseGamesProps) => {
       }
     }
 
-    return {
-      variables,
-      ssr: false,
-      client: isLive ? liveClient! : prematchClient!,
-      notifyOnNetworkStatusChange: true,
-    }
+    return variables
   }, [
     filter?.limit,
     filter?.offset,
@@ -125,7 +120,12 @@ export const useGames = (props?: UseGamesProps) => {
     isLive,
   ])
 
-  const { data, loading, error } = useQuery<GamesQuery, GamesQueryVariables>(GamesDocument, options)
+  const { data, loading, error } = useQuery<GamesQuery, GamesQueryVariables>(GamesDocument, {
+    variables,
+    ssr: false,
+    client: isLive ? liveClient! : prematchClient!,
+    notifyOnNetworkStatusChange: true,
+  })
 
   return {
     games: data?.games,

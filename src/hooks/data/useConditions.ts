@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
 import { type FetchPolicy, useQuery } from '@apollo/client'
 import {
+  type OrderDirection,
   type Condition_Filter,
-
+  type PrematchConditionOrderBy,
   type PrematchConditionsQuery,
   type PrematchConditionsQueryVariables,
   PrematchConditionsDocument,
@@ -25,6 +26,8 @@ type QueryProps = {
 type UseConditionsProps = {
   gameId: string | bigint
   filter?: Condition_Filter
+  orderBy?: PrematchConditionOrderBy
+  orderDirection?: OrderDirection
   prematchQuery?: QueryProps
   liveQuery?: QueryProps
 }
@@ -35,7 +38,7 @@ const defaultQueryProps: QueryProps = {
 }
 
 export const useConditions = (props: UseConditionsProps) => {
-  const { gameId, filter, prematchQuery = defaultQueryProps, liveQuery = defaultQueryProps } = props
+  const { gameId, filter, orderDirection, orderBy, prematchQuery = defaultQueryProps, liveQuery = defaultQueryProps } = props
   const { prematchClient, liveClient } = useApolloClients()
   const { contracts } = useChain()
 
@@ -47,10 +50,12 @@ export const useConditions = (props: UseConditionsProps) => {
         },
         ...(filter || {}),
       },
+      orderBy,
+      orderDirection,
     }
 
     return vars
-  }, [ gameId, filter ])
+  }, [ gameId, filter, orderDirection, orderBy ])
 
   const {
     data: prematchData,
