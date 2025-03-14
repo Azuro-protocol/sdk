@@ -7,5 +7,9 @@ export const formatToFixed = (value: string | number, digitsCount: number): stri
 
   const [ int, digits ] = value.split('.')
 
+  if (digitsCount === 0) {
+    return int!
+  }
+
   return `${int}.${digits!.substring(0, digitsCount)}`
 }

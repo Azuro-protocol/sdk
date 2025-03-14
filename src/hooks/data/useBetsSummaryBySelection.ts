@@ -98,15 +98,22 @@ export const useBetsSummaryBySelection = ({ account, gameId, gameStatus, keyStru
         }
 
         if (isExpress) {
-          const { rawOdds } = selection as GameBetsQuery['bets'][0]['selections'][0]
+          const { rawOdds: _rawOdds } = selection as GameBetsQuery['bets'][0]['selections'][0]
 
-          const rawSubBetOdds = parseUnits(String(BigInt(rawOdds) - rawOne), DIVIDER)
-          const rawSubBetAmount = rawAmount * ( rawSubBetOdds / rawOddsSummary )
+          const rawOdds = BigInt(_rawOdds)
+          const rawSubBetOdds = parseUnits(String(rawOdds - rawOne), DIVIDER)
+          const rawPartialOdds = rawSubBetOdds / rawOddsSummary / BigInt(10 ** (DIVIDER - ODDS_DECIMALS))
+          const rawSubBetAmount = rawAmount * rawPartialOdds / BigInt(10 ** ODDS_DECIMALS)
 
-          acc[key]! += isWin ? rawSubBetAmount * BigInt(rawOdds) : -rawSubBetAmount
+          if (isWin) {
+            acc[key]! += rawSubBetAmount * rawOdds / BigInt(10 ** ODDS_DECIMALS)
+          }
+          else {
+            acc[key]! += rawSubBetAmount
+          }
         }
         else {
-          acc[key]! += parseUnits(String(isWin ? rawPayout : -rawAmount), DIVIDER)
+          acc[key]! += isWin ? rawPayout : -rawAmount
         }
       })
 
@@ -114,7 +121,7 @@ export const useBetsSummaryBySelection = ({ account, gameId, gameStatus, keyStru
     }, {})
 
     return Object.keys(rawSummary).reduce<Record<string, string>>((acc, key) => {
-      acc[key] = formatUnits(rawSummary[key]!, betToken.decimals + DIVIDER)
+      acc[key] = formatUnits(rawSummary[key]!, betToken.decimals)
 
       return acc
     }, {})
