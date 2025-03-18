@@ -1,21 +1,18 @@
-import { useMemo } from 'react'
 import {
-  PrematchGraphGameStatus,
+  GameState,
   Game_OrderBy,
   OrderDirection,
 
   type SportsQuery,
   type SportsQueryVariables,
   SportsDocument,
-  type ChainId,
-  chainsData,
 } from '@azuro-org/toolkit'
-import { useQuery, queryOptions } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { request } from 'graphql-request'
+import { useCallback } from 'react'
 
 import { useChain } from '../../contexts/chain'
-import { getGameStartsAtValue } from '../../helpers'
-import type { SportHub } from '../../global'
+import { type QueryParameter, type SportHub } from '../../global'
 
 
 export type UseSportsProps = {
@@ -30,106 +27,23 @@ export type UseSportsProps = {
   gameOrderBy?: Game_OrderBy.Turnover | Game_OrderBy.StartsAt
   orderDir?: OrderDirection
   isLive?: boolean
+  query?: QueryParameter<SportsQuery['sports']>
 }
 
-const getSportsOptions = (props: UseSportsProps & { chainId: ChainId, startsAt?: number }) => {
+export const useSports = (props: UseSportsProps = {}) => {
   const {
-    chainId,
-    startsAt: _startsAt,
-    filter,
+    filter = {},
     gameOrderBy = Game_OrderBy.StartsAt,
     orderDir = OrderDirection.Asc,
     isLive,
-  } = props || {}
+    query = {},
+  } = props
 
-  const { graphql, contracts } = chainsData[chainId]
+  const { graphql } = useChain()
 
-  const gqlLink = isLive ? graphql.live : graphql.prematch
-  const startsAt = _startsAt || Math.floor(Date.now() / 1000)
+  const gqlLink = graphql.feed
 
-  return queryOptions({
-    queryKey: [
-      'sports',
-      gqlLink,
-      gameOrderBy,
-      orderDir,
-      startsAt,
-      filter?.limit,
-      filter?.sportHub,
-      filter?.sportSlug,
-      filter?.countrySlug,
-      filter?.leagueSlug,
-      filter?.sportIds?.join('-'),
-    ],
-    queryFn: async () => {
-      const variables: SportsQueryVariables = {
-        first: filter?.limit || 1000,
-        sportFilter: {},
-        countryFilter: {},
-        leagueFilter: {},
-        gameFilter: {
-          hasActiveConditions: true,
-          status_in: [ PrematchGraphGameStatus.Created, PrematchGraphGameStatus.Paused ],
-        },
-        gameOrderBy,
-        gameOrderDirection: orderDir,
-      }
-
-      if (filter?.sportSlug) {
-        variables.sportFilter!.slug = filter.sportSlug
-      }
-
-      if (filter?.sportHub) {
-        variables.sportFilter!.sporthub = filter.sportHub
-      }
-
-      if (filter?.sportIds?.length) {
-        variables.sportFilter!.sportId_in = filter?.sportIds
-      }
-
-      if (filter?.countrySlug) {
-        variables.countryFilter!.slug = filter.countrySlug
-      }
-
-      if (isLive) {
-        variables.gameFilter!.startsAt_lt = startsAt
-      }
-      else {
-        variables.gameFilter!.startsAt_gt = startsAt
-        variables.gameFilter!.liquidityPool = contracts.lp.address.toLowerCase()
-      }
-
-      variables.leagueFilter!.games_ = variables.gameFilter!
-
-      if (filter?.leagueSlug) {
-        variables.leagueFilter!.slug = filter.leagueSlug
-      }
-
-      const { sports } = await request<SportsQuery, SportsQueryVariables>({
-        url: gqlLink,
-        document: SportsDocument,
-        variables,
-      })
-
-      return sports
-    },
-  })
-}
-
-export const useSports = (props: UseSportsProps) => {
-  const { gameOrderBy = Game_OrderBy.StartsAt } = props || {}
-
-  const { appChain } = useChain()
-
-  const startsAt = getGameStartsAtValue()
-
-  const { data, ...rest } = useQuery(getSportsOptions({ ...props, chainId: appChain.id, startsAt }))
-
-  const formattedSports = useMemo(() => {
-    if (!data?.length) {
-      return []
-    }
-
+  const formatData = useCallback((data: SportsQuery['sports']) => {
     const filteredSports = data.map(sport => {
       const { countries } = sport
 
@@ -179,12 +93,76 @@ export const useSports = (props: UseSportsProps) => {
         }
       }).sort((a, b) => +a.countries[0]!.leagues[0]!.games[0]!.startsAt - +b.countries[0]!.leagues[0]!.games[0]!.startsAt)
     }
+  }, [])
 
-    return filteredSports
-  }, [ data ])
+  return useQuery({
+    queryKey: [
+      'sports',
+      isLive,
+      gqlLink,
+      gameOrderBy,
+      orderDir,
+      filter.limit,
+      filter.sportHub,
+      filter.sportSlug,
+      filter.countrySlug,
+      filter.leagueSlug,
+      filter.sportIds?.join('-'),
+    ],
+    queryFn: async () => {
+      const variables: SportsQueryVariables = {
+        first: filter.limit ?? 1000,
+        sportFilter: {},
+        countryFilter: {},
+        leagueFilter: {},
+        gameFilter: {
+          state: isLive ? GameState.Live : GameState.Prematch,
+        },
+        gameOrderBy,
+        gameOrderDirection: orderDir,
+      }
 
-  return {
-    data: formattedSports,
-    ...rest,
-  }
+      if (isLive) {
+        variables.sportFilter!.activeLiveGamesCount_not = 0
+        variables.countryFilter!.activeLiveGamesCount_not = 0
+        variables.leagueFilter!.activeLiveGamesCount_not = 0
+      }
+      else {
+        variables.sportFilter!.activePrematchGamesCount_not = 0
+        variables.countryFilter!.activePrematchGamesCount_not = 0
+        variables.leagueFilter!.activePrematchGamesCount_not = 0
+      }
+
+      if (filter.sportSlug) {
+        variables.sportFilter!.slug = filter.sportSlug
+      }
+
+      if (filter.sportHub) {
+        variables.sportFilter!.sporthub = filter.sportHub
+      }
+
+      if (filter.sportIds?.length) {
+        variables.sportFilter!.sportId_in = filter.sportIds
+      }
+
+      if (filter.countrySlug) {
+        variables.countryFilter!.slug = filter.countrySlug
+      }
+
+      if (filter.leagueSlug) {
+        variables.leagueFilter!.slug = filter.leagueSlug
+      }
+
+      const { sports } = await request<SportsQuery, SportsQueryVariables>({
+        url: gqlLink,
+        document: SportsDocument,
+        variables,
+      })
+
+      return sports
+    },
+    select: formatData,
+    refetchOnWindowFocus: false,
+    ...query,
+  })
 }

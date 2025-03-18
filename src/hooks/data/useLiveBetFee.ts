@@ -25,7 +25,7 @@ export const useLiveBetFee = ({ enabled }: Props = { enabled: true }) => {
     }
   }
 
-  let { isFetching, data, refetch } = useQuery({
+  let { data, ...rest } = useQuery({
     queryKey: [ '/live-bet-fee', appChain.id ],
     queryFn,
     enabled,
@@ -38,10 +38,7 @@ export const useLiveBetFee = ({ enabled }: Props = { enabled: true }) => {
   }
 
   return {
-    gasAmount: data?.gasAmount,
-    relayerFeeAmount: data?.relayerFeeAmount,
-    formattedRelayerFeeAmount: data?.formattedRelayerFeeAmount,
-    refetch,
-    loading: isFetching,
+    data,
+    ...rest,
   }
 }

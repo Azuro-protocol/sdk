@@ -1,101 +1,86 @@
 import {
   type Condition_Filter,
-
-  type PrematchConditionsQuery,
-  type PrematchConditionsQueryVariables,
-  PrematchConditionsDocument,
-
-  type LiveConditionsQuery,
-  type LiveConditionsQueryVariables,
-  LiveConditionsDocument,
+  type ConditionsQuery,
+  type ConditionsQueryVariables,
+  ConditionsDocument,
 } from '@azuro-org/toolkit'
 import { useQuery } from '@tanstack/react-query'
 import { request } from 'graphql-request'
 
 import { useChain } from '../../contexts/chain'
+import { type QueryParameter } from '../../global'
 
-
-type QueryProps = {
-  refetchInterval?: number
-  enabled?: boolean
-}
 
 type UseConditionsProps = {
   gameId: string | bigint
   filter?: Condition_Filter
-  prematchQueryProps?: QueryProps
-  liveQueryProps?: QueryProps
-}
-
-const defaultQueryProps: QueryProps = {
-  refetchInterval: undefined,
-  enabled: true,
+  query?: QueryParameter<ConditionsQuery['conditions']>
 }
 
 export const useConditions = (props: UseConditionsProps) => {
-  const { gameId, filter, prematchQueryProps = defaultQueryProps, liveQueryProps = defaultQueryProps } = props
-  const { appChain, contracts, graphql } = useChain()
+  const { gameId, filter = {}, query = {} } = props
+  const { appChain, graphql } = useChain()
 
-  const prematchQuery = useQuery({
+  return useQuery({
     queryKey: [
-      'prematch-conditions',
+      'conditions',
       appChain.id,
       gameId,
       filter,
     ],
     queryFn: async () => {
-      const variables: PrematchConditionsQueryVariables = {
+      const variables: ConditionsQueryVariables = {
         where: {
-          ...(filter || {}),
+          ...filter,
           game_: {
             gameId,
           },
         },
       }
 
-      const { conditions } = await request<PrematchConditionsQuery, PrematchConditionsQueryVariables>({
-        url: graphql.prematch,
-        document: PrematchConditionsDocument,
+      const { conditions } = await request<ConditionsQuery, ConditionsQueryVariables>({
+        url: graphql.feed,
+        document: ConditionsDocument,
         variables,
       })
 
       return conditions
     },
-    enabled: Boolean(gameId) && (prematchQueryProps.enabled ?? true),
-    refetchInterval: prematchQueryProps?.refetchInterval,
+    refetchOnWindowFocus: false,
+    ...query,
   })
 
-  const liveQuery = useQuery({
-    queryKey: [
-      'live-conditions',
-      appChain.id,
-      gameId,
-      filter,
-    ],
-    queryFn: async () => {
-      const variables: LiveConditionsQueryVariables = {
-        where: {
-          ...(filter as any || {}),
-          game_: {
-            gameId,
-          },
-        },
-      }
+  // const liveQuery = useQuery({
+  //   queryKey: [
+  //     'live-conditions',
+  //     appChain.id,
+  //     gameId,
+  //     filter,
+  //   ],
+  //   queryFn: async () => {
+  //     const variables: LiveConditionsQueryVariables = {
+  //       where: {
+  //         ...(filter as any || {}),
+  //         game_: {
+  //           gameId,
+  //         },
+  //       },
+  //     }
 
-      const { conditions } = await request<LiveConditionsQuery, LiveConditionsQueryVariables>({
-        url: graphql.prematch,
-        document: LiveConditionsDocument,
-        variables,
-      })
+  //     const { conditions } = await request<LiveConditionsQuery, LiveConditionsQueryVariables>({
+  //       url: graphql.prematch,
+  //       document: LiveConditionsDocument,
+  //       variables,
+  //     })
 
-      return conditions
-    },
-    enabled: Boolean(gameId) && (liveQueryProps.enabled ?? true),
-    refetchInterval: liveQueryProps?.refetchInterval,
-  })
+  //     return conditions
+  //   },
+  //   enabled: Boolean(gameId) && (liveQueryProps.enabled ?? true),
+  //   refetchInterval: liveQueryProps?.refetchInterval,
+  // })
 
-  return {
-    prematchQuery,
-    liveQuery,
-  }
+  // return {
+  //   prematchQuery,
+  //   liveQuery,
+  // }
 }

@@ -60,9 +60,7 @@ export const usePrepareBet = (props: Props) => {
     totalOdds, freeBet, betGas, liveEIP712Attention, onSuccess, onError,
   } = props
 
-  const isLiveBet = useMemo(() => {
-    return selections.some(({ coreAddress }) => coreAddress === liveHostAddress)
-  }, [ selections ])
+  const isLiveBet = true
   const isCombo = !isLiveBet && selections.length > 1
   const isBatch = isCombo && typeof _betAmount === 'object'
   const isFreeBet = Boolean(freeBet) && !isCombo && !isBatch
@@ -76,12 +74,12 @@ export const usePrepareBet = (props: Props) => {
   const wagmiConfig = useConfig()
   const walletClient = useWalletClient()
   const {
-    relayerFeeAmount: rawRelayerFeeAmount,
-    formattedRelayerFeeAmount: relayerFeeAmount,
-    loading: isRelayerFeeFetching,
+    data: liveBetFeeData,
+    isFetching: isRelayerFeeFetching,
   } = useLiveBetFee({
     enabled: isLiveBet,
   })
+  const { relayerFeeAmount: rawRelayerFeeAmount, formattedRelayerFeeAmount: relayerFeeAmount } = liveBetFeeData || {}
   const { addBet } = useBetsCache()
   const { refetch: refetchBetTokenBalance } = useBetTokenBalance()
   const { refetch: refetchNativeBalance } = useNativeBalance()
@@ -288,50 +286,50 @@ export const usePrepareBet = (props: Props) => {
         }
       }
       else if (isFreeBet) {
-        const { coreAddress, conditionId, outcomeId } = selections[0]!
-        const { id, expiresAt, contractAddress, rawMinOdds, rawAmount, signature, chainId } = freeBet!
+        // const { coreAddress, conditionId, outcomeId } = selections[0]!
+        // const { id, expiresAt, contractAddress, rawMinOdds, rawAmount, signature, chainId } = freeBet!
 
-        const fixedSelectionMinOdds = calcMindOdds({ odds: odds[`${conditionId}-${outcomeId}`]!, slippage })
-        const rawSelectionMinOdds = parseUnits(fixedSelectionMinOdds, ODDS_DECIMALS)
-        const rawFreeBetMinOdds = rawMinOdds > rawSelectionMinOdds ? rawMinOdds : rawSelectionMinOdds
+        // const fixedSelectionMinOdds = calcMindOdds({ odds: odds[`${conditionId}-${outcomeId}`]!, slippage })
+        // const rawSelectionMinOdds = parseUnits(fixedSelectionMinOdds, ODDS_DECIMALS)
+        // const rawFreeBetMinOdds = rawMinOdds > rawSelectionMinOdds ? rawMinOdds : rawSelectionMinOdds
 
-        bets.push({
-          rawAmount,
-          selections,
-          freebetContractAddress: contractAddress,
-          freebetId: String(id),
-        })
+        // bets.push({
+        //   rawAmount,
+        //   selections,
+        //   freebetContractAddress: contractAddress,
+        //   freebetId: String(id),
+        // })
 
-        const data = encodeFunctionData({
-          abi: freeBetAbi,
-          functionName: 'bet',
-          args: [
-            {
-              chainId: BigInt(chainId),
-              expiresAt: BigInt(Math.floor(expiresAt / 1000)),
-              amount: rawAmount,
-              freeBetId: BigInt(id),
-              minOdds: rawMinOdds,
-              owner: account.address!,
-            },
-            signature,
-            coreAddress as Address,
-            BigInt(conditionId),
-            BigInt(outcomeId),
-            rawDeadline,
-            rawFreeBetMinOdds,
-          ],
-        })
+        // const data = encodeFunctionData({
+        //   abi: freeBetAbi,
+        //   functionName: 'bet',
+        //   args: [
+        //     {
+        //       chainId: BigInt(chainId),
+        //       expiresAt: BigInt(Math.floor(expiresAt / 1000)),
+        //       amount: rawAmount,
+        //       freeBetId: BigInt(id),
+        //       minOdds: rawMinOdds,
+        //       owner: account.address!,
+        //     },
+        //     signature,
+        //     coreAddress as Address,
+        //     BigInt(conditionId),
+        //     BigInt(outcomeId),
+        //     rawDeadline,
+        //     rawFreeBetMinOdds,
+        //   ],
+        // })
 
-        txHash = isAAWallet ? (
-          await aaClient!.sendTransaction({ to: contractAddress, data, chain: appChain })
-        ) : (
-          await betTx.sendTransactionAsync({
-            to: contractAddress,
-            data,
-            ...(betGas || {}),
-          })
-        )
+        // txHash = isAAWallet ? (
+        //   await aaClient!.sendTransaction({ to: contractAddress, data, chain: appChain })
+        // ) : (
+        //   await betTx.sendTransactionAsync({
+        //     to: contractAddress,
+        //     data,
+        //     ...(betGas || {}),
+        //   })
+        // )
       }
       else {
         let betData
@@ -434,7 +432,7 @@ export const usePrepareBet = (props: Props) => {
       }
 
       const receipt = await waitForTransactionReceipt(wagmiConfig, {
-        hash: txHash,
+        hash: txHash!,
         chainId: appChain.id,
       })
 

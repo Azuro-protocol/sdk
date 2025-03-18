@@ -1,12 +1,10 @@
-import { parseUnits } from 'viem'
 import {
-  PrematchGraphGameStatus,
+  GameState,
   Game_OrderBy,
   OrderDirection,
   GamesDocument,
-  MARGIN_DECIMALS,
 
-  type ConditionStatus,
+  type ConditionState,
   type GamesQuery,
   type GamesQueryVariables,
 } from '@azuro-org/toolkit'
@@ -14,8 +12,7 @@ import { useQuery } from '@tanstack/react-query'
 import { request } from 'graphql-request'
 
 import { useChain } from '../../contexts/chain'
-import { getGameStartsAtValue } from '../../helpers'
-import { type SportHub } from '../../global'
+import { type QueryParameter, type SportHub } from '../../global'
 
 
 export type UseGamesProps = {
@@ -26,41 +23,41 @@ export type UseGamesProps = {
     sportSlug?: string
     sportIds?: Array<string | number>
     leagueSlug?: string | string[]
-    maxMargin?: number
-    conditionsStatus?: ConditionStatus | ConditionStatus[]
+    conditionsState?: ConditionState | ConditionState[]
   }
   orderBy?: Game_OrderBy
   orderDir?: OrderDirection
   isLive?: boolean
+  query?: QueryParameter<GamesQuery['games']>
 }
 
-export const useGames = (props?: UseGamesProps) => {
+export const useGames = (props: UseGamesProps = {}) => {
   const {
-    filter,
+    filter = {},
     orderBy = Game_OrderBy.CreatedBlockTimestamp,
     orderDir = OrderDirection.Desc,
     isLive,
-  } = props || {}
+    query = {},
+  } = props
+
   const { graphql } = useChain()
 
-  const startsAt = getGameStartsAtValue()
-  const gqlLink = isLive ? graphql.live : graphql.prematch
+  const gqlLink = graphql.feed
 
   return useQuery({
     queryKey: [
       'games',
       gqlLink,
-      filter?.limit,
-      filter?.offset,
-      filter?.sportHub,
-      filter?.sportSlug,
-      filter?.sportIds?.join('-'),
-      filter?.leagueSlug,
-      filter?.maxMargin,
-      filter?.conditionsStatus,
+      isLive,
+      filter.limit,
+      filter.offset,
+      filter.sportHub,
+      filter.sportSlug,
+      filter.sportIds?.join('-'),
+      filter.leagueSlug,
+      filter.conditionsState,
       orderBy,
       orderDir,
-      startsAt,
     ],
     queryFn: async () => {
       const variables: GamesQueryVariables = {
@@ -68,55 +65,44 @@ export const useGames = (props?: UseGamesProps) => {
         orderBy,
         orderDirection: orderDir,
         where: {
-          hasActiveConditions: true,
-          status_in: [ PrematchGraphGameStatus.Created, PrematchGraphGameStatus.Paused ],
+          activeConditionsCount_not: 0,
+          state: isLive ? GameState.Live : GameState.Prematch,
           conditions_: {},
           sport_: {},
           league_: {},
         },
       }
 
-      if (isLive) {
-        variables.where.startsAt_lt = startsAt
-      }
-      else {
-        variables.where.startsAt_gt = startsAt
-      }
-
-      if (filter?.limit) {
+      if (filter.limit) {
         variables.first = filter.limit
       }
 
-      if (filter?.offset) {
+      if (filter.offset) {
         variables.skip = filter.offset
       }
 
-      if (filter?.sportHub) {
+      if (filter.sportHub) {
         variables.where.sport_!.sporthub = filter.sportHub
       }
 
-      if (filter?.sportSlug) {
+      if (filter.sportSlug) {
         variables.where.sport_!.slug_starts_with_nocase = filter.sportSlug
       }
 
-      if (filter?.sportIds?.length) {
+      if (filter.sportIds?.length) {
         variables.where.sport_!.sportId_in = filter?.sportIds
       }
 
-      if (filter?.leagueSlug) {
+      if (filter.leagueSlug) {
         variables.where.league_!.slug_in = typeof filter.leagueSlug === 'string' ? [ filter.leagueSlug ] : filter.leagueSlug
       }
 
-      if (filter?.maxMargin) {
-        variables.where.conditions_!.margin_lte = parseUnits(String(filter.maxMargin), MARGIN_DECIMALS).toString()
-      }
-
-      if (filter?.conditionsStatus) {
-        if (typeof filter.conditionsStatus === 'string') {
-          variables.where.conditions_!.status = filter.conditionsStatus
+      if (filter.conditionsState) {
+        if (typeof filter.conditionsState === 'string') {
+          variables.where.conditions_!.state = filter.conditionsState
         }
         else {
-          variables.where.conditions_!.status_in = filter.conditionsStatus
+          variables.where.conditions_!.state_in = filter.conditionsState
         }
       }
 
@@ -128,5 +114,7 @@ export const useGames = (props?: UseGamesProps) => {
 
       return games
     },
+    refetchOnWindowFocus: false,
+    ...query,
   })
 }

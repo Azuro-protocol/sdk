@@ -2,36 +2,33 @@ import React, { useContext, createContext, useState, useMemo, useCallback, useEf
 import type { ApolloCache, NormalizedCacheObject } from '@apollo/client'
 import {
   type Selection,
-  type MainGameInfoFragment,
-  type PrematchConditionFragment,
+  type GameInfoFragment,
+  type ConditionFragment,
 
-  ConditionStatus,
+  ConditionState,
   MIN_LIVE_BET_AMOUNT,
   liveHostAddress,
-  MainGameInfoFragmentDoc,
-  PrematchConditionFragmentDoc,
+  GameInfoFragmentDoc,
+  ConditionFragmentDoc,
 } from '@azuro-org/toolkit'
 import { type Address } from 'viem'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 import { base, baseSepolia } from 'viem/chains'
 
-import { useApolloClients } from './apollo'
 import { localStorageKeys } from '../config'
 import { useChain } from './chain'
 import { formatToFixed } from '../helpers'
 import { useOdds } from '../hooks/watch/useOdds'
-import { useStatuses } from '../hooks/watch/useStatuses'
+import { useSelectionsState } from '../hooks/watch/useSelectionsState'
 import { type FreeBet, useFreeBets } from '../hooks/data/useFreeBets'
 import useForceUpdate from '../helpers/hooks/useForceUpdate'
 import { useExtendedAccount } from '../hooks/useAaConnector'
 
 
 export enum BetslipDisableReason {
-  ConditionStatus = 'ConditionStatus',
+  ConditionState = 'ConditionState',
   BetAmountGreaterThanMaxBet = 'BetAmountGreaterThanMaxBet',
   BetAmountLowerThanMinBet = 'BetAmountLowerThanMinBet',
-  BatchWithLive = 'BatchWithLive',
-  ComboWithLive = 'ComboWithLive',
   ComboWithForbiddenItem = 'ComboWithForbiddenItem',
   ComboWithSameGame = 'ComboWithSameGame',
   PrematchConditionInStartedGame = 'PrematchConditionInStartedGame',
@@ -60,7 +57,7 @@ type Game = {
 }
 
 export type BetslipItem = {
-  lpAddress: string
+  // lpAddress: string
   game: Game
   isExpressForbidden: boolean
   marketName: string
@@ -69,7 +66,7 @@ export type BetslipItem = {
 
 type AddItemProps = {
   gameId: string
-  lpAddress: string
+  // lpAddress: string
   isExpressForbidden: boolean
 } & Selection
 
@@ -93,15 +90,14 @@ export type DetailedBetslipContextValue = {
   minBet: number | undefined
   selectedFreeBet: FreeBet | undefined
   freeBets: FreeBet[] | undefined | null
-  statuses: Record<string, ConditionStatus>
+  states: Record<string, ConditionState>
   disableReason: BetslipDisableReason | undefined
   changeBetAmount: (value: string) => void
   changeBatchBetAmount: (item: ChangeBatchBetAmountItem, value: string) => void
   changeBatch: (value: boolean) => void
   selectFreeBet: (value?: FreeBet) => void
-  isLiveBet: boolean
   isBatch: boolean
-  isStatusesFetching: boolean
+  isStatesFetching: boolean
   isOddsFetching: boolean
   isFreeBetsFetching: boolean
   isBetAllowed: boolean
@@ -126,7 +122,6 @@ export type BetslipProviderProps = {
 export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
   const { children, affiliate, isBatchBetWithSameGameEnabled } = props
 
-  const { prematchClient, liveClient } = useApolloClients()
   const { appChain } = useChain()
   const account = useExtendedAccount()
   const { forceUpdate } = useForceUpdate()
@@ -142,8 +137,8 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     affiliate: affiliate!,
     enabled: Boolean(affiliate),
   })
-  const { odds, totalOdds, maxBet, loading: isOddsFetching } = useOdds({ betAmount, batchBetAmounts, selections: items })
-  const { statuses, loading: isStatusesFetching } = useStatuses({ selections: items })
+  const { odds, totalOdds, maxBet, isFetching: isOddsFetching } = useOdds({ betAmount, batchBetAmounts, selections: items })
+  const { states, isFetching: isStatesFetching } = useSelectionsState({ selections: items })
 
   const isCombo = !isBatch && items.length > 1
 
@@ -179,94 +174,86 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     return betAmount
   }, [ isBatch, betAmount, batchBetAmounts, selectedFreeBet ])
 
-  const isLiveBet = useMemo(() => {
-    return items.some(({ coreAddress }) => coreAddress === liveHostAddress)
-  }, [ items ])
+  // const isLiveBet = useMemo(() => {
+  //   return items.some(({ coreAddress }) => coreAddress === liveHostAddress)
+  // }, [ items ])
 
-  const isConditionsInCreatedStatus = useMemo(() => {
-    return Object.values(statuses).every(status => status === ConditionStatus.Created)
-  }, [ statuses ])
+  const isConditionsInActiveState = useMemo(() => {
+    return Object.values(states).every(state => state === ConditionState.Active)
+  }, [ states ])
 
   const isComboWithDifferentGames = useMemo(() => {
     return !isCombo || checkDifferentGames(items)
   }, [ isCombo, items ])
 
-  const isBatchAllowed = !isBatch || !isLiveBet
+  // const isFreeBetAllowed = useMemo(() => {
+  //   if (!selectedFreeBet || !totalOdds) {
+  //     return true
+  //   }
 
-  const isFreeBetAllowed = useMemo(() => {
-    if (!selectedFreeBet || !totalOdds) {
-      return true
-    }
-
-    return (
-      !isCombo && !isBatch && !isLiveBet
-      && selectedFreeBet.expiresAt > Date.now()
-      && totalOdds >= parseFloat(selectedFreeBet.minOdds)
-    )
-  }, [ selectedFreeBet, isCombo, isBatch, isLiveBet, totalOdds ])
+  //   return (
+  //     !isCombo && !isBatch && !isLiveBet
+  //     && selectedFreeBet.expiresAt > Date.now()
+  //     && totalOdds >= parseFloat(selectedFreeBet.minOdds)
+  //   )
+  // }, [ selectedFreeBet, isCombo, isBatch, isLiveBet, totalOdds ])
 
   const isComboAllowed = useMemo(() => {
-    return !isCombo || !isLiveBet && isComboWithDifferentGames && items.every(({ isExpressForbidden }) => !isExpressForbidden)
+    return !isCombo || isComboWithDifferentGames && items.every(({ isExpressForbidden }) => !isExpressForbidden)
   }, [ isCombo, items ])
 
-  const isPrematchBetAllowed = useMemo(() => {
-    return items.every(({ coreAddress, game: { startsAt } }) => {
-      if (coreAddress === liveHostAddress) {
-        return true
-      }
+  // const isPrematchBetAllowed = useMemo(() => {
+  //   return items.every(({ game: { startsAt } }) => {
 
-      return startsAt * 1000 > Date.now()
-    })
-  }, [ items ])
+  //     return startsAt * 1000 > Date.now()
+  //   })
+  // }, [ items ])
 
-  const minBet = isLiveBet && !appChain?.testnet ? MIN_LIVE_BET_AMOUNT : undefined
+  // const minBet = isLiveBet && !appChain?.testnet ? MIN_LIVE_BET_AMOUNT : undefined
+  const minBet = undefined
 
   const isAmountLowerThanMaxBet = Boolean(betAmount) && typeof maxBet !== 'undefined' ? +betAmount <= maxBet : true
   const isAmountBiggerThanMinBet = Boolean(betAmount) && typeof minBet !== 'undefined' ? +betAmount >= minBet : true
 
   const isBetAllowed = (
-    isConditionsInCreatedStatus
+    isConditionsInActiveState
     && isComboAllowed
-    && isBatchAllowed
-    && isPrematchBetAllowed
-    && isFreeBetAllowed
+    // && isPrematchBetAllowed
+    // && isFreeBetAllowed
     && isAmountLowerThanMaxBet
     && isAmountBiggerThanMinBet
   )
 
   let disableReason = (() => {
-    if (!isConditionsInCreatedStatus) {
-      return BetslipDisableReason.ConditionStatus
+    if (!isConditionsInActiveState) {
+      return BetslipDisableReason.ConditionState
     }
 
-    if (!isFreeBetAllowed) {
-      if (isLiveBet) {
-        return BetslipDisableReason.FreeBetWithLive
-      }
-      else {
-        if (isCombo) {
-          return BetslipDisableReason.FreeBetWithCombo
-        }
+    // if (!isFreeBetAllowed) {
+    //   if (isLiveBet) {
+    //     return BetslipDisableReason.FreeBetWithLive
+    //   }
+    //   else {
+    //     if (isCombo) {
+    //       return BetslipDisableReason.FreeBetWithCombo
+    //     }
 
-        if (isBatch) {
-          return BetslipDisableReason.FreeBetWithBatch
-        }
-      }
+    //     if (isBatch) {
+    //       return BetslipDisableReason.FreeBetWithBatch
+    //     }
+    //   }
 
-      if (selectedFreeBet!.expiresAt <= Date.now()) {
-        return BetslipDisableReason.FreeBetExpired
-      }
+    //   if (selectedFreeBet!.expiresAt <= Date.now()) {
+    //     return BetslipDisableReason.FreeBetExpired
+    //   }
 
-      if (totalOdds < parseFloat(selectedFreeBet!.minOdds)) {
-        return BetslipDisableReason.FreeBetMinOdds
-      }
-    }
+    //   if (totalOdds < parseFloat(selectedFreeBet!.minOdds)) {
+    //     return BetslipDisableReason.FreeBetMinOdds
+    //   }
+    // }
 
     if (!isComboAllowed) {
-      if (isLiveBet) {
-        return BetslipDisableReason.ComboWithLive
-      }
-      else if (!isComboWithDifferentGames) {
+      if (!isComboWithDifferentGames) {
         return BetslipDisableReason.ComboWithSameGame
       }
       else {
@@ -274,13 +261,9 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
       }
     }
 
-    if (!isPrematchBetAllowed) {
-      return BetslipDisableReason.PrematchConditionInStartedGame
-    }
-
-    if (!isBatchAllowed) {
-      return BetslipDisableReason.BatchWithLive
-    }
+    // if (!isPrematchBetAllowed) {
+    //   return BetslipDisableReason.PrematchConditionInStartedGame
+    // }
 
     if (!isAmountLowerThanMaxBet) {
       return BetslipDisableReason.BetAmountGreaterThanMaxBet
@@ -323,26 +306,26 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
   }, [ appChain ])
 
   const addItem = useCallback((itemProps: AddItemProps) => {
-    const { gameId, coreAddress, lpAddress, conditionId, outcomeId } = itemProps
+    const { gameId, conditionId, outcomeId } = itemProps
 
-    let game: MainGameInfoFragment | null
+    let game: GameInfoFragment | null = null
     let cache: ApolloCache<NormalizedCacheObject>
     let gameEntityId: string
 
-    if (coreAddress === liveHostAddress) {
-      cache = liveClient!.cache
-      gameEntityId = gameId
-    }
-    else {
-      cache = prematchClient!.cache
-      gameEntityId = `${lpAddress.toLowerCase()}_${gameId}`
-    }
+    // if (coreAddress === liveHostAddress) {
+    //   cache = liveClient!.cache
+    //   gameEntityId = gameId
+    // }
+    // else {
+    //   cache = prematchClient!.cache
+    //   gameEntityId = `${lpAddress.toLowerCase()}_${gameId}`
+    // }
 
-    game = cache.readFragment<MainGameInfoFragment>({
-      id: cache.identify({ __typename: 'Game', id: gameEntityId }),
-      fragment: MainGameInfoFragmentDoc,
-      fragmentName: 'MainGameInfo',
-    })
+    // game = cache.readFragment<MainGameInfoFragment>({
+    //   id: cache.identify({ __typename: 'Game', id: gameEntityId }),
+    //   fragment: MainGameInfoFragmentDoc,
+    //   fragmentName: 'MainGameInfo',
+    // })
 
     if (!game) {
       return
@@ -351,24 +334,24 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     let marketName = getMarketName({ outcomeId })
     let selectionName = getSelectionName({ outcomeId, withPoint: true })
 
-    if (coreAddress !== liveHostAddress) {
-      const conditionEntityId = `${coreAddress.toLowerCase()}_${conditionId}`
-      const condition = cache.readFragment<PrematchConditionFragment>({
-        id: cache.identify({ __typename: 'Condition', id: conditionEntityId }),
-        fragment: PrematchConditionFragmentDoc,
-        fragmentName: 'PrematchCondition',
-      })
+    // if (coreAddress !== liveHostAddress) {
+    //   const conditionEntityId = `${coreAddress.toLowerCase()}_${conditionId}`
+    //   const condition = cache.readFragment<ConditionFragment>({
+    //     id: cache.identify({ __typename: 'Condition', id: conditionEntityId }),
+    //     fragment: ConditionFragmentDoc,
+    //     fragmentName: 'Condition',
+    //   })
 
-      if (condition?.title && condition.title !== 'null') {
-        marketName = condition.title
+    //   if (condition?.title && condition.title !== 'null') {
+    //     marketName = condition.title
 
-        const outcome = condition.outcomes.find(outcome => outcome.outcomeId === outcomeId)
+    //     const outcome = condition.outcomes.find(outcome => outcome.outcomeId === outcomeId)
 
-        if (outcome?.title && outcome.title !== 'null') {
-          selectionName = outcome.title
-        }
-      }
-    }
+    //     if (outcome?.title && outcome.title !== 'null') {
+    //       selectionName = outcome.title
+    //     }
+    //   }
+    // }
 
     const {
       participants,
@@ -557,15 +540,14 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     minBet,
     selectedFreeBet,
     freeBets,
-    statuses,
+    states,
     disableReason,
     changeBetAmount,
     changeBatchBetAmount,
     changeBatch,
     selectFreeBet: setFreeBet,
     isBatch,
-    isLiveBet,
-    isStatusesFetching,
+    isStatesFetching,
     isOddsFetching,
     isFreeBetsFetching,
     isBetAllowed,
@@ -578,15 +560,14 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     minBet,
     selectedFreeBet,
     freeBets,
-    statuses,
+    states,
     disableReason,
     changeBetAmount,
     changeBatchBetAmount,
     changeBatch,
     setFreeBet,
     isBatch,
-    isLiveBet,
-    isStatusesFetching,
+    isStatesFetching,
     isOddsFetching,
     isFreeBetsFetching,
     isBetAllowed,

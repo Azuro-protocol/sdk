@@ -3,14 +3,16 @@ import { useQuery } from '@tanstack/react-query'
 import { request } from 'graphql-request'
 
 import { useChain } from '../../contexts/chain'
+import { type QueryParameter } from '../../global'
 
 
 type UseGameProps = {
-  gameId: string | bigint
+  gameId: string
+  query?: QueryParameter<GameQuery['game']>
 }
 
 export const useGame = (props: UseGameProps) => {
-  const { gameId } = props
+  const { gameId, query = {} } = props
 
   const { graphql, appChain } = useChain()
 
@@ -22,38 +24,34 @@ export const useGame = (props: UseGameProps) => {
     ],
     queryFn: async () => {
       const variables: GameQueryVariables = {
-        gameId: gameId!,
+        id: gameId,
       }
 
-      let game: GameQuery['games'][0] | undefined
-
-      const prematchData = await request<GameQuery, GameQueryVariables>({
-        url: graphql.prematch,
+      const { game } = await request<GameQuery, GameQueryVariables>({
+        url: graphql.feed,
         document: GameDocument,
         variables,
       })
 
-      game = prematchData?.games?.[0]
+      // game = prematchData?.games?.[0]
 
-      const shouldGetLive = !game || Date.now() >= +game.startsAt * 1000
+      // const shouldGetLive = !game || Date.now() >= +game.startsAt * 1000
 
-      if (shouldGetLive) {
-        const liveData = await request<GameQuery, GameQueryVariables>({
-          url: graphql.live,
-          document: GameDocument,
-          variables,
-        })
+      // if (shouldGetLive) {
+      //   const liveData = await request<GameQuery, GameQueryVariables>({
+      //     url: graphql.live,
+      //     document: GameDocument,
+      //     variables,
+      //   })
 
-        if (liveData?.games?.[0]) {
-          game = liveData?.games?.[0]
-        }
-      }
+      //   if (liveData?.games?.[0]) {
+      //     game = liveData?.games?.[0]
+      //   }
+      // }
 
-      return {
-        game,
-        isGameInLive: game?.gameId === gameId,
-      }
+      return game
     },
-    enabled: Boolean(gameId),
+    refetchOnWindowFocus: false,
+    ...query,
   })
 }

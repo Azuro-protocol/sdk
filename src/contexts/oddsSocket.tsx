@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { chainsData, type ConditionStatus } from '@azuro-org/toolkit'
+import { chainsData, type ConditionState } from '@azuro-org/toolkit'
 
 import { createQueueAction } from '../helpers/createQueueAction'
 import { conditionStatusWatcher } from '../modules/conditionStatusWatcher'
@@ -19,7 +19,7 @@ export type OddsSocketContextValue = {
 
 export type OddsSocketData = {
   id: string
-  state?: ConditionStatus
+  state?: ConditionState
   margin: number
   reinforcement: number
   winningOutcomesCount: number
@@ -50,7 +50,7 @@ export const useOddsSocket = () => {
 }
 
 export const OddsSocketProvider: React.FC<any> = ({ children }) => {
-  const { appChain } = useChain()
+  const { appChain, environment } = useChain()
   const [ isSocketReady, setSocketReady ] = useState(false)
 
   const prevChainId = useRef(appChain.id)
@@ -71,21 +71,28 @@ export const OddsSocketProvider: React.FC<any> = ({ children }) => {
     })
 
     socket.current!.send(JSON.stringify({
-      action: 'subscribe',
-      conditionIds: Object.keys(weights),
+      channel: 'SubscribeConditions',
+      payload: {
+        conditionIds: Object.keys(weights),
+        environment,
+      },
     }))
-  }, [])
+  }, [ environment ])
 
-  const unsubscribeCall = (conditionIds: string[]) => {
+  const unsubscribeCall = useCallback((conditionIds: string[]) => {
     if (socket.current?.readyState !== 1) {
       return
     }
 
     socket.current!.send(JSON.stringify({
-      action: 'unsubscribe',
-      conditionIds,
+      channel: 'UnsubscribeConditions',
+      // action: 'unsubscribe',
+      payload: {
+        conditionIds,
+        environment,
+      },
     }))
-  }
+  }, [ environment ])
 
   const unsubscribe = useCallback((weights: Record<string, number>) => {
     if (socket.current?.readyState !== 1) {
@@ -111,20 +118,20 @@ export const OddsSocketProvider: React.FC<any> = ({ children }) => {
     }
 
     unsubscribeCall(newUnsubscribers)
-  }, [])
+  }, [ unsubscribeCall ])
 
-  const runAction = useCallback(createQueueAction(subscribe, unsubscribe), [])
+  const runAction = useCallback(createQueueAction(subscribe, unsubscribe), [ subscribe, unsubscribe ])
 
   const subscribeToUpdates = useCallback((conditionIds: string[]) => {
     runAction('subscribe', conditionIds)
-  }, [])
+  }, [ runAction ])
 
   const unsubscribeToUpdates = useCallback((conditionIds: string[]) => {
     runAction('unsubscribe', conditionIds)
-  }, [])
+  }, [ runAction ])
 
   const connect = () => {
-    socket.current = new WebSocket(`${chainsData[appChain.id].socket}/conditions`)
+    socket.current = new WebSocket(`${chainsData[appChain.id].socket}/feed`)
 
     socket.current.onopen = () => {
       setSocketReady(true)

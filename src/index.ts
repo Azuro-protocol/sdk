@@ -1,11 +1,10 @@
 export { cookieKeys, localStorageKeys, LIVE_STATISTICS_SUPPORTED_SPORTS, LIVE_STATISTICS_SUPPORTED_PROVIDERS } from './config'
 export * from './global'
-export { AzuroSDKProvider, Watchers } from './AzuroSDKProvider'
+export { AzuroSDKProvider } from './AzuroSDKProvider'
 
 // contexts
 export * from './contexts/chain'
 export * from './contexts/live'
-export * from './contexts/apollo'
 export * from './contexts/betslip'
 export { OddsSocketProvider } from './contexts/oddsSocket'
 export {
@@ -55,14 +54,13 @@ export { usePrepareBet } from './hooks/write/usePrepareBet'
 
 // watch hooks
 export { useOdds } from './hooks/watch/useOdds'
-export { useWatchers } from './hooks/watch/useWatchers'
 export { useSelection } from './hooks/watch/useSelection'
-export { useStatuses } from './hooks/watch/useStatuses'
+export { useSelectionsState } from './hooks/watch/useSelectionsState'
 export { useLiveStatistics } from './hooks/watch/useLiveStatistics'
 
 // other hooks
 export { useBetTokenBalance } from './hooks/useBetTokenBalance'
-export { useGameStatus } from './hooks/useGameStatus'
+// export { useGameStatus } from './hooks/useGameStatus'
 export { useNativeBalance } from './hooks/useNativeBalance'
 export { useActiveMarket } from './hooks/useActiveMarket'
 export { useWrapTokens, WRAP_CHAINS } from './hooks/useWrapTokens'
@@ -79,6 +77,6 @@ export { useWaveLeaderBoard } from './hooks/wave/useWaveLeaderBoard'
 export { useWaveActivation } from './hooks/wave/useWaveActivation'
 
 // deBridge
-export { useDeBridgeBet } from './hooks/deBridge/useDeBridgeBet'
+// export { useDeBridgeBet } from './hooks/deBridge/useDeBridgeBet'
 export { useDeBridgeSupportedChains } from './hooks/deBridge/useDeBridgeSupportedChains'
 export { useDeBridgeSupportedTokens } from './hooks/deBridge/useDeBridgeSupportedTokens'

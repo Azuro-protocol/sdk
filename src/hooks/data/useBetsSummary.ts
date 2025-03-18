@@ -1,53 +1,27 @@
-import { useMemo } from 'react'
+import { useCallback } from 'react'
 import { formatUnits } from 'viem'
 import { type BettorsQuery, type BettorsQueryVariables, BettorsDocument } from '@azuro-org/toolkit'
 import { useQuery } from '@tanstack/react-query'
 import { request } from 'graphql-request'
 
 import { useChain } from '../../contexts/chain'
+import { type QueryParameter } from '../../global'
 
 
-type Props = {
+type UseBetsSummaryProps = {
   account: string
   affiliates?: string[]
+  query?: QueryParameter<BettorsQuery['bettors']>
 }
 
-export const useBetsSummary = (props: Props) => {
-  const { account, affiliates } = props
+export const useBetsSummary = (props: UseBetsSummaryProps) => {
+  const { account, affiliates, query = {} } = props
 
   const { betToken, graphql } = useChain()
 
-  const gqlLink = graphql.prematch
+  const gqlLink = graphql.bets
 
-  const { data, ...rest } = useQuery({
-    queryKey: [
-      'bets-summary',
-      gqlLink,
-      account,
-      affiliates?.join('-'),
-    ],
-    queryFn: async () => {
-      const variables: BettorsQueryVariables = {
-        where: {
-          address: account?.toLowerCase(),
-        },
-      }
-
-      if (affiliates?.length) {
-        variables.where.affiliate_in = affiliates.map(affiliate => affiliate.toLowerCase())
-      }
-
-      const { bettors } = await request<BettorsQuery, BettorsQueryVariables>({
-        url: gqlLink,
-        document: BettorsDocument,
-        variables,
-      })
-
-      return bettors
-    },
-  })
-
-  const formattedData = useMemo(() => {
+  const formatData = useCallback((data: BettorsQuery['bettors']) => {
     if (!data?.length) {
       return {
         toPayout: '0',
@@ -99,10 +73,36 @@ export const useBetsSummary = (props: Props) => {
       wonBetsCount,
       lostBetsCount,
     }
-  }, [ data ])
+  }, [])
 
-  return {
-    data: formattedData,
-    ...rest,
-  }
+  return useQuery({
+    queryKey: [
+      'bets-summary',
+      gqlLink,
+      account,
+      affiliates?.join('-'),
+    ],
+    queryFn: async () => {
+      const variables: BettorsQueryVariables = {
+        where: {
+          address: account?.toLowerCase(),
+        },
+      }
+
+      if (affiliates?.length) {
+        variables.where.affiliate_in = affiliates.map(affiliate => affiliate.toLowerCase())
+      }
+
+      const { bettors } = await request<BettorsQuery, BettorsQueryVariables>({
+        url: gqlLink,
+        document: BettorsDocument,
+        variables,
+      })
+
+      return bettors
+    },
+    select: formatData,
+    refetchOnWindowFocus: false,
+    ...query,
+  })
 }

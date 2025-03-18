@@ -1,5 +1,5 @@
 import {
-  PrematchGraphGameStatus,
+  GameState,
 
   type SportsNavigationQuery,
   type SportsNavigationQueryVariables,
@@ -7,62 +7,60 @@ import {
 import { useQuery } from '@tanstack/react-query'
 import { request } from 'graphql-request'
 
-import { type SportHub } from '../../global'
+import { type QueryParameter, type SportHub } from '../../global'
 import { useChain } from '../../contexts/chain'
-import { getGameStartsAtValue } from '../../helpers'
 
 
-type UseNavigationProps = {
+type UseSportsNavigationProps = {
   filter?: {
     sportHub?: SportHub
     sportIds?: Array<string | number>
   }
-  withGameCount?: boolean
+  // withGameCount?: boolean
   isLive?: boolean
+  query?: QueryParameter<SportsNavigationQuery['sports']>
 }
 
-export const useSportsNavigation = (props: UseNavigationProps = {}) => {
-  const { filter, withGameCount = false, isLive } = props
+export const useSportsNavigation = (props: UseSportsNavigationProps = {}) => {
+  const { filter = {}, isLive, query = {} } = props
 
   const { graphql } = useChain()
 
-  const startsAt = getGameStartsAtValue()
-  const gqlLink = isLive ? graphql.live : graphql.prematch
+  const gqlLink = graphql.feed
 
   return useQuery({
     queryKey: [
       'sports-navigation',
       gqlLink,
-      withGameCount,
-      startsAt,
       isLive,
-      filter?.sportHub,
-      filter?.sportIds?.join('-'),
+      // withGameCount,
+      filter.sportHub,
+      filter.sportIds?.join('-'),
     ],
     queryFn: async () => {
       const variables: SportsNavigationQueryVariables = {
         first: 1000,
-        withGameCount,
+        // withGameCount,
         sportFilter: {},
-        gameFilter: {
-          hasActiveConditions: true,
-          status_in: [ PrematchGraphGameStatus.Created, PrematchGraphGameStatus.Paused ],
-        },
+        // gameFilter: {
+        //   activeConditionsCount_not: 0,
+        //   state: isLive ? GameState.Live : GameState.Prematch,
+        // },
       }
 
       if (isLive) {
-        variables.gameFilter!.startsAt_lt = startsAt
+        variables.sportFilter!.activeLiveGamesCount_not = 0
       }
       else {
-        variables.gameFilter!.startsAt_gt = startsAt
+        variables.sportFilter!.activePrematchGamesCount_not = 0
       }
 
-      if (filter?.sportHub) {
+      if (filter.sportHub) {
         variables.sportFilter!.sporthub = filter.sportHub
       }
 
-      if (filter?.sportIds?.length) {
-        variables.sportFilter!.sportId_in = filter?.sportIds
+      if (filter.sportIds?.length) {
+        variables.sportFilter!.sportId_in = filter.sportIds
       }
 
       const { sports } = await request<SportsNavigationQuery, SportsNavigationQueryVariables>({
@@ -73,5 +71,7 @@ export const useSportsNavigation = (props: UseNavigationProps = {}) => {
 
       return sports
     },
+    refetchOnWindowFocus: false,
+    ...query,
   })
 }

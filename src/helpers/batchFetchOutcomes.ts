@@ -1,37 +1,38 @@
-import { type ApolloClient } from '@apollo/client'
+import { request } from 'graphql-request'
 import {
-  type ConditionStatus,
-  type PrematchConditionsBatchQuery,
-  PrematchConditionsBatchDocument,
+  type ConditionState,
+  type ConditionsBatchQuery,
+  type ConditionsBatchQueryVariables,
+  ConditionsBatchDocument,
 } from '@azuro-org/toolkit'
 
 import { createBatch } from './createBatch'
 
 
 type OutcomeData = {
-  status: ConditionStatus
+  state: ConditionState
   odds: number
 }
 
 type Result = Record<string, OutcomeData>
 
-const getOutcomes = async (conditionEntityIds: string[], client: ApolloClient<object>) => {
-  const result = await client.query<PrematchConditionsBatchQuery>({
-    query: PrematchConditionsBatchDocument,
+const getOutcomes = async (conditionEntityIds: string[], gqlLink: string) => {
+  const { conditions } = await request<ConditionsBatchQuery, ConditionsBatchQueryVariables>({
+    url: gqlLink,
+    document: ConditionsBatchDocument,
     variables: {
       conditionFilter: {
         id_in: conditionEntityIds,
       },
     },
-    fetchPolicy: 'network-only',
   })
 
-  return result?.data?.conditions.reduce<Result>((acc, { conditionId, outcomes, status }) => {
+  return conditions.reduce<Result>((acc, { conditionId, outcomes, state }) => {
     outcomes.forEach(({ outcomeId, odds }) => {
       const key = `${conditionId}-${outcomeId}`
       acc[key] = {
         odds: +odds,
-        status,
+        state,
       }
     })
 

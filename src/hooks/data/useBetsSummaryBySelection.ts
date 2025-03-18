@@ -5,7 +5,7 @@ import {
   BetResult,
   GameBetsDocument } from '@azuro-org/toolkit'
 import {
-  GameStatus,
+  GameState,
 
   type GameBetsQuery,
   type GameBetsQueryVariables,
@@ -14,23 +14,27 @@ import { useQuery } from '@tanstack/react-query'
 import { request } from 'graphql-request'
 
 import { useChain } from '../../contexts/chain'
+import { type QueryParameter } from '../../global'
 
 
 export type BetsSummaryBySelection = Record<string, string>
 
-type Props = {
+type UseBetsSummaryBySelectionProps = {
   account: Address
   gameId: string
-  gameStatus: GameStatus
+  gameState: GameState
   keyStruct?: 'outcomeId' | 'conditionId-outcomeId'
+  query?: QueryParameter<GameBetsQuery>
 }
 
 const DIVIDER = 18
 
-export const useBetsSummaryBySelection = ({ account, gameId, gameStatus, keyStruct = 'outcomeId' }: Props) => {
+export const useBetsSummaryBySelection = (props: UseBetsSummaryBySelectionProps) => {
+  const { account, gameId, gameState, keyStruct = 'outcomeId', query = {} } = props
+
   const { betToken, graphql } = useChain()
 
-  const gqlLink = graphql.prematch
+  const gqlLink = graphql.bets
 
   const { data, ...rest } = useQuery({
     queryKey: [
@@ -53,7 +57,9 @@ export const useBetsSummaryBySelection = ({ account, gameId, gameStatus, keyStru
 
       return data
     },
-    enabled: Boolean(account) && gameStatus === GameStatus.Resolved,
+    enabled: Boolean(account) && gameState === GameState.Resolved,
+    refetchOnWindowFocus: false,
+    ...query,
   })
 
   const { bets: prematchBets, liveBets } = data || {}

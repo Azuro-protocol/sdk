@@ -280,7 +280,8 @@ export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
   }, [])
 
   const connect = () => {
-    socket.current = new WebSocket(`${chainsData[appChain.id].socket}/statistics/games`)
+    socket.current = new WebSocket('wss://dev-streams.azuro.org/v1/streams/statistics/games') // TODO
+    // socket.current = new WebSocket(`${chainsData[appChain.id].socket}/statistics/games`)
 
     socket.current.onopen = () => {
       setSocketReady(true)

@@ -28,34 +28,32 @@ type Props = {
 export const useFreeBets = ({ account, affiliate, enabled }: Props) => {
   const { appChain, api } = useChain()
 
-  const queryFn = async () => {
-    const freebets = await getFreeBets({
-      chainId: appChain.id,
-      account,
-      affiliate,
-    })
-
-    if (!freebets) {
-      return freebets
-    }
-
-    return freebets.map<FreeBet>(freebet => ({
-      id: +freebet.id,
-      contractAddress: freebet.contract.freebetContractAddress,
-      signature: freebet.signature,
-      expiresAt: freebet.expiresAt * 1000,
-      amount: formatUnits(BigInt(freebet.amount), freebet.contract.decimals),
-      rawAmount: BigInt(freebet.amount),
-      minOdds: formatUnits(BigInt(freebet.minOdds), ODDS_DECIMALS),
-      rawMinOdds: BigInt(freebet.minOdds),
-      campaign: freebet.campaign,
-      chainId: +freebet.contract.chainId as ChainId,
-    }))
-  }
-
   const { data, ...rest } = useQuery({
     queryKey: [ 'freebets', api, account?.toLowerCase(), affiliate?.toLowerCase() ],
-    queryFn,
+    queryFn: async () => {
+      const freebets = await getFreeBets({
+        chainId: appChain.id,
+        account,
+        affiliate,
+      })
+
+      if (!freebets) {
+        return freebets
+      }
+
+      return freebets.map<FreeBet>(freebet => ({
+        id: +freebet.id,
+        contractAddress: freebet.contract.freebetContractAddress,
+        signature: freebet.signature,
+        expiresAt: freebet.expiresAt * 1000,
+        amount: formatUnits(BigInt(freebet.amount), freebet.contract.decimals),
+        rawAmount: BigInt(freebet.amount),
+        minOdds: formatUnits(BigInt(freebet.minOdds), ODDS_DECIMALS),
+        rawMinOdds: BigInt(freebet.minOdds),
+        campaign: freebet.campaign,
+        chainId: +freebet.contract.chainId as ChainId,
+      }))
+    },
     refetchOnWindowFocus: false,
     enabled,
   })

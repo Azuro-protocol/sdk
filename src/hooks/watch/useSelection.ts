@@ -2,11 +2,10 @@ import { useEffect, useState } from 'react'
 import { formatUnits } from 'viem'
 import { useConfig } from 'wagmi'
 import { readContract } from '@wagmi/core'
-import { type Selection, ConditionStatus, ODDS_DECIMALS, liveHostAddress } from '@azuro-org/toolkit'
+import { type Selection, ConditionState, ODDS_DECIMALS, liveHostAddress } from '@azuro-org/toolkit'
 
 import { oddsWatcher } from '../../modules/oddsWatcher'
 import { useChain } from '../../contexts/chain'
-import { useApolloClients } from '../../contexts/apollo'
 import { useOddsSocket, type OddsChangedData } from '../../contexts/oddsSocket'
 import { conditionStatusWatcher } from '../../modules/conditionStatusWatcher'
 import { batchFetchOutcomes } from '../../helpers/batchFetchOutcomes'
@@ -15,29 +14,26 @@ import { batchFetchOutcomes } from '../../helpers/batchFetchOutcomes'
 type Props = {
   selection: Selection
   initialOdds?: number
-  initialStatus?: ConditionStatus
+  initialState?: ConditionState
 }
 
-export const useSelection = ({ selection, initialOdds, initialStatus }: Props) => {
-  const { coreAddress, conditionId, outcomeId } = selection
+export const useSelection = ({ selection, initialOdds, initialState }: Props) => {
+  const { conditionId, outcomeId } = selection
 
-  const { appChain, contracts } = useChain()
-  const { prematchClient } = useApolloClients()
+  const { graphql } = useChain()
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useOddsSocket()
   const config = useConfig()
-
-  const isLive = coreAddress.toLowerCase() === liveHostAddress.toLowerCase()
 
   const [ odds, setOdds ] = useState(initialOdds || 0)
   const [ isOddsFetching, setOddsFetching ] = useState(!initialOdds)
 
-  const [ status, setStatus ] = useState(initialStatus || ConditionStatus.Created)
-  const [ isStatusFetching, setStatusFetching ] = useState(!initialStatus)
+  const [ state, setState ] = useState(initialState || ConditionState.Active)
+  const [ isStateFetching, setStateFetching ] = useState(!initialState)
 
-  const isLocked = status !== ConditionStatus.Created
+  const isLocked = state !== ConditionState.Active
 
   useEffect(() => {
-    if (!isLive || !isSocketReady) {
+    if (!isSocketReady) {
       return
     }
 
@@ -52,26 +48,26 @@ export const useSelection = ({ selection, initialOdds, initialStatus }: Props) =
     const unsubscribe = oddsWatcher.subscribe(`${conditionId}`, async (oddsData) => {
       let odds: string | number | undefined = oddsData?.outcomes?.[String(outcomeId)]?.odds
 
-      if (!odds) {
-        const rawOdds = await readContract(config, {
-          address: contracts.prematchCore.address,
-          abi: contracts.prematchCore.abi,
-          functionName: 'calcOdds',
-          chainId: appChain.id,
-          args: [
-            BigInt(conditionId),
-            BigInt(1),
-            BigInt(outcomeId),
-          ],
-        })
+      // if (!odds) {
+      //   const rawOdds = await readContract(config, {
+      //     address: contracts.prematchCore.address,
+      //     abi: contracts.prematchCore.abi,
+      //     functionName: 'calcOdds',
+      //     chainId: appChain.id,
+      //     args: [
+      //       BigInt(conditionId),
+      //       BigInt(1),
+      //       BigInt(outcomeId),
+      //     ],
+      //   })
 
-        odds = formatUnits(rawOdds, ODDS_DECIMALS)
-      }
-      else {
-        setOddsFetching(false)
-      }
+      //   odds = formatUnits(rawOdds, ODDS_DECIMALS)
+      // }
+      // else {
+      //   setOddsFetching(false)
+      // }
 
-      setOdds(+odds)
+      setOdds(+odds!)
     })
 
     return () => {
@@ -80,9 +76,9 @@ export const useSelection = ({ selection, initialOdds, initialStatus }: Props) =
   }, [ config ])
 
   useEffect(() => {
-    const unsubscribe = conditionStatusWatcher.subscribe(`${conditionId}`, (newStatus: ConditionStatus) => {
-      setStatusFetching(false)
-      setStatus(newStatus)
+    const unsubscribe = conditionStatusWatcher.subscribe(`${conditionId}`, (newState: ConditionState) => {
+      setStateFetching(false)
+      setState(newState)
     })
 
     return () => {
@@ -91,31 +87,30 @@ export const useSelection = ({ selection, initialOdds, initialStatus }: Props) =
   }, [])
 
   useEffect(() => {
-    if (isLive || (initialOdds && initialStatus)) {
+    if (initialOdds && initialState) {
       return
     }
 
     ;(async () => {
-      const conditionEntityId = `${contracts.prematchCore.address.toLowerCase()}_${conditionId}`
       const key = `${conditionId}-${outcomeId}`
-      const data = await batchFetchOutcomes([ conditionEntityId ], prematchClient!)
+      const data = await batchFetchOutcomes([ conditionId ], graphql.feed)
 
       if (!initialOdds) {
         setOdds(data?.[key]?.odds || 0)
         setOddsFetching(false)
       }
 
-      if (!initialStatus) {
-        setStatus(data?.[key]?.status || ConditionStatus.Created)
-        setStatusFetching(false)
+      if (!initialState) {
+        setState(data?.[key]?.state || ConditionState.Active)
+        setStateFetching(false)
       }
     })()
-  }, [ prematchClient ])
+  }, [ graphql.feed ])
 
   return {
     odds,
     isLocked,
     isOddsFetching,
-    isStatusFetching,
+    isStateFetching,
   }
 }

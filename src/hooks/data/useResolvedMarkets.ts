@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { type Market, groupConditionsByMarket, ConditionStatus } from '@azuro-org/toolkit'
+import { type Market, groupConditionsByMarket, ConditionState } from '@azuro-org/toolkit'
 
 import { useConditions } from './useConditions'
 
@@ -11,63 +11,63 @@ type Props = {
 export const useResolvedMarkets = (props: Props) => {
   const { gameId } = props
 
-  const { prematchQuery, liveQuery } = useConditions({
-    gameId,
-    filter: {
-      status: ConditionStatus.Resolved,
-    },
-  })
+  // const { data, ...rest } = useConditions({
+  //   gameId,
+  //   filter: {
+  //     status: ConditionStatus.Resolved,
+  //   },
+  // })
 
-  const { data: prematchConditions } = prematchQuery
-  const { data: liveConditions } = liveQuery
+  // const { data: prematchConditions } = prematchQuery
+  // const { data: liveConditions } = liveQuery
 
-  const prematchConditionIds = prematchConditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('_')
-  const liveConditionIds = liveConditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('_')
+  // const prematchConditionIds = prematchConditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('_')
+  // const liveConditionIds = liveConditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('_')
 
-  const prematchMarkets = useMemo(() => {
-    if (!prematchConditions?.length) {
-      return []
-    }
+  // const prematchMarkets = useMemo(() => {
+  //   if (!prematchConditions?.length) {
+  //     return []
+  //   }
 
-    return groupConditionsByMarket(prematchConditions)
-  }, [ prematchConditionIds ])
+  //   return groupConditionsByMarket(prematchConditions)
+  // }, [ prematchConditionIds ])
 
-  const liveMarkets = useMemo(() => {
-    if (!liveConditions?.length) {
-      return []
-    }
+  // const liveMarkets = useMemo(() => {
+  //   if (!liveConditions?.length) {
+  //     return []
+  //   }
 
-    return groupConditionsByMarket(liveConditions)
-  }, [ liveConditionIds ])
+  //   return groupConditionsByMarket(liveConditions)
+  // }, [ liveConditionIds ])
 
-  const groupedMarkets = useMemo(() => {
-    if (!prematchMarkets?.length || !liveMarkets?.length) {
-      if (prematchMarkets?.length) {
-        return prematchMarkets
-      }
+  // const groupedMarkets = useMemo(() => {
+  //   if (!prematchMarkets?.length || !liveMarkets?.length) {
+  //     if (prematchMarkets?.length) {
+  //       return prematchMarkets
+  //     }
 
-      if (liveMarkets?.length) {
-        return liveMarkets
-      }
-    }
+  //     if (liveMarkets?.length) {
+  //       return liveMarkets
+  //     }
+  //   }
 
-    return Object.values([ ...liveMarkets, ...prematchMarkets ].reduce((acc, market) => {
-      const { marketKey } = market
+  //   return Object.values([ ...liveMarkets, ...prematchMarkets ].reduce((acc, market) => {
+  //     const { marketKey } = market
 
-      if (!acc[marketKey]) {
-        acc[marketKey] = market
-      }
+  //     if (!acc[marketKey]) {
+  //       acc[marketKey] = market
+  //     }
 
-      return acc
-    }, {} as Record<string, Market>))
-  }, [ prematchMarkets, liveMarkets ])
+  //     return acc
+  //   }, {} as Record<string, Market>))
+  // }, [ prematchMarkets, liveMarkets ])
 
   return {
     data: {
-      groupedMarkets,
-      prematchMarkets,
-      liveMarkets,
+      groupedMarkets: [],
+      prematchMarkets: [],
+      liveMarkets: [],
     },
-    isFetching: prematchQuery.isFetching || liveQuery.isFetching,
+    isFetching: false,
   }
 }

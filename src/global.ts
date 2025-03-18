@@ -1,6 +1,15 @@
 import type { Address } from 'viem'
 import { type Selection, type GraphBetStatus, type GameQuery } from '@azuro-org/toolkit'
+import { type DefaultError, type QueryKey } from '@tanstack/react-query'
+import { type UseQueryParameters } from 'wagmi/query'
 
+
+export type QueryParameter<
+  queryFnData = unknown,
+  error = DefaultError,
+  data = queryFnData,
+  queryKey extends QueryKey = QueryKey,
+> = Omit<UseQueryParameters<queryFnData, error, data, queryKey>, 'queryFn' | 'queryHash' | 'queryKey' | 'queryKeyHashFn' | 'throwOnError' | 'select'> | undefined
 
 export enum SportHub {
   Sports = 'sports',
@@ -19,7 +28,7 @@ export type BetOutcome = {
   selectionName: string
   odds: number
   marketName: string
-  game: GameQuery['games'][0]
+  game: GameQuery['game']
   isWin: boolean | null
   isLose: boolean | null
   isCanceled: boolean

@@ -1,13 +1,10 @@
-import { ConditionStatus, liveHostAddress, type GameMarkets, type Selection } from '@azuro-org/toolkit'
+import { ConditionState, liveHostAddress, type GameMarkets, type Selection } from '@azuro-org/toolkit'
 import { useEffect, useMemo, useState } from 'react'
 
-import { useOddsSocket } from '../contexts/oddsSocket'
 import { useChain } from '../contexts/chain'
-import { useStatuses } from './watch/useStatuses'
-import { conditionStatusWatcher } from '../modules/conditionStatusWatcher'
+import { useSelectionsState } from './watch/useSelectionsState'
 import useIsMounted from '../helpers/hooks/useIsMounted'
 import { findActiveCondition } from '../helpers/findActiveCondition'
-import { batchFetchLiveConditions } from '../helpers/batchFetchLiveConditions'
 
 
 type Props = {
@@ -15,10 +12,6 @@ type Props = {
 }
 
 export const useActiveMarket = ({ markets }: Props) => {
-  const { api } = useChain()
-  const isMounted = useIsMounted()
-  const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useOddsSocket()
-
   const { sortedMarketKeys, marketsByKey } = useMemo(() => {
     const defaultValue = {
       sortedMarketKeys: [] as string[],
@@ -46,10 +39,6 @@ export const useActiveMarket = ({ markets }: Props) => {
     return sortedMarketKeys.filter(key => key !== activeMarketKey)
   }, [ activeMarketKey, sortedMarketKeys ])
 
-  const isLive = (
-    markets?.[0]?.outcomeRows?.[0]?.[0]?.coreAddress?.toLocaleLowerCase() === liveHostAddress.toLocaleLowerCase()
-  )
-
   const selections = useMemo(() => {
     return markets.reduce<Selection[]>((acc, market) => {
       const { outcomeRows } = market
@@ -66,27 +55,27 @@ export const useActiveMarket = ({ markets }: Props) => {
 
   // prematch part start
 
-  const { statuses: prematchStatuses, loading: isPrematchStatusesFetching } = useStatuses({
-    selections: isLive ? [] : selections,
+  const { states, isFetching } = useSelectionsState({
+    selections,
   })
 
   useEffect(() => {
-    if (isLive || !markets?.length) {
+    if (!markets?.length) {
       return
     }
 
     const activeConditionId = marketsByKey[activeMarketKey!]!.outcomeRows[activeConditionIndex]![0]!.conditionId
 
     const activeStatus = (
-      prematchStatuses[activeConditionId] || ConditionStatus.Created
+      states[activeConditionId] || ConditionState.Active
     )
 
-    if (activeStatus === ConditionStatus.Created) {
+    if (activeStatus === ConditionState.Active) {
       return
     }
 
     const { nextMarketKey, nextConditionIndex } = findActiveCondition({
-      statuses: prematchStatuses,
+      states,
       marketsByKey,
       sortedMarketKeys,
       activeMarketKey,
@@ -99,113 +88,113 @@ export const useActiveMarket = ({ markets }: Props) => {
     if (nextConditionIndex) {
       setActiveConditionIndex(nextConditionIndex)
     }
-  }, [ prematchStatuses ])
+  }, [ states ])
 
   // prematch part end
 
   // live part start
-  const [ liveConditionStatus, setLiveConditionStatus ] = useState(ConditionStatus.Created)
+  // const [ liveConditionStatus, setLiveConditionStatus ] = useState(ConditionState.Active)
 
-  useEffect(() => {
-    if (!isLive || !markets.length) {
-      return
-    }
+  // useEffect(() => {
+  //   if (!isLive || !markets.length) {
+  //     return
+  //   }
 
-    const activeConditionId = marketsByKey[activeMarketKey!]!.outcomeRows[activeConditionIndex]![0]!.conditionId
+  //   const activeConditionId = marketsByKey[activeMarketKey!]!.outcomeRows[activeConditionIndex]![0]!.conditionId
 
-    const unsubscribe = conditionStatusWatcher.subscribe(activeConditionId, (newStatus) => {
-      setLiveConditionStatus(newStatus)
-    })
+  //   const unsubscribe = conditionStatusWatcher.subscribe(activeConditionId, (newStatus) => {
+  //     setLiveConditionStatus(newStatus)
+  //   })
 
-    return () => {
-      unsubscribe()
-    }
-  }, [ activeMarketKey, activeConditionIndex ])
+  //   return () => {
+  //     unsubscribe()
+  //   }
+  // }, [ activeMarketKey, activeConditionIndex ])
 
-  useEffect(() => {
-    if (!isLive || !markets?.length || !isSocketReady) {
-      return
-    }
+  // useEffect(() => {
+  //   if (!isLive || !markets?.length || !isSocketReady) {
+  //     return
+  //   }
 
-    const activeConditionId = marketsByKey[activeMarketKey!]!.outcomeRows[activeConditionIndex]![0]!.conditionId
+  //   const activeConditionId = marketsByKey[activeMarketKey!]!.outcomeRows[activeConditionIndex]![0]!.conditionId
 
-    subscribeToUpdates([ activeConditionId ])
+  //   subscribeToUpdates([ activeConditionId ])
 
-    return () => {
-      unsubscribeToUpdates([ activeConditionId ])
-    }
-  }, [ activeMarketKey, activeConditionIndex, isSocketReady ])
+  //   return () => {
+  //     unsubscribeToUpdates([ activeConditionId ])
+  //   }
+  // }, [ activeMarketKey, activeConditionIndex, isSocketReady ])
 
-  useEffect(() => {
-    if (!isLive || !markets?.length || liveConditionStatus === ConditionStatus.Created) {
-      return
-    }
+  // useEffect(() => {
+  //   if (!isLive || !markets?.length || liveConditionStatus === ConditionStatus.Created) {
+  //     return
+  //   }
 
-    let timeout: NodeJS.Timeout
+  //   let timeout: NodeJS.Timeout
 
-    const getNextMarket = async () => {
-      try {
-        const conditionIds = [
-          ...new Set(selections.map(({ conditionId }) => conditionId)),
-        ]
+  //   const getNextMarket = async () => {
+  //     try {
+  //       const conditionIds = [
+  //         ...new Set(selections.map(({ conditionId }) => conditionId)),
+  //       ]
 
-        const data = await batchFetchLiveConditions(conditionIds, api)
+  //       const data = await batchFetchLiveConditions(conditionIds, api)
 
-        if (!isMounted()) {
-          return
-        }
+  //       if (!isMounted()) {
+  //         return
+  //       }
 
-        const statusByConditionId = conditionIds.reduce<Record<string, ConditionStatus>>((acc, conditionId) => {
-          const { state } = data[conditionId] || { state: ConditionStatus.Paused }
+  //       const statusByConditionId = conditionIds.reduce<Record<string, ConditionStatus>>((acc, conditionId) => {
+  //         const { state } = data[conditionId] || { state: ConditionStatus.Paused }
 
-          acc[conditionId] = state!
+  //         acc[conditionId] = state!
 
-          return acc
-        }, {})
+  //         return acc
+  //       }, {})
 
-        const { nextMarketKey, nextConditionIndex } = findActiveCondition({
-          statuses: statusByConditionId,
-          marketsByKey,
-          sortedMarketKeys,
-          activeMarketKey,
-        })
+  //       const { nextMarketKey, nextConditionIndex } = findActiveCondition({
+  //         statuses: statusByConditionId,
+  //         marketsByKey,
+  //         sortedMarketKeys,
+  //         activeMarketKey,
+  //       })
 
-        if (nextMarketKey) {
-          setActiveMarketKey(nextMarketKey)
+  //       if (nextMarketKey) {
+  //         setActiveMarketKey(nextMarketKey)
 
-          if (nextConditionIndex) {
-            setActiveConditionIndex(nextConditionIndex)
-          }
+  //         if (nextConditionIndex) {
+  //           setActiveConditionIndex(nextConditionIndex)
+  //         }
 
-          setLiveConditionStatus(ConditionStatus.Created)
-        }
-        // refetch in timeout
-        else {
+  //         setLiveConditionStatus(ConditionStatus.Created)
+  //       }
+  //       // refetch in timeout
+  //       else {
 
-          const isContainsPausedState = Object.values(statusByConditionId).some(status => status === ConditionStatus.Paused)
+  //         const isContainsPausedState = Object.values(statusByConditionId).some(status => status === ConditionStatus.Paused)
 
-          // if we have condition in paused state
-          // then refetch statuses in 10s
-          if (isContainsPausedState) {
-            timeout = setTimeout(() => {
-              if (isMounted()) {
-                getNextMarket()
-              }
-            }, 10_000)
-          }
-        }
-      }
-      catch {}
-    }
+  //         // if we have condition in paused state
+  //         // then refetch statuses in 10s
+  //         if (isContainsPausedState) {
+  //           timeout = setTimeout(() => {
+  //             if (isMounted()) {
+  //               getNextMarket()
+  //             }
+  //           }, 10_000)
+  //         }
+  //       }
+  //     }
+  //     catch {}
+  //   }
 
-    getNextMarket()
+  //   getNextMarket()
 
-    return () => {
-      if (timeout) {
-        clearTimeout(timeout)
-      }
-    }
-  }, [ activeMarketKey, activeConditionIndex, liveConditionStatus ])
+  //   return () => {
+  //     if (timeout) {
+  //       clearTimeout(timeout)
+  //     }
+  //   }
+  // }, [ activeMarketKey, activeConditionIndex, liveConditionStatus ])
 
   // live part end
 
@@ -215,6 +204,6 @@ export const useActiveMarket = ({ markets }: Props) => {
     activeConditionIndex,
     otherMarkets,
     sortedMarketKeys,
-    loading: isPrematchStatusesFetching,
+    isFetching,
   }
 }
