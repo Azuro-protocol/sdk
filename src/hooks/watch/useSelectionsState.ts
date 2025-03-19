@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { type Selection, type ConditionState } from '@azuro-org/toolkit'
 
-import { useOddsSocket } from '../../contexts/oddsSocket'
+import { useConditionUpdates } from '../../contexts/conditionUpdates'
 import { conditionStatusWatcher } from '../../modules/conditionStatusWatcher'
 import { batchFetchOutcomes } from '../../helpers/batchFetchOutcomes'
 import { useChain } from '../../contexts/chain'
@@ -13,7 +13,7 @@ type Props = {
 
 export const useSelectionsState = ({ selections }: Props) => {
   const { graphql } = useChain()
-  const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useOddsSocket()
+  const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useConditionUpdates()
 
   const [ states, setStates ] = useState<Record<string, ConditionState>>({})
 

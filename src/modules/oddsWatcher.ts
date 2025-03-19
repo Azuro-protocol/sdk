@@ -1,5 +1,5 @@
 import { createWatcher } from '../helpers'
-import { type OddsChangedData } from '../contexts/oddsSocket'
+import { type OddsChangedData } from '../contexts/conditionUpdates'
 
 
-export const oddsWatcher = createWatcher<OddsChangedData | undefined>()
+export const oddsWatcher = createWatcher<OddsChangedData>()

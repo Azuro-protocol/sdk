@@ -6,7 +6,8 @@ export { AzuroSDKProvider } from './AzuroSDKProvider'
 export * from './contexts/chain'
 export * from './contexts/live'
 export * from './contexts/betslip'
-export { OddsSocketProvider } from './contexts/oddsSocket'
+export { FeedSocketProvider } from './contexts/feedSocket'
+export { ConditionUpdatesProvider } from './contexts/conditionUpdates'
 export {
   LiveStatisticsSocketProvider,
 

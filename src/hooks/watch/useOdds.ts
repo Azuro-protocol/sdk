@@ -3,7 +3,7 @@ import { useConfig } from 'wagmi'
 import { type Selection, liveHostAddress, calcLiveOdds } from '@azuro-org/toolkit'
 
 import { useChain } from '../../contexts/chain'
-import { useOddsSocket, type OddsChangedData } from '../../contexts/oddsSocket'
+import { useConditionUpdates, type OddsChangedData } from '../../contexts/conditionUpdates'
 import { formatToFixed } from '../../helpers'
 import useIsMounted from '../../helpers/hooks/useIsMounted'
 import { oddsWatcher } from '../../modules/oddsWatcher'
@@ -17,7 +17,7 @@ type CalcOddsProps = {
 }
 
 export const useOdds = ({ selections, betAmount, batchBetAmounts }: CalcOddsProps) => {
-  const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useOddsSocket()
+  const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useConditionUpdates()
   const { appChain } = useChain()
   const config = useConfig()
   const isMounted = useIsMounted()
@@ -65,15 +65,15 @@ export const useOdds = ({ selections, betAmount, batchBetAmounts }: CalcOddsProp
   betAmountRef.current = betAmount
   batchBetAmountsRef.current = batchBetAmounts
 
-  const maxBet = useMemo<number | undefined>(() => {
-    if (!selections.length || selections.length > 1) {
-      return undefined
-    }
+  // const maxBet = useMemo<number | undefined>(() => {
+  //   if (!selections.length || selections.length > 1) {
+  //     return undefined
+  //   }
 
-    const { conditionId, outcomeId } = selections[0]!
+  //   const { conditionId, outcomeId } = selections[0]!
 
-    return oddsDataRef.current?.[conditionId]?.outcomes?.[outcomeId]?.maxBet
-  }, [ selectionsKey, odds ]) // we need odds in deps because we update oddsDataRef with odds
+  //   return oddsDataRef.current?.[conditionId]?.outcomes?.[outcomeId]?.maxBet
+  // }, [ selectionsKey, odds ]) // we need odds in deps because we update oddsDataRef with odds
 
   // const fetchPrematchOdds = async () => {
   //   if (!prematchItems.length) {
@@ -191,7 +191,7 @@ export const useOdds = ({ selections, betAmount, batchBetAmounts }: CalcOddsProp
   return {
     odds,
     totalOdds,
-    maxBet,
+    maxBet: 1,
     isFetching,
   }
 }

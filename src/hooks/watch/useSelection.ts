@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react'
-import { formatUnits } from 'viem'
 import { useConfig } from 'wagmi'
-import { readContract } from '@wagmi/core'
-import { type Selection, ConditionState, ODDS_DECIMALS, liveHostAddress } from '@azuro-org/toolkit'
+import { type Selection, ConditionState } from '@azuro-org/toolkit'
 
 import { oddsWatcher } from '../../modules/oddsWatcher'
 import { useChain } from '../../contexts/chain'
-import { useOddsSocket, type OddsChangedData } from '../../contexts/oddsSocket'
+import { useConditionUpdates } from '../../contexts/conditionUpdates'
 import { conditionStatusWatcher } from '../../modules/conditionStatusWatcher'
 import { batchFetchOutcomes } from '../../helpers/batchFetchOutcomes'
 
@@ -21,7 +19,7 @@ export const useSelection = ({ selection, initialOdds, initialState }: Props) =>
   const { conditionId, outcomeId } = selection
 
   const { graphql } = useChain()
-  const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useOddsSocket()
+  const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useConditionUpdates()
   const config = useConfig()
 
   const [ odds, setOdds ] = useState(initialOdds || 0)
@@ -45,29 +43,10 @@ export const useSelection = ({ selection, initialOdds, initialState }: Props) =>
   }, [ isSocketReady ])
 
   useEffect(() => {
-    const unsubscribe = oddsWatcher.subscribe(`${conditionId}`, async (oddsData) => {
-      let odds: string | number | undefined = oddsData?.outcomes?.[String(outcomeId)]?.odds
+    const unsubscribe = oddsWatcher.subscribe(`${conditionId}`, (oddsData) => {
+      const odds = oddsData.outcomes[String(outcomeId)]!.odds
 
-      // if (!odds) {
-      //   const rawOdds = await readContract(config, {
-      //     address: contracts.prematchCore.address,
-      //     abi: contracts.prematchCore.abi,
-      //     functionName: 'calcOdds',
-      //     chainId: appChain.id,
-      //     args: [
-      //       BigInt(conditionId),
-      //       BigInt(1),
-      //       BigInt(outcomeId),
-      //     ],
-      //   })
-
-      //   odds = formatUnits(rawOdds, ODDS_DECIMALS)
-      // }
-      // else {
-      //   setOddsFetching(false)
-      // }
-
-      setOdds(+odds!)
+      setOdds(odds)
     })
 
     return () => {
