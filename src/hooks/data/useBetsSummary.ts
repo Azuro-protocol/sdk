@@ -2,10 +2,10 @@ import { useCallback } from 'react'
 import { formatUnits } from 'viem'
 import { type BettorsQuery, type BettorsQueryVariables, BettorsDocument } from '@azuro-org/toolkit'
 import { useQuery } from '@tanstack/react-query'
-import { request } from 'graphql-request'
 
 import { useChain } from '../../contexts/chain'
 import { type QueryParameter } from '../../global'
+import { gqlRequest } from '../../helpers/gqlRequest'
 
 
 type UseBetsSummaryProps = {
@@ -93,7 +93,7 @@ export const useBetsSummary = (props: UseBetsSummaryProps) => {
         variables.where.affiliate_in = affiliates.map(affiliate => affiliate.toLowerCase())
       }
 
-      const { bettors } = await request<BettorsQuery, BettorsQueryVariables>({
+      const { bettors } = await gqlRequest<BettorsQuery, BettorsQueryVariables>({
         url: gqlLink,
         document: BettorsDocument,
         variables,

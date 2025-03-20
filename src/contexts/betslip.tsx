@@ -17,7 +17,7 @@ import { base, baseSepolia } from 'viem/chains'
 
 import { localStorageKeys } from '../config'
 import { useChain } from './chain'
-import { formatToFixed } from '../helpers'
+import { formatToFixed } from '../helpers/formatToFixed'
 import { useOdds } from '../hooks/watch/useOdds'
 import { useSelectionsState } from '../hooks/watch/useSelectionsState'
 import { type FreeBet, useFreeBets } from '../hooks/data/useFreeBets'

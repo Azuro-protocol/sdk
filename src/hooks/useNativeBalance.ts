@@ -16,7 +16,7 @@ export const useNativeBalance = () => {
     balance: formatUnits(data.value, data.decimals),
   }), [])
 
-  const { isLoading, data, error, refetch } = useBalance({
+  return useBalance({
     chainId: appChain.id,
     address,
     query: {
@@ -24,12 +24,4 @@ export const useNativeBalance = () => {
       select: formatBalance,
     },
   })
-
-  return {
-    loading: isLoading,
-    rawBalance: data?.rawBalance,
-    balance: data?.balance,
-    error,
-    refetch,
-  }
 }

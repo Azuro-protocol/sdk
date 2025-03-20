@@ -5,10 +5,10 @@ import {
   type SportsNavigationQueryVariables,
   SportsNavigationDocument } from '@azuro-org/toolkit'
 import { useQuery } from '@tanstack/react-query'
-import { request } from 'graphql-request'
 
 import { type QueryParameter, type SportHub } from '../../global'
 import { useChain } from '../../contexts/chain'
+import { gqlRequest } from '../../helpers/gqlRequest'
 
 
 type UseSportsNavigationProps = {
@@ -63,7 +63,7 @@ export const useSportsNavigation = (props: UseSportsNavigationProps = {}) => {
         variables.sportFilter!.sportId_in = filter.sportIds
       }
 
-      const { sports } = await request<SportsNavigationQuery, SportsNavigationQueryVariables>({
+      const { sports } = await gqlRequest<SportsNavigationQuery, SportsNavigationQueryVariables>({
         url: gqlLink,
         document: SportsNavigationDocument,
         variables,

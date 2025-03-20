@@ -4,7 +4,7 @@ import { type Selection, liveHostAddress, calcLiveOdds } from '@azuro-org/toolki
 
 import { useChain } from '../../contexts/chain'
 import { useConditionUpdates, type OddsChangedData } from '../../contexts/conditionUpdates'
-import { formatToFixed } from '../../helpers'
+import { formatToFixed } from '../../helpers/formatToFixed'
 import useIsMounted from '../../helpers/hooks/useIsMounted'
 import { oddsWatcher } from '../../modules/oddsWatcher'
 import { debounce } from '../../helpers/debounce'

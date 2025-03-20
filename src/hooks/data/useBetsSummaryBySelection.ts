@@ -11,10 +11,10 @@ import {
   type GameBetsQueryVariables,
 } from '@azuro-org/toolkit'
 import { useQuery } from '@tanstack/react-query'
-import { request } from 'graphql-request'
 
 import { useChain } from '../../contexts/chain'
 import { type QueryParameter } from '../../global'
+import { gqlRequest } from '../../helpers/gqlRequest'
 
 
 export type BetsSummaryBySelection = Record<string, string>
@@ -49,7 +49,7 @@ export const useBetsSummaryBySelection = (props: UseBetsSummaryBySelectionProps)
         gameId,
       }
 
-      const data = await request<GameBetsQuery, GameBetsQueryVariables>({
+      const data = await gqlRequest<GameBetsQuery, GameBetsQueryVariables>({
         url: gqlLink,
         document: GameBetsDocument,
         variables,

@@ -12,7 +12,7 @@ import {
 import { useReducer } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { getEventArgsFromTxReceipt } from '../../helpers'
+import { getEventArgsFromTxReceipt } from '../../helpers/getEventArgsFromTxReceipt'
 import { useChain } from '../../contexts/chain'
 import { useAAWalletClient, useExtendedAccount } from '../useAaConnector'
 import { useBetsCache } from '../useBetsCache'

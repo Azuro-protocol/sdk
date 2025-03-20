@@ -5,7 +5,7 @@ import { base, baseSepolia, gnosis } from 'viem/chains'
 import { waitForTransactionReceipt } from 'wagmi/actions'
 
 import { useChain } from '../contexts/chain'
-import { formatToFixed } from '../helpers'
+import { formatToFixed } from '../helpers/formatToFixed'
 import { useBetTokenBalance } from './useBetTokenBalance'
 import { useNativeBalance } from './useNativeBalance'
 import { useAAWalletClient, useExtendedAccount } from './useAaConnector'

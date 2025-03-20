@@ -9,10 +9,10 @@ import {
   type GamesQueryVariables,
 } from '@azuro-org/toolkit'
 import { useQuery } from '@tanstack/react-query'
-import { request } from 'graphql-request'
 
 import { useChain } from '../../contexts/chain'
 import { type QueryParameter, type SportHub } from '../../global'
+import { gqlRequest } from '../../helpers/gqlRequest'
 
 
 export type UseGamesProps = {
@@ -106,7 +106,7 @@ export const useGames = (props: UseGamesProps = {}) => {
         }
       }
 
-      const { games } = await request<GamesQuery, GamesQueryVariables>({
+      const { games } = await gqlRequest<GamesQuery, GamesQueryVariables>({
         url: gqlLink,
         document: GamesDocument,
         variables,

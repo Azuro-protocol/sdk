@@ -1,4 +1,3 @@
-import { request } from 'graphql-request'
 import {
   type ConditionState,
   type ConditionsBatchQuery,
@@ -7,6 +6,7 @@ import {
 } from '@azuro-org/toolkit'
 
 import { createBatch } from './createBatch'
+import { gqlRequest } from './gqlRequest'
 
 
 type OutcomeData = {
@@ -17,7 +17,7 @@ type OutcomeData = {
 type Result = Record<string, OutcomeData>
 
 const getOutcomes = async (conditionEntityIds: string[], gqlLink: string) => {
-  const { conditions } = await request<ConditionsBatchQuery, ConditionsBatchQueryVariables>({
+  const { conditions } = await gqlRequest<ConditionsBatchQuery, ConditionsBatchQueryVariables>({
     url: gqlLink,
     document: ConditionsBatchDocument,
     variables: {

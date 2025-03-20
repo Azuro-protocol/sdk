@@ -8,11 +8,11 @@ import {
   SportsDocument,
 } from '@azuro-org/toolkit'
 import { useQuery } from '@tanstack/react-query'
-import { request } from 'graphql-request'
 import { useCallback } from 'react'
 
 import { useChain } from '../../contexts/chain'
 import { type QueryParameter, type SportHub } from '../../global'
+import { gqlRequest } from '../../helpers/gqlRequest'
 
 
 export type UseSportsProps = {
@@ -153,7 +153,7 @@ export const useSports = (props: UseSportsProps = {}) => {
         variables.leagueFilter!.slug = filter.leagueSlug
       }
 
-      const { sports } = await request<SportsQuery, SportsQueryVariables>({
+      const { sports } = await gqlRequest<SportsQuery, SportsQueryVariables>({
         url: gqlLink,
         document: SportsDocument,
         variables,

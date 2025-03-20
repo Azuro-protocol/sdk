@@ -36,7 +36,7 @@ import {
 } from '@azuro-org/toolkit'
 
 // import { useApolloClients } from '../contexts/apollo'
-import { getEventArgsFromTxReceipt } from '../helpers'
+import { getEventArgsFromTxReceipt } from '../helpers/getEventArgsFromTxReceipt'
 import { useChain } from '../contexts/chain'
 import { useExtendedAccount } from '../hooks/useAaConnector'
 

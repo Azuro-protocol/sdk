@@ -5,10 +5,10 @@ import {
   ConditionsDocument,
 } from '@azuro-org/toolkit'
 import { useQuery } from '@tanstack/react-query'
-import { request } from 'graphql-request'
 
 import { useChain } from '../../contexts/chain'
 import { type QueryParameter } from '../../global'
+import { gqlRequest } from '../../helpers/gqlRequest'
 
 
 type UseConditionsProps = {
@@ -38,7 +38,7 @@ export const useConditions = (props: UseConditionsProps) => {
         },
       }
 
-      const { conditions } = await request<ConditionsQuery, ConditionsQueryVariables>({
+      const { conditions } = await gqlRequest<ConditionsQuery, ConditionsQueryVariables>({
         url: graphql.feed,
         document: ConditionsDocument,
         variables,

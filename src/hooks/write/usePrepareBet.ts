@@ -20,7 +20,7 @@ import {
 
 import { useChain } from '../../contexts/chain'
 import { DEFAULT_DEADLINE } from '../../config'
-import { formatToFixed } from '../../helpers'
+import { formatToFixed } from '../../helpers/formatToFixed'
 import { useBetsCache, type NewBetProps } from '../useBetsCache'
 import { useLiveBetFee } from '../data/useLiveBetFee'
 import { type FreeBet } from '../data/useFreeBets'

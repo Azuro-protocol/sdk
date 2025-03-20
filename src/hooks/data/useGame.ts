@@ -1,9 +1,9 @@
 import { type GameQuery, type GameQueryVariables, GameDocument } from '@azuro-org/toolkit'
 import { useQuery } from '@tanstack/react-query'
-import { request } from 'graphql-request'
 
 import { useChain } from '../../contexts/chain'
 import { type QueryParameter } from '../../global'
+import { gqlRequest } from '../../helpers/gqlRequest'
 
 
 type UseGameProps = {
@@ -27,7 +27,7 @@ export const useGame = (props: UseGameProps) => {
         id: gameId,
       }
 
-      const { game } = await request<GameQuery, GameQueryVariables>({
+      const { game } = await gqlRequest<GameQuery, GameQueryVariables>({
         url: graphql.feed,
         document: GameDocument,
         variables,
