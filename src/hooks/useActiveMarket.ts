@@ -87,11 +87,13 @@ export const useActiveMarket = ({ markets }: Props) => {
   }, [ states ])
 
   return {
-    marketsByKey,
-    activeMarketKey,
-    activeConditionIndex,
-    otherMarkets,
-    sortedMarketKeys,
+    data: {
+      marketsByKey,
+      activeMarketKey,
+      activeConditionIndex,
+      otherMarkets,
+      sortedMarketKeys,
+    },
     isFetching,
   }
 }

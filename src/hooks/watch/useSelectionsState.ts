@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { type Selection, type ConditionState } from '@azuro-org/toolkit'
 
 import { useConditionUpdates } from '../../contexts/conditionUpdates'
-import { conditionStatusWatcher } from '../../modules/conditionStatusWatcher'
+import { conditionWatcher } from '../../modules/conditionWatcher'
 import { batchFetchOutcomes } from '../../helpers/batchFetchOutcomes'
 import { useChain } from '../../contexts/chain'
 
@@ -52,10 +52,12 @@ export const useSelectionsState = ({ selections }: Props) => {
     }
 
     const unsubscribeList = selections.map(({ conditionId }) => {
-      return conditionStatusWatcher.subscribe(conditionId, (newStatus) => {
+      return conditionWatcher.subscribe(conditionId, (data) => {
+        const { state: newState } = data
+
         setStates(states => ({
           ...states,
-          [conditionId]: newStatus,
+          [conditionId]: newState,
         }))
       })
     })

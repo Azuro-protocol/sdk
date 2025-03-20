@@ -3,10 +3,10 @@ import { useConfig } from 'wagmi'
 import { type Selection, liveHostAddress, calcLiveOdds } from '@azuro-org/toolkit'
 
 import { useChain } from '../../contexts/chain'
-import { useConditionUpdates, type OddsChangedData } from '../../contexts/conditionUpdates'
+import { useConditionUpdates, type ConditionUpdatedData } from '../../contexts/conditionUpdates'
 import { formatToFixed } from '../../helpers/formatToFixed'
 import useIsMounted from '../../helpers/hooks/useIsMounted'
-import { oddsWatcher } from '../../modules/oddsWatcher'
+import { conditionWatcher } from '../../modules/conditionWatcher'
 import { debounce } from '../../helpers/debounce'
 
 
@@ -46,7 +46,7 @@ export const useOdds = ({ selections, betAmount, batchBetAmounts }: CalcOddsProp
   const [ totalOdds, setTotalOdds ] = useState<number>(0)
   const [ isFetching, setFetching ] = useState(Boolean(selections.length))
 
-  const oddsDataRef = useRef<Record<string, OddsChangedData>>({})
+  const oddsDataRef = useRef<Record<string, ConditionUpdatedData>>({})
   const betAmountRef = useRef(betAmount)
   const batchBetAmountsRef = useRef(batchBetAmounts)
   const prevSelectionsKeyRef = useRef(selectionsKey)
@@ -108,7 +108,7 @@ export const useOdds = ({ selections, betAmount, batchBetAmounts }: CalcOddsProp
   //   }
   // }
 
-  // const fetchLiveOdds = (items: Selection[], newOddsData?: OddsChangedData) => {
+  // const fetchLiveOdds = (items: Selection[], newOddsData?: ConditionUpdatedData) => {
   //   if (!items.length) {
   //     return
   //   }
@@ -169,7 +169,7 @@ export const useOdds = ({ selections, betAmount, batchBetAmounts }: CalcOddsProp
   //   }
 
   //   const unsubscribeList = selections.map(({ conditionId }) => {
-  //     return oddsWatcher.subscribe(`${conditionId}`, (oddsData?: OddsChangedData) => {
+  //     return oddsWatcher.subscribe(`${conditionId}`, (oddsData?: ConditionUpdatedData) => {
   //       if (oddsData) {
   //         const item = liveItems.find(item => item.conditionId === oddsData.conditionId)
   //         fetchLiveOdds([ item! ], oddsData)

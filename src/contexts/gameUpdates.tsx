@@ -1,66 +1,49 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef } from 'react'
-import { type ConditionState } from '@azuro-org/toolkit'
+import { type GameState } from '@azuro-org/toolkit'
 
 import { createQueueAction } from '../helpers/createQueueAction'
-import { conditionWatcher } from '../modules/conditionWatcher'
+import { gameWathcer } from '../modules/gameWathcer'
 import { useChain } from './chain'
 import { useFeedSocket } from './feedSocket'
 
 
-export type ConditionUpdatesContextValue = {
+export type GameUpdatesContextValue = {
   isSocketReady: boolean
   subscribeToUpdates: (conditionIds: string[]) => void
   unsubscribeToUpdates: (conditionIds: string[]) => void
 }
 
 enum Event {
-  Subscribe = 'SubscribeConditions',
-  Unsubscribe = 'UnsubscribeConditions',
-  Update = 'ConditionUpdated',
+  Subscribe = 'SubscribeGames',
+  Unsubscribe = 'UnsubscribeGames',
+  Update = 'GameUpdated',
 }
 
-export type ConditionData = {
-  id: string, // conditionId
-  gameId: string,
-  maxConditionPayout: string,
-  maxOutcomePayout: string,
-  maxLiveConditionPayout: string,
-  maxLiveOutcomePayout: string,
-  isPrematchEnabled: boolean,
-  isLiveEnabled: boolean,
-  state: ConditionState,
-  outcomes: {
-    outcomeId: number,
-    title: string | null,
-    currentOdds: string
-  }[]
+export type GameData = {
+  id: string // gameId
+  sportId: number
+  country: string
+  league: string
+  state: GameState
+  startsAt: number
+  participants: string[]
+  title: string | null
 }
 
 export type SocketData = {
   event: string
-  data: ConditionData
+  data: GameData
 }
 
-export type ConditionUpdatedData = {
-  conditionId: string
-  state: ConditionState,
-  // margin: number
-  // reinforcement: number
-  // winningOutcomesCount: number
-  outcomes: Record<string, {
-    odds: number
-    // clearOdds: number
-    // maxBet: number
-  }>
+export type GameUpdatedData = GameData
+
+const GameUpdatesContext = createContext<GameUpdatesContextValue | null>(null)
+
+export const useGameUpdates = () => {
+  return useContext(GameUpdatesContext) as GameUpdatesContextValue
 }
 
-const ConditionUpdatesContext = createContext<ConditionUpdatesContextValue | null>(null)
-
-export const useConditionUpdates = () => {
-  return useContext(ConditionUpdatesContext) as ConditionUpdatesContextValue
-}
-
-export const ConditionUpdatesProvider: React.FC<any> = ({ children }) => {
+export const GameUpdatesProvider: React.FC<any> = ({ children }) => {
   const { environment } = useChain()
   const { socket, isSocketReady } = useFeedSocket()
 
@@ -157,26 +140,9 @@ export const ConditionUpdatesProvider: React.FC<any> = ({ children }) => {
         return
       }
 
-      const { id: conditionId, outcomes, state } = data
+      const { id: gameId } = data
 
-      const eventData: ConditionUpdatedData = {
-        conditionId: conditionId,
-        state,
-        // reinforcement: +reinforcement,
-        // margin: +margin,
-        // winningOutcomesCount: +winningOutcomesCount,
-        outcomes: outcomes.reduce((acc, { outcomeId, currentOdds }) => {
-          acc[String(outcomeId)] = {
-            odds: +currentOdds,
-            // clearOdds,
-            // maxBet: maxStake,
-          }
-
-          return acc
-        }, {} as ConditionUpdatedData['outcomes']),
-      }
-
-      conditionWatcher.dispatch(conditionId, eventData)
+      gameWathcer.dispatch(gameId, data)
     }
 
     const handleClose = () => {
@@ -196,15 +162,15 @@ export const ConditionUpdatesProvider: React.FC<any> = ({ children }) => {
     }
   }, [ socket ])
 
-  const value: ConditionUpdatesContextValue = {
+  const value: GameUpdatesContextValue = {
     isSocketReady,
     subscribeToUpdates,
     unsubscribeToUpdates,
   }
 
   return (
-    <ConditionUpdatesContext.Provider value={value}>
+    <GameUpdatesContext.Provider value={value}>
       {children}
-    </ConditionUpdatesContext.Provider>
+    </GameUpdatesContext.Provider>
   )
 }

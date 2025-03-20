@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useConfig } from 'wagmi'
 import { type Selection, ConditionState } from '@azuro-org/toolkit'
 
-import { oddsWatcher } from '../../modules/oddsWatcher'
+import { conditionWatcher } from '../../modules/conditionWatcher'
 import { useChain } from '../../contexts/chain'
 import { useConditionUpdates } from '../../contexts/conditionUpdates'
-import { conditionStatusWatcher } from '../../modules/conditionStatusWatcher'
 import { batchFetchOutcomes } from '../../helpers/batchFetchOutcomes'
 
 
@@ -20,7 +18,6 @@ export const useSelection = ({ selection, initialOdds, initialState }: Props) =>
 
   const { graphql } = useChain()
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useConditionUpdates()
-  const config = useConfig()
 
   const [ odds, setOdds ] = useState(initialOdds || 0)
   const [ isOddsFetching, setOddsFetching ] = useState(!initialOdds)
@@ -40,30 +37,22 @@ export const useSelection = ({ selection, initialOdds, initialState }: Props) =>
     return () => {
       unsubscribeToUpdates([ conditionId ])
     }
-  }, [ isSocketReady ])
+  }, [ isSocketReady, conditionId ])
 
   useEffect(() => {
-    const unsubscribe = oddsWatcher.subscribe(`${conditionId}`, (oddsData) => {
-      const odds = oddsData.outcomes[String(outcomeId)]!.odds
+    const unsubscribe = conditionWatcher.subscribe(`${conditionId}`, (data) => {
+      const { outcomes, state: newState } = data
+
+      const odds = outcomes[String(outcomeId)]!.odds
 
       setOdds(odds)
-    })
-
-    return () => {
-      unsubscribe()
-    }
-  }, [ config ])
-
-  useEffect(() => {
-    const unsubscribe = conditionStatusWatcher.subscribe(`${conditionId}`, (newState: ConditionState) => {
-      setStateFetching(false)
       setState(newState)
     })
 
     return () => {
       unsubscribe()
     }
-  }, [])
+  }, [ conditionId ])
 
   useEffect(() => {
     if (initialOdds && initialState) {
@@ -84,10 +73,13 @@ export const useSelection = ({ selection, initialOdds, initialState }: Props) =>
         setStateFetching(false)
       }
     })()
-  }, [ graphql.feed ])
+  }, [ conditionId, graphql.feed ])
 
   return {
-    odds,
+    data: {
+      odds,
+      state,
+    },
     isLocked,
     isOddsFetching,
     isStateFetching,

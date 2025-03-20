@@ -8,6 +8,7 @@ export * from './contexts/live'
 export * from './contexts/betslip'
 export { FeedSocketProvider } from './contexts/feedSocket'
 export { ConditionUpdatesProvider } from './contexts/conditionUpdates'
+export { GameUpdatesProvider } from './contexts/gameUpdates'
 export {
   LiveStatisticsSocketProvider,
 
@@ -57,6 +58,7 @@ export { usePrepareBet } from './hooks/write/usePrepareBet'
 export { useOdds } from './hooks/watch/useOdds'
 export { useSelection } from './hooks/watch/useSelection'
 export { useSelectionsState } from './hooks/watch/useSelectionsState'
+export { useGameState } from './hooks/watch/useGameState'
 export { useLiveStatistics } from './hooks/watch/useLiveStatistics'
 
 // other hooks

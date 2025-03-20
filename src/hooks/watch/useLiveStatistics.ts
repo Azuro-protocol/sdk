@@ -78,7 +78,7 @@ export const useLiveStatistics = ({ gameId, sportId, gameState, enabled = true }
   }, [ skip, gameId ])
 
   return {
-    statistics,
+    data: statistics,
     isFetching,
     isAvailable,
   }

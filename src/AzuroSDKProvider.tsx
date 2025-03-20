@@ -5,6 +5,7 @@ import { FeedSocketProvider } from './contexts/feedSocket'
 import { ConditionUpdatesProvider } from './contexts/conditionUpdates'
 import { LiveStatisticsSocketProvider } from './contexts/liveStatisticsSocket'
 import { BetslipProvider, type BetslipProviderProps } from './contexts/betslip'
+import { GameUpdatesProvider } from './contexts/gameUpdates'
 
 
 type AzuroSDKProviderProps = ChainProviderProps & BetslipProviderProps
@@ -15,16 +16,18 @@ export const AzuroSDKProvider: React.FC<AzuroSDKProviderProps> = (props) => {
   return (
     <ChainProvider initialChainId={initialChainId}>
       <FeedSocketProvider>
-        <ConditionUpdatesProvider>
-          <LiveStatisticsSocketProvider>
-            <BetslipProvider
-              isBatchBetWithSameGameEnabled={isBatchBetWithSameGameEnabled}
-              affiliate={affiliate}
-            >
-              {children}
-            </BetslipProvider>
-          </LiveStatisticsSocketProvider>
-        </ConditionUpdatesProvider>
+        <GameUpdatesProvider>
+          <ConditionUpdatesProvider>
+            <LiveStatisticsSocketProvider>
+              <BetslipProvider
+                isBatchBetWithSameGameEnabled={isBatchBetWithSameGameEnabled}
+                affiliate={affiliate}
+              >
+                {children}
+              </BetslipProvider>
+            </LiveStatisticsSocketProvider>
+          </ConditionUpdatesProvider>
+        </GameUpdatesProvider>
       </FeedSocketProvider>
     </ChainProvider>
   )
