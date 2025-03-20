@@ -25,7 +25,6 @@ export const useActiveMarkets = (props: Props) => {
 
   const { data: conditions, ...rest } = query
 
-  // generate unique key for memo deps
   const conditionIds = conditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('_')
 
   const markets = useMemo(() => {

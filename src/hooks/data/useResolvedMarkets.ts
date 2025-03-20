@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { type Market, groupConditionsByMarket, ConditionState } from '@azuro-org/toolkit'
+import { groupConditionsByMarket, ConditionState } from '@azuro-org/toolkit'
 
 import { useConditions } from './useConditions'
 
@@ -11,34 +11,22 @@ type Props = {
 export const useResolvedMarkets = (props: Props) => {
   const { gameId } = props
 
-  // const { data, ...rest } = useConditions({
-  //   gameId,
-  //   filter: {
-  //     status: ConditionStatus.Resolved,
-  //   },
-  // })
+  const { data: conditions, ...rest } = useConditions({
+    gameId,
+    filter: {
+      state: ConditionState.Resolved,
+    },
+  })
 
-  // const { data: prematchConditions } = prematchQuery
-  // const { data: liveConditions } = liveQuery
+  const conditionIds = conditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('_')
 
-  // const prematchConditionIds = prematchConditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('_')
-  // const liveConditionIds = liveConditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('_')
+  const markets = useMemo(() => {
+    if (!conditions?.length) {
+      return []
+    }
 
-  // const prematchMarkets = useMemo(() => {
-  //   if (!prematchConditions?.length) {
-  //     return []
-  //   }
-
-  //   return groupConditionsByMarket(prematchConditions)
-  // }, [ prematchConditionIds ])
-
-  // const liveMarkets = useMemo(() => {
-  //   if (!liveConditions?.length) {
-  //     return []
-  //   }
-
-  //   return groupConditionsByMarket(liveConditions)
-  // }, [ liveConditionIds ])
+    return groupConditionsByMarket(conditions)
+  }, [ conditionIds ])
 
   // const groupedMarkets = useMemo(() => {
   //   if (!prematchMarkets?.length || !liveMarkets?.length) {
@@ -63,11 +51,7 @@ export const useResolvedMarkets = (props: Props) => {
   // }, [ prematchMarkets, liveMarkets ])
 
   return {
-    data: {
-      groupedMarkets: [],
-      prematchMarkets: [],
-      liveMarkets: [],
-    },
-    isFetching: false,
+    data: markets,
+    ...rest,
   }
 }

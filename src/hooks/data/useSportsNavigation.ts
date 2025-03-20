@@ -1,6 +1,4 @@
 import {
-  GameState,
-
   type SportsNavigationQuery,
   type SportsNavigationQueryVariables,
   SportsNavigationDocument } from '@azuro-org/toolkit'
@@ -16,7 +14,6 @@ type UseSportsNavigationProps = {
     sportHub?: SportHub
     sportIds?: Array<string | number>
   }
-  // withGameCount?: boolean
   isLive?: boolean
   query?: QueryParameter<SportsNavigationQuery['sports']>
 }
@@ -33,19 +30,13 @@ export const useSportsNavigation = (props: UseSportsNavigationProps = {}) => {
       'sports-navigation',
       gqlLink,
       isLive,
-      // withGameCount,
       filter.sportHub,
       filter.sportIds?.join('-'),
     ],
     queryFn: async () => {
       const variables: SportsNavigationQueryVariables = {
         first: 1000,
-        // withGameCount,
         sportFilter: {},
-        // gameFilter: {
-        //   activeConditionsCount_not: 0,
-        //   state: isLive ? GameState.Live : GameState.Prematch,
-        // },
       }
 
       if (isLive) {

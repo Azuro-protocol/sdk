@@ -49,38 +49,4 @@ export const useConditions = (props: UseConditionsProps) => {
     refetchOnWindowFocus: false,
     ...query,
   })
-
-  // const liveQuery = useQuery({
-  //   queryKey: [
-  //     'live-conditions',
-  //     appChain.id,
-  //     gameId,
-  //     filter,
-  //   ],
-  //   queryFn: async () => {
-  //     const variables: LiveConditionsQueryVariables = {
-  //       where: {
-  //         ...(filter as any || {}),
-  //         game_: {
-  //           gameId,
-  //         },
-  //       },
-  //     }
-
-  //     const { conditions } = await request<LiveConditionsQuery, LiveConditionsQueryVariables>({
-  //       url: graphql.prematch,
-  //       document: LiveConditionsDocument,
-  //       variables,
-  //     })
-
-  //     return conditions
-  //   },
-  //   enabled: Boolean(gameId) && (liveQueryProps.enabled ?? true),
-  //   refetchInterval: liveQueryProps?.refetchInterval,
-  // })
-
-  // return {
-  //   prematchQuery,
-  //   liveQuery,
-  // }
 }

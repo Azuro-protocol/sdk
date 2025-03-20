@@ -1,6 +1,4 @@
 import {
-  GameState,
-
   type NavigationQuery,
   type NavigationQueryVariables,
   NavigationDocument,
@@ -17,7 +15,6 @@ type UseNavigationProps = {
     sportHub?: SportHub
     sportIds?: Array<string | number>
   }
-  // withGameCount?: boolean
   isLive?: boolean
   query?: QueryParameter<NavigationQuery['sports']>
 }
@@ -34,21 +31,15 @@ export const useNavigation = (props: UseNavigationProps = {}) => {
       'navigation',
       gqlLink,
       isLive,
-      // withGameCount,
       filter.sportHub,
       filter.sportIds?.join('-'),
     ],
     queryFn: async () => {
       const variables: NavigationQueryVariables = {
         first: 1000,
-        // withGameCount,
         sportFilter: {},
         countryFilter: {},
         leagueFilter: {},
-        // gameFilter: {
-        //   activeConditionsCount_not: 0,
-        //   state: isLive ? GameState.Live : GameState.Prematch,
-        // },
       }
 
       if (isLive) {
