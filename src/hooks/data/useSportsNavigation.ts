@@ -4,14 +4,14 @@ import {
   SportsNavigationDocument } from '@azuro-org/toolkit'
 import { useQuery } from '@tanstack/react-query'
 
-import { type QueryParameter, type SportHub } from '../../global'
+import { type QueryParameter } from '../../global'
 import { useChain } from '../../contexts/chain'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
 
 type UseSportsNavigationProps = {
   filter?: {
-    sportHub?: SportHub
+    sportHub?: AzuroSDK.SportHub
     sportIds?: Array<string | number>
   }
   isLive?: boolean

@@ -13,14 +13,14 @@ import {
   PrematchBetsDocument,
 } from '@azuro-org/toolkit'
 
-import { type BetOutcome, type Bet, type BetType } from '../../global'
+import { type BetOutcome, type Bet } from '../../global'
 
 
 export type UsePrematchBetsProps = {
   filter: {
     bettor: Address
     affiliate?: string
-    type?: BetType
+    type?: AzuroSDK.BetType
     limit?: number
     offset?: number
   }

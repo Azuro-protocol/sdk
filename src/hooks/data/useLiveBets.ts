@@ -21,7 +21,6 @@ import type {
 } from '@azuro-org/toolkit'
 
 // import { useApolloClients } from '../../contexts/apollo'
-import type { BetType } from '../../global'
 
 
 type LiveBetOutcome = {
@@ -61,7 +60,7 @@ export type UseLiveBetsProps = {
   filter: {
     bettor: Address
     affiliate?: string
-    type?: BetType
+    type?: AzuroSDK.BetType
     limit?: number
     offset?: number
   }

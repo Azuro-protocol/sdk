@@ -11,17 +11,26 @@ export type QueryParameter<
   queryKey extends QueryKey = QueryKey,
 > = Omit<UseQueryParameters<queryFnData, error, data, queryKey>, 'queryFn' | 'queryHash' | 'queryKey' | 'queryKeyHashFn' | 'throwOnError' | 'select'> | undefined
 
-export enum SportHub {
-  Sports = 'sports',
-  Esports = 'esports',
-  Unique = 'unique'
-}
+declare global {
+  namespace AzuroSDK {
+    interface BetslipItem extends Selection {
+      gameId: string
+      isExpressForbidden: boolean
+    }
 
-export enum BetType {
-  Unredeemed = 'unredeemed',
-  Accepted = 'accepted',
-  Settled = 'settled',
-  CashedOut = 'cashedOut',
+    enum SportHub {
+      Sports = 'sports',
+      Esports = 'esports',
+      Unique = 'unique'
+    }
+
+    enum BetType {
+      Unredeemed = 'unredeemed',
+      Accepted = 'accepted',
+      Settled = 'settled',
+      CashedOut = 'cashedOut',
+    }
+  }
 }
 
 export type BetOutcome = {

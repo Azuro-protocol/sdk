@@ -1,5 +1,4 @@
 import React, { useContext, createContext, useState, useMemo, useCallback, useEffect, useRef } from 'react'
-import type { ApolloCache, NormalizedCacheObject } from '@apollo/client'
 import {
   type Selection,
   type GameInfoFragment,
@@ -21,7 +20,7 @@ import { formatToFixed } from '../helpers/formatToFixed'
 import { useOdds } from '../hooks/watch/useOdds'
 import { useSelectionsState } from '../hooks/watch/useSelectionsState'
 import { type FreeBet, useFreeBets } from '../hooks/data/useFreeBets'
-import useForceUpdate from '../helpers/hooks/useForceUpdate'
+import useForceUpdate from '../hooks/helpers/useForceUpdate'
 import { useExtendedAccount } from '../hooks/useAaConnector'
 
 
@@ -39,44 +38,13 @@ export enum BetslipDisableReason {
   FreeBetMinOdds = 'FreeBetMinOdds',
 }
 
-type Game = {
-  gameId: string
-  title: string
-  countryName: string
-  countrySlug: string
-  leagueName: string
-  leagueSlug: string
-  participants: Array<{
-    name: string
-    image?: string
-  }>
-  startsAt: number
-  sportId: number
-  sportSlug: string
-  sportName: string
-}
-
-export type BetslipItem = {
-  // lpAddress: string
-  game: Game
-  isExpressForbidden: boolean
-  marketName: string
-  selectionName: string
-} & Selection
-
-type AddItemProps = {
-  gameId: string
-  // lpAddress: string
-  isExpressForbidden: boolean
-} & Selection
-
 type RemoveItemProps = Omit<Selection, 'coreAddress'>
 
 type ChangeBatchBetAmountItem = Omit<Selection, 'coreAddress'>
 
 export type BaseBetslipContextValue = {
-  items: BetslipItem[]
-  addItem: (itemProps: AddItemProps) => void
+  items: AzuroSDK.BetslipItem[]
+  addItem: (itemProps: AzuroSDK.BetslipItem) => void
   removeItem: (itemProps: RemoveItemProps) => void
   clear: () => void
 }
@@ -126,7 +94,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
   const account = useExtendedAccount()
   const { forceUpdate } = useForceUpdate()
 
-  const [ items, setItems ] = useState<BetslipItem[]>([])
+  const [ items, setItems ] = useState<AzuroSDK.BetslipItem[]>([])
   const [ selectedFreeBet, setFreeBet ] = useState<FreeBet>()
   const [ betAmount, setBetAmount ] = useState('')
   const [ batchBetAmounts, setBatchBetAmounts ] = useState<Record<string, string>>({})
@@ -142,13 +110,13 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
 
   const isCombo = !isBatch && items.length > 1
 
-  const checkDifferentGames = (items: BetslipItem[]) => {
-    const gameIds = items.map(({ game }) => game.gameId)
+  const checkDifferentGames = (items: AzuroSDK.BetslipItem[]) => {
+    const gameIds = items.map(({ gameId }) => gameId)
 
     return gameIds.length === new Set(gameIds).size
   }
 
-  const createInitialBatchAmounts = (items: BetslipItem[]) => {
+  const createInitialBatchAmounts = (items: AzuroSDK.BetslipItem[]) => {
     setBatchBetAmounts(batchAmounts => {
       const newBatchAmounts: Record<string, string> = {}
 
@@ -305,11 +273,10 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     })
   }, [ appChain ])
 
-  const addItem = useCallback((itemProps: AddItemProps) => {
-    const { gameId, conditionId, outcomeId } = itemProps
+  const addItem = useCallback((item: AzuroSDK.BetslipItem) => {
+    // const { gameId, conditionId, outcomeId } = itemProps
 
     let game: GameInfoFragment | null = null
-    let cache: ApolloCache<NormalizedCacheObject>
     let gameEntityId: string
 
     // if (coreAddress === liveHostAddress) {
@@ -327,12 +294,12 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     //   fragmentName: 'MainGameInfo',
     // })
 
-    if (!game) {
-      return
-    }
+    // if (!game) {
+    //   return
+    // }
 
-    let marketName = getMarketName({ outcomeId })
-    let selectionName = getSelectionName({ outcomeId, withPoint: true })
+    // let marketName = getMarketName({ outcomeId })
+    // let selectionName = getSelectionName({ outcomeId, withPoint: true })
 
     // if (coreAddress !== liveHostAddress) {
     //   const conditionEntityId = `${coreAddress.toLowerCase()}_${conditionId}`
@@ -353,47 +320,9 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     //   }
     // }
 
-    const {
-      participants,
-      startsAt: _startsAt,
-      title,
-      sport: {
-        sportId: _sportId,
-        slug: sportSlug,
-        name: sportName,
-      },
-      league: {
-        name: leagueName,
-        slug: leagueSlug,
-        country: {
-          name: countryName,
-          slug: countrySlug,
-        },
-      },
-    } = game
-
-    const item = {
-      ...itemProps,
-      marketName,
-      selectionName,
-      game: {
-        gameId,
-        title,
-        countryName,
-        countrySlug,
-        leagueName,
-        leagueSlug,
-        participants,
-        startsAt: +_startsAt,
-        sportId: +_sportId,
-        sportSlug,
-        sportName,
-      },
-    } as BetslipItem
-
     setItems(items => {
-      let newItems: BetslipItem[]
-      const replaceIndex = items.findIndex(({ game: { gameId } }) => gameId === item.game.gameId)
+      let newItems: AzuroSDK.BetslipItem[]
+      const replaceIndex = items.findIndex(({ gameId }) => gameId === item.gameId)
 
       // if cart contains outcome from same game as new item
       // then replace old item
@@ -489,7 +418,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
   }, [ appChain.id ])
 
   useEffect(() => {
-    let storedItems: BetslipItem[] = JSON.parse(localStorage.getItem(localStorageKeys.betslipItems) || '[]')
+    let storedItems: AzuroSDK.BetslipItem[] = JSON.parse(localStorage.getItem(localStorageKeys.betslipItems) || '[]')
 
     if (!Array.isArray(storedItems)) {
       return
