@@ -15,7 +15,6 @@ npm install @azuro-org/sdk
 #### Peer Dependencies
 
 ```
-@apollo/client@^3.11.10
 @azuro-org/dictionaries@^3.0.26
 graphql@^16.9.0
 react@^18.3.1

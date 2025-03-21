@@ -5,7 +5,7 @@ import { type Selection, liveHostAddress, calcLiveOdds } from '@azuro-org/toolki
 import { useChain } from '../../contexts/chain'
 import { useConditionUpdates, type ConditionUpdatedData } from '../../contexts/conditionUpdates'
 import { formatToFixed } from '../../helpers/formatToFixed'
-import useIsMounted from '../../helpers/hooks/useIsMounted'
+import useIsMounted from '../helpers/useIsMounted'
 import { conditionWatcher } from '../../modules/conditionWatcher'
 import { debounce } from '../../helpers/debounce'
 
