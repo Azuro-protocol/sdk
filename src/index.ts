@@ -63,7 +63,6 @@ export { useLiveStatistics } from './hooks/watch/useLiveStatistics'
 
 // other hooks
 export { useBetTokenBalance } from './hooks/useBetTokenBalance'
-// export { useGameStatus } from './hooks/useGameStatus'
 export { useNativeBalance } from './hooks/useNativeBalance'
 export { useActiveMarket } from './hooks/useActiveMarket'
 export { useWrapTokens, WRAP_CHAINS } from './hooks/useWrapTokens'
@@ -78,8 +77,3 @@ export { useWaveStats } from './hooks/wave/useWaveStats'
 export { useWavePeriods, type WavePeriod } from './hooks/wave/useWavePeriods'
 export { useWaveLeaderBoard } from './hooks/wave/useWaveLeaderBoard'
 export { useWaveActivation } from './hooks/wave/useWaveActivation'
-
-// deBridge
-// export { useDeBridgeBet } from './hooks/deBridge/useDeBridgeBet'
-export { useDeBridgeSupportedChains } from './hooks/deBridge/useDeBridgeSupportedChains'
-export { useDeBridgeSupportedTokens } from './hooks/deBridge/useDeBridgeSupportedTokens'

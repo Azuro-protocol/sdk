@@ -26,7 +26,6 @@
     "lint-ts": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@apollo/client": "^3.11.10",
     "@azuro-org/dictionaries": "^3.0.26",
     "@azuro-org/sdk-social-aa-connector": "^1.1.3",
     "graphql": "^16.9.0",

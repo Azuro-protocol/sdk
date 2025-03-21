@@ -206,15 +206,16 @@ export const useLiveStatisticsSocket = () => {
 }
 
 export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
-  const { appChain } = useChain()
-  const [ isSocketReady, setSocketReady ] = useState(false)
+  const [ socket, setSocket ] = useState<WebSocket>()
+  const isSocketReady = socket?.readyState === WebSocket.OPEN
 
-  const prevChainId = useRef(appChain.id)
-  const socket = useRef<WebSocket>()
+  const isConnectedRef = useRef(false)
+  const socketUrl = 'wss://dev-streams.azuro.org/v1/streams/statistics/games'
+  const prevSocketUrl = useRef(socketUrl) // TODO
   const subscribers = useRef<Record<string, number>>({})
 
   const subscribe = useCallback((weights: Record<string, number>) => {
-    if (socket.current?.readyState !== 1) {
+    if (socket?.readyState !== 1) {
       return
     }
 
@@ -226,25 +227,25 @@ export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
       subscribers.current[gameId] += weights[gameId]!
     })
 
-    socket.current!.send(JSON.stringify({
+    socket.send(JSON.stringify({
       action: 'subscribe',
       gameIds: Object.keys(weights),
     }))
   }, [])
 
   const unsubscribeCall = (gameIds: string[]) => {
-    if (socket.current?.readyState !== 1) {
+    if (socket?.readyState !== 1) {
       return
     }
 
-    socket.current!.send(JSON.stringify({
+    socket.send(JSON.stringify({
       action: 'unsubscribe',
       gameIds,
     }))
   }
 
   const unsubscribe = useCallback((weights: Record<string, number>) => {
-    if (socket.current?.readyState !== 1) {
+    if (socket?.readyState !== 1) {
       return
     }
 
@@ -280,26 +281,32 @@ export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
   }, [])
 
   const connect = () => {
-    socket.current = new WebSocket('wss://dev-streams.azuro.org/v1/streams/statistics/games') // TODO
-    // socket.current = new WebSocket(`${chainsData[appChain.id].socket}/statistics/games`)
-
-    socket.current.onopen = () => {
-      setSocketReady(true)
+    if (isConnectedRef.current) {
+      return
     }
 
-    socket.current.onclose = (event) => {
-      subscribers.current = {}
-      socket.current = undefined
-      setSocketReady(false)
+    isConnectedRef.current = true
 
-      if (event.code === SocketCloseReason.ChainChanged) {
-        return
-      }
+    const newSocket = new WebSocket(socketUrl) // TODO
 
-      connect()
+    const handleOpen = () => {
+      setSocket(newSocket)
+    }
+    const handleClose = () => {
+      setSocket(undefined)
+      isConnectedRef.current = false
+
+      newSocket.removeEventListener('open', handleOpen)
+      newSocket.removeEventListener('message', handleMessage)
+      newSocket.removeEventListener('close', handleClose)
+      newSocket.removeEventListener('error', handleError)
+      setTimeout(connect, 1000)
+    }
+    const handleError = () => {
+      isConnectedRef.current = false
     }
 
-    socket.current.onmessage = (message: MessageEvent<LiveStatisticSocketData>) => {
+    const handleMessage = (message: MessageEvent<LiveStatisticSocketData>) => {
       JSON.parse(message.data.toString()).forEach((data: LiveStatisticSocketData[0]) => {
         const { id, fixture, live } = data
 
@@ -313,35 +320,28 @@ export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
       })
     }
 
-    socket.current.onerror = () => {
-      subscribers.current = {}
-      socket.current = undefined
-      setSocketReady(false)
-
-      setTimeout(connect, 1000)
-    }
+    newSocket.addEventListener('open', handleOpen)
+    newSocket.addEventListener('message', handleMessage)
+    newSocket.addEventListener('close', handleClose)
+    newSocket.addEventListener('error', handleError)
   }
 
   useEffect(() => {
-    if (
-      isSocketReady
-      && socket.current
-      && prevChainId.current !== appChain.id
-      && chainsData[prevChainId.current].socket !== chainsData[appChain.id].socket
-    ) {
-      unsubscribeCall(Object.keys(subscribers.current))
-      socket.current.close(SocketCloseReason.ChainChanged)
+    connect()
+
+    return () => {
+      socket?.close()
     }
-    prevChainId.current = appChain.id
-  }, [ chainsData[appChain.id].socket, isSocketReady ])
+  }, [])
 
   useEffect(() => {
-    if (typeof socket.current !== 'undefined' || isSocketReady) {
+    if (!socket || !isSocketReady || prevSocketUrl.current === socketUrl) {
       return
     }
 
-    connect()
-  }, [ chainsData[appChain.id].socket, isSocketReady ])
+    socket.close()
+    prevSocketUrl.current = socketUrl
+  }, [ socketUrl, isSocketReady ])
 
   const value: LiveStatisticsSocket = {
     isSocketReady,

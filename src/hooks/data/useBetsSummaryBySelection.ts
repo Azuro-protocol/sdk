@@ -72,8 +72,12 @@ export const useBetsSummaryBySelection = (props: UseBetsSummaryBySelectionProps)
     const rawOne = parseUnits('1', ODDS_DECIMALS)
 
     const rawSummary = [ ...(prematchBets || []), ...(liveBets || []) ].reduce<Record<string, bigint>>((acc, bet) => {
-      const { rawAmount: _rawAmount, rawPotentialPayout: _rawPotentialPayout, result, selections } = bet
+      const { rawAmount: _rawAmount, rawPotentialPayout: _rawPotentialPayout, result, selections, isCashedOut } = bet
       const { freebet } = bet as GameBetsQuery['bets'][0]
+
+      if (isCashedOut) {
+        return acc
+      }
 
       const isExpress = selections.length > 1
       const isWin = result === BetResult.Won

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { type GameState } from '@azuro-org/toolkit'
 
 import { gameWathcer } from '../../modules/gameWathcer'
-import { useConditionUpdates } from '../../contexts/conditionUpdates'
+import { useGameUpdates } from '../../contexts/gameUpdates'
 
 
 type Props = {
@@ -11,7 +11,7 @@ type Props = {
 }
 
 export const useGameState = ({ gameId, initialState }: Props) => {
-  const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useConditionUpdates()
+  const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useGameUpdates()
 
   const [ state, setState ] = useState(initialState)
 
