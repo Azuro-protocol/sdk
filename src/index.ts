@@ -35,6 +35,7 @@ export {
 
 // data hooks
 export { usePrematchBets, type UsePrematchBetsProps } from './hooks/data/usePrematchBets'
+export { useBets, type UseBetsProps } from './hooks/data/useBets'
 export { useLiveBets, type UseLiveBetsProps } from './hooks/data/useLiveBets'
 export { useConditions } from './hooks/data/useConditions'
 export { useActiveConditions } from './hooks/data/useActiveConditions'

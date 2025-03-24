@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { type GameState } from '@azuro-org/toolkit'
+import { GameState } from '@azuro-org/toolkit'
 
 import { gameWathcer } from '../../modules/gameWathcer'
 import { useGameUpdates } from '../../contexts/gameUpdates'
@@ -13,10 +13,11 @@ type Props = {
 export const useGameState = ({ gameId, initialState }: Props) => {
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useGameUpdates()
 
+  const skip = initialState === GameState.Finished
   const [ state, setState ] = useState(initialState)
 
   useEffect(() => {
-    if (!isSocketReady) {
+    if (!isSocketReady || skip) {
       return
     }
 
@@ -25,7 +26,7 @@ export const useGameState = ({ gameId, initialState }: Props) => {
     return () => {
       unsubscribeToUpdates([ gameId ])
     }
-  }, [ isSocketReady, gameId ])
+  }, [ isSocketReady, gameId, skip ])
 
   useEffect(() => {
     const unsubscribe = gameWathcer.subscribe(gameId, (data) => {

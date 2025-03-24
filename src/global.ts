@@ -1,6 +1,6 @@
 import type { Address } from 'viem'
 import { type Selection, type GraphBetStatus, type GameQuery } from '@azuro-org/toolkit'
-import { type DefaultError, type QueryKey } from '@tanstack/react-query'
+import { type UseInfiniteQueryOptions, type DefaultError, type QueryKey } from '@tanstack/react-query'
 import { type UseQueryParameters } from 'wagmi/query'
 
 
@@ -10,6 +10,15 @@ export type QueryParameter<
   data = queryFnData,
   queryKey extends QueryKey = QueryKey,
 > = Omit<UseQueryParameters<queryFnData, error, data, queryKey>, 'queryFn' | 'queryHash' | 'queryKey' | 'queryKeyHashFn' | 'throwOnError' | 'select'> | undefined
+
+export type InfiniteQueryParameters<
+  queryFnData = unknown,
+  error = DefaultError,
+  data = queryFnData,
+  queryData = queryFnData,
+  queryKey extends QueryKey = QueryKey,
+  pageParam = number,
+> = Omit<UseInfiniteQueryOptions<queryFnData, error, data, queryData, queryKey, pageParam>, 'initialData'>
 
 declare global {
   namespace AzuroSDK {
