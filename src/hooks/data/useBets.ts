@@ -13,6 +13,7 @@ import {
   SelectionResult,
   BetConditionStatus,
   GameState,
+  GamesDocument,
 } from '@azuro-org/toolkit'
 import { type Address } from 'viem'
 import { useInfiniteQuery } from '@tanstack/react-query'
@@ -24,7 +25,7 @@ import { gqlRequest } from '../../helpers/gqlRequest'
 
 
 type QueryResult = {
-  data: Bet[],
+  bets: Bet[],
   nextPage: number,
 }
 
@@ -54,11 +55,11 @@ export const useBets = (props: UseBetsProps) => {
 
   return useInfiniteQuery({
     queryKey: [
-      'games',
+      'bets',
       gqlLink,
-      filter.limit,
       filter.bettor,
       filter.type,
+      filter.limit,
       filter.affiliate,
       orderBy,
       orderDir,
@@ -116,7 +117,7 @@ export const useBets = (props: UseBetsProps) => {
 
       const { games } = await gqlRequest<GamesQuery, GamesQueryVariables>({
         url: graphql.feed,
-        document: BetsDocument,
+        document: GamesDocument,
         variables: {
           first: 1000,
           where: {
@@ -224,14 +225,13 @@ export const useBets = (props: UseBetsProps) => {
           coreAddress: coreAddress as Address,
           lpAddress: lpAddress as Address,
           outcomes,
-          isLive: false,
         }
 
         return bet
       })
 
       return {
-        data: bets,
+        bets,
         nextPage: games.length < ITEMS_PER_PAGE ? NaN : pageParam + 1,
       }
     },

@@ -14,12 +14,14 @@ type UseGameProps = {
 export const useGame = (props: UseGameProps) => {
   const { gameId, query = {} } = props
 
-  const { graphql, appChain } = useChain()
+  const { graphql } = useChain()
+
+  const gqlLink = graphql.feed
 
   return useQuery({
     queryKey: [
       'game',
-      appChain.id,
+      gqlLink,
       gameId,
     ],
     queryFn: async () => {
@@ -28,26 +30,10 @@ export const useGame = (props: UseGameProps) => {
       }
 
       const { game } = await gqlRequest<GameQuery, GameQueryVariables>({
-        url: graphql.feed,
+        url: gqlLink,
         document: GameDocument,
         variables,
       })
-
-      // game = prematchData?.games?.[0]
-
-      // const shouldGetLive = !game || Date.now() >= +game.startsAt * 1000
-
-      // if (shouldGetLive) {
-      //   const liveData = await request<GameQuery, GameQueryVariables>({
-      //     url: graphql.live,
-      //     document: GameDocument,
-      //     variables,
-      //   })
-
-      //   if (liveData?.games?.[0]) {
-      //     game = liveData?.games?.[0]
-      //   }
-      // }
 
       return game
     },

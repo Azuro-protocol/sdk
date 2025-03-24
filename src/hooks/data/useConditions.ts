@@ -19,12 +19,14 @@ type UseConditionsProps = {
 
 export const useConditions = (props: UseConditionsProps) => {
   const { gameId, filter = {}, query = {} } = props
-  const { appChain, graphql } = useChain()
+  const { graphql } = useChain()
+
+  const gqlLink = graphql.feed
 
   return useQuery({
     queryKey: [
       'conditions',
-      appChain.id,
+      gqlLink,
       gameId,
       filter,
     ],
@@ -39,7 +41,7 @@ export const useConditions = (props: UseConditionsProps) => {
       }
 
       const { conditions } = await gqlRequest<ConditionsQuery, ConditionsQueryVariables>({
-        url: graphql.feed,
+        url: gqlLink,
         document: ConditionsDocument,
         variables,
       })

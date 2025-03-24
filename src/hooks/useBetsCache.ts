@@ -1,5 +1,16 @@
 import { type TransactionReceipt, type Address, formatUnits, parseUnits } from 'viem'
 import {
+  type BetsQuery,
+  BetStatus,
+  ConditionDocument,
+  type ConditionQuery,
+  type ConditionQueryVariables,
+  type ConditionsQuery,
+  GameDocument,
+  type GameQuery,
+  type GameQueryVariables,
+  GraphBetStatus,
+  ODDS_DECIMALS,
   type Selection,
   // ODDS_DECIMALS,
   // liveHostAddress,
@@ -34,11 +45,14 @@ import {
   // type GameQuery,
   // GameDocument,
 } from '@azuro-org/toolkit'
+import { useQueryClient } from '@tanstack/react-query'
+import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 
-// import { useApolloClients } from '../contexts/apollo'
 import { getEventArgsFromTxReceipt } from '../helpers/getEventArgsFromTxReceipt'
 import { useChain } from '../contexts/chain'
 import { useExtendedAccount } from '../hooks/useAaConnector'
+import { gqlRequest } from '../helpers/gqlRequest'
+import { type BetsSummary, type Bet, type BetOutcome } from '../global'
 
 
 type UpdateBetProps = {
@@ -50,7 +64,7 @@ export type NewBetProps = {
   bet: {
     rawAmount: bigint
     selections: Selection[]
-    freebetId?: string | bigint
+    freebetId?: string
     freebetContractAddress?: Address
   }
   odds: Record<string, number>
@@ -59,9 +73,10 @@ export type NewBetProps = {
 }
 
 export const useBetsCache = () => {
+  const queryClient = useQueryClient()
   // const { prematchClient, liveClient } = useApolloClients()
-  // const { contracts, betToken } = useChain()
-  // const { address } = useExtendedAccount()
+  const { contracts, betToken, graphql } = useChain()
+  const { address } = useExtendedAccount()
 
   const updateBetCache = (
     { coreAddress, tokenId }: UpdateBetProps,
@@ -155,6 +170,195 @@ export const useBetsCache = () => {
     //     rawToPayout: String(newRawToPayout),
     //   }
     // })
+  }
+
+  const addBet2 = async (props: NewBetProps) => {
+    const { bet, odds, affiliate, receipt } = props
+    const { rawAmount, selections, freebetId } = bet
+
+    const outcomes: BetOutcome[] = []
+
+    const conditions = queryClient.getQueryData<ConditionsQuery['conditions']>([ 'conditions', graphql.feed ])
+
+    for (let index = 0; index < selections.length; index++) {
+      const { outcomeId, conditionId } = selections[index]!
+
+      let condition = conditions?.find((condition) => condition.conditionId === conditionId)
+
+      if (!condition) {
+        const { condition: _condition } = await gqlRequest<ConditionQuery, ConditionQueryVariables>({
+          url: graphql.feed,
+          document: ConditionDocument,
+          variables: {
+            id: conditionId,
+          },
+        })
+
+        condition = _condition!
+      }
+
+      const gameId = condition.game.gameId
+
+      let game = queryClient.getQueryData<GameQuery['game']>([ 'game', graphql.feed, gameId ])
+
+      if (!game) {
+        const { game: _game } = await gqlRequest<GameQuery, GameQueryVariables>({
+          url: graphql.feed,
+          document: GameDocument,
+          variables: {
+            id: conditionId,
+          },
+        })
+
+        game = _game!
+      }
+
+      const { title: customMarketName } = condition
+      const { title: customSelectionName } = condition.outcomes.find(outcome => outcome.outcomeId === outcomeId)!
+      const selectionName = customSelectionName && customSelectionName !== 'null' ? customSelectionName : getSelectionName({ outcomeId, withPoint: true })
+      const marketName = customMarketName && customMarketName !== 'null' ? customMarketName : getMarketName({ outcomeId })
+
+      outcomes.push({
+        selectionName,
+        outcomeId,
+        conditionId,
+        // coreAddress: '',
+        odds: +odds,
+        marketName,
+        game,
+        isWin: false,
+        isLose: false,
+        isCanceled: false,
+      })
+    }
+
+
+    // TODO get args from transaction
+    let tokenId: string = ''
+    let rawOdds: bigint = 0n
+
+    // if (isLive) {
+    //   const receiptArgs = getEventArgsFromTxReceipt({ receipt, eventName: 'NewLiveBet', abi: liveCoreAbi })
+
+    //   tokenId = (receiptArgs?.tokenId!).toString()
+    //   rawOdds = receiptArgs?.odds!
+    // }
+    // // we don't need additional for freeBet cause it triggers NewBet event on prematch core
+    // else {
+    //   const isExpress = selections.length > 1
+
+    //   if (isExpress) {
+
+    //     const receiptArgs = getEventArgsFromTxReceipt({
+    //       receipt,
+    //       eventName: 'NewBet',
+    //       abi: contracts.prematchComboCore.abi,
+    //     })
+
+    //     tokenId = receiptArgs?.betId.toString()!
+    //     rawOdds = receiptArgs?.bet.odds!
+    //   }
+    //   else {
+    //     const { conditionId, outcomeId } = selections[0]!
+    //     const eventParams = {
+    //       conditionId: BigInt(conditionId),
+    //       outcomeId: BigInt(outcomeId),
+    //     }
+
+    //     const receiptArgs = getEventArgsFromTxReceipt({
+    //       receipt,
+    //       eventName: 'NewBet',
+    //       abi: contracts.prematchCore.abi,
+    //       params: eventParams,
+    //     })
+
+    //     tokenId = receiptArgs?.tokenId.toString()!
+    //     rawOdds = receiptArgs?.odds!
+    //   }
+    // }
+
+    const rawPotentialPayout = rawAmount * rawOdds
+
+    const potentialPayout = formatUnits(rawPotentialPayout, betToken.decimals)
+    const finalOdds = formatUnits(rawOdds, ODDS_DECIMALS)
+    const amount = formatUnits(rawAmount, betToken.decimals)
+    const isFreebet = Boolean(bet.freebetId)
+
+
+    queryClient.setQueriesData({
+      predicate: ({ queryKey }) => (
+        queryKey[0] === 'bets' &&
+        queryKey[1] === graphql.feed &&
+        String(queryKey[2]).toLowerCase() === address!.toLowerCase() &&
+        (queryKey[3] === AzuroSDK.BetType.Accepted || typeof queryKey[3] === 'undefined')
+      ),
+    }, (data: { pages: Bet[][], pageParams: number[] }) => {
+      if (!data) {
+        return data
+      }
+
+      const { pages, pageParams } = data
+
+      const newBet: Bet = {
+        affiliate: affiliate!,
+        tokenId,
+        freebetContractAddress: bet.freebetContractAddress as Address,
+        freebetId: bet.freebetId,
+        txHash: receipt.transactionHash,
+        totalOdds: +finalOdds,
+        status: GraphBetStatus.Accepted,
+        amount,
+        possibleWin: +potentialPayout - (isFreebet ? +amount : 0),
+        payout: null,
+        createdAt: Math.floor(Date.now() / 1000),
+        cashout: undefined,
+        isWin: false,
+        isLose: false,
+        isRedeemable: false,
+        isRedeemed: false,
+        isCanceled: false,
+        isCashedOut: false,
+        coreAddress: '' as Address, // TODO
+        lpAddress: '' as Address, // TODO
+        outcomes,
+      }
+
+      const newPage = [
+        newBet,
+        ...pages[0]!,
+      ]
+
+      return {
+        pages: [ newPage, ...pages.slice(1) ],
+        pageParams,
+      }
+    })
+
+    const bettors = queryClient.getQueriesData<BetsSummary>({
+      predicate: ({ queryKey }) => (
+        queryKey[0] === 'bets-summary' &&
+        queryKey[1] === graphql.feed &&
+        String(queryKey[2]).toLowerCase() === address!.toLowerCase()
+      ),
+    })
+
+    if (bettors.length) {
+      bettors.forEach(([ queryKey, data ]) => {
+        if (data) {
+          queryClient.setQueryData(queryKey, (oldData: BetsSummary) => {
+            if (!oldData) {
+              return oldData
+            }
+
+            return {
+              ...oldData,
+              betsCount: oldData.betsCount + 1,
+              inBets: +oldData.inBets + +amount,
+            }
+          })
+        }
+      })
+    }
   }
 
   const addBet = async (props: NewBetProps) => {

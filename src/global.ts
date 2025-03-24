@@ -73,6 +73,15 @@ export type Bet = {
   isRedeemable: boolean
   isRedeemed: boolean
   isCanceled: boolean
-  isLive: boolean
   isCashedOut: boolean
+}
+
+export type BetsSummary = {
+  toPayout: string,
+  inBets: string,
+  totalPayout: string,
+  totalProfit: string,
+  betsCount: number,
+  wonBetsCount: number,
+  lostBetsCount: number,
 }
