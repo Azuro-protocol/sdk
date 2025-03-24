@@ -38,9 +38,9 @@ export enum BetslipDisableReason {
   FreeBetMinOdds = 'FreeBetMinOdds',
 }
 
-type RemoveItemProps = Omit<Selection, 'coreAddress'>
+type RemoveItemProps = Selection
 
-type ChangeBatchBetAmountItem = Omit<Selection, 'coreAddress'>
+type ChangeBatchBetAmountItem = Selection
 
 export type BaseBetslipContextValue = {
   items: AzuroSDK.BetslipItem[]

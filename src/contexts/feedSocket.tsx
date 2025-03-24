@@ -3,6 +3,10 @@ import React, { createContext, useContext, useEffect, useRef, useState } from 'r
 import { useChain } from './chain'
 
 
+enum SocketCloseReason {
+  Unmount = 3000
+}
+
 export type FeedSocketContextValue = {
   socket: WebSocket | undefined;
   isSocketReady: boolean;
@@ -34,14 +38,18 @@ export const FeedSocketProvider: React.FC<any> = ({ children }) => {
     const handleOpen = () => {
       setSocket(newSocket)
     }
-    const handleClose = () => {
+    const handleClose = (event: CloseEvent) => {
       setSocket(undefined)
       isConnectedRef.current = false
 
       newSocket.removeEventListener('open', handleOpen)
       newSocket.removeEventListener('close', handleClose)
       newSocket.removeEventListener('error', handleError)
-      setTimeout(connect, 1000)
+
+
+      if (event.code !== SocketCloseReason.Unmount) {
+        setTimeout(connect, 1000)
+      }
     }
     const handleError = () => {
       isConnectedRef.current = false
@@ -56,7 +64,7 @@ export const FeedSocketProvider: React.FC<any> = ({ children }) => {
     connect()
 
     return () => {
-      socket?.close()
+      socket?.close(SocketCloseReason.Unmount)
     }
   }, [])
 

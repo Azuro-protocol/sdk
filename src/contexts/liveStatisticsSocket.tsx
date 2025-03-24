@@ -7,7 +7,7 @@ import { useChain } from './chain'
 
 
 enum SocketCloseReason {
-  ChainChanged = 3000
+  Unmount = 3000
 }
 
 export type LiveStatisticsSocket = {
@@ -292,7 +292,7 @@ export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
     const handleOpen = () => {
       setSocket(newSocket)
     }
-    const handleClose = () => {
+    const handleClose = (event: CloseEvent) => {
       setSocket(undefined)
       isConnectedRef.current = false
 
@@ -300,7 +300,10 @@ export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
       newSocket.removeEventListener('message', handleMessage)
       newSocket.removeEventListener('close', handleClose)
       newSocket.removeEventListener('error', handleError)
-      setTimeout(connect, 1000)
+
+      if (event.code !== SocketCloseReason.Unmount) {
+        setTimeout(connect, 1000)
+      }
     }
     const handleError = () => {
       isConnectedRef.current = false
