@@ -57,15 +57,16 @@ export { usePrepareBet } from './hooks/write/usePrepareBet'
 
 // watch hooks
 export { useOdds } from './hooks/watch/useOdds'
-export { useSelection } from './hooks/watch/useSelection'
-export { useSelectionsState } from './hooks/watch/useSelectionsState'
+export { useSelectionOdds } from './hooks/watch/useSelectionOdds'
+export { useConditionState } from './hooks/watch/useConditionState'
+export { useConditionsState } from './hooks/watch/useConditionsState'
 export { useGameState } from './hooks/watch/useGameState'
 export { useLiveStatistics } from './hooks/watch/useLiveStatistics'
+export { useActiveMarket } from './hooks/watch/useActiveMarket'
 
 // other hooks
 export { useBetTokenBalance } from './hooks/useBetTokenBalance'
 export { useNativeBalance } from './hooks/useNativeBalance'
-export { useActiveMarket } from './hooks/useActiveMarket'
 export { useWrapTokens, WRAP_CHAINS } from './hooks/useWrapTokens'
 
 // cashout

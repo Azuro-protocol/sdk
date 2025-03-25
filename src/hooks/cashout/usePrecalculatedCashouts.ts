@@ -22,7 +22,6 @@ export type PrecalculatedCashout = {
 export const usePrecalculatedCashouts = ({ tokenId, selections, graphBetStatus, enabled = true }: Props) => {
   const { appChain, api } = useChain()
 
-  // const isLive = selections[0]!.coreAddress === contracts.liveCore?.address
   const conditionsKey = useMemo(() => {
     return selections.map(({ conditionId, outcomeId }) => `${conditionId}/${outcomeId}`).join('-')
   }, [ selections ])
@@ -65,7 +64,6 @@ export const usePrecalculatedCashouts = ({ tokenId, selections, graphBetStatus, 
       !isConditionsFromDifferentProviders &&
       Boolean(selections.length) &&
       graphBetStatus === GraphBetStatus.Accepted
-      // !isLive
     ),
   })
 

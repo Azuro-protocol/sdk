@@ -300,16 +300,17 @@ export const useCashout = (props: Props) => {
       allowanceTx.refetch()
       updatePrecalculatedCache()
 
-      updateBetCache({
-        coreAddress: betCoreAddress,
-        tokenId,
-      }, {
-        isCashedOut: true,
-        cashout: {
-          __typename: 'Cashout',
-          payout: formatUnits(receiptArgs?.value || 0n, betToken.decimals),
-        },
-      })
+      // TODO
+      // updateBetCache({
+      //   coreAddress: betCoreAddress,
+      //   tokenId,
+      // }, {
+      //   isCashedOut: true,
+      //   cashout: {
+      //     __typename: 'Cashout',
+      //     payout: formatUnits(receiptArgs?.value || 0n, betToken.decimals),
+      //   },
+      // })
 
       onSuccess?.(receipt)
     }

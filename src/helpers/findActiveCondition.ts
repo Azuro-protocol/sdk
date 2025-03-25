@@ -10,8 +10,8 @@ type Props = {
 
 export const findActiveCondition = ({ states, marketsByKey, sortedMarketKeys, activeMarketKey }: Props) => {
   // try to find condition with Created status in active market
-  let nextConditionIndex = marketsByKey[activeMarketKey!]!.outcomeRows.findIndex((outcomes) => {
-    return outcomes.some(({ conditionId }) => states[conditionId] === ConditionState.Active)
+  let nextConditionIndex = marketsByKey[activeMarketKey!]!.conditions.findIndex(({ conditionId }) => {
+    return states[conditionId] === ConditionState.Active
   })
 
   if (nextConditionIndex !== -1) {
@@ -25,8 +25,8 @@ export const findActiveCondition = ({ states, marketsByKey, sortedMarketKeys, ac
     nextConditionIndex = 0
 
     const nextMarketKey = sortedMarketKeys.find(marketKey => {
-      return marketsByKey[marketKey]!.outcomeRows.find((outcomes, index) => {
-        const isMatch = states[outcomes[0]!.conditionId] === ConditionState.Active
+      return marketsByKey[marketKey]!.conditions.find(({ conditionId }, index) => {
+        const isMatch = states[conditionId] === ConditionState.Active
 
         if (isMatch) {
           nextConditionIndex = index

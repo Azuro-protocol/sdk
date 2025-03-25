@@ -80,8 +80,106 @@ export const useBetsCache = () => {
 
   const updateBetCache = (
     { coreAddress, tokenId }: UpdateBetProps,
-    values: Partial<any> | Partial<any>
+    values: Partial<Bet>
   ) => {
+    let bet: Bet | undefined
+
+    queryClient.setQueriesData({
+      predicate: ({ queryKey }) => (
+        queryKey[0] === 'bets' &&
+        queryKey[1] === graphql.feed &&
+        String(queryKey[2]).toLowerCase() === address!.toLowerCase()
+      ),
+    }, (data: { pages: Bet[][], pageParams: number[] }) => {
+      if (!data) {
+        return data
+      }
+
+      const { pages, pageParams } = data
+
+      const newPages = pages.map(page => {
+        return page.map(bet => {
+          if (bet.tokenId === tokenId) {
+            bet = {
+              ...bet,
+              ...values,
+            }
+
+            return bet
+          }
+
+          return bet
+        })
+      })
+
+      return {
+        pages: newPages,
+        pageParams,
+      }
+    })
+
+    if (!bet) {
+      return
+    }
+
+    if (values.isCashedOut) {
+      queryClient.setQueriesData({
+        predicate: ({ queryKey }) => (
+          queryKey[0] === 'bets' &&
+          queryKey[1] === graphql.feed &&
+          String(queryKey[2]).toLowerCase() === address!.toLowerCase() &&
+          queryKey[3] === AzuroSDK.BetType.CashedOut
+        ),
+      }, (data: { pages: Bet[][], pageParams: number[] }) => {
+        if (!data) {
+          return data
+        }
+
+        const { pages, pageParams } = data
+
+        const newPage = [
+          bet,
+          ...pages[0]!,
+        ]
+
+        return {
+          pages: [ newPage, ...pages.slice(1) ],
+          pageParams,
+        }
+      })
+    }
+
+    if (!values.isCashedOut && !bet.payout) {
+      return
+    }
+
+    queryClient.setQueriesData({
+      predicate: ({ queryKey }) => (
+        queryKey[0] === 'bets-summary' &&
+        queryKey[1] === graphql.feed &&
+        String(queryKey[2]).toLowerCase() === address!.toLowerCase()
+      ),
+    }, (oldData: BetsSummary) => {
+      if (!oldData) {
+        return oldData
+      }
+
+      const newData = {
+        ...oldData,
+      }
+
+      if (bet.payout) {
+        newData.toPayout = String(+newData.toPayout - bet.payout)
+      }
+
+      if (values.isCashedOut) {
+        newData.betsCount -= 1
+        newData.inBets = String(+newData.inBets - +bet.amount)
+      }
+
+      return newData
+    })
+
     // const isLive = contracts.liveCore ? coreAddress.toLowerCase() === contracts.liveCore.address.toLowerCase() : false
     // const { cache } = prematchClient!
 
@@ -284,7 +382,6 @@ export const useBetsCache = () => {
     const amount = formatUnits(rawAmount, betToken.decimals)
     const isFreebet = Boolean(bet.freebetId)
 
-
     queryClient.setQueriesData({
       predicate: ({ queryKey }) => (
         queryKey[0] === 'bets' &&
@@ -334,31 +431,23 @@ export const useBetsCache = () => {
       }
     })
 
-    const bettors = queryClient.getQueriesData<BetsSummary>({
+    queryClient.setQueriesData({
       predicate: ({ queryKey }) => (
         queryKey[0] === 'bets-summary' &&
         queryKey[1] === graphql.feed &&
         String(queryKey[2]).toLowerCase() === address!.toLowerCase()
       ),
+    }, (oldData: BetsSummary) => {
+      if (!oldData) {
+        return oldData
+      }
+
+      return {
+        ...oldData,
+        betsCount: oldData.betsCount + 1,
+        inBets: +oldData.inBets + +amount,
+      }
     })
-
-    if (bettors.length) {
-      bettors.forEach(([ queryKey, data ]) => {
-        if (data) {
-          queryClient.setQueryData(queryKey, (oldData: BetsSummary) => {
-            if (!oldData) {
-              return oldData
-            }
-
-            return {
-              ...oldData,
-              betsCount: oldData.betsCount + 1,
-              inBets: +oldData.inBets + +amount,
-            }
-          })
-        }
-      })
-    }
   }
 
   const addBet = async (props: NewBetProps) => {

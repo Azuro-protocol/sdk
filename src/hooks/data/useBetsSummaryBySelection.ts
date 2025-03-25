@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { type Address, formatUnits, parseUnits } from 'viem'
 import {
   ODDS_DECIMALS,
@@ -36,39 +36,7 @@ export const useBetsSummaryBySelection = (props: UseBetsSummaryBySelectionProps)
 
   const gqlLink = graphql.bets
 
-  const { data, ...rest } = useQuery({
-    queryKey: [
-      'bets-summary-by-selection',
-      gqlLink,
-      account,
-      gameId,
-    ],
-    queryFn: async () => {
-      const variables: GameBetsQueryVariables = {
-        actor: account?.toLowerCase(),
-        gameId,
-      }
-
-      const data = await gqlRequest<GameBetsQuery, GameBetsQueryVariables>({
-        url: gqlLink,
-        document: GameBetsDocument,
-        variables,
-      })
-
-      return data
-    },
-    enabled: Boolean(account) && gameState === GameState.Resolved,
-    refetchOnWindowFocus: false,
-    ...query,
-  })
-
-  const { bets: prematchBets, liveBets } = data || {}
-
-  const betsSummary = useMemo<BetsSummaryBySelection>(() => {
-    if (!prematchBets?.length && !liveBets?.length) {
-      return {}
-    }
-
+  const formatData = useCallback(({ bets: prematchBets, liveBets }: GameBetsQuery) => {
     const rawOne = parseUnits('1', ODDS_DECIMALS)
 
     const rawSummary = [ ...(prematchBets || []), ...(liveBets || []) ].reduce<Record<string, bigint>>((acc, bet) => {
@@ -138,10 +106,32 @@ export const useBetsSummaryBySelection = (props: UseBetsSummaryBySelectionProps)
 
       return acc
     }, {})
-  }, [ prematchBets, liveBets ])
+  }, [])
 
-  return {
-    data: betsSummary,
-    ...rest,
-  }
+  return useQuery({
+    queryKey: [
+      'bets-summary-by-selection',
+      gqlLink,
+      account,
+      gameId,
+    ],
+    queryFn: async () => {
+      const variables: GameBetsQueryVariables = {
+        actor: account?.toLowerCase(),
+        gameId,
+      }
+
+      const data = await gqlRequest<GameBetsQuery, GameBetsQueryVariables>({
+        url: gqlLink,
+        document: GameBetsDocument,
+        variables,
+      })
+
+      return data
+    },
+    enabled: Boolean(account) && gameState === GameState.Finished,
+    refetchOnWindowFocus: false,
+    select: formatData,
+    ...query,
+  })
 }

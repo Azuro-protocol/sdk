@@ -18,7 +18,7 @@ import { localStorageKeys } from '../config'
 import { useChain } from './chain'
 import { formatToFixed } from '../helpers/formatToFixed'
 import { useOdds } from '../hooks/watch/useOdds'
-import { useSelectionsState } from '../hooks/watch/useSelectionsState'
+import { useConditionsState } from '../hooks/watch/useConditionsState'
 import { type FreeBet, useFreeBets } from '../hooks/data/useFreeBets'
 import useForceUpdate from '../hooks/helpers/useForceUpdate'
 import { useExtendedAccount } from '../hooks/useAaConnector'
@@ -105,8 +105,14 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     affiliate: affiliate!,
     enabled: Boolean(affiliate),
   })
-  const { odds, totalOdds, maxBet, isFetching: isOddsFetching } = useOdds({ betAmount, batchBetAmounts, selections: items })
-  const { states, isFetching: isStatesFetching } = useSelectionsState({ selections: items })
+  const { odds, totalOdds, maxBet, isFetching: isOddsFetching } = useOdds({
+    betAmount,
+    batchBetAmounts,
+    selections: items,
+  })
+  const { states, isFetching: isStatesFetching } = useConditionsState({
+    conditionIds: items.map(({ conditionId }) => conditionId),
+  })
 
   const isCombo = !isBatch && items.length > 1
 

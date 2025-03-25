@@ -9,8 +9,8 @@ import { useFeedSocket } from './feedSocket'
 
 export type GameUpdatesContextValue = {
   isSocketReady: boolean
-  subscribeToUpdates: (conditionIds: string[]) => void
-  unsubscribeToUpdates: (conditionIds: string[]) => void
+  subscribeToUpdates: (gameIds: string[]) => void
+  unsubscribeToUpdates: (gameIds: string[]) => void
 }
 
 enum Event {
@@ -72,13 +72,13 @@ export const GameUpdatesProvider: React.FC<any> = ({ children }) => {
     socket.send(JSON.stringify({
       event: Event.Subscribe,
       data: {
-        conditionIds: Object.keys(weights),
+        gameIds: Object.keys(weights),
         environment,
       },
     }))
   }, [ socket, environment ])
 
-  const unsubscribeCall = useCallback((conditionIds: string[]) => {
+  const unsubscribeCall = useCallback((gameIds: string[]) => {
     if (socket?.readyState !== 1) {
       return
     }
@@ -86,7 +86,7 @@ export const GameUpdatesProvider: React.FC<any> = ({ children }) => {
     socket.send(JSON.stringify({
       event: Event.Unsubscribe,
       data: {
-        conditionIds,
+        gameIds,
         environment,
       },
     }))
@@ -100,13 +100,13 @@ export const GameUpdatesProvider: React.FC<any> = ({ children }) => {
     // we mustn't unsubscribe for condition if it has more that 1 subscriber
     const newUnsubscribers: string[] = []
 
-    Object.keys(weights).forEach((conditionId) => {
-      if (subscribers.current[conditionId]) {
-        subscribers.current[conditionId] += weights[conditionId]!
+    Object.keys(weights).forEach((gameId) => {
+      if (subscribers.current[gameId]) {
+        subscribers.current[gameId] += weights[gameId]!
 
-        if (subscribers.current[conditionId] === 0) {
-          delete subscribers.current[conditionId]
-          newUnsubscribers.push(conditionId)
+        if (subscribers.current[gameId] === 0) {
+          delete subscribers.current[gameId]
+          newUnsubscribers.push(gameId)
         }
       }
     })
@@ -120,12 +120,12 @@ export const GameUpdatesProvider: React.FC<any> = ({ children }) => {
 
   const runAction = useCallback(createQueueAction(subscribe, unsubscribe), [ subscribe, unsubscribe ])
 
-  const subscribeToUpdates = useCallback((conditionIds: string[]) => {
-    runAction('subscribe', conditionIds)
+  const subscribeToUpdates = useCallback((gameIds: string[]) => {
+    runAction('subscribe', gameIds)
   }, [ runAction ])
 
-  const unsubscribeToUpdates = useCallback((conditionIds: string[]) => {
-    runAction('unsubscribe', conditionIds)
+  const unsubscribeToUpdates = useCallback((gameIds: string[]) => {
+    runAction('unsubscribe', gameIds)
   }, [ runAction ])
 
   useEffect(() => {

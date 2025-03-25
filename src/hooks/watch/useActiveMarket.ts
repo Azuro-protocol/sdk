@@ -1,8 +1,8 @@
-import { ConditionState, type GameMarkets, type Selection } from '@azuro-org/toolkit'
+import { ConditionState, type GameMarkets } from '@azuro-org/toolkit'
 import { useEffect, useMemo, useState } from 'react'
 
-import { useSelectionsState } from './watch/useSelectionsState'
-import { findActiveCondition } from '../helpers/findActiveCondition'
+import { useConditionsState } from './useConditionsState'
+import { findActiveCondition } from '../../helpers/findActiveCondition'
 
 
 type Props = {
@@ -37,22 +37,21 @@ export const useActiveMarket = ({ markets }: Props) => {
     return sortedMarketKeys.filter(key => key !== activeMarketKey)
   }, [ activeMarketKey, sortedMarketKeys ])
 
-  const selections = useMemo(() => {
-    return markets.reduce<Selection[]>((acc, market) => {
-      const { outcomeRows } = market
+  const conditions = useMemo(() => {
+    return markets.reduce<Record<string, ConditionState>>((acc, market) => {
+      const { conditions } = market
 
-      outcomeRows.forEach(outcomes => {
-        outcomes.forEach((outcome) => {
-          acc.push(outcome)
-        })
+      conditions.forEach(({ conditionId, state }) => {
+        acc[conditionId] = state
       })
 
       return acc
-    }, [])
+    }, {})
   }, [ markets ])
 
-  const { states, isFetching } = useSelectionsState({
-    selections,
+  const { states, isFetching } = useConditionsState({
+    conditionIds: Object.keys(conditions),
+    initialStates: conditions,
   })
 
   useEffect(() => {
@@ -60,7 +59,7 @@ export const useActiveMarket = ({ markets }: Props) => {
       return
     }
 
-    const activeConditionId = marketsByKey[activeMarketKey!]!.outcomeRows[activeConditionIndex]![0]!.conditionId
+    const activeConditionId = marketsByKey[activeMarketKey!]!.conditions[activeConditionIndex]!.conditionId
 
     const activeStatus = (
       states[activeConditionId] || ConditionState.Active
@@ -88,6 +87,7 @@ export const useActiveMarket = ({ markets }: Props) => {
 
   return {
     data: {
+      states,
       marketsByKey,
       activeMarketKey,
       activeConditionIndex,

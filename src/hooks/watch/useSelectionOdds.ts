@@ -4,28 +4,22 @@ import { type Selection, ConditionState } from '@azuro-org/toolkit'
 import { conditionWatcher } from '../../modules/conditionWatcher'
 import { useChain } from '../../contexts/chain'
 import { useConditionUpdates } from '../../contexts/conditionUpdates'
-import { batchFetchOutcomes } from '../../helpers/batchFetchOutcomes'
+import { batchFetchConditions } from '../../helpers/batchFetchConditions'
 
 
 type Props = {
   selection: Selection
   initialOdds?: number
-  initialState?: ConditionState
 }
 
-export const useSelection = ({ selection, initialOdds, initialState }: Props) => {
+export const useSelectionOdds = ({ selection, initialOdds }: Props) => {
   const { conditionId, outcomeId } = selection
 
   const { graphql } = useChain()
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useConditionUpdates()
 
   const [ odds, setOdds ] = useState(initialOdds || 0)
-  const [ isOddsFetching, setOddsFetching ] = useState(!initialOdds)
-
-  const [ state, setState ] = useState(initialState || ConditionState.Active)
-  const [ isStateFetching, setStateFetching ] = useState(!initialState)
-
-  const isLocked = state !== ConditionState.Active
+  const [ isFetching, setFetching ] = useState(!initialOdds)
 
   useEffect(() => {
     if (!isSocketReady) {
@@ -41,12 +35,13 @@ export const useSelection = ({ selection, initialOdds, initialState }: Props) =>
 
   useEffect(() => {
     const unsubscribe = conditionWatcher.subscribe(`${conditionId}`, (data) => {
-      const { outcomes, state: newState } = data
+      const { outcomes } = data
 
-      const odds = outcomes[String(outcomeId)]!.odds
+      const odds = outcomes[String(outcomeId)]?.odds
 
-      setOdds(odds)
-      setState(newState)
+      if (odds) {
+        setOdds(odds)
+      }
     })
 
     return () => {
@@ -55,33 +50,20 @@ export const useSelection = ({ selection, initialOdds, initialState }: Props) =>
   }, [ conditionId ])
 
   useEffect(() => {
-    if (initialOdds && initialState) {
+    if (initialOdds) {
       return
     }
 
     ;(async () => {
-      const key = `${conditionId}-${outcomeId}`
-      const data = await batchFetchOutcomes([ conditionId ], graphql.feed)
+      const data = await batchFetchConditions([ conditionId ], graphql.feed)
 
-      if (!initialOdds) {
-        setOdds(data?.[key]?.odds || 0)
-        setOddsFetching(false)
-      }
-
-      if (!initialState) {
-        setState(data?.[key]?.state || ConditionState.Active)
-        setStateFetching(false)
-      }
+      setOdds(+(data?.[conditionId]?.outcomes?.[outcomeId]?.odds || 0))
+      setFetching(false)
     })()
   }, [ conditionId, graphql.feed ])
 
   return {
-    data: {
-      odds,
-      state,
-    },
-    isLocked,
-    isOddsFetching,
-    isStateFetching,
+    data: odds,
+    isFetching,
   }
 }
