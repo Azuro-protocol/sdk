@@ -1,10 +1,10 @@
 import {
+  type SportsQuery,
+  type SportsQueryVariables,
+
   GameState,
   Game_OrderBy,
   OrderDirection,
-
-  type SportsQuery,
-  type SportsQueryVariables,
   SportsDocument,
 } from '@azuro-org/toolkit'
 import { useQuery } from '@tanstack/react-query'

@@ -1,12 +1,12 @@
 import {
+  type ConditionState,
+  type GamesQuery,
+  type GamesQueryVariables,
+
   GameState,
   Game_OrderBy,
   OrderDirection,
   GamesDocument,
-
-  type ConditionState,
-  type GamesQuery,
-  type GamesQueryVariables,
 } from '@azuro-org/toolkit'
 import { useQuery } from '@tanstack/react-query'
 

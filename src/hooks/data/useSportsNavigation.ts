@@ -1,7 +1,9 @@
 import {
   type SportsNavigationQuery,
   type SportsNavigationQueryVariables,
-  SportsNavigationDocument } from '@azuro-org/toolkit'
+
+  SportsNavigationDocument,
+} from '@azuro-org/toolkit'
 import { useQuery } from '@tanstack/react-query'
 
 import { type QueryParameter } from '../../global'

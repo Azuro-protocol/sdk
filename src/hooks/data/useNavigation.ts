@@ -1,6 +1,7 @@
 import {
   type NavigationQuery,
   type NavigationQueryVariables,
+
   NavigationDocument,
 } from '@azuro-org/toolkit'
 import { useQuery } from '@tanstack/react-query'

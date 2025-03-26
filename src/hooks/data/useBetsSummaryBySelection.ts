@@ -1,14 +1,13 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback } from 'react'
 import { type Address, formatUnits, parseUnits } from 'viem'
 import {
-  ODDS_DECIMALS,
-  BetResult,
-  GameBetsDocument } from '@azuro-org/toolkit'
-import {
-  GameState,
-
   type GameBetsQuery,
   type GameBetsQueryVariables,
+
+  ODDS_DECIMALS,
+  BetResult,
+  GameBetsDocument,
+  GameState,
 } from '@azuro-org/toolkit'
 import { useQuery } from '@tanstack/react-query'
 

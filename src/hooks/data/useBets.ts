@@ -1,12 +1,11 @@
 import {
-  OrderDirection,
-  Bet_OrderBy,
-
   type BetsQueryVariables,
   type BetsQuery,
   type GamesQuery,
   type GamesQueryVariables,
 
+  OrderDirection,
+  Bet_OrderBy,
   GraphBetStatus,
   BetsDocument,
   BetResult,

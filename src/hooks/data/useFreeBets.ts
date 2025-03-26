@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { type ChainId, ODDS_DECIMALS, getFreeBets } from '@azuro-org/toolkit'
 import { type Hex, formatUnits, type Address } from 'viem'
-import { useMemo } from 'react'
+import { useCallback } from 'react'
 
 import { useChain } from '../../contexts/chain'
+import { type QueryParameter } from '../../global'
 
 
 export type FreeBet = {
@@ -23,12 +24,18 @@ type Props = {
   account: Address
   affiliate: Address
   enabled?: boolean
+  query?: QueryParameter<FreeBet[]>
 }
 
-export const useFreeBets = ({ account, affiliate, enabled }: Props) => {
+export const useFreeBets = (props: Props) => {
+  const { account, affiliate, enabled = true, query = {} } = props
   const { appChain, api } = useChain()
 
-  const { data, ...rest } = useQuery({
+  const formatData = useCallback((data: FreeBet[]) => {
+    return data.filter(({ chainId }) => +chainId === appChain.id)
+  }, [ appChain.id ])
+
+  return useQuery({
     queryKey: [ 'freebets', api, account?.toLowerCase(), affiliate?.toLowerCase() ],
     queryFn: async () => {
       const freebets = await getFreeBets({
@@ -38,7 +45,7 @@ export const useFreeBets = ({ account, affiliate, enabled }: Props) => {
       })
 
       if (!freebets) {
-        return freebets
+        return []
       }
 
       return freebets.map<FreeBet>(freebet => ({
@@ -56,18 +63,7 @@ export const useFreeBets = ({ account, affiliate, enabled }: Props) => {
     },
     refetchOnWindowFocus: false,
     enabled,
+    select: formatData,
+    ...query,
   })
-
-  const appChainFreeBets = useMemo(() => {
-    if (!data) {
-      return data
-    }
-
-    return data.filter(({ chainId }) => +chainId === appChain.id)
-  }, [ data, appChain.id ])
-
-  return {
-    data: appChainFreeBets,
-    ...rest,
-  }
 }

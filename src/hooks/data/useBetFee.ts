@@ -2,13 +2,22 @@ import { useQuery } from '@tanstack/react-query'
 import { getLiveBetFee } from '@azuro-org/toolkit'
 
 import { useChain } from '../../contexts/chain'
+import { type QueryParameter } from '../../global'
 
+
+type Result = {
+  gasAmount: bigint,
+  relayerFeeAmount: bigint,
+  formattedRelayerFeeAmount: string,
+}
 
 type Props = {
   enabled?: boolean
+  query?: QueryParameter<Result>
 }
 
-export const useLiveBetFee = ({ enabled }: Props = { enabled: true }) => {
+export const useBetFee = (props: Props) => {
+  const { enabled = true, query = {} } = props
   const { appChain } = useChain()
 
   const queryFn = async () => {
@@ -26,11 +35,12 @@ export const useLiveBetFee = ({ enabled }: Props = { enabled: true }) => {
   }
 
   let { data, ...rest } = useQuery({
-    queryKey: [ '/live-bet-fee', appChain.id ],
+    queryKey: [ '/bet-fee', appChain.id ],
     queryFn,
     enabled,
     refetchOnWindowFocus: false,
     refetchInterval: 10_000,
+    ...query,
   })
 
   if (!enabled) {
