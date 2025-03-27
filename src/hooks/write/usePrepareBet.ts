@@ -37,7 +37,6 @@ type Props = {
   odds: Record<string, number>
   totalOdds: number
   freeBet?: FreeBet
-  betGas?: Pick<SendTransactionParameters, 'gas' | 'gasPrice' | 'maxFeePerGas' | 'maxFeePerBlobGas' | 'maxPriorityFeePerGas'>
   liveEIP712Attention?: string
   deadline?: number
   onSuccess?(receipt?: TransactionReceipt): void
@@ -57,11 +56,10 @@ const simpleObjReducer = (state: LiveBetTxState, newState: Partial<LiveBetTxStat
 export const usePrepareBet = (props: Props) => {
   const {
     betAmount: _betAmount, slippage, deadline, affiliate, selections, odds,
-    totalOdds, freeBet, betGas, liveEIP712Attention, onSuccess, onError,
+    totalOdds, freeBet, liveEIP712Attention, onSuccess, onError,
   } = props
 
-  const isLiveBet = true
-  const isCombo = !isLiveBet && selections.length > 1
+  const isCombo = selections.length > 1
   const isBatch = isCombo && typeof _betAmount === 'object'
   const isFreeBet = Boolean(freeBet) && !isCombo && !isBatch
 
@@ -76,17 +74,16 @@ export const usePrepareBet = (props: Props) => {
   const {
     data: liveBetFeeData,
     isFetching: isRelayerFeeFetching,
-  } = useBetFee({
-    enabled: isLiveBet,
-  })
+  } = useBetFee()
   const { relayerFeeAmount: rawRelayerFeeAmount, formattedRelayerFeeAmount: relayerFeeAmount } = liveBetFeeData || {}
   const { addBet } = useBetsCache()
   const { refetch: refetchBetTokenBalance } = useBetTokenBalance()
   const { refetch: refetchNativeBalance } = useNativeBalance()
 
-  const [ liveOrAABetTx, updateLiveOrAABetTx ] = useReducer(simpleObjReducer, { data: undefined, isPending: false })
+  const [ betTx, setBetTx ] = useReducer(simpleObjReducer, { data: undefined, isPending: false })
 
-  const approveAddress = isLiveBet ? contracts.liveRelayer?.address : contracts.proxyFront.address
+  // const approveAddress = isLiveBet ? contracts.liveRelayer?.address : contracts.proxyFront.address
+  const approveAddress = contracts.liveRelayer?.address
 
   const allowanceTx = useReadContract({
     chainId: appChain.id,
@@ -122,19 +119,15 @@ export const usePrepareBet = (props: Props) => {
     if (
       !betAmount
       || typeof allowanceTx?.data === 'undefined'
-      || (isLiveBet && typeof relayerFeeAmount === 'undefined')
+      || typeof relayerFeeAmount === 'undefined'
     ) {
       return false
     }
 
-    let approveAmount = betAmount
-
-    if (isLiveBet) {
-      approveAmount += +relayerFeeAmount!
-    }
+    const approveAmount = betAmount + +relayerFeeAmount!
 
     return allowanceTx.data < parseUnits(String(approveAmount), betToken.decimals)
-  }, [ allowanceTx.data, isLiveBet, relayerFeeAmount, betAmount ])
+  }, [ allowanceTx.data, relayerFeeAmount, betAmount ])
 
   const approve = async () => {
     const hash = await approveTx.writeContractAsync({
@@ -154,12 +147,10 @@ export const usePrepareBet = (props: Props) => {
     allowanceTx.refetch()
   }
 
-  const betTx = useSendTransaction()
-
   const betReceipt = useWaitForTransactionReceipt({
-    hash: betTx.data || liveOrAABetTx.data,
+    hash: betTx.data,
     query: {
-      enabled: Boolean(betTx.data) || Boolean(liveOrAABetTx.data),
+      enabled: Boolean(betTx.data),
     },
   })
 
@@ -170,16 +161,11 @@ export const usePrepareBet = (props: Props) => {
 
     let bets: NewBetProps['bet'][] = []
 
-    const fixedAmount = formatToFixed(betAmount, betToken.decimals)
-    const rawAmount = parseUnits(fixedAmount, betToken.decimals)
-    const rawDeadline = BigInt(Math.floor(Date.now() / 1000) + (deadline || DEFAULT_DEADLINE))
-
     let txHash: Hex
 
-    betTx.reset()
-    updateLiveOrAABetTx({
+    setBetTx({
       data: undefined,
-      isPending: isLiveBet || isAAWallet,
+      isPending: true,
     })
 
     if (isAAWallet && aaClient) {
@@ -187,105 +173,7 @@ export const usePrepareBet = (props: Props) => {
     }
 
     try {
-      if (isLiveBet) {
-        const fixedMinOdds = calcMindOdds({ odds: totalOdds, slippage })
-        const rawMinOdds = parseUnits(fixedMinOdds, ODDS_DECIMALS)
-        const { conditionId, outcomeId } = selections[0]!
-
-        if (isAAWallet && isApproveRequired) {
-          const hash = await aaClient!.sendTransaction({
-            to: betToken.address!,
-            data: encodeFunctionData({
-              abi: erc20Abi,
-              functionName: 'approve',
-              args: [
-                approveAddress!,
-                maxUint256,
-              ],
-            }),
-          })
-
-          await waitForTransactionReceipt(wagmiConfig, {
-            hash,
-            chainId: appChain.id,
-            confirmations: 1,
-          })
-        }
-
-        bets.push({
-          rawAmount,
-          selections,
-        })
-
-        const liveBet = {
-          attention: liveEIP712Attention || 'By signing this transaction, I agree to place a bet for a live event on \'Azuro SDK Example',
-          affiliate,
-          core: contracts.liveCore!.address,
-          amount: String(rawAmount),
-          chainId: appChain.id,
-          conditionId: conditionId,
-          outcomeId: +outcomeId,
-          minOdds: String(rawMinOdds),
-          nonce: String(Date.now()),
-          expiresAt: Math.floor(Date.now() / 1000) + 2000,
-          relayerFeeAmount: String(rawRelayerFeeAmount),
-        }
-
-        const typedData = getBetTypedData({
-          account: account.address!,
-          chainId: appChain.id,
-          bet: liveBet,
-        })
-
-        const signature = isAAWallet
-          ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account })
-          : await walletClient!.data!.signTypedData(typedData)
-
-        const createdOrder = await createBet({
-          account: account.address!,
-          chainId: appChain.id,
-          bet: liveBet,
-          signature,
-        })
-
-        const {
-          id: orderId,
-          state: newOrderState,
-          errorMessage,
-        } = createdOrder!
-
-        if (newOrderState === BetState.Created) {
-          txHash = await new Promise<Hex>((res, rej) => {
-            const interval = setInterval(async () => {
-              const order = await getBet({
-                chainId: appChain.id,
-                orderId,
-              })
-
-              const { state, txHash, errorMessage } = order!
-
-              if (state === BetState.Rejected) {
-                clearInterval(interval)
-                rej(errorMessage)
-              }
-
-              if (txHash) {
-                clearInterval(interval)
-                res(txHash as Hex)
-              }
-            }, 1000)
-          })
-
-          updateLiveOrAABetTx({
-            data: txHash,
-            isPending: false,
-          })
-        }
-        else {
-          throw Error(errorMessage)
-        }
-      }
-      else if (isFreeBet) {
+      if (isFreeBet) {
         // const { coreAddress, conditionId, outcomeId } = selections[0]!
         // const { id, expiresAt, contractAddress, rawMinOdds, rawAmount, signature, chainId } = freeBet!
 
@@ -332,104 +220,205 @@ export const usePrepareBet = (props: Props) => {
         // )
       }
       else {
-        let betData
+        const fixedAmount = formatToFixed(betAmount, betToken.decimals)
+        const rawAmount = parseUnits(fixedAmount, betToken.decimals)
+        const expiresAt = Math.floor(Date.now() / 1000) + (deadline || DEFAULT_DEADLINE)
+        const fixedMinOdds = calcMindOdds({ odds: totalOdds, slippage })
+        const rawMinOdds = parseUnits(fixedMinOdds, ODDS_DECIMALS)
+        const { conditionId, outcomeId } = selections[0]!
 
-        if (isBatch) {
-          betData = selections.map(selection => {
-            const { conditionId, outcomeId } = selection
-
-            const fixedAmount = parseFloat(_betAmount[`${conditionId}-${outcomeId}`]!).toFixed(betToken.decimals)
-            const rawAmount = parseUnits(fixedAmount, betToken.decimals)
-            const fixedMinOdds = calcMindOdds({ odds: odds[`${conditionId}-${outcomeId}`]!, slippage })
-            const rawMinOdds = parseUnits(fixedMinOdds, ODDS_DECIMALS)
-            const data = getPrematchBetDataBytes([ selection ])
-
-            bets.push({
-              rawAmount,
-              selections: [ selection ],
-            })
-
-            return {
-              core: contracts.prematchCore.address,
-              amount: rawAmount,
-              expiresAt: rawDeadline,
-              extraData: {
-                affiliate,
-                minOdds: rawMinOdds,
-                data,
-              },
-            }
-          })
-        }
-        else {
-          const fixedMinOdds = calcMindOdds({ odds: totalOdds, slippage })
-          const rawMinOdds = parseUnits(fixedMinOdds, ODDS_DECIMALS)
-          const coreAddress = selections.length > 1 ? contracts.prematchComboCore.address : contracts.prematchCore.address
-          const data = getPrematchBetDataBytes(selections)
-
-          bets.push({
-            rawAmount,
-            selections,
+        if (isAAWallet && isApproveRequired) {
+          const hash = await aaClient!.sendTransaction({
+            to: betToken.address!,
+            data: encodeFunctionData({
+              abi: erc20Abi,
+              functionName: 'approve',
+              args: [
+                approveAddress!,
+                maxUint256,
+              ],
+            }),
           })
 
-          betData = [
-            {
-              core: coreAddress,
-              amount: rawAmount,
-              expiresAt: rawDeadline,
-              extraData: {
-                affiliate,
-                minOdds: rawMinOdds,
-                data,
-              },
-            },
-          ]
+          await waitForTransactionReceipt(wagmiConfig, {
+            hash,
+            chainId: appChain.id,
+            confirmations: 1,
+          })
         }
 
-        const betTxDTO = {
-          to: contracts.proxyFront.address,
-          data: encodeFunctionData({
-            abi: contracts.proxyFront.abi,
-            functionName: 'bet',
-            args: [
-              contracts.lp.address,
-              betData,
-            ],
-          }),
-          ...(betGas || {}),
+        bets.push({
+          rawAmount,
+          selections,
+        })
+
+        const bet = {
+          attention: liveEIP712Attention || 'By signing this transaction, I agree to place a bet for a live event on \'Azuro SDK Example',
+          affiliate,
+          core: contracts.liveCore!.address,
+          amount: String(rawAmount),
+          chainId: appChain.id,
+          conditionId: conditionId,
+          outcomeId: +outcomeId,
+          minOdds: String(rawMinOdds),
+          nonce: String(Date.now()),
+          expiresAt,
+          relayerFeeAmount: String(rawRelayerFeeAmount),
         }
 
-        if (isAAWallet) {
-          const calls = isApproveRequired ? [
-            {
-              to: betToken.address!,
-              data: encodeFunctionData({
-                abi: erc20Abi,
-                functionName: 'approve',
-                args: [
-                  approveAddress!,
-                  maxUint256,
-                ],
-              }),
-            },
-            betTxDTO,
-          ] : [
-            betTxDTO,
-          ]
+        const typedData = getBetTypedData({
+          account: account.address!,
+          chainId: appChain.id,
+          bet,
+        })
 
-          txHash = await aaClient!.sendTransaction({
-            calls,
+        const signature = isAAWallet
+          ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account })
+          : await walletClient!.data!.signTypedData(typedData)
+
+        const createdOrder = await createBet({
+          account: account.address!,
+          chainId: appChain.id,
+          bet,
+          signature,
+        })
+
+        const {
+          id: orderId,
+          state: newOrderState,
+          errorMessage,
+        } = createdOrder!
+
+        if (newOrderState === BetState.Created) {
+          txHash = await new Promise<Hex>((res, rej) => {
+            const interval = setInterval(async () => {
+              const order = await getBet({
+                chainId: appChain.id,
+                orderId,
+              })
+
+              const { state, txHash, errorMessage } = order!
+
+              if (state === BetState.Rejected) {
+                clearInterval(interval)
+                rej(errorMessage)
+              }
+
+              if (txHash) {
+                clearInterval(interval)
+                res(txHash as Hex)
+              }
+            }, 1000)
           })
 
-          updateLiveOrAABetTx({
+          setBetTx({
             data: txHash,
             isPending: false,
           })
         }
         else {
-          txHash = await betTx.sendTransactionAsync(betTxDTO)
+          throw Error(errorMessage)
         }
       }
+      // else {
+      //   let betData
+
+      //   if (isBatch) {
+      //     betData = selections.map(selection => {
+      //       const { conditionId, outcomeId } = selection
+
+      //       const fixedAmount = parseFloat(_betAmount[`${conditionId}-${outcomeId}`]!).toFixed(betToken.decimals)
+      //       const rawAmount = parseUnits(fixedAmount, betToken.decimals)
+      //       const fixedMinOdds = calcMindOdds({ odds: odds[`${conditionId}-${outcomeId}`]!, slippage })
+      //       const rawMinOdds = parseUnits(fixedMinOdds, ODDS_DECIMALS)
+      //       const data = getPrematchBetDataBytes([ selection ])
+
+      //       bets.push({
+      //         rawAmount,
+      //         selections: [ selection ],
+      //       })
+
+      //       return {
+      //         core: contracts.prematchCore.address,
+      //         amount: rawAmount,
+      //         expiresAt: rawDeadline,
+      //         extraData: {
+      //           affiliate,
+      //           minOdds: rawMinOdds,
+      //           data,
+      //         },
+      //       }
+      //     })
+      //   }
+      //   else {
+      //     const fixedMinOdds = calcMindOdds({ odds: totalOdds, slippage })
+      //     const rawMinOdds = parseUnits(fixedMinOdds, ODDS_DECIMALS)
+      //     const coreAddress = selections.length > 1 ? contracts.prematchComboCore.address : contracts.prematchCore.address
+      //     const data = getPrematchBetDataBytes(selections)
+
+      //     bets.push({
+      //       rawAmount,
+      //       selections,
+      //     })
+
+      //     betData = [
+      //       {
+      //         core: coreAddress,
+      //         amount: rawAmount,
+      //         expiresAt: rawDeadline,
+      //         extraData: {
+      //           affiliate,
+      //           minOdds: rawMinOdds,
+      //           data,
+      //         },
+      //       },
+      //     ]
+      //   }
+
+      //   const betTxDTO = {
+      //     to: contracts.proxyFront.address,
+      //     data: encodeFunctionData({
+      //       abi: contracts.proxyFront.abi,
+      //       functionName: 'bet',
+      //       args: [
+      //         contracts.lp.address,
+      //         betData,
+      //       ],
+      //     }),
+      //     ...(betGas || {}),
+      //   }
+
+      //   if (isAAWallet) {
+      //     const calls = isApproveRequired ? [
+      //       {
+      //         to: betToken.address!,
+      //         data: encodeFunctionData({
+      //           abi: erc20Abi,
+      //           functionName: 'approve',
+      //           args: [
+      //             approveAddress!,
+      //             maxUint256,
+      //           ],
+      //         }),
+      //       },
+      //       betTxDTO,
+      //     ] : [
+      //       betTxDTO,
+      //     ]
+
+      //     txHash = await aaClient!.sendTransaction({
+      //       calls,
+      //     })
+
+      //     updateLiveOrAABetTx({
+      //       data: txHash,
+      //       isPending: false,
+      //     })
+      //   }
+      //   else {
+      //     txHash = await betTx.sendTransactionAsync(betTxDTO)
+      //   }
+      // }
 
       const receipt = await waitForTransactionReceipt(wagmiConfig, {
         hash: txHash!,
@@ -437,8 +426,7 @@ export const usePrepareBet = (props: Props) => {
       })
 
       if (receipt?.status === 'reverted') {
-        betTx.reset()
-        updateLiveOrAABetTx({
+        setBetTx({
           data: undefined,
           isPending: false,
         })
@@ -476,11 +464,9 @@ export const usePrepareBet = (props: Props) => {
       onSuccess?.(receipt)
     }
     catch (err) {
-      if (isLiveBet) {
-        updateLiveOrAABetTx({
-          isPending: false,
-        })
-      }
+      setBetTx({
+        isPending: false,
+      })
 
       onError?.(err as any)
     }
@@ -501,9 +487,9 @@ export const usePrepareBet = (props: Props) => {
       isProcessing: approveReceipt.isLoading,
     },
     betTx: {
-      data: betTx.data || liveOrAABetTx.data,
+      data: betTx.data,
       receipt: betReceipt.data,
-      isPending: betTx.isPending || liveOrAABetTx.isPending,
+      isPending: betTx.isPending,
       isProcessing: betReceipt.isLoading,
     },
     relayerFeeAmount,

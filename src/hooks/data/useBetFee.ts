@@ -16,7 +16,7 @@ type Props = {
   query?: QueryParameter<Result>
 }
 
-export const useBetFee = (props: Props) => {
+export const useBetFee = (props: Props = {}) => {
   const { enabled = true, query = {} } = props
   const { appChain } = useChain()
 
