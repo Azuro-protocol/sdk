@@ -15,11 +15,11 @@ import {
   GamesDocument,
 } from '@azuro-org/toolkit'
 import { type Address } from 'viem'
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { type InfiniteData, useInfiniteQuery } from '@tanstack/react-query'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 
 import { useChain } from '../../contexts/chain'
-import { type Bet, type BetOutcome, type InfiniteQueryParameters } from '../../global'
+import { BetType, type Bet, type BetOutcome, type InfiniteQueryParameters } from '../../global'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
 
@@ -32,7 +32,7 @@ export type UseBetsProps = {
   filter: {
     bettor: Address
     affiliate?: string
-    type?: AzuroSDK.BetType
+    type?: BetType
     limit?: number
   }
   orderBy?: Bet_OrderBy
@@ -76,20 +76,20 @@ export const useBets = (props: UseBetsProps) => {
         },
       }
 
-      if (filter.type === AzuroSDK.BetType.Unredeemed) {
+      if (filter.type === BetType.Unredeemed) {
         variables.where.isRedeemable = true
       }
 
-      if (filter.type === AzuroSDK.BetType.Accepted) {
+      if (filter.type === BetType.Accepted) {
         variables.where.status = GraphBetStatus.Accepted
         variables.where.isCashedOut = false
       }
 
-      if (filter.type === AzuroSDK.BetType.Settled) {
+      if (filter.type === BetType.Settled) {
         variables.where.status_in = [ GraphBetStatus.Resolved, GraphBetStatus.Canceled ]
       }
 
-      if (filter.type === AzuroSDK.BetType.CashedOut) {
+      if (filter.type === BetType.CashedOut) {
         variables.where.isCashedOut = true
       }
 

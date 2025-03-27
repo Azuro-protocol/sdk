@@ -11,7 +11,7 @@ import {
 import { useQuery } from '@tanstack/react-query'
 
 import { useChain } from '../../contexts/chain'
-import { type QueryParameter } from '../../global'
+import { type SportHub, type QueryParameter } from '../../global'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
 
@@ -19,7 +19,7 @@ export type UseGamesProps = {
   filter?: {
     limit?: number
     offset?: number
-    sportHub?: AzuroSDK.SportHub
+    sportHub?: SportHub
     sportSlug?: string
     sportIds?: Array<string | number>
     leagueSlug?: string | string[]

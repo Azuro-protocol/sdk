@@ -1,7 +1,6 @@
 import type { Address } from 'viem'
 import { type Selection, type GraphBetStatus, type GameQuery } from '@azuro-org/toolkit'
-import { type UseInfiniteQueryOptions, type DefaultError, type QueryKey } from '@tanstack/react-query'
-import { type UseQueryParameters } from 'wagmi/query'
+import { type UseInfiniteQueryOptions, type DefaultError, type QueryKey, type UseQueryOptions } from '@tanstack/react-query'
 
 
 export type QueryParameter<
@@ -9,7 +8,7 @@ export type QueryParameter<
   error = DefaultError,
   data = queryFnData,
   queryKey extends QueryKey = QueryKey,
-> = Omit<UseQueryParameters<queryFnData, error, data, queryKey>, 'queryFn' | 'queryHash' | 'queryKey' | 'queryKeyHashFn' | 'throwOnError' | 'select'> | undefined
+> = Omit<UseQueryOptions<queryFnData, error, data, queryKey>, 'queryFn' | 'queryHash' | 'queryKey' | 'queryKeyHashFn' | 'throwOnError' | 'select'> | undefined
 
 export type InfiniteQueryParameters<
   queryFnData = unknown,
@@ -18,7 +17,7 @@ export type InfiniteQueryParameters<
   queryData = queryFnData,
   queryKey extends QueryKey = QueryKey,
   pageParam = number,
-> = Omit<UseInfiniteQueryOptions<queryFnData, error, data, queryData, queryKey, pageParam>, 'initialData'>
+> = Omit<UseInfiniteQueryOptions<queryFnData, error, data, queryData, queryKey, pageParam>, 'queryFn' | 'queryHash' | 'queryKey' | 'queryKeyHashFn' | 'throwOnError' | 'select' | 'initialData'>
 
 declare global {
   namespace AzuroSDK {
@@ -26,27 +25,27 @@ declare global {
       gameId: string
       isExpressForbidden: boolean
     }
-
-    enum SportHub {
-      Sports = 'sports',
-      Esports = 'esports',
-      Unique = 'unique'
-    }
-
-    enum BetType {
-      Unredeemed = 'unredeemed',
-      Accepted = 'accepted',
-      Settled = 'settled',
-      CashedOut = 'cashedOut',
-    }
   }
+}
+
+export enum SportHub {
+  Sports = 'sports',
+  Esports = 'esports',
+  Unique = 'unique'
+}
+
+export enum BetType {
+  Unredeemed = 'unredeemed',
+  Accepted = 'accepted',
+  Settled = 'settled',
+  CashedOut = 'cashedOut',
 }
 
 export type BetOutcome = {
   selectionName: string
   odds: number
   marketName: string
-  game: GameQuery['game']
+  game: NonNullable<GameQuery['game']>
   isWin: boolean | null
   isLose: boolean | null
   isCanceled: boolean

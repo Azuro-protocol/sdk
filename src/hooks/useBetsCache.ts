@@ -52,7 +52,7 @@ import { getEventArgsFromTxReceipt } from '../helpers/getEventArgsFromTxReceipt'
 import { useChain } from '../contexts/chain'
 import { useExtendedAccount } from '../hooks/useAaConnector'
 import { gqlRequest } from '../helpers/gqlRequest'
-import { type BetsSummary, type Bet, type BetOutcome } from '../global'
+import { type BetsSummary, type Bet, type BetOutcome, BetType } from '../global'
 
 
 type UpdateBetProps = {
@@ -128,7 +128,7 @@ export const useBetsCache = () => {
           queryKey[0] === 'bets' &&
           queryKey[1] === graphql.feed &&
           String(queryKey[2]).toLowerCase() === address!.toLowerCase() &&
-          queryKey[3] === AzuroSDK.BetType.CashedOut
+          queryKey[3] === BetType.CashedOut
         ),
       }, (data: { pages: Bet[][], pageParams: number[] }) => {
         if (!data) {
@@ -387,7 +387,7 @@ export const useBetsCache = () => {
         queryKey[0] === 'bets' &&
         queryKey[1] === graphql.feed &&
         String(queryKey[2]).toLowerCase() === address!.toLowerCase() &&
-        (queryKey[3] === AzuroSDK.BetType.Accepted || typeof queryKey[3] === 'undefined')
+        (queryKey[3] === BetType.Accepted || typeof queryKey[3] === 'undefined')
       ),
     }, (data: { pages: Bet[][], pageParams: number[] }) => {
       if (!data) {

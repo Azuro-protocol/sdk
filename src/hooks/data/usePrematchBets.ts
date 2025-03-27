@@ -8,19 +8,19 @@ import {
   GraphBetStatus,
   SelectionResult,
 
-  type PrematchBetsQuery,
-  type PrematchBetsQueryVariables,
-  PrematchBetsDocument,
+  // type PrematchBetsQuery,
+  // type PrematchBetsQueryVariables,
+  // PrematchBetsDocument,
 } from '@azuro-org/toolkit'
 
-import { type BetOutcome, type Bet } from '../../global'
+import { type BetOutcome, type Bet, type BetType } from '../../global'
 
 
 export type UsePrematchBetsProps = {
   filter: {
     bettor: Address
     affiliate?: string
-    type?: AzuroSDK.BetType
+    type?: BetType
     limit?: number
     offset?: number
   }

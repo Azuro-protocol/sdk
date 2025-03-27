@@ -11,14 +11,14 @@ import { useQuery } from '@tanstack/react-query'
 import { useCallback } from 'react'
 
 import { useChain } from '../../contexts/chain'
-import { type QueryParameter } from '../../global'
+import { type SportHub, type QueryParameter } from '../../global'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
 
 export type UseSportsProps = {
   filter?: {
     limit?: number
-    sportHub?: AzuroSDK.SportHub
+    sportHub?: SportHub
     sportSlug?: string
     countrySlug?: string
     leagueSlug?: string

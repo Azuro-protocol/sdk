@@ -5,7 +5,7 @@ import {
   type ConditionFragment,
 
   ConditionState,
-  MIN_LIVE_BET_AMOUNT,
+  MIN_BET_AMOUNT,
   liveHostAddress,
   GameInfoFragmentDoc,
   ConditionFragmentDoc,

@@ -6,14 +6,14 @@ import {
 } from '@azuro-org/toolkit'
 import { useQuery } from '@tanstack/react-query'
 
-import { type QueryParameter } from '../../global'
+import { type SportHub, type QueryParameter } from '../../global'
 import { useChain } from '../../contexts/chain'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
 
 type UseNavigationProps = {
   filter?: {
-    sportHub?: AzuroSDK.SportHub
+    sportHub?: SportHub
     sportIds?: Array<string | number>
   }
   isLive?: boolean

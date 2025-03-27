@@ -11,18 +11,18 @@ import {
 import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useReducer } from 'react'
 import {
-  type Selection, ODDS_DECIMALS, liveHostAddress, LiveBetState,
+  type Selection, ODDS_DECIMALS, liveHostAddress, BetState,
   calcMindOdds, freeBetAbi, getPrematchBetDataBytes,
-  getLiveBetTypedData,
-  createLiveBet,
-  getLiveBet,
+  getBetTypedData,
+  createBet,
+  getBet,
 } from '@azuro-org/toolkit'
 
 import { useChain } from '../../contexts/chain'
 import { DEFAULT_DEADLINE } from '../../config'
 import { formatToFixed } from '../../helpers/formatToFixed'
 import { useBetsCache, type NewBetProps } from '../useBetsCache'
-import { useLiveBetFee } from '../data/useLiveBetFee'
+import { useBetFee } from '../data/useBetFee'
 import { type FreeBet } from '../data/useFreeBets'
 import { useAAWalletClient, useExtendedAccount } from '../useAaConnector'
 import { useBetTokenBalance } from '../useBetTokenBalance'
@@ -76,7 +76,7 @@ export const usePrepareBet = (props: Props) => {
   const {
     data: liveBetFeeData,
     isFetching: isRelayerFeeFetching,
-  } = useLiveBetFee({
+  } = useBetFee({
     enabled: isLiveBet,
   })
   const { relayerFeeAmount: rawRelayerFeeAmount, formattedRelayerFeeAmount: relayerFeeAmount } = liveBetFeeData || {}
@@ -231,7 +231,7 @@ export const usePrepareBet = (props: Props) => {
           relayerFeeAmount: String(rawRelayerFeeAmount),
         }
 
-        const typedData = getLiveBetTypedData({
+        const typedData = getBetTypedData({
           account: account.address!,
           chainId: appChain.id,
           bet: liveBet,
@@ -241,7 +241,7 @@ export const usePrepareBet = (props: Props) => {
           ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account })
           : await walletClient!.data!.signTypedData(typedData)
 
-        const createdOrder = await createLiveBet({
+        const createdOrder = await createBet({
           account: account.address!,
           chainId: appChain.id,
           bet: liveBet,
@@ -254,17 +254,17 @@ export const usePrepareBet = (props: Props) => {
           errorMessage,
         } = createdOrder!
 
-        if (newOrderState === LiveBetState.Created) {
+        if (newOrderState === BetState.Created) {
           txHash = await new Promise<Hex>((res, rej) => {
             const interval = setInterval(async () => {
-              const order = await getLiveBet({
+              const order = await getBet({
                 chainId: appChain.id,
                 orderId,
               })
 
               const { state, txHash, errorMessage } = order!
 
-              if (state === LiveBetState.Rejected) {
+              if (state === BetState.Rejected) {
                 clearInterval(interval)
                 rej(errorMessage)
               }

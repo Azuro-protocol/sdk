@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { getLiveBetFee } from '@azuro-org/toolkit'
+import { getBetFee } from '@azuro-org/toolkit'
 
 import { useChain } from '../../contexts/chain'
 import { type QueryParameter } from '../../global'
@@ -25,7 +25,7 @@ export const useBetFee = (props: Props) => {
       gasAmount,
       relayerFeeAmount,
       beautyRelayerFeeAmount,
-    } = await getLiveBetFee(appChain.id)
+    } = await getBetFee(appChain.id)
 
     return {
       gasAmount: BigInt(gasAmount),

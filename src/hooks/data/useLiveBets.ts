@@ -11,14 +11,16 @@ import type {
   BetResult,
   SelectionResult,
 
-  LiveBetsQuery,
-  LiveBetsQueryVariables,
-  LiveBetsDocument,
+  // LiveBetsQuery,
+  // LiveBetsQueryVariables,
+  // LiveBetsDocument,
 
   GameQuery,
   GamesQuery,
   GamesDocument,
 } from '@azuro-org/toolkit'
+
+import { type BetType } from '../../global'
 
 // import { useApolloClients } from '../../contexts/apollo'
 
@@ -60,7 +62,7 @@ export type UseLiveBetsProps = {
   filter: {
     bettor: Address
     affiliate?: string
-    type?: AzuroSDK.BetType
+    type?: BetType
     limit?: number
     offset?: number
   }
