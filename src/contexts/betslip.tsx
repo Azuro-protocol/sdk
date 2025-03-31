@@ -22,6 +22,7 @@ import { useConditionsState } from '../hooks/watch/useConditionsState'
 import { type FreeBet, useFreeBets } from '../hooks/data/useFreeBets'
 import useForceUpdate from '../hooks/helpers/useForceUpdate'
 import { useExtendedAccount } from '../hooks/useAaConnector'
+import { useMaxBet } from '../hooks/watch/useMaxBet'
 
 
 export enum BetslipDisableReason {
@@ -68,6 +69,7 @@ export type DetailedBetslipContextValue = {
   isStatesFetching: boolean
   isOddsFetching: boolean
   isFreeBetsFetching: boolean
+  isMaxBetFetching: boolean
   isBetAllowed: boolean
 }
 
@@ -113,6 +115,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
   const { states, isFetching: isStatesFetching } = useConditionsState({
     conditionIds: items.map(({ conditionId }) => conditionId),
   })
+  const { data: maxBet, isFetching: isMaxBetFetching } = useMaxBet({ selections: items })
 
   const { odds, totalOdds } = oddsData
   const isCombo = items.length > 1
@@ -189,10 +192,9 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
   // }, [ items ])
 
   // const minBet = isLiveBet && !appChain?.testnet ? MIN_LIVE_BET_AMOUNT : undefined
-  const maxBet = 10 // TODO
-  const minBet = undefined
+  const minBet = undefined // TODO
 
-  const isAmountLowerThanMaxBet = Boolean(betAmount) && typeof maxBet !== 'undefined' ? +betAmount <= maxBet : true
+  const isAmountLowerThanMaxBet = Boolean(betAmount) && typeof maxBet !== 'undefined' ? +betAmount <= +maxBet : true
   const isAmountBiggerThanMinBet = Boolean(betAmount) && typeof minBet !== 'undefined' ? +betAmount >= minBet : true
 
   const isBetAllowed = (
@@ -480,7 +482,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     // batchBetAmounts,
     odds,
     totalOdds,
-    maxBet,
+    maxBet: +(maxBet || 0),
     minBet,
     selectedFreeBet,
     freeBets,
@@ -494,6 +496,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     isStatesFetching,
     isOddsFetching,
     isFreeBetsFetching,
+    isMaxBetFetching,
     isBetAllowed,
   }), [
     totalBetAmount,
@@ -514,6 +517,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     isStatesFetching,
     isOddsFetching,
     isFreeBetsFetching,
+    isMaxBetFetching,
     isBetAllowed,
   ])
 

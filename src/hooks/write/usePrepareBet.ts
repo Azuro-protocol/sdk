@@ -229,8 +229,7 @@ export const usePrepareBet = (props: Props) => {
         const fixedAmount = formatToFixed(betAmount, betToken.decimals)
         const rawAmount = parseUnits(fixedAmount, betToken.decimals)
         const expiresAt = Math.floor(Date.now() / 1000) + (deadline || DEFAULT_DEADLINE)
-        const fixedMinOdds = calcMindOdds({ odds: totalOdds, slippage })
-        const rawMinOdds = parseUnits(fixedMinOdds, ODDS_DECIMALS)
+        const rawOdds = parseUnits(totalOdds.toFixed(ODDS_DECIMALS), ODDS_DECIMALS)
         const { conditionId, outcomeId } = selections[0]!
 
         if (isAAWallet && isApproveRequired) {
@@ -273,7 +272,7 @@ export const usePrepareBet = (props: Props) => {
           const bet = {
             conditionId,
             outcomeId,
-            odds: String(rawMinOdds),
+            odds: String(rawOdds),
           }
 
           const typedData = getComboBetTypedData({
@@ -302,7 +301,7 @@ export const usePrepareBet = (props: Props) => {
           const bet = {
             conditionId: conditionId,
             outcomeId,
-            odds: String(rawMinOdds),
+            odds: String(rawOdds),
             amount: String(rawAmount),
             nonce: String(Date.now()),
           }
