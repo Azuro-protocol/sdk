@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { type Selection, ConditionState } from '@azuro-org/toolkit'
+import { type Selection } from '@azuro-org/toolkit'
 
-import { conditionWatcher } from '../../modules/conditionWatcher'
+import { outcomeWatcher } from '../../modules/outcomeWatcher'
 import { useChain } from '../../contexts/chain'
 import { useConditionUpdates } from '../../contexts/conditionUpdates'
 import { batchFetchConditions } from '../../helpers/batchFetchConditions'
@@ -34,20 +34,14 @@ export const useSelectionOdds = ({ selection, initialOdds }: Props) => {
   }, [ isSocketReady, conditionId ])
 
   useEffect(() => {
-    const unsubscribe = conditionWatcher.subscribe(`${conditionId}`, (data) => {
-      const { outcomes } = data
-
-      const odds = outcomes[String(outcomeId)]?.odds
-
-      if (odds) {
-        setOdds(odds)
-      }
+    const unsubscribe = outcomeWatcher.subscribe(`${conditionId}-${outcomeId}`, (data) => {
+      setOdds( data.odds)
     })
 
     return () => {
       unsubscribe()
     }
-  }, [ conditionId ])
+  }, [ conditionId, outcomeId ])
 
   useEffect(() => {
     if (initialOdds) {
@@ -60,7 +54,7 @@ export const useSelectionOdds = ({ selection, initialOdds }: Props) => {
       setOdds(+(data?.[conditionId]?.outcomes?.[outcomeId]?.odds || 0))
       setFetching(false)
     })()
-  }, [ conditionId, graphql.feed ])
+  }, [ conditionId, outcomeId, graphql.feed ])
 
   return {
     data: odds,

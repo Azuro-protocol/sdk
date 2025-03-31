@@ -1,197 +1,106 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
-import { useConfig } from 'wagmi'
-import { type Selection, liveHostAddress, calcLiveOdds } from '@azuro-org/toolkit'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { type Selection } from '@azuro-org/toolkit'
 
+import { outcomeWatcher } from '../../modules/outcomeWatcher'
 import { useChain } from '../../contexts/chain'
-import { useConditionUpdates, type ConditionUpdatedData } from '../../contexts/conditionUpdates'
+import { useConditionUpdates } from '../../contexts/conditionUpdates'
+import { batchFetchConditions } from '../../helpers/batchFetchConditions'
 import { formatToFixed } from '../../helpers/formatToFixed'
-import useIsMounted from '../helpers/useIsMounted'
-import { conditionWatcher } from '../../modules/conditionWatcher'
-import { debounce } from '../../helpers/debounce'
 
 
-type CalcOddsProps = {
+type Props = {
   selections: Selection[]
-  betAmount?: string
-  batchBetAmounts?: Record<string, string>
 }
 
-export const useOdds = ({ selections, betAmount, batchBetAmounts }: CalcOddsProps) => {
+export const useOdds = ({ selections }: Props) => {
+  const { graphql } = useChain()
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useConditionUpdates()
-  const { appChain } = useChain()
-  const config = useConfig()
-  const isMounted = useIsMounted()
-
-  // const { liveItems, prematchItems } = useMemo<{ liveItems: Selection[], prematchItems: Selection[] }>(() => {
-  //   return selections.reduce((acc, item) => {
-  //     if (item.coreAddress.toLocaleLowerCase() === liveHostAddress.toLocaleLowerCase()) {
-  //       acc.liveItems.push(item)
-  //     }
-  //     else {
-  //       acc.prematchItems.push(item)
-  //     }
-
-  //     return acc
-  //   }, {
-  //     liveItems: [],
-  //     prematchItems: [],
-  //   } as { liveItems: Selection[], prematchItems: Selection[] })
-  // }, [ selections ])
-
-  const selectionsKey = useMemo(() => (
-    selections.map(({ conditionId }) => conditionId).join('-')
-  ), [ selections ])
 
   const [ odds, setOdds ] = useState<Record<string, number>>({})
-  const [ totalOdds, setTotalOdds ] = useState<number>(0)
-  const [ isFetching, setFetching ] = useState(Boolean(selections.length))
+  const [ isFetching, setFetching ] = useState(true)
 
-  const oddsDataRef = useRef<Record<string, ConditionUpdatedData>>({})
-  const betAmountRef = useRef(betAmount)
-  const batchBetAmountsRef = useRef(batchBetAmounts)
+  const { selectionsKey, conditionsKey } = useMemo(() => (
+    selections?.reduce((acc, { conditionId, outcomeId }) => {
+      acc.selectionsKey += acc.selectionsKey ? `-${conditionId}/${outcomeId}` : `${conditionId}/${outcomeId}`
+      acc.conditionsKey += acc.conditionsKey ? `-${conditionId}` : `${conditionId}`
+
+      return acc
+    }, {
+      selectionsKey: '',
+      conditionsKey: '',
+    })
+  ), [ selections ])
+
   const prevSelectionsKeyRef = useRef(selectionsKey)
 
-  if (
-    selectionsKey !== prevSelectionsKeyRef.current
-    || betAmount !== betAmountRef.current
-    || batchBetAmounts !== batchBetAmountsRef.current
-  ) {
+  if (selectionsKey !== prevSelectionsKeyRef.current) {
     setFetching(true)
     setOdds({})
-    setTotalOdds(1)
   }
 
   prevSelectionsKeyRef.current = selectionsKey
-  betAmountRef.current = betAmount
-  batchBetAmountsRef.current = batchBetAmounts
 
-  // const maxBet = useMemo<number | undefined>(() => {
-  //   if (!selections.length || selections.length > 1) {
-  //     return undefined
-  //   }
+  const totalOdds = useMemo(() => {
+    return +formatToFixed(Object.keys(odds).reduce((acc, key) => acc * +odds[key]!, 1), 5)
+  }, [ odds ])
 
-  //   const { conditionId, outcomeId } = selections[0]!
+  useEffect(() => {
+    if (!isSocketReady) {
+      return
+    }
 
-  //   return oddsDataRef.current?.[conditionId]?.outcomes?.[outcomeId]?.maxBet
-  // }, [ selectionsKey, odds ]) // we need odds in deps because we update oddsDataRef with odds
+    const conditionIds = conditionsKey.split('-')
 
-  // const fetchPrematchOdds = async () => {
-  //   if (!prematchItems.length) {
-  //     return
-  //   }
+    subscribeToUpdates(conditionIds)
 
-  //   try {
-  //     const prematchOdds = await calcPrematchOdds({
-  //       config,
-  //       betAmount: betAmountRef.current,
-  //       batchBetAmounts: batchBetAmountsRef.current,
-  //       selections: prematchItems,
-  //       chainId: appChain.id,
-  //     })
+    return () => {
+      unsubscribeToUpdates(conditionIds)
+    }
+  }, [ isSocketReady, conditionsKey ])
 
-  //     if (isMounted()) {
-  //       setOdds(odds => {
-  //         const newOdds = { ...odds, ...prematchOdds }
-  //         const newTotalOdds = +formatToFixed(Object.keys(newOdds).reduce((acc, key) => acc * +newOdds[key]!, 1), 5)
+  useEffect(() => {
+    const unsubscribeList = selections.map(({ conditionId, outcomeId }) => {
+      return outcomeWatcher.subscribe(`${conditionId}-${outcomeId}`, (data) => {
+        setOdds(prevOdds => ({
+          ...prevOdds,
+          [`${conditionId}-${outcomeId}`]: data.odds,
+        }))
+      })
+    })
 
-  //         setTotalOdds(newTotalOdds)
+    return () => {
+      unsubscribeList.forEach((unsubscribe) => {
+        unsubscribe()
+      })
+    }
+  }, [ selectionsKey ])
 
-  //         return newOdds
-  //       })
-  //       setPrematchOddsFetching(false)
-  //     }
-  //   }
-  //   catch (err) {
-  //     if (isMounted()) {
-  //       setPrematchOddsFetching(false)
-  //     }
-  //   }
-  // }
+  useEffect(() => {
+    const conditionIds = conditionsKey?.split('-')
 
-  // const fetchLiveOdds = (items: Selection[], newOddsData?: ConditionUpdatedData) => {
-  //   if (!items.length) {
-  //     return
-  //   }
+    if (!conditionIds.length) {
+      return
+    }
 
-  //   if (newOddsData) {
-  //     oddsDataRef.current[newOddsData.conditionId] = newOddsData
-  //   }
+    ;(async () => {
+      const data = await batchFetchConditions(conditionIds, graphql.feed)
 
-  //   const liveOdds = items.reduce((acc, item) => {
-  //     const { conditionId, outcomeId } = item
-  //     const oddsData = oddsDataRef.current[conditionId]
+      const newOdds = selections.reduce<Record<string, number>>((acc, { conditionId, outcomeId }) => {
+        acc[`${conditionId}-${outcomeId}`] = +(data[conditionId]?.outcomes[outcomeId]?.odds || 1)
 
-  //     if (!oddsData) {
-  //       return acc
-  //     }
+        return acc
+      }, {})
 
-  //     acc[`${conditionId}-${outcomeId}`] = calcLiveOdds({ selection: item, betAmount: betAmountRef.current, oddsData })
-
-  //     return acc
-  //   }, {} as Record<string, number>)
-
-  //   setOdds(odds => {
-  //     const newOdds = { ...odds, ...liveOdds }
-  //     const newTotalOdds = +formatToFixed(Object.keys(newOdds).reduce((acc, key) => acc * +newOdds[key]!, 1), 3)
-
-  //     setTotalOdds(newTotalOdds)
-
-  //     return newOdds
-  //   })
-  // }
-
-  // const fetchOdds = useCallback(debounce(() => {
-  //   fetchPrematchOdds()
-  //   fetchLiveOdds(liveItems)
-  // }, 100), [ selectionsKey ])
-
-  // useEffect(() => {
-  //   if (!isSocketReady || !liveItems.length) {
-  //     return
-  //   }
-
-  //   const ids = liveKey.split('-')
-
-  //   subscribeToUpdates(ids)
-
-  //   return () => {
-  //     unsubscribeToUpdates(ids)
-  //   }
-  // }, [ liveKey, isSocketReady ])
-
-  // useEffect(() => {
-  //   fetchOdds()
-  // }, [ fetchOdds, betAmount, batchBetAmounts ])
-
-  // useEffect(() => {
-  //   if (!selections?.length) {
-  //     return
-  //   }
-
-  //   const unsubscribeList = selections.map(({ conditionId }) => {
-  //     return oddsWatcher.subscribe(`${conditionId}`, (oddsData?: ConditionUpdatedData) => {
-  //       if (oddsData) {
-  //         const item = liveItems.find(item => item.conditionId === oddsData.conditionId)
-  //         fetchLiveOdds([ item! ], oddsData)
-  //       }
-  //       else {
-  //         setPrematchOddsFetching(true)
-  //         fetchPrematchOdds()
-  //       }
-  //     })
-  //   })
-
-  //   return () => {
-  //     unsubscribeList.forEach((unsubscribe) => {
-  //       unsubscribe()
-  //     })
-  //   }
-  // }, [ selectionsKey ])
+      setOdds(newOdds)
+      setFetching(false)
+    })()
+  }, [ selectionsKey, graphql.feed ])
 
   return {
-    odds,
-    totalOdds,
-    maxBet: 1,
+    data: {
+      odds,
+      totalOdds,
+    },
     isFetching,
   }
 }

@@ -3,6 +3,7 @@ import { type ConditionState } from '@azuro-org/toolkit'
 
 import { createQueueAction } from '../helpers/createQueueAction'
 import { conditionWatcher } from '../modules/conditionWatcher'
+import { outcomeWatcher } from '../modules/outcomeWatcher'
 import { useChain } from './chain'
 import { useFeedSocket } from './feedSocket'
 
@@ -47,11 +48,12 @@ export type ConditionUpdatedData = {
   // margin: number
   // reinforcement: number
   // winningOutcomesCount: number
-  outcomes: Record<string, {
-    odds: number
-    // clearOdds: number
-    // maxBet: number
-  }>
+}
+
+export type OutcomeUpdateData = {
+  odds: number
+  // clearOdds: number
+  // maxBet: number
 }
 
 const ConditionUpdatesContext = createContext<ConditionUpdatesContextValue | null>(null)
@@ -165,18 +167,24 @@ export const ConditionUpdatesProvider: React.FC<any> = ({ children }) => {
         // reinforcement: +reinforcement,
         // margin: +margin,
         // winningOutcomesCount: +winningOutcomesCount,
-        outcomes: outcomes.reduce((acc, { outcomeId, currentOdds }) => {
-          acc[String(outcomeId)] = {
-            odds: +currentOdds,
-            // clearOdds,
-            // maxBet: maxStake,
-          }
+        // outcomes: outcomes.reduce((acc, { outcomeId, currentOdds }) => {
+        //   acc[String(outcomeId)] = {
+        //     odds: +currentOdds,
+        //     // clearOdds,
+        //     // maxBet: maxStake,
+        //   }
 
-          return acc
-        }, {} as ConditionUpdatedData['outcomes']),
+        //   return acc
+        // }, {} as ConditionUpdatedData['outcomes']),
       }
 
       conditionWatcher.dispatch(conditionId, eventData)
+
+      outcomes.forEach(({ outcomeId, currentOdds }) => {
+        outcomeWatcher.dispatch(`${conditionId}-${outcomeId}`, {
+          odds: +currentOdds,
+        })
+      })
     }
 
     const handleClose = () => {

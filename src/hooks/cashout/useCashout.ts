@@ -91,8 +91,8 @@ export const useCashout = (props: Props) => {
   const isLive = false // TODO
   // const betCoreAddress = selections[0]!.coreAddress as Address
   const betCoreAddress = '' as Address // TODO
-  const betNftContractAddress = betCoreAddress.toLowerCase() === contracts.prematchComboCore.address.toLowerCase() ? (
-    contracts.prematchComboCore.address
+  const betNftContractAddress = betCoreAddress.toLowerCase() === contracts.core.address.toLowerCase() ? (
+    contracts.core.address
   ) : (
     contracts.azuroBet.address
   )

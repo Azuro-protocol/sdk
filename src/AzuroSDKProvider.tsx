@@ -11,7 +11,7 @@ import { GameUpdatesProvider } from './contexts/gameUpdates'
 type AzuroSDKProviderProps = ChainProviderProps & BetslipProviderProps
 
 export const AzuroSDKProvider: React.FC<AzuroSDKProviderProps> = (props) => {
-  const { children, initialChainId, affiliate, isBatchBetWithSameGameEnabled } = props
+  const { children, initialChainId, affiliate } = props
 
   return (
     <ChainProvider initialChainId={initialChainId}>
@@ -20,7 +20,7 @@ export const AzuroSDKProvider: React.FC<AzuroSDKProviderProps> = (props) => {
           <ConditionUpdatesProvider>
             <LiveStatisticsSocketProvider>
               <BetslipProvider
-                isBatchBetWithSameGameEnabled={isBatchBetWithSameGameEnabled}
+                // isBatchBetWithSameGameEnabled={isBatchBetWithSameGameEnabled}
                 affiliate={affiliate}
               >
                 {children}

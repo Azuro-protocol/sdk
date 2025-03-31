@@ -65,12 +65,12 @@ export const useRedeemBet = () => {
         isNative: false,
       }))
 
-      to = contracts.proxyFront.address
-      data = encodeFunctionData({
-        abi: contracts.proxyFront.abi,
-        functionName: 'withdrawPayouts',
-        args: [ betsData ],
-      })
+      // to = contracts.proxyFront.address
+      // data = encodeFunctionData({
+      //   abi: contracts.proxyFront.abi,
+      //   functionName: 'withdrawPayouts',
+      //   args: [ betsData ],
+      // })
     }
     else {
       const { tokenId, coreAddress, freebetContractAddress, freebetId } = bets[0]!
@@ -98,44 +98,44 @@ export const useRedeemBet = () => {
 
     let hash: Hex
 
-    if (isAAWallet) {
-      try {
-        hash = await aaClient!.sendTransaction({ to, data, chain: appChain })
+    // if (isAAWallet) {
+    //   try {
+    //     hash = await aaClient!.sendTransaction({ to, data, chain: appChain })
 
-        setAaTxState({
-          data: hash,
-          isPending: false,
-          error: null,
-        })
-      }
-      catch (error: any) {
-        setAaTxState({
-          data: undefined,
-          isPending: false,
-          error,
-        })
+    //     setAaTxState({
+    //       data: hash,
+    //       isPending: false,
+    //       error: null,
+    //     })
+    //   }
+    //   catch (error: any) {
+    //     setAaTxState({
+    //       data: undefined,
+    //       isPending: false,
+    //       error,
+    //     })
 
-        throw error
-      }
-    }
-    else {
-      hash = await redeemTx.sendTransactionAsync({ to, data })
-    }
+    //     throw error
+    //   }
+    // }
+    // else {
+    //   hash = await redeemTx.sendTransactionAsync({ to, data })
+    // }
 
-    const receipt = await waitForTransactionReceipt(wagmiConfig, {
-      hash,
-      chainId: appChain.id,
-    })
+    // const receipt = await waitForTransactionReceipt(wagmiConfig, {
+    //   hash,
+    //   chainId: appChain.id,
+    // })
 
-    if (receipt?.status === 'reverted') {
-      redeemTx.reset()
-      setAaTxState({
-        isPending: false,
-        data: undefined,
-        error: null,
-      })
-      throw new Error(`transaction ${receipt.transactionHash} was reverted`)
-    }
+    // if (receipt?.status === 'reverted') {
+    //   redeemTx.reset()
+    //   setAaTxState({
+    //     isPending: false,
+    //     data: undefined,
+    //     error: null,
+    //   })
+    //   throw new Error(`transaction ${receipt.transactionHash} was reverted`)
+    // }
 
     refetchBetTokenBalance()
     refetchNativeBalance()

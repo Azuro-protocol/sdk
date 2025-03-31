@@ -7,15 +7,19 @@ import {
   parseUnits, maxUint256, encodeFunctionData,
   type Address, erc20Abi, type TransactionReceipt, type Hex,
   type SendTransactionParameters,
+  SignTypedDataParameters,
 } from 'viem'
 import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useReducer } from 'react'
 import {
-  type Selection, ODDS_DECIMALS, liveHostAddress, BetState,
+  type Selection, type BetClientData, ODDS_DECIMALS, liveHostAddress, BetState,
   calcMindOdds, freeBetAbi, getPrematchBetDataBytes,
   getBetTypedData,
   createBet,
   getBet,
+  getComboBetTypedData,
+  createComboBet,
+  type CreateBetResponse,
 } from '@azuro-org/toolkit'
 
 import { useChain } from '../../contexts/chain'
@@ -30,7 +34,8 @@ import { useNativeBalance } from '../useNativeBalance'
 
 
 type Props = {
-  betAmount: string | Record<string, string>
+  // betAmount: string | Record<string, string>
+  betAmount: string
   slippage: number
   affiliate: Address
   selections: Selection[]
@@ -55,13 +60,14 @@ const simpleObjReducer = (state: LiveBetTxState, newState: Partial<LiveBetTxStat
 
 export const usePrepareBet = (props: Props) => {
   const {
-    betAmount: _betAmount, slippage, deadline, affiliate, selections, odds,
+    betAmount, slippage, deadline, affiliate, selections, odds,
     totalOdds, freeBet, liveEIP712Attention, onSuccess, onError,
   } = props
 
   const isCombo = selections.length > 1
-  const isBatch = isCombo && typeof _betAmount === 'object'
-  const isFreeBet = Boolean(freeBet) && !isCombo && !isBatch
+  // const isBatch = isCombo && typeof _betAmount === 'object'
+  // const isFreeBet = Boolean(freeBet) && !isCombo && !isBatch
+  const isFreeBet = Boolean(freeBet) && !isCombo
 
   const account = useExtendedAccount()
   const isAAWallet = Boolean(account.isAAWallet)
@@ -83,7 +89,7 @@ export const usePrepareBet = (props: Props) => {
   const [ betTx, setBetTx ] = useReducer(simpleObjReducer, { data: undefined, isPending: false })
 
   // const approveAddress = isLiveBet ? contracts.liveRelayer?.address : contracts.proxyFront.address
-  const approveAddress = contracts.liveRelayer?.address
+  const approveAddress = contracts.relayer?.address
 
   const allowanceTx = useReadContract({
     chainId: appChain.id,
@@ -107,13 +113,13 @@ export const usePrepareBet = (props: Props) => {
     },
   })
 
-  const betAmount = useMemo(() => {
-    if (typeof _betAmount === 'string') {
-      return +_betAmount
-    }
+  // const betAmount = useMemo(() => {
+  //   if (typeof _betAmount === 'string') {
+  //     return +_betAmount
+  //   }
 
-    return Object.values(_betAmount).reduce((acc, amount) => acc + +amount, 0)
-  }, [ _betAmount ])
+  //   return Object.values(_betAmount).reduce((acc, amount) => acc + +amount, 0)
+  // }, [ _betAmount ])
 
   const isApproveRequired = useMemo(() => {
     if (
@@ -252,36 +258,73 @@ export const usePrepareBet = (props: Props) => {
           selections,
         })
 
-        const bet = {
+        const clientData: BetClientData = {
           attention: liveEIP712Attention || 'By signing this transaction, I agree to place a bet for a live event on \'Azuro SDK Example',
           affiliate,
-          core: contracts.liveCore!.address,
-          amount: String(rawAmount),
-          chainId: appChain.id,
-          conditionId: conditionId,
-          outcomeId: +outcomeId,
-          minOdds: String(rawMinOdds),
-          nonce: String(Date.now()),
+          core: contracts.core.address,
           expiresAt,
+          chainId: appChain.id,
           relayerFeeAmount: String(rawRelayerFeeAmount),
         }
 
-        const typedData = getBetTypedData({
-          account: account.address!,
-          chainId: appChain.id,
-          bet,
-        })
+        let createdOrder: CreateBetResponse | null
 
-        const signature = isAAWallet
-          ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account })
-          : await walletClient!.data!.signTypedData(typedData)
+        if (isCombo) {
+          const bet = {
+            conditionId,
+            outcomeId,
+            odds: String(rawMinOdds),
+          }
 
-        const createdOrder = await createBet({
-          account: account.address!,
-          chainId: appChain.id,
-          bet,
-          signature,
-        })
+          const typedData = getComboBetTypedData({
+            account: account.address!,
+            clientData,
+            amount: String(rawAmount),
+            nonce: String(Date.now()),
+            bet,
+          })
+
+          const signature = isAAWallet
+            ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account })
+            : await walletClient!.data!.signTypedData(typedData)
+
+
+          createdOrder = await createComboBet({
+            account: account.address!,
+            clientData,
+            amount: String(rawAmount),
+            nonce: String(Date.now()),
+            bet,
+            signature,
+          })
+        }
+        else {
+          const bet = {
+            conditionId: conditionId,
+            outcomeId,
+            odds: String(rawMinOdds),
+            amount: String(rawAmount),
+            nonce: String(Date.now()),
+          }
+
+          const typedData = getBetTypedData({
+            account: account.address!,
+            clientData,
+            bet,
+          })
+
+          const signature = isAAWallet
+            ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account })
+            : await walletClient!.data!.signTypedData(typedData)
+
+
+          createdOrder = await createBet({
+            account: account.address!,
+            clientData,
+            bet,
+            signature,
+          })
+        }
 
         const {
           id: orderId,
