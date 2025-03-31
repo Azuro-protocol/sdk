@@ -34,9 +34,8 @@ export {
 } from './contexts/liveStatisticsSocket'
 
 // data hooks
-export { usePrematchBets, type UsePrematchBetsProps } from './hooks/data/usePrematchBets'
 export { useBets, type UseBetsProps } from './hooks/data/useBets'
-export { useLiveBets, type UseLiveBetsProps } from './hooks/data/useLiveBets'
+export { useLegacyBets, type UseLegacyBetsProps } from './hooks/data/useLegacyBets'
 export { useConditions } from './hooks/data/useConditions'
 export { useActiveConditions } from './hooks/data/useActiveConditions'
 export { useGame } from './hooks/data/useGame'
@@ -49,7 +48,8 @@ export { useNavigation } from './hooks/data/useNavigation'
 export { useBetFee } from './hooks/data/useBetFee'
 export { useBetsSummary } from './hooks/data/useBetsSummary'
 export { useBetsSummaryBySelection, type BetsSummaryBySelection } from './hooks/data/useBetsSummaryBySelection'
-export { useFreeBets, type FreeBet } from './hooks/data/useFreeBets'
+// export { useFreeBets, type FreeBet } from './hooks/data/useFreeBets' // TODO
+export { useMaxBet } from './hooks/data/useMaxBet'
 
 // write hooks
 export { useRedeemBet } from './hooks/write/useRedeemBet'

@@ -58,84 +58,68 @@ export const useRedeemBet = () => {
     let data: Hex
     let to: Address
 
-    if (isBatch) {
-      const betsData = bets.map(({ tokenId, coreAddress }) => ({
-        core: coreAddress as Address,
-        tokenId: BigInt(tokenId),
-        isNative: false,
-      }))
+    const { freebetContractAddress, freebetId, coreAddress } = bets[0]!
 
-      // to = contracts.proxyFront.address
-      // data = encodeFunctionData({
-      //   abi: contracts.proxyFront.abi,
-      //   functionName: 'withdrawPayouts',
-      //   args: [ betsData ],
-      // })
+    if (freebetContractAddress && freebetId) {
+      to = freebetContractAddress
+      data = encodeFunctionData({
+        abi: freeBetAbi,
+        functionName: 'withdrawPayout',
+        args: [ BigInt(freebetId) ],
+      })
     }
     else {
-      const { tokenId, coreAddress, freebetContractAddress, freebetId } = bets[0]!
-
-      if (freebetContractAddress && freebetId) {
-        to = freebetContractAddress
-        data = encodeFunctionData({
-          abi: freeBetAbi,
-          functionName: 'withdrawPayout',
-          args: [ BigInt(freebetId) ],
-        })
-      }
-      else {
-        to = contracts.lp.address
-        data = encodeFunctionData({
-          abi: contracts.lp.abi,
-          functionName: 'withdrawPayout',
-          args: [
-            coreAddress,
-            BigInt(tokenId),
-          ],
-        })
-      }
+      to = contracts.lp.address
+      data = encodeFunctionData({
+        abi: contracts.lp.abi,
+        functionName: 'withdrawPayouts',
+        args: [
+          coreAddress,
+          bets.map(({ tokenId }) => BigInt(tokenId)),
+        ],
+      })
     }
 
     let hash: Hex
 
-    // if (isAAWallet) {
-    //   try {
-    //     hash = await aaClient!.sendTransaction({ to, data, chain: appChain })
+    if (isAAWallet) {
+      try {
+        hash = await aaClient!.sendTransaction({ to, data, chain: appChain })
 
-    //     setAaTxState({
-    //       data: hash,
-    //       isPending: false,
-    //       error: null,
-    //     })
-    //   }
-    //   catch (error: any) {
-    //     setAaTxState({
-    //       data: undefined,
-    //       isPending: false,
-    //       error,
-    //     })
+        setAaTxState({
+          data: hash,
+          isPending: false,
+          error: null,
+        })
+      }
+      catch (error: any) {
+        setAaTxState({
+          data: undefined,
+          isPending: false,
+          error,
+        })
 
-    //     throw error
-    //   }
-    // }
-    // else {
-    //   hash = await redeemTx.sendTransactionAsync({ to, data })
-    // }
+        throw error
+      }
+    }
+    else {
+      hash = await redeemTx.sendTransactionAsync({ to, data })
+    }
 
-    // const receipt = await waitForTransactionReceipt(wagmiConfig, {
-    //   hash,
-    //   chainId: appChain.id,
-    // })
+    const receipt = await waitForTransactionReceipt(wagmiConfig, {
+      hash,
+      chainId: appChain.id,
+    })
 
-    // if (receipt?.status === 'reverted') {
-    //   redeemTx.reset()
-    //   setAaTxState({
-    //     isPending: false,
-    //     data: undefined,
-    //     error: null,
-    //   })
-    //   throw new Error(`transaction ${receipt.transactionHash} was reverted`)
-    // }
+    if (receipt?.status === 'reverted') {
+      redeemTx.reset()
+      setAaTxState({
+        isPending: false,
+        data: undefined,
+        error: null,
+      })
+      throw new Error(`transaction ${receipt.transactionHash} was reverted`)
+    }
 
     refetchBetTokenBalance()
     refetchNativeBalance()

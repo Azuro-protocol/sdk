@@ -22,7 +22,7 @@ import { useConditionsState } from '../hooks/watch/useConditionsState'
 import { type FreeBet, useFreeBets } from '../hooks/data/useFreeBets'
 import useForceUpdate from '../hooks/helpers/useForceUpdate'
 import { useExtendedAccount } from '../hooks/useAaConnector'
-import { useMaxBet } from '../hooks/watch/useMaxBet'
+import { useMaxBet } from '../hooks/data/useMaxBet'
 
 
 export enum BetslipDisableReason {
@@ -57,18 +57,18 @@ export type DetailedBetslipContextValue = {
   totalOdds: number
   maxBet: number | undefined
   minBet: number | undefined
-  selectedFreeBet: FreeBet | undefined
-  freeBets: FreeBet[] | undefined | null
+  // selectedFreeBet: FreeBet | undefined
+  // freeBets: FreeBet[] | undefined | null
   states: Record<string, ConditionState>
   disableReason: BetslipDisableReason | undefined
   changeBetAmount: (value: string) => void
   // changeBatchBetAmount: (item: ChangeBatchBetAmountItem, value: string) => void
   // changeBatch: (value: boolean) => void
-  selectFreeBet: (value?: FreeBet) => void
+  // selectFreeBet: (value?: FreeBet) => void
   // isBatch: boolean
   isStatesFetching: boolean
   isOddsFetching: boolean
-  isFreeBetsFetching: boolean
+  // isFreeBetsFetching: boolean
   isMaxBetFetching: boolean
   isBetAllowed: boolean
 }
@@ -102,11 +102,12 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
   // const [ batchBetAmounts, setBatchBetAmounts ] = useState<Record<string, string>>({})
   // const [ isBatch, setBatch ] = useState(false)
 
-  const { data: freeBets, isFetching: isFreeBetsFetching } = useFreeBets({
-    account: account.address!,
-    affiliate: affiliate!,
-    enabled: Boolean(affiliate),
-  })
+  // TODO
+  // const { data: freeBets, isFetching: isFreeBetsFetching } = useFreeBets({
+  //   account: account.address!,
+  //   affiliate: affiliate!,
+  //   enabled: Boolean(affiliate),
+  // })
   const { data: oddsData, isFetching: isOddsFetching } = useOdds({
     // betAmount,
     // batchBetAmounts,
@@ -484,18 +485,18 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     totalOdds,
     maxBet: +(maxBet || 0),
     minBet,
-    selectedFreeBet,
-    freeBets,
+    // selectedFreeBet,
+    // freeBets,
     states,
     disableReason,
     changeBetAmount,
     // changeBatchBetAmount,
     // changeBatch,
-    selectFreeBet: setFreeBet,
+    // selectFreeBet: setFreeBet,
     // isBatch,
     isStatesFetching,
     isOddsFetching,
-    isFreeBetsFetching,
+    // isFreeBetsFetching,
     isMaxBetFetching,
     isBetAllowed,
   }), [
@@ -505,18 +506,18 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     totalOdds,
     maxBet,
     minBet,
-    selectedFreeBet,
-    freeBets,
+    // selectedFreeBet,
+    // freeBets,
     states,
     disableReason,
     changeBetAmount,
     // changeBatchBetAmount,
     // changeBatch,
-    setFreeBet,
+    // setFreeBet,
     // isBatch,
     isStatesFetching,
     isOddsFetching,
-    isFreeBetsFetching,
+    // isFreeBetsFetching,
     isMaxBetFetching,
     isBetAllowed,
   ])

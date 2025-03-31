@@ -17,7 +17,7 @@ export type InfiniteQueryParameters<
   queryData = queryFnData,
   queryKey extends QueryKey = QueryKey,
   pageParam = number,
-> = Omit<UseInfiniteQueryOptions<queryFnData, error, data, queryData, queryKey, pageParam>, 'queryFn' | 'queryHash' | 'queryKey' | 'queryKeyHashFn' | 'throwOnError' | 'select' | 'initialData'>
+> = Omit<UseInfiniteQueryOptions<queryFnData, error, data, queryData, queryKey, pageParam>, 'queryFn' | 'queryHash' | 'queryKey' | 'queryKeyHashFn' | 'throwOnError' | 'select' | 'initialData' | 'getNextPageParam' | 'initialPageParam'>
 
 declare global {
   namespace AzuroSDK {

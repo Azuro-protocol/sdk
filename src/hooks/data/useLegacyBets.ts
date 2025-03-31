@@ -1,18 +1,16 @@
 import {
-  type BetsQueryVariables,
-  type BetsQuery,
-  type GamesQuery,
-  type GamesQueryVariables,
+  type LegacyPrematchBetsQueryVariables,
+  type LegacyPrematchBetsQuery,
 
   OrderDirection,
-  Bet_OrderBy,
+  Legacy_Bet_OrderBy,
   GraphBetStatus,
-  BetsDocument,
+  LegacyPrematchBetsDocument,
   BetResult,
   SelectionResult,
   BetConditionStatus,
   GameState,
-  GamesDocument,
+  LegacyGameStatus,
 } from '@azuro-org/toolkit'
 import { type Address } from 'viem'
 import { useInfiniteQuery } from '@tanstack/react-query'
@@ -28,23 +26,24 @@ type QueryResult = {
   nextPage: number | undefined,
 }
 
-export type UseBetsProps = {
+export type UseLegacyBetsProps = {
   filter: {
     bettor: Address
     affiliate?: string
     type?: BetType
+    limit?: number
   }
   itemsPerPage?: number
-  orderBy?: Bet_OrderBy
+  orderBy?: Legacy_Bet_OrderBy
   orderDir?: OrderDirection
   query?: InfiniteQueryParameters<QueryResult>
 }
 
-export const useBets = (props: UseBetsProps) => {
+export const useLegacyBets = (props: UseLegacyBetsProps) => {
   const {
     filter,
     itemsPerPage = 100,
-    orderBy = Bet_OrderBy.CreatedBlockTimestamp,
+    orderBy = Legacy_Bet_OrderBy.CreatedBlockTimestamp,
     orderDir = OrderDirection.Asc,
     query,
   } = props
@@ -59,13 +58,14 @@ export const useBets = (props: UseBetsProps) => {
       gqlLink,
       filter.bettor,
       filter.type,
+      filter.limit,
       filter.affiliate,
       itemsPerPage,
       orderBy,
       orderDir,
     ],
     queryFn: async ({ pageParam }) => {
-      const variables: BetsQueryVariables = {
+      const variables: LegacyPrematchBetsQueryVariables = {
         first: itemsPerPage,
         skip: itemsPerPage * (pageParam - 1),
         orderBy,
@@ -96,48 +96,13 @@ export const useBets = (props: UseBetsProps) => {
         variables.where.affiliate = filter.affiliate
       }
 
-      const { v3Bets } = await gqlRequest<BetsQuery, BetsQueryVariables>({
+      const { bets: _bets } = await gqlRequest<LegacyPrematchBetsQuery, LegacyPrematchBetsQueryVariables>({
         url: gqlLink,
-        document: BetsDocument,
+        document: LegacyPrematchBetsDocument,
         variables,
       })
 
-      if (!v3Bets?.length) {
-        return {
-          bets: [],
-          nextPage: undefined,
-        }
-      }
-
-      const gameIds = v3Bets.reduce((acc, { selections }) => {
-        selections.forEach((selection) => {
-          const { outcome: { condition: { gameId } } } = selection
-
-          acc.add(gameId)
-        })
-
-        return acc
-      }, new Set<string>())
-
-
-      const { games } = await gqlRequest<GamesQuery, GamesQueryVariables>({
-        url: graphql.feed,
-        document: GamesDocument,
-        variables: {
-          first: 1000,
-          where: {
-            gameId_in: [ ...gameIds ],
-          },
-        },
-      })
-
-      const gameByGameId = games.reduce((acc, game) => {
-        acc[game.gameId] = game
-
-        return acc
-      }, {} as Record<string, GamesQuery['games'][0]>)
-
-      const bets = v3Bets.map((rawBet) => {
+      const bets = _bets.map((rawBet) => {
         const {
           tokenId, status, amount, odds, settledOdds, createdAt, result, affiliate, selections,
           cashout: _cashout, isCashedOut, payout: _payout, isRedeemed: _isRedeemed, isRedeemable, freebet, txHash,
@@ -164,48 +129,56 @@ export const useBets = (props: UseBetsProps) => {
         const possibleWin = +amount * totalOdds - +betDiff
         const cashout = isCashedOut ? _cashout?.payout : undefined
 
-        const outcomes: BetOutcome[] = selections
-          .map((selection) => {
-            const {
-              odds,
-              result,
-              outcome: {
-                outcomeId,
-                title: customSelectionName,
-                condition: {
-                  conditionId,
-                  status: conditionStatus,
-                  title: customMarketName,
-                  gameId,
-                },
-              },
-            } = selection
-
-            const game = gameByGameId[gameId]!
-
-            const isWin = result ? result === SelectionResult.Won : null
-            const isLose = result ? result === SelectionResult.Lost : null
-            const isCanceled = (
-              conditionStatus === BetConditionStatus.Canceled
-                  || game.state === GameState.Stopped
-            )
-
-            const marketName = customMarketName && customMarketName !== 'null' ? customMarketName : getMarketName({ outcomeId })
-            const selectionName = customSelectionName && customSelectionName !== 'null' ? customSelectionName : getSelectionName({ outcomeId, withPoint: true })
-
-            return {
-              selectionName,
+        const outcomes = selections
+          .map<BetOutcome>((selection) => {
+          const {
+            odds,
+            result,
+            outcome: {
               outcomeId,
-              conditionId,
-              coreAddress,
-              odds: +odds,
-              marketName,
-              game,
-              isWin,
-              isLose,
-              isCanceled,
-            }
-          })
+              title: customSelectionName,
+              condition: {
+                conditionId,
+                status: conditionStatus,
+                title: customMarketName,
+                game,
+              },
+            },
+          } = selection
+
+          const isWin = result ? result === SelectionResult.Won : null
+          const isLose = result ? result === SelectionResult.Lost : null
+          const isCanceled = (
+            conditionStatus === BetConditionStatus.Canceled
+                  || game.status === LegacyGameStatus.Paused
+          )
+
+          const marketName = customMarketName && customMarketName !== 'null' ? customMarketName : getMarketName({ outcomeId })
+          const selectionName = customSelectionName && customSelectionName !== 'null' ? customSelectionName : getSelectionName({ outcomeId, withPoint: true })
+
+          return {
+            selectionName,
+            outcomeId,
+            conditionId,
+            coreAddress,
+            odds: +odds,
+            marketName,
+            game: {
+              id: game.id,
+              gameId: game.gameId,
+              title: game.title || '',
+              startsAt: game.startsAt,
+              state: GameState.Finished,
+              sport: game.sport,
+              league: game.league,
+              country: game.league.country,
+              participants: game.participants,
+            },
+            isWin,
+            isLose,
+            isCanceled,
+          }
+        })
           .sort((a, b) => +a.game.startsAt - +b.game.startsAt)
 
         const bet: Bet = {

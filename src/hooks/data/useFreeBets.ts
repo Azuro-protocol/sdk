@@ -48,18 +48,20 @@ export const useFreeBets = (props: Props) => {
         return []
       }
 
-      return freebets.map<FreeBet>(freebet => ({
-        id: +freebet.id,
-        contractAddress: freebet.contract.freebetContractAddress,
-        signature: freebet.signature,
-        expiresAt: freebet.expiresAt * 1000,
-        amount: formatUnits(BigInt(freebet.amount), freebet.contract.decimals),
-        rawAmount: BigInt(freebet.amount),
-        minOdds: formatUnits(BigInt(freebet.minOdds), ODDS_DECIMALS),
-        rawMinOdds: BigInt(freebet.minOdds),
-        campaign: freebet.campaign,
-        chainId: +freebet.contract.chainId as ChainId,
-      }))
+      // return freebets.map<FreeBet>(freebet => ({
+      //   id: +freebet.id,
+      //   contractAddress: freebet.contract.freebetContractAddress,
+      //   signature: freebet.signature,
+      //   expiresAt: freebet.expiresAt * 1000,
+      //   amount: formatUnits(BigInt(freebet.amount), freebet.contract.decimals),
+      //   rawAmount: BigInt(freebet.amount),
+      //   minOdds: formatUnits(BigInt(freebet.minOdds), ODDS_DECIMALS),
+      //   rawMinOdds: BigInt(freebet.minOdds),
+      //   campaign: freebet.campaign,
+      //   chainId: +freebet.contract.chainId as ChainId,
+      // }))
+
+      return []
     },
     refetchOnWindowFocus: false,
     enabled,

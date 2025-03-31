@@ -13,7 +13,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useReducer } from 'react'
 import {
   type Selection, type BetClientData, ODDS_DECIMALS, liveHostAddress, BetState,
-  calcMindOdds, freeBetAbi, getPrematchBetDataBytes,
+  calcMindOdds, freeBetAbi,
   getBetTypedData,
   createBet,
   getBet,
@@ -41,7 +41,7 @@ type Props = {
   selections: Selection[]
   odds: Record<string, number>
   totalOdds: number
-  freeBet?: FreeBet
+  // freeBet?: FreeBet // TODO
   liveEIP712Attention?: string
   deadline?: number
   onSuccess?(receipt?: TransactionReceipt): void
@@ -61,13 +61,14 @@ const simpleObjReducer = (state: LiveBetTxState, newState: Partial<LiveBetTxStat
 export const usePrepareBet = (props: Props) => {
   const {
     betAmount, slippage, deadline, affiliate, selections, odds,
-    totalOdds, freeBet, liveEIP712Attention, onSuccess, onError,
+    totalOdds, liveEIP712Attention, onSuccess, onError,
   } = props
 
   const isCombo = selections.length > 1
   // const isBatch = isCombo && typeof _betAmount === 'object'
   // const isFreeBet = Boolean(freeBet) && !isCombo && !isBatch
-  const isFreeBet = Boolean(freeBet) && !isCombo
+  // const isFreeBet = Boolean(freeBet) && !isCombo
+  const isFreeBet = false
 
   const account = useExtendedAccount()
   const isAAWallet = Boolean(account.isAAWallet)
@@ -362,105 +363,6 @@ export const usePrepareBet = (props: Props) => {
           throw Error(errorMessage)
         }
       }
-      // else {
-      //   let betData
-
-      //   if (isBatch) {
-      //     betData = selections.map(selection => {
-      //       const { conditionId, outcomeId } = selection
-
-      //       const fixedAmount = parseFloat(_betAmount[`${conditionId}-${outcomeId}`]!).toFixed(betToken.decimals)
-      //       const rawAmount = parseUnits(fixedAmount, betToken.decimals)
-      //       const fixedMinOdds = calcMindOdds({ odds: odds[`${conditionId}-${outcomeId}`]!, slippage })
-      //       const rawMinOdds = parseUnits(fixedMinOdds, ODDS_DECIMALS)
-      //       const data = getPrematchBetDataBytes([ selection ])
-
-      //       bets.push({
-      //         rawAmount,
-      //         selections: [ selection ],
-      //       })
-
-      //       return {
-      //         core: contracts.prematchCore.address,
-      //         amount: rawAmount,
-      //         expiresAt: rawDeadline,
-      //         extraData: {
-      //           affiliate,
-      //           minOdds: rawMinOdds,
-      //           data,
-      //         },
-      //       }
-      //     })
-      //   }
-      //   else {
-      //     const fixedMinOdds = calcMindOdds({ odds: totalOdds, slippage })
-      //     const rawMinOdds = parseUnits(fixedMinOdds, ODDS_DECIMALS)
-      //     const coreAddress = selections.length > 1 ? contracts.prematchComboCore.address : contracts.prematchCore.address
-      //     const data = getPrematchBetDataBytes(selections)
-
-      //     bets.push({
-      //       rawAmount,
-      //       selections,
-      //     })
-
-      //     betData = [
-      //       {
-      //         core: coreAddress,
-      //         amount: rawAmount,
-      //         expiresAt: rawDeadline,
-      //         extraData: {
-      //           affiliate,
-      //           minOdds: rawMinOdds,
-      //           data,
-      //         },
-      //       },
-      //     ]
-      //   }
-
-      //   const betTxDTO = {
-      //     to: contracts.proxyFront.address,
-      //     data: encodeFunctionData({
-      //       abi: contracts.proxyFront.abi,
-      //       functionName: 'bet',
-      //       args: [
-      //         contracts.lp.address,
-      //         betData,
-      //       ],
-      //     }),
-      //     ...(betGas || {}),
-      //   }
-
-      //   if (isAAWallet) {
-      //     const calls = isApproveRequired ? [
-      //       {
-      //         to: betToken.address!,
-      //         data: encodeFunctionData({
-      //           abi: erc20Abi,
-      //           functionName: 'approve',
-      //           args: [
-      //             approveAddress!,
-      //             maxUint256,
-      //           ],
-      //         }),
-      //       },
-      //       betTxDTO,
-      //     ] : [
-      //       betTxDTO,
-      //     ]
-
-      //     txHash = await aaClient!.sendTransaction({
-      //       calls,
-      //     })
-
-      //     updateLiveOrAABetTx({
-      //       data: txHash,
-      //       isPending: false,
-      //     })
-      //   }
-      //   else {
-      //     txHash = await betTx.sendTransactionAsync(betTxDTO)
-      //   }
-      // }
 
       const receipt = await waitForTransactionReceipt(wagmiConfig, {
         hash: txHash!,
@@ -480,16 +382,16 @@ export const usePrepareBet = (props: Props) => {
       allowanceTx.refetch()
 
       if (isFreeBet) {
-        const queryKey = [ 'freebets', api, account.address!.toLowerCase(), affiliate.toLowerCase() ]
-        await queryClient.cancelQueries({ queryKey })
+        // const queryKey = [ 'freebets', api, account.address!.toLowerCase(), affiliate.toLowerCase() ]
+        // await queryClient.cancelQueries({ queryKey })
 
-        queryClient.setQueryData(queryKey, (oldFreeBets: FreeBet[]) => {
-          const newFreeBets = [ ...oldFreeBets ].filter(({ id, contractAddress }) => {
-            return contractAddress.toLowerCase() !== freeBet!.contractAddress.toLowerCase() || id !== freeBet!.id
-          })
+        // queryClient.setQueryData(queryKey, (oldFreeBets: FreeBet[]) => {
+        //   const newFreeBets = [ ...oldFreeBets ].filter(({ id, contractAddress }) => {
+        //     return contractAddress.toLowerCase() !== freeBet!.contractAddress.toLowerCase() || id !== freeBet!.id
+        //   })
 
-          return newFreeBets
-        })
+        //   return newFreeBets
+        // })
       }
 
       if (receipt) {
