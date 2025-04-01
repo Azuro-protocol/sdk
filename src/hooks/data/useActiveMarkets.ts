@@ -5,7 +5,7 @@ import { useActiveConditions } from './useActiveConditions'
 import { type QueryParameter } from '../../global'
 
 
-type Props = {
+type UseActiveMarketsProps = {
   gameId: string
   filter?: {
     outcomeIds?: string[]
@@ -14,7 +14,7 @@ type Props = {
   query?: QueryParameter<ConditionsQuery['conditions']>
 }
 
-export const useActiveMarkets = (props: Props) => {
+export const useActiveMarkets = (props: UseActiveMarketsProps) => {
   const { gameId, filter, query: queryProps } = props
 
   const query = useActiveConditions({

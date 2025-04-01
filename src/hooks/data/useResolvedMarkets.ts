@@ -4,11 +4,11 @@ import { groupConditionsByMarket, ConditionState } from '@azuro-org/toolkit'
 import { useConditions } from './useConditions'
 
 
-type Props = {
+type UseResolvedMarketsProps = {
   gameId: string
 }
 
-export const useResolvedMarkets = (props: Props) => {
+export const useResolvedMarkets = (props: UseResolvedMarketsProps) => {
   const { gameId } = props
 
   const { data: conditions, ...rest } = useConditions({

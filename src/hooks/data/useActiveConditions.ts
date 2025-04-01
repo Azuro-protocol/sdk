@@ -5,7 +5,7 @@ import { useConditions } from './useConditions'
 import { type QueryParameter } from '../../global'
 
 
-type UseConditionsProps = {
+type UseActiveConditionsProps = {
   gameId: string | bigint
   filter?: {
     outcomeIds?: string[]
@@ -13,7 +13,7 @@ type UseConditionsProps = {
   query?: QueryParameter<ConditionsQuery['conditions']>
 }
 
-export const useActiveConditions = (props: UseConditionsProps) => {
+export const useActiveConditions = (props: UseActiveConditionsProps) => {
   const { gameId, filter = {}, query = {} } = props
 
   const conditionsFilter = useMemo<Condition_Filter>(() => {

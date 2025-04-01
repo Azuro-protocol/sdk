@@ -53,7 +53,7 @@ export { useMaxBet } from './hooks/data/useMaxBet'
 
 // write hooks
 export { useRedeemBet } from './hooks/write/useRedeemBet'
-export { usePrepareBet } from './hooks/write/usePrepareBet'
+export { useBet } from './hooks/write/useBet'
 
 // watch hooks
 export { useOdds } from './hooks/watch/useOdds'

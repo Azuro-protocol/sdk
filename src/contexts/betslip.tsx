@@ -113,7 +113,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     // batchBetAmounts,
     selections: items,
   })
-  const { states, isFetching: isStatesFetching } = useConditionsState({
+  const { data: states, isFetching: isStatesFetching } = useConditionsState({
     conditionIds: items.map(({ conditionId }) => conditionId),
   })
   const { data: maxBet, isFetching: isMaxBetFetching } = useMaxBet({ selections: items })

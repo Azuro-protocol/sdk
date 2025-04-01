@@ -88,7 +88,7 @@ export const useConditionsState = ({ conditionIds, initialStates }: Props) => {
   }, [ conditionsKey ])
 
   return {
-    states,
+    data: states,
     isFetching: isStatesFetching,
   }
 }

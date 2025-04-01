@@ -1,19 +1,17 @@
 import {
-  useReadContract, useWriteContract, useSendTransaction,
+  useReadContract, useWriteContract,
   useWaitForTransactionReceipt, useWalletClient, useConfig,
 } from 'wagmi'
 import { waitForTransactionReceipt } from 'wagmi/actions'
 import {
   parseUnits, maxUint256, encodeFunctionData,
   type Address, erc20Abi, type TransactionReceipt, type Hex,
-  type SendTransactionParameters,
-  SignTypedDataParameters,
 } from 'viem'
 import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useReducer } from 'react'
 import {
-  type Selection, type BetClientData, ODDS_DECIMALS, liveHostAddress, BetState,
-  calcMindOdds, freeBetAbi,
+  type Selection, type BetClientData, ODDS_DECIMALS, BetState,
+  calcMindOdds,
   getBetTypedData,
   createBet,
   getBet,
@@ -27,13 +25,13 @@ import { DEFAULT_DEADLINE } from '../../config'
 import { formatToFixed } from '../../helpers/formatToFixed'
 import { useBetsCache, type NewBetProps } from '../useBetsCache'
 import { useBetFee } from '../data/useBetFee'
-import { type FreeBet } from '../data/useFreeBets'
+// import { type FreeBet } from '../data/useFreeBets'
 import { useAAWalletClient, useExtendedAccount } from '../useAaConnector'
 import { useBetTokenBalance } from '../useBetTokenBalance'
 import { useNativeBalance } from '../useNativeBalance'
 
 
-type Props = {
+type UseBetProps = {
   // betAmount: string | Record<string, string>
   betAmount: string
   slippage: number
@@ -58,7 +56,7 @@ const simpleObjReducer = (state: LiveBetTxState, newState: Partial<LiveBetTxStat
   ...newState,
 })
 
-export const usePrepareBet = (props: Props) => {
+export const useBet = (props: UseBetProps) => {
   const {
     betAmount, slippage, deadline, affiliate, selections, odds,
     totalOdds, liveEIP712Attention, onSuccess, onError,
@@ -271,19 +269,16 @@ export const usePrepareBet = (props: Props) => {
         let createdOrder: CreateBetResponse | null
 
         if (isCombo) {
-          const bet = {
-            conditionId,
-            outcomeId,
-          }
-
-          const typedData = getComboBetTypedData({
+          const betData = {
             account: account.address!,
             clientData,
             amount: rawAmount,
             minOdds: rawMinOdds,
             nonce: String(Date.now()),
-            bet,
-          })
+            bets: selections,
+          }
+
+          const typedData = getComboBetTypedData(betData)
 
           const signature = isAAWallet
             ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account })
@@ -291,29 +286,24 @@ export const usePrepareBet = (props: Props) => {
 
 
           createdOrder = await createComboBet({
-            account: account.address!,
-            clientData,
-            amount: rawAmount,
-            minOdds: rawMinOdds,
-            nonce: String(Date.now()),
-            bet,
+            ...betData,
             signature,
           })
         }
         else {
-          const bet = {
-            conditionId: conditionId,
-            outcomeId,
-            amount: rawAmount,
-            minOdds: rawMinOdds,
-            nonce: String(Date.now()),
-          }
-
-          const typedData = getBetTypedData({
+          const betData = {
             account: account.address!,
             clientData,
-            bet,
-          })
+            bet: {
+              conditionId: conditionId,
+              outcomeId,
+              amount: rawAmount,
+              minOdds: rawMinOdds,
+              nonce: String(Date.now()),
+            },
+          }
+
+          const typedData = getBetTypedData(betData)
 
           const signature = isAAWallet
             ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account })
@@ -321,9 +311,7 @@ export const usePrepareBet = (props: Props) => {
 
 
           createdOrder = await createBet({
-            account: account.address!,
-            clientData,
-            bet,
+            ...betData,
             signature,
           })
         }

@@ -88,7 +88,7 @@ export const useBetsCache = () => {
     queryClient.setQueriesData({
       predicate: ({ queryKey }) => (
         queryKey[0] === 'bets' &&
-        queryKey[1] === graphql.feed &&
+        queryKey[1] === graphql.bets &&
         String(queryKey[2]).toLowerCase() === address!.toLowerCase()
       ),
     }, (data: { pages: Bet[][], pageParams: number[] }) => {
@@ -127,7 +127,7 @@ export const useBetsCache = () => {
       queryClient.setQueriesData({
         predicate: ({ queryKey }) => (
           queryKey[0] === 'bets' &&
-          queryKey[1] === graphql.feed &&
+          queryKey[1] === graphql.bets &&
           String(queryKey[2]).toLowerCase() === address!.toLowerCase() &&
           queryKey[3] === BetType.CashedOut
         ),
@@ -157,7 +157,7 @@ export const useBetsCache = () => {
     queryClient.setQueriesData({
       predicate: ({ queryKey }) => (
         queryKey[0] === 'bets-summary' &&
-        queryKey[1] === graphql.feed &&
+        queryKey[1] === graphql.bets &&
         String(queryKey[2]).toLowerCase() === address!.toLowerCase()
       ),
     }, (oldData: BetsSummary) => {
@@ -305,7 +305,7 @@ export const useBetsCache = () => {
           url: graphql.feed,
           document: GameDocument,
           variables: {
-            id: conditionId,
+            id: gameId,
           },
         })
 
@@ -322,7 +322,7 @@ export const useBetsCache = () => {
         outcomeId,
         conditionId,
         // coreAddress: '',
-        odds: +odds,
+        odds: +(odds[`${conditionId}-${outcomeId}`] || 1),
         marketName,
         game,
         isWin: false,
@@ -339,11 +339,11 @@ export const useBetsCache = () => {
       acc *= odds
 
       return acc
-    }, 0n)
+    }, 1n)
 
     const rawPotentialPayout = rawAmount * rawOdds
 
-    const potentialPayout = formatUnits(rawPotentialPayout, betToken.decimals)
+    const potentialPayout = formatUnits(rawPotentialPayout, betToken.decimals + ODDS_DECIMALS)
     const finalOdds = formatUnits(rawOdds, ODDS_DECIMALS)
     const amount = formatUnits(rawAmount, betToken.decimals)
     const isFreebet = Boolean(bet.freebetId)
@@ -351,11 +351,11 @@ export const useBetsCache = () => {
     queryClient.setQueriesData({
       predicate: ({ queryKey }) => (
         queryKey[0] === 'bets' &&
-        queryKey[1] === graphql.feed &&
+        queryKey[1] === graphql.bets &&
         String(queryKey[2]).toLowerCase() === address!.toLowerCase() &&
         (queryKey[3] === BetType.Accepted || typeof queryKey[3] === 'undefined')
       ),
-    }, (data: { pages: Bet[][], pageParams: number[] }) => {
+    }, (data: { pages: { bets: Bet[], nextPage: number | undefined }[], pageParams: number[] }) => {
       if (!data) {
         return data
       }
@@ -386,10 +386,10 @@ export const useBetsCache = () => {
         outcomes,
       }
 
-      const newPage = [
-        newBet,
-        ...pages[0]!,
-      ]
+      const newPage = {
+        bets: [ newBet, ...pages[0]!.bets ],
+        nextPage: pages[0]!.nextPage,
+      }
 
       return {
         pages: [ newPage, ...pages.slice(1) ],
@@ -400,7 +400,7 @@ export const useBetsCache = () => {
     queryClient.setQueriesData({
       predicate: ({ queryKey }) => (
         queryKey[0] === 'bets-summary' &&
-        queryKey[1] === graphql.feed &&
+        queryKey[1] === graphql.bets &&
         String(queryKey[2]).toLowerCase() === address!.toLowerCase()
       ),
     }, (oldData: BetsSummary) => {

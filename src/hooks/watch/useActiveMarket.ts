@@ -49,7 +49,7 @@ export const useActiveMarket = ({ markets }: Props) => {
     }, {})
   }, [ markets ])
 
-  const { states, isFetching } = useConditionsState({
+  const { data: states, isFetching } = useConditionsState({
     conditionIds: Object.keys(conditions),
     initialStates: conditions,
   })

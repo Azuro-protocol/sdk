@@ -11,12 +11,12 @@ type Result = {
   formattedRelayerFeeAmount: string,
 }
 
-type Props = {
+type UseBetFeeProps = {
   enabled?: boolean
   query?: QueryParameter<Result>
 }
 
-export const useBetFee = (props: Props = {}) => {
+export const useBetFee = (props: UseBetFeeProps = {}) => {
   const { enabled = true, query = {} } = props
   const { appChain } = useChain()
 
