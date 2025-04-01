@@ -90,7 +90,7 @@ export const usePrepareBet = (props: Props) => {
   const [ betTx, setBetTx ] = useReducer(simpleObjReducer, { data: undefined, isPending: false })
 
   // const approveAddress = isLiveBet ? contracts.liveRelayer?.address : contracts.proxyFront.address
-  const approveAddress = contracts.relayer?.address
+  const approveAddress = contracts.relayer.address
 
   const allowanceTx = useReadContract({
     chainId: appChain.id,
@@ -230,7 +230,8 @@ export const usePrepareBet = (props: Props) => {
         const fixedAmount = formatToFixed(betAmount, betToken.decimals)
         const rawAmount = parseUnits(fixedAmount, betToken.decimals)
         const expiresAt = Math.floor(Date.now() / 1000) + (deadline || DEFAULT_DEADLINE)
-        const rawOdds = parseUnits(totalOdds.toFixed(ODDS_DECIMALS), ODDS_DECIMALS)
+        const fixedMinOdds = calcMindOdds({ odds: totalOdds, slippage })
+        const rawMinOdds = parseUnits(fixedMinOdds, ODDS_DECIMALS)
         const { conditionId, outcomeId } = selections[0]!
 
         if (isAAWallet && isApproveRequired) {
@@ -273,13 +274,13 @@ export const usePrepareBet = (props: Props) => {
           const bet = {
             conditionId,
             outcomeId,
-            odds: String(rawOdds),
           }
 
           const typedData = getComboBetTypedData({
             account: account.address!,
             clientData,
-            amount: String(rawAmount),
+            amount: rawAmount,
+            minOdds: rawMinOdds,
             nonce: String(Date.now()),
             bet,
           })
@@ -292,7 +293,8 @@ export const usePrepareBet = (props: Props) => {
           createdOrder = await createComboBet({
             account: account.address!,
             clientData,
-            amount: String(rawAmount),
+            amount: rawAmount,
+            minOdds: rawMinOdds,
             nonce: String(Date.now()),
             bet,
             signature,
@@ -302,8 +304,8 @@ export const usePrepareBet = (props: Props) => {
           const bet = {
             conditionId: conditionId,
             outcomeId,
-            odds: String(rawOdds),
-            amount: String(rawAmount),
+            amount: rawAmount,
+            minOdds: rawMinOdds,
             nonce: String(Date.now()),
           }
 
