@@ -16,10 +16,10 @@ npm install @azuro-org/sdk
 
 ```
 @azuro-org/dictionaries@^3.0.26
-graphql@^16.9.0
+graphql@^16.10.0
 react@^18.3.1
-viem@^2.23.2
-wagmi@^2.14.11
+viem@^2.24.3
+wagmi@^2.14.16
 ```
 
 Package information can be found in our [Doc](https://gem.azuro.org/sdk/overview)
