@@ -231,7 +231,7 @@ export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
       action: 'subscribe',
       gameIds: Object.keys(weights),
     }))
-  }, [])
+  }, [ socket ])
 
   const unsubscribeCall = (gameIds: string[]) => {
     if (socket?.readyState !== 1) {
@@ -268,17 +268,17 @@ export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
     }
 
     unsubscribeCall(newUnsubscribers)
-  }, [])
+  }, [ socket, unsubscribeCall ])
 
-  const runAction = useCallback(createQueueAction(subscribe, unsubscribe), [])
+  const runAction = useCallback(createQueueAction(subscribe, unsubscribe), [ subscribe, unsubscribe ])
 
   const subscribeToUpdates = useCallback((gameIds: string[]) => {
     runAction('subscribe', gameIds)
-  }, [])
+  }, [ runAction ])
 
   const unsubscribeToUpdates = useCallback((gameIds: string[]) => {
     runAction('unsubscribe', gameIds)
-  }, [])
+  }, [ runAction ])
 
   const connect = () => {
     if (isConnectedRef.current) {

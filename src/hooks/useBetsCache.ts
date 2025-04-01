@@ -321,7 +321,6 @@ export const useBetsCache = () => {
         selectionName,
         outcomeId,
         conditionId,
-        // coreAddress: '',
         odds: +(odds[`${conditionId}-${outcomeId}`] || 1),
         marketName,
         game,
@@ -343,7 +342,7 @@ export const useBetsCache = () => {
 
     const rawPotentialPayout = rawAmount * rawOdds
 
-    const potentialPayout = formatUnits(rawPotentialPayout, betToken.decimals + ODDS_DECIMALS)
+    const potentialPayout = formatUnits(rawPotentialPayout, ODDS_DECIMALS * receiptArgs!.betDatas.length + betToken.decimals)
     const finalOdds = formatUnits(rawOdds, ODDS_DECIMALS)
     const amount = formatUnits(rawAmount, betToken.decimals)
     const isFreebet = Boolean(bet.freebetId)

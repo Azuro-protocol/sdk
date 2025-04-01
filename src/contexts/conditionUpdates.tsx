@@ -45,15 +45,10 @@ export type SocketData = {
 export type ConditionUpdatedData = {
   conditionId: string
   state: ConditionState,
-  // margin: number
-  // reinforcement: number
-  // winningOutcomesCount: number
 }
 
 export type OutcomeUpdateData = {
   odds: number
-  // clearOdds: number
-  // maxBet: number
 }
 
 const ConditionUpdatesContext = createContext<ConditionUpdatesContextValue | null>(null)
