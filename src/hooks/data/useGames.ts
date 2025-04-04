@@ -65,7 +65,6 @@ export const useGames = (props: UseGamesProps = {}) => {
         orderBy,
         orderDirection: orderDir,
         where: {
-          activeConditionsCount_not: 0,
           state: isLive ? GameState.Live : GameState.Prematch,
           conditions_: {},
           sport_: {},

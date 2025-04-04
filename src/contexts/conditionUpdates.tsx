@@ -25,8 +25,6 @@ export type ConditionData = {
   gameId: string,
   maxConditionPayout: string,
   maxOutcomePayout: string,
-  maxLiveConditionPayout: string,
-  maxLiveOutcomePayout: string,
   isPrematchEnabled: boolean,
   isLiveEnabled: boolean,
   state: ConditionState,

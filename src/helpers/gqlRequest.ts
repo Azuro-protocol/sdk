@@ -2,7 +2,7 @@ import { Kind, type DocumentNode, print } from 'graphql'
 
 
 const extractOperationName = (document: DocumentNode): string | undefined => {
-  let operationName = undefined
+  let operationName: string | undefined = undefined
 
   const defs = document.definitions.filter((definition) => (
     typeof definition === 'object'
