@@ -125,10 +125,7 @@ export const useRedeemBet = () => {
     refetchNativeBalance()
 
     bets.forEach(({ tokenId, coreAddress }) => {
-      updateBetCache({
-        coreAddress,
-        tokenId,
-      }, {
+      updateBetCache(tokenId, {
         isRedeemed: true,
         isRedeemable: false,
       })
