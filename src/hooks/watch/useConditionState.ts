@@ -17,12 +17,12 @@ export const useConditionState = ({ conditionId, initialState }: Props) => {
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useConditionUpdates()
 
   const [ state, setState ] = useState(initialState || ConditionState.Active)
-  const [ isFetching, setFetching ] = useState(!initialState)
+  const [ isFetching, setFetching ] = useState(!initialState && Boolean(conditionId))
 
   const isLocked = state !== ConditionState.Active
 
   useEffect(() => {
-    if (!isSocketReady) {
+    if (!isSocketReady || !conditionId) {
       return
     }
 
@@ -34,6 +34,11 @@ export const useConditionState = ({ conditionId, initialState }: Props) => {
   }, [ isSocketReady, conditionId ])
 
   useEffect(() => {
+    if (!conditionId) {
+      return
+    }
+
+    setState(initialState || ConditionState.Active)
     const unsubscribe = conditionWatcher.subscribe(`${conditionId}`, (data) => {
       const { state: newState } = data
 
@@ -46,9 +51,11 @@ export const useConditionState = ({ conditionId, initialState }: Props) => {
   }, [ conditionId ])
 
   useEffect(() => {
-    if (initialState) {
+    if (initialState || !conditionId) {
       return
     }
+
+    setFetching(true)
 
     ;(async () => {
       const data = await batchFetchConditions([ conditionId ], graphql.feed)
@@ -56,7 +63,7 @@ export const useConditionState = ({ conditionId, initialState }: Props) => {
       setState(data?.[conditionId]?.state || ConditionState.Active)
       setFetching(false)
     })()
-  }, [ conditionId, graphql.feed ])
+  }, [ conditionId, graphql.feed, initialState ])
 
   return {
     data: state,

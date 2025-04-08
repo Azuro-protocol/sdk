@@ -91,7 +91,7 @@ export const useBetsCache = () => {
         queryKey[1] === graphql.bets &&
         String(queryKey[2]).toLowerCase() === address!.toLowerCase()
       ),
-    }, (data: { pages: Bet[][], pageParams: number[] }) => {
+    }, (data: { pages: { bets: Bet[], nextPage: number | undefined }[], pageParams: number[] }) => {
       if (!data) {
         return data
       }
@@ -99,18 +99,23 @@ export const useBetsCache = () => {
       const { pages, pageParams } = data
 
       const newPages = pages.map(page => {
-        return page.map(bet => {
-          if (bet.tokenId === tokenId) {
-            bet = {
-              ...bet,
-              ...values,
+        const { bets, nextPage } = page
+
+        return {
+          nextPage,
+          bets: bets.map(bet => {
+            if (bet.tokenId === tokenId) {
+              bet = {
+                ...bet,
+                ...values,
+              }
+
+              return bet
             }
 
             return bet
-          }
-
-          return bet
-        })
+          }),
+        }
       })
 
       return {
@@ -123,32 +128,37 @@ export const useBetsCache = () => {
       return
     }
 
-    if (values.isCashedOut) {
-      queryClient.setQueriesData({
-        predicate: ({ queryKey }) => (
-          queryKey[0] === 'bets' &&
-          queryKey[1] === graphql.bets &&
-          String(queryKey[2]).toLowerCase() === address!.toLowerCase() &&
-          queryKey[3] === BetType.CashedOut
-        ),
-      }, (data: { pages: Bet[][], pageParams: number[] }) => {
-        if (!data) {
-          return data
-        }
+    // if (values.isCashedOut) {
+    //   queryClient.setQueriesData({
+    //     predicate: ({ queryKey }) => (
+    //       queryKey[0] === 'bets' &&
+    //       queryKey[1] === graphql.bets &&
+    //       String(queryKey[2]).toLowerCase() === address!.toLowerCase() &&
+    //       queryKey[3] === BetType.CashedOut
+    //     ),
+    //   }, (data: { pages: { bets: Bet[], nextPage: number | undefined }[], pageParams: number[] }) => {
+    //     if (!data) {
+    //       return data
+    //     }
 
-        const { pages, pageParams } = data
+    //     const { pages, pageParams } = data
 
-        const newPage = [
-          bet,
-          ...pages[0]!,
-        ]
+    //     const newPage = [
+    //       bet,
+    //       ...pages[0]!,
+    //     ]
 
-        return {
-          pages: [ newPage, ...pages.slice(1) ],
-          pageParams,
-        }
-      })
-    }
+    //     const newPage = {
+    //       bets: [ bet, ...pages[0]!.bets ],
+    //       nextPage: pages[0]!.nextPage,
+    //     }
+
+    //     return {
+    //       pages: [ newPage, ...pages.slice(1) ],
+    //       pageParams,
+    //     }
+    //   })
+    // }
 
     if (!values.isCashedOut && !bet.payout) {
       return
