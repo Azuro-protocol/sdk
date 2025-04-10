@@ -56,22 +56,8 @@ export const useSports = (props: UseSportsProps = {}) => {
     }).filter(sport => sport.countries.length)
 
     if (gameOrderBy === Game_OrderBy.Turnover) {
-      const sportsWithTurnover = filteredSports.map(sport => {
-        const { countries } = sport
 
-        const turnover = countries.reduce((acc, { turnover }) => {
-          acc += +turnover
-
-          return acc
-        }, 0)
-
-        return {
-          ...sport,
-          turnover,
-        }
-      })
-
-      return sportsWithTurnover.sort((a, b) => b.turnover - a.turnover)
+      return filteredSports.sort((a, b) => +b.turnover - +a.turnover)
     }
 
     if (gameOrderBy === Game_OrderBy.StartsAt) {

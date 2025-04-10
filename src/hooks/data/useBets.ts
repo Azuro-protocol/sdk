@@ -119,7 +119,6 @@ export const useBets = (props: UseBetsProps) => {
         return acc
       }, new Set<string>())
 
-
       const { games } = await gqlRequest<GamesQuery, GamesQueryVariables>({
         url: graphql.feed,
         document: GamesDocument,

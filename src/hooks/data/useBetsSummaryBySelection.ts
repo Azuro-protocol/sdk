@@ -27,6 +27,7 @@ type UseBetsSummaryBySelectionProps = {
 }
 
 const DIVIDER = 18
+const RAW_ONE = parseUnits('1', ODDS_DECIMALS)
 
 export const useBetsSummaryBySelection = (props: UseBetsSummaryBySelectionProps) => {
   const { account, gameId, gameState, keyStruct = 'outcomeId', query = {} } = props
@@ -35,10 +36,9 @@ export const useBetsSummaryBySelection = (props: UseBetsSummaryBySelectionProps)
 
   const gqlLink = graphql.bets
 
-  const formatData = useCallback(({ bets: prematchBets, liveBets }: GameBetsQuery) => {
-    const rawOne = parseUnits('1', ODDS_DECIMALS)
+  const formatData = useCallback(({ bets: prematchBets, liveBets, v3Bets }: GameBetsQuery) => {
 
-    const rawSummary = [ ...(prematchBets || []), ...(liveBets || []) ].reduce<Record<string, bigint>>((acc, bet) => {
+    const rawSummary = [ ...(prematchBets || []), ...(liveBets || []), ...(v3Bets || []) ].reduce<Record<string, bigint>>((acc, bet) => {
       const { rawAmount: _rawAmount, rawPotentialPayout: _rawPotentialPayout, result, selections, isCashedOut } = bet
       const { freebet } = bet as GameBetsQuery['bets'][0]
 
@@ -59,7 +59,7 @@ export const useBetsSummaryBySelection = (props: UseBetsSummaryBySelectionProps)
         selections.forEach(selection => {
           const { rawOdds } = selection as GameBetsQuery['bets'][0]['selections'][0]
 
-          rawOddsSummary += BigInt(rawOdds) - rawOne
+          rawOddsSummary += BigInt(rawOdds) - RAW_ONE
         })
       }
 
@@ -67,7 +67,11 @@ export const useBetsSummaryBySelection = (props: UseBetsSummaryBySelectionProps)
         const { outcome: { outcomeId, condition: { conditionId } } } = selection
 
         if (isExpress) {
-          const { outcome: { condition: { game: { gameId: _gameId } } } } = selection as GameBetsQuery['bets'][0]['selections'][0]
+          const _gameId = (
+            (selection as GameBetsQuery['bets'][0]['selections'][0]).outcome.condition.game.gameId
+          ) || (
+            (selection as GameBetsQuery['v3Bets'][0]['selections'][0]).outcome.condition.gameId
+          )
 
           if (gameId !== _gameId) {
             return
@@ -88,7 +92,7 @@ export const useBetsSummaryBySelection = (props: UseBetsSummaryBySelectionProps)
           const { rawOdds: _rawOdds } = selection as GameBetsQuery['bets'][0]['selections'][0]
 
           const rawOdds = BigInt(_rawOdds)
-          const rawSubBetOdds = parseUnits(String(rawOdds - rawOne), DIVIDER)
+          const rawSubBetOdds = parseUnits(String(rawOdds - RAW_ONE), DIVIDER)
           const rawPartialOdds = rawSubBetOdds / rawOddsSummary / BigInt(10 ** (DIVIDER - ODDS_DECIMALS))
           const rawSubBetAmount = rawAmount * rawPartialOdds / BigInt(10 ** ODDS_DECIMALS)
 

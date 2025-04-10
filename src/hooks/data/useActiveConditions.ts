@@ -18,7 +18,7 @@ export const useActiveConditions = (props: UseActiveConditionsProps) => {
 
   const conditionsFilter = useMemo<Condition_Filter>(() => {
     const _filter: Condition_Filter = {
-      state_not: ConditionState.Resolved,
+      state_in: [ ConditionState.Active, ConditionState.Stopped ],
     }
 
     if (filter?.outcomeIds) {

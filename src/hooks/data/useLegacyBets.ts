@@ -1,16 +1,19 @@
 import {
-  type LegacyPrematchBetsQueryVariables,
-  type LegacyPrematchBetsQuery,
+  type LegacyBetsQueryVariables,
+  type LegacyBetsQuery,
+  type LegacyLiveGamesQueryVariables,
+  type LegacyLiveGamesQuery,
 
   OrderDirection,
   Legacy_Bet_OrderBy,
   GraphBetStatus,
-  LegacyPrematchBetsDocument,
+  LegacyBetsDocument,
   BetResult,
   SelectionResult,
   BetConditionStatus,
   GameState,
   LegacyGameStatus,
+  LegacyLiveGamesDocument,
 } from '@azuro-org/toolkit'
 import { type Address } from 'viem'
 import { useInfiniteQuery } from '@tanstack/react-query'
@@ -65,7 +68,7 @@ export const useLegacyBets = (props: UseLegacyBetsProps) => {
       orderDir,
     ],
     queryFn: async ({ pageParam }) => {
-      const variables: LegacyPrematchBetsQueryVariables = {
+      const variables: LegacyBetsQueryVariables = {
         first: itemsPerPage,
         skip: itemsPerPage * (pageParam - 1),
         orderBy,
@@ -96,16 +99,54 @@ export const useLegacyBets = (props: UseLegacyBetsProps) => {
         variables.where.affiliate = filter.affiliate
       }
 
-      const { bets: _bets } = await gqlRequest<LegacyPrematchBetsQuery, LegacyPrematchBetsQueryVariables>({
+      const { bets: prematchBets, liveBets } = await gqlRequest<LegacyBetsQuery, LegacyBetsQueryVariables>({
         url: gqlLink,
-        document: LegacyPrematchBetsDocument,
+        document: LegacyBetsDocument,
         variables,
       })
 
-      const bets = _bets.map((rawBet) => {
+      if (!prematchBets?.length && !liveBets?.length) {
+        return {
+          bets: [],
+          nextPage: undefined,
+        }
+      }
+
+      let liveGames: Record<string, LegacyLiveGamesQuery['games'][0]>
+
+      if (liveBets?.length) {
+        const gameIds = liveBets.reduce((acc, { selections }) => {
+          selections.forEach((selection) => {
+            const { outcome: { condition: { gameId } } } = selection
+
+            acc.add(gameId)
+          })
+
+          return acc
+        }, new Set<string>())
+
+        const { games } = await gqlRequest<LegacyLiveGamesQuery, LegacyLiveGamesQueryVariables>({
+          url: graphql.legacyLive,
+          document: LegacyLiveGamesDocument,
+          variables: {
+            first: 1000,
+            where: {
+              gameId_in: [ ...gameIds ],
+            },
+          },
+        })
+
+        liveGames = games.reduce<Record<string, LegacyLiveGamesQuery['games'][0]>>((acc, game) => {
+          acc[game.gameId] = game
+
+          return acc
+        }, {})
+      }
+
+      const bets = [ ...(prematchBets || []), ...(liveBets || []) ].map((rawBet) => {
         const {
           tokenId, status, amount, odds, settledOdds, createdAt, result, affiliate, selections,
-          cashout: _cashout, isCashedOut, payout: _payout, isRedeemed: _isRedeemed, isRedeemable, freebet, txHash,
+          cashout: _cashout, isCashedOut, payout: _payout, isRedeemed: _isRedeemed, isRedeemable, txHash,
           core: {
             address: coreAddress,
             liquidityPool: {
@@ -113,6 +154,8 @@ export const useLegacyBets = (props: UseLegacyBetsProps) => {
             },
           },
         } = rawBet
+
+        const { freebet } = rawBet as LegacyBetsQuery['bets'][0]
 
         const isWin = result === BetResult.Won
         const isLose = result === BetResult.Lost
@@ -136,15 +179,26 @@ export const useLegacyBets = (props: UseLegacyBetsProps) => {
             result,
             outcome: {
               outcomeId,
-              title: customSelectionName,
               condition: {
                 conditionId,
                 status: conditionStatus,
-                title: customMarketName,
-                game,
               },
             },
           } = selection
+
+          const {
+            outcome: {
+              title: customSelectionName,
+              condition: {
+                title: customMarketName,
+                game: prematchGame,
+              },
+            },
+          } = selection as LegacyBetsQuery['bets'][0]['selections'][0]
+
+          const { outcome: { condition: { gameId: liveGameId } } } = selection as LegacyBetsQuery['liveBets'][0]['selections'][0]
+
+          const game = prematchGame || liveGames[liveGameId]
 
           const isWin = result ? result === SelectionResult.Won : null
           const isLose = result ? result === SelectionResult.Lost : null
