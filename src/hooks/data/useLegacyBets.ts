@@ -204,6 +204,7 @@ export const useLegacyBets = (props: UseLegacyBetsProps) => {
             conditionStatus === BetConditionStatus.Canceled
                   || game.status === LegacyGameStatus.Paused
           )
+          const isLive = !prematchGame
 
           const marketName = customMarketName && customMarketName !== 'null' ? customMarketName : getMarketName({ outcomeId })
           const selectionName = customSelectionName && customSelectionName !== 'null' ? customSelectionName : getSelectionName({ outcomeId, withPoint: true })
@@ -230,6 +231,7 @@ export const useLegacyBets = (props: UseLegacyBetsProps) => {
             isWin,
             isLose,
             isCanceled,
+            isLive,
           }
         })
           .sort((a, b) => +a.game.startsAt - +b.game.startsAt)

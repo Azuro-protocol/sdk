@@ -4,6 +4,7 @@ import {
   type GamesQuery,
   type GamesQueryVariables,
 
+  SelectionKind,
   OrderDirection,
   Bet_OrderBy,
   GraphBetStatus,
@@ -168,6 +169,7 @@ export const useBets = (props: UseBetsProps) => {
             const {
               odds,
               result,
+              conditionKind,
               outcome: {
                 outcomeId,
                 title: customSelectionName,
@@ -188,6 +190,7 @@ export const useBets = (props: UseBetsProps) => {
               conditionStatus === BetConditionStatus.Canceled
                   || game.state === GameState.Stopped
             )
+            const isLive = conditionKind === SelectionKind.Live
 
             const marketName = customMarketName && customMarketName !== 'null' ? customMarketName : getMarketName({ outcomeId })
             const selectionName = customSelectionName && customSelectionName !== 'null' ? customSelectionName : getSelectionName({ outcomeId, withPoint: true })
@@ -203,6 +206,7 @@ export const useBets = (props: UseBetsProps) => {
               isWin,
               isLose,
               isCanceled,
+              isLive,
             }
           })
           .sort((a, b) => +a.game.startsAt - +b.game.startsAt)

@@ -7,10 +7,8 @@ import {
   Game_OrderBy,
   OrderDirection,
   GamesDocument,
-  MARGIN_DECIMALS,
 } from '@azuro-org/toolkit'
 import { useQuery } from '@tanstack/react-query'
-import { parseUnits } from 'viem'
 
 import { useChain } from '../../contexts/chain'
 import { type SportHub, type QueryParameter } from '../../global'
@@ -102,7 +100,7 @@ export const useGames = (props: UseGamesProps = {}) => {
       }
 
       if (filter.maxMargin) {
-        variables.where.conditions_!.margin_lte = parseUnits(String(filter.maxMargin), MARGIN_DECIMALS).toString()
+        variables.where.conditions_!.margin_lte = String(filter.maxMargin)
       }
 
       if (filter.conditionsState) {

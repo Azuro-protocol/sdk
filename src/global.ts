@@ -46,6 +46,7 @@ export type BetOutcome = {
   odds: number
   marketName: string
   game: NonNullable<GameQuery['game']>
+  isLive: boolean
   isWin: boolean | null
   isLose: boolean | null
   isCanceled: boolean

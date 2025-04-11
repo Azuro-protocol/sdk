@@ -1,6 +1,5 @@
-import { type Condition_Filter, type ConditionsQuery, ConditionState, MARGIN_DECIMALS } from '@azuro-org/toolkit'
+import { type Condition_Filter, type ConditionsQuery, ConditionState } from '@azuro-org/toolkit'
 import { useMemo } from 'react'
-import { parseUnits } from 'viem'
 
 import { useConditions } from './useConditions'
 import { type QueryParameter } from '../../global'
@@ -28,7 +27,7 @@ export const useActiveConditions = (props: UseActiveConditionsProps) => {
     }
 
     if (filter.maxMargin) {
-      _filter.margin_lte = parseUnits(String(filter.maxMargin), MARGIN_DECIMALS).toString()
+      _filter.margin_lte = String(filter.maxMargin)
     }
 
     return _filter
