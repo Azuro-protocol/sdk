@@ -225,6 +225,7 @@ export const useLegacyBets = (props: UseLegacyBetsProps) => {
               league: game.league,
               country: game.league.country,
               participants: game.participants,
+              turnover: '0',
             },
             isWin,
             isLose,
