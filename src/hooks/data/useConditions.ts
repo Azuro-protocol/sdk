@@ -2,6 +2,8 @@ import {
   type Condition_Filter,
   type ConditionsQuery,
   type ConditionsQueryVariables,
+  type Condition_OrderBy,
+  type OrderDirection,
 
   ConditionsDocument,
 } from '@azuro-org/toolkit'
@@ -15,11 +17,13 @@ import { gqlRequest } from '../../helpers/gqlRequest'
 type UseConditionsProps = {
   gameId: string | bigint
   filter?: Condition_Filter
+  orderBy?: Condition_OrderBy
+  orderDir?: OrderDirection
   query?: QueryParameter<ConditionsQuery['conditions']>
 }
 
 export const useConditions = (props: UseConditionsProps) => {
-  const { gameId, filter = {}, query = {} } = props
+  const { gameId, filter = {}, orderBy, orderDir, query = {} } = props
   const { graphql } = useChain()
 
   const gqlLink = graphql.feed
@@ -29,10 +33,14 @@ export const useConditions = (props: UseConditionsProps) => {
       'conditions',
       gqlLink,
       gameId,
+      orderBy,
+      orderDir,
       filter,
     ],
     queryFn: async () => {
       const variables: ConditionsQueryVariables = {
+        orderBy,
+        orderDirection: orderDir,
         where: {
           ...filter,
           game_: {

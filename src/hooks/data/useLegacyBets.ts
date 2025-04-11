@@ -34,7 +34,6 @@ export type UseLegacyBetsProps = {
     bettor: Address
     affiliate?: string
     type?: BetType
-    limit?: number
   }
   itemsPerPage?: number
   orderBy?: Legacy_Bet_OrderBy
@@ -61,7 +60,6 @@ export const useLegacyBets = (props: UseLegacyBetsProps) => {
       gqlLink,
       filter.bettor,
       filter.type,
-      filter.limit,
       filter.affiliate,
       itemsPerPage,
       orderBy,

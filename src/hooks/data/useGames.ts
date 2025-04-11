@@ -7,8 +7,10 @@ import {
   Game_OrderBy,
   OrderDirection,
   GamesDocument,
+  MARGIN_DECIMALS,
 } from '@azuro-org/toolkit'
 import { useQuery } from '@tanstack/react-query'
+import { parseUnits } from 'viem'
 
 import { useChain } from '../../contexts/chain'
 import { type SportHub, type QueryParameter } from '../../global'
@@ -23,6 +25,7 @@ export type UseGamesProps = {
     sportSlug?: string
     sportIds?: Array<string | number>
     leagueSlug?: string | string[]
+    maxMargin?: number | string
     conditionsState?: ConditionState | ConditionState[]
   }
   orderBy?: Game_OrderBy
@@ -55,6 +58,7 @@ export const useGames = (props: UseGamesProps = {}) => {
       filter.sportSlug,
       filter.sportIds?.join('-'),
       filter.leagueSlug,
+      filter.maxMargin,
       filter.conditionsState,
       orderBy,
       orderDir,
@@ -66,6 +70,7 @@ export const useGames = (props: UseGamesProps = {}) => {
         orderDirection: orderDir,
         where: {
           state: isLive ? GameState.Live : GameState.Prematch,
+          activeAndStoppedConditionsCount_not: 0,
           conditions_: {},
           sport_: {},
           league_: {},
@@ -94,6 +99,10 @@ export const useGames = (props: UseGamesProps = {}) => {
 
       if (filter.leagueSlug) {
         variables.where.league_!.slug_in = typeof filter.leagueSlug === 'string' ? [ filter.leagueSlug ] : filter.leagueSlug
+      }
+
+      if (filter.maxMargin) {
+        variables.where.conditions_!.margin_lte = parseUnits(String(filter.maxMargin), MARGIN_DECIMALS).toString()
       }
 
       if (filter.conditionsState) {

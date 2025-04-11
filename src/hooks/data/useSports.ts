@@ -103,6 +103,7 @@ export const useSports = (props: UseSportsProps = {}) => {
         leagueFilter: {},
         gameFilter: {
           state: isLive ? GameState.Live : GameState.Prematch,
+          activeAndStoppedConditionsCount_not: 0,
         },
         gameOrderBy,
         gameOrderDirection: orderDir,

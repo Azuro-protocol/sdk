@@ -1,5 +1,6 @@
-import { type Condition_Filter, type ConditionsQuery, ConditionState } from '@azuro-org/toolkit'
+import { type Condition_Filter, type ConditionsQuery, ConditionState, MARGIN_DECIMALS } from '@azuro-org/toolkit'
 import { useMemo } from 'react'
+import { parseUnits } from 'viem'
 
 import { useConditions } from './useConditions'
 import { type QueryParameter } from '../../global'
@@ -9,6 +10,7 @@ type UseActiveConditionsProps = {
   gameId: string | bigint
   filter?: {
     outcomeIds?: string[]
+    maxMargin?: number | string
   }
   query?: QueryParameter<ConditionsQuery['conditions']>
 }
@@ -21,12 +23,16 @@ export const useActiveConditions = (props: UseActiveConditionsProps) => {
       state_in: [ ConditionState.Active, ConditionState.Stopped ],
     }
 
-    if (filter?.outcomeIds) {
+    if (filter.outcomeIds) {
       _filter.outcomesIds_contains = filter.outcomeIds
     }
 
+    if (filter.maxMargin) {
+      _filter.margin_lte = parseUnits(String(filter.maxMargin), MARGIN_DECIMALS).toString()
+    }
+
     return _filter
-  }, [ filter?.outcomeIds ])
+  }, [ filter.outcomeIds, filter.maxMargin ])
 
   return useConditions({
     gameId,
