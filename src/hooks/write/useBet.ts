@@ -46,12 +46,12 @@ type UseBetProps = {
   onError?(err?: Error): void
 }
 
-type LiveBetTxState = {
+type BetTxState = {
   isPending: boolean
   data: Hex | undefined
 }
 
-const simpleObjReducer = (state: LiveBetTxState, newState: Partial<LiveBetTxState>) => ({
+const simpleObjReducer = (state: BetTxState, newState: Partial<BetTxState>) => ({
   ...state,
   ...newState,
 })
@@ -73,14 +73,13 @@ export const useBet = (props: UseBetProps) => {
   const aaClient = useAAWalletClient()
 
   const { appChain, contracts, betToken, api } = useChain()
-  const queryClient = useQueryClient()
   const wagmiConfig = useConfig()
   const walletClient = useWalletClient()
   const {
-    data: liveBetFeeData,
+    data: betFeeData,
     isFetching: isRelayerFeeFetching,
   } = useBetFee()
-  const { relayerFeeAmount: rawRelayerFeeAmount, formattedRelayerFeeAmount: relayerFeeAmount } = liveBetFeeData || {}
+  const { relayerFeeAmount: rawRelayerFeeAmount, formattedRelayerFeeAmount: relayerFeeAmount } = betFeeData || {}
   const { addBet } = useBetsCache()
   const { refetch: refetchBetTokenBalance } = useBetTokenBalance()
   const { refetch: refetchNativeBalance } = useNativeBalance()

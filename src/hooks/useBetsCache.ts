@@ -137,6 +137,12 @@ export const useBetsCache = () => {
 
     const outcomes: BetOutcome[] = []
 
+    const receiptArgs = getEventArgsFromTxReceipt({ receipt, eventName: 'NewLiveBet', abi: coreAbi })
+
+    if (!receiptArgs) {
+      return
+    }
+
     const conditions = queryClient.getQueryData<ConditionsQuery['conditions']>([ 'conditions', graphql.feed ])
 
     for (let index = 0; index < selections.length; index++) {
@@ -177,6 +183,10 @@ export const useBetsCache = () => {
       const selectionName = customSelectionName && customSelectionName !== 'null' ? customSelectionName : getSelectionName({ outcomeId, withPoint: true })
       const marketName = customMarketName && customMarketName !== 'null' ? customMarketName : getMarketName({ outcomeId })
 
+      const eventOutcome = receiptArgs.betDatas.find(({ conditionId: rawConditionId, outcomeId: rawOutcomeId }) => (
+        rawConditionId === BigInt(conditionId) && rawOutcomeId === BigInt(outcomeId)
+      ))!
+
       outcomes.push({
         selectionName,
         outcomeId,
@@ -187,11 +197,10 @@ export const useBetsCache = () => {
         isWin: false,
         isLose: false,
         isCanceled: false,
+        isLive: eventOutcome.conditionKind === 1,
       })
     }
 
-
-    const receiptArgs = getEventArgsFromTxReceipt({ receipt, eventName: 'NewLiveBet', abi: coreAbi })
 
     const tokenId = (receiptArgs?.tokenId!).toString()
     const rawOdds = receiptArgs!.betDatas!.reduce((acc, { odds }) => {
