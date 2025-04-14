@@ -56,7 +56,7 @@ export const useLegacyBets = (props: UseLegacyBetsProps) => {
 
   return useInfiniteQuery({
     queryKey: [
-      'bets',
+      'legacy-bets',
       gqlLink,
       filter.bettor,
       filter.type,
