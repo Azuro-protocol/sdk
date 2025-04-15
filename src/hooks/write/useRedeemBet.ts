@@ -12,8 +12,22 @@ import { useBetTokenBalance } from '../useBetTokenBalance'
 import { useNativeBalance } from '../useNativeBalance'
 
 
+const legacyV2LpAbi = [
+  {
+    'inputs': [
+      { 'internalType': 'address', 'name': 'core', 'type': 'address',
+      },
+      { 'internalType': 'uint256', 'name': 'tokenId', 'type': 'uint256',
+      },
+    ], 'name': 'withdrawPayout', 'outputs': [
+      { 'internalType': 'uint128', 'name': 'amount', 'type': 'uint128',
+      },
+    ], 'stateMutability': 'nonpayable', 'type': 'function',
+  },
+] as const
+
 type SubmitProps = {
-  bets: Array<Pick<Bet, 'tokenId' | 'coreAddress' | 'freebetContractAddress' | 'freebetId'>>
+  bets: Array<Pick<Bet, 'tokenId' | 'coreAddress' | 'lpAddress' | 'freebetContractAddress' | 'freebetId'>>
 }
 
 type AaTxState = {
@@ -46,7 +60,6 @@ export const useRedeemBet = () => {
 
   const submit = async (props: SubmitProps) => {
     const { bets } = props
-    const isBatch = bets.length > 1
 
     redeemTx.reset()
     setAaTxState({
@@ -58,9 +71,33 @@ export const useRedeemBet = () => {
     let data: Hex
     let to: Address
 
-    const { freebetContractAddress, freebetId, coreAddress } = bets[0]!
+    const { freebetContractAddress, freebetId, coreAddress, lpAddress } = bets[0]!
 
-    if (freebetContractAddress && freebetId) {
+    const isSameLp = new Set(bets.map(({ lpAddress }) => lpAddress)).size === 1
+
+    if (!isSameLp) {
+      throw new Error('redeem can\'t be executed for multiple lp contracts')
+    }
+
+    const isBatch = bets.length > 1
+    const isV2 = lpAddress.toLowerCase() !== contracts.lp.address.toLowerCase()
+
+    if (isBatch && isV2) {
+      throw new Error('v2 redeem can\'t be executed for multiple bets')
+    }
+
+    if (isV2) {
+      to = lpAddress
+      data = encodeFunctionData({
+        abi: legacyV2LpAbi,
+        functionName: 'withdrawPayout',
+        args: [
+          coreAddress,
+          BigInt(bets[0]!.tokenId),
+        ],
+      })
+    }
+    else if (freebetContractAddress && freebetId) {
       to = freebetContractAddress
       data = encodeFunctionData({
         abi: freeBetAbi,
@@ -69,7 +106,7 @@ export const useRedeemBet = () => {
       })
     }
     else {
-      to = contracts.lp.address
+      to = lpAddress
       data = encodeFunctionData({
         abi: contracts.lp.abi,
         functionName: 'withdrawPayouts',
@@ -124,11 +161,15 @@ export const useRedeemBet = () => {
     refetchBetTokenBalance()
     refetchNativeBalance()
 
-    bets.forEach(({ tokenId, coreAddress }) => {
-      updateBetCache(tokenId, {
-        isRedeemed: true,
-        isRedeemable: false,
-      })
+    bets.forEach(({ tokenId }) => {
+      updateBetCache(
+        tokenId,
+        {
+          isRedeemed: true,
+          isRedeemable: false,
+        },
+        isV2
+      )
     })
 
     return receipt

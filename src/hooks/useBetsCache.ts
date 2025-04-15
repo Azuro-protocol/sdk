@@ -43,13 +43,15 @@ export const useBetsCache = () => {
 
   const updateBetCache = (
     tokenId: string | bigint,
-    values: Partial<Bet>
+    values: Partial<Bet>,
+    isLegacy?: boolean
   ) => {
     let cachedBet: Bet | undefined
+    const betsKey = isLegacy ? 'legacy-bets' : 'bets'
 
     queryClient.setQueriesData({
       predicate: ({ queryKey }) => (
-        queryKey[0] === 'bets' &&
+        queryKey[0] === betsKey &&
         queryKey[1] === graphql.bets &&
         String(queryKey[2]).toLowerCase() === address!.toLowerCase()
       ),

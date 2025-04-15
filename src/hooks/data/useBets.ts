@@ -78,6 +78,7 @@ export const useBets = (props: UseBetsProps) => {
 
       if (filter.type === BetType.Unredeemed) {
         variables.where.isRedeemable = true
+        variables.where.isCashedOut = false
       }
 
       if (filter.type === BetType.Accepted) {
