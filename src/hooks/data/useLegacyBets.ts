@@ -220,6 +220,7 @@ export const useLegacyBets = (props: UseLegacyBetsProps) => {
             game: {
               id: game.id,
               gameId: game.gameId,
+              slug: '', // TODO add slug in legacy games query
               title: game.title || '',
               startsAt: game.startsAt,
               state: GameState.Finished,
