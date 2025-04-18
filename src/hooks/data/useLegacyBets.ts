@@ -224,7 +224,13 @@ export const useLegacyBets = (props: UseLegacyBetsProps) => {
               title: game.title || '',
               startsAt: game.startsAt,
               state: GameState.Finished,
-              sport: game.sport,
+              sport: {
+                ...game.sport,
+                sporthub: {
+                  id: '',
+                  slug: '',
+                },
+              },
               league: game.league,
               country: game.league.country,
               participants: game.participants,
