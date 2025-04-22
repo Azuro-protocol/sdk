@@ -7,7 +7,6 @@ import {
   parseUnits, maxUint256, encodeFunctionData,
   type Address, erc20Abi, type TransactionReceipt, type Hex,
 } from 'viem'
-import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useReducer } from 'react'
 import {
   type Selection, type BetClientData, ODDS_DECIMALS, BetState,
@@ -40,7 +39,7 @@ type UseBetProps = {
   odds: Record<string, number>
   totalOdds: number
   // freeBet?: FreeBet // TODO
-  liveEIP712Attention?: string
+  EIP712Attention?: string
   deadline?: number
   onSuccess?(receipt?: TransactionReceipt): void
   onError?(err?: Error): void
@@ -59,7 +58,7 @@ const simpleObjReducer = (state: BetTxState, newState: Partial<BetTxState>) => (
 export const useBet = (props: UseBetProps) => {
   const {
     betAmount, slippage, deadline, affiliate, selections, odds,
-    totalOdds, liveEIP712Attention, onSuccess, onError,
+    totalOdds, EIP712Attention, onSuccess, onError,
   } = props
 
   const isCombo = selections.length > 1
@@ -257,12 +256,15 @@ export const useBet = (props: UseBetProps) => {
         })
 
         const clientData: BetClientData = {
-          attention: liveEIP712Attention || 'By signing this transaction, I agree to place a bet for a live event on \'Azuro SDK Example',
+          attention: EIP712Attention || 'By signing this transaction, I agree to place a bet for a live event on \'Azuro SDK Example',
           affiliate,
           core: contracts.core.address,
           expiresAt,
           chainId: appChain.id,
           relayerFeeAmount: String(rawRelayerFeeAmount),
+          isBetSponsored: false,
+          isFeeSponsored: false,
+          isSponsoredBetReturnable: false,
         }
 
         let createdOrder: CreateBetResponse | null
