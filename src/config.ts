@@ -9,5 +9,5 @@ export const cookieKeys = {
 } as const
 
 export const localStorageKeys = {
-  betslipItems: 'betslipItems',
+  betslipItems: 'betslipItems-v3',
 }
