@@ -1,6 +1,6 @@
 {
   "name": "@azuro-org/sdk",
-  "version": "6.0.0-beta.13",
+  "version": "6.0.0-beta.14",
   "author": "Azuro",
   "type": "module",
   "main": "dist/index.js",
@@ -21,7 +21,6 @@
     "build": "rimraf dist && rollup -c",
     "prepublishOnly": "npm run build",
     "------------------  Lint --------------------------------------------------------------------------------": "",
-    "lint": "next lint && tsc --noEmit",
     "lint-fix": "eslint ./src -c .eslintrc --fix --ext js,ts,tsx",
     "lint-ts": "tsc --noEmit"
   },
