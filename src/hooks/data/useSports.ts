@@ -47,7 +47,12 @@ export const useSports = (props: UseSportsProps = {}) => {
     const filteredSports = data.map(sport => {
       const { countries } = sport
 
-      const filteredCountries = countries.filter(({ leagues }) => leagues.length)
+      const filteredCountries = countries.map((country) => {
+        return {
+          ...country,
+          leagues: country.leagues.filter((league) => league.games.length)
+        }
+      }).filter((country) => country.leagues.length)
 
       return {
         ...sport,
@@ -56,7 +61,6 @@ export const useSports = (props: UseSportsProps = {}) => {
     }).filter(sport => sport.countries.length)
 
     if (gameOrderBy === Game_OrderBy.Turnover) {
-
       return filteredSports.sort((a, b) => +b.turnover - +a.turnover)
     }
 
