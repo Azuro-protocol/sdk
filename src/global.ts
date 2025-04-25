@@ -1,4 +1,4 @@
-import type { Address } from 'viem'
+import { type Address, type Hex } from 'viem'
 import { type Selection, type GraphBetStatus, type GameQuery } from '@azuro-org/toolkit'
 import { type UseInfiniteQueryOptions, type DefaultError, type QueryKey, type UseQueryOptions } from '@tanstack/react-query'
 
@@ -46,6 +46,7 @@ export type BetOutcome = {
   odds: number
   marketName: string
   game: NonNullable<GameQuery['game']>
+  wonOutcomeIds: string[] | null
   isLive: boolean
   isWin: boolean | null
   isLose: boolean | null
@@ -53,7 +54,8 @@ export type BetOutcome = {
 } & Selection
 
 export type Bet = {
-  affiliate: string
+  actor: Address
+  affiliate: Address
   tokenId: string
   freebetId?: string
   freebetContractAddress?: Address
@@ -61,12 +63,14 @@ export type Bet = {
   coreAddress: Address
   lpAddress: Address
   outcomes: BetOutcome[]
-  txHash: string
+  txHash: Hex
+  redeemedTxHash: Hex | null
   status: GraphBetStatus
   amount: string
   possibleWin: number
   payout: number | null
   createdAt: number
+  resolvedAt: number | null
   cashout?: string
   isWin: boolean
   isLose: boolean

@@ -50,7 +50,7 @@ export const useSports = (props: UseSportsProps = {}) => {
       const filteredCountries = countries.map((country) => {
         return {
           ...country,
-          leagues: country.leagues.filter((league) => league.games.length)
+          leagues: country.leagues.filter((league) => league.games.length),
         }
       }).filter((country) => country.leagues.length)
 

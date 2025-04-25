@@ -15,7 +15,7 @@ import {
   LegacyGameStatus,
   LegacyLiveGamesDocument,
 } from '@azuro-org/toolkit'
-import { type Address } from 'viem'
+import { type Hex, type Address } from 'viem'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 
@@ -144,8 +144,9 @@ export const useLegacyBets = (props: UseLegacyBetsProps) => {
 
       const bets = [ ...(prematchBets || []), ...(liveBets || []) ].map((rawBet) => {
         const {
-          tokenId, status, amount, odds, settledOdds, createdAt, result, affiliate, selections,
+          tokenId, actor, status, amount, odds, settledOdds, createdAt, resolvedAt, result, affiliate, selections,
           cashout: _cashout, isCashedOut, payout: _payout, isRedeemed: _isRedeemed, isRedeemable, txHash,
+          redeemedTxHash,
           core: {
             address: coreAddress,
             liquidityPool: {
@@ -181,6 +182,7 @@ export const useLegacyBets = (props: UseLegacyBetsProps) => {
               condition: {
                 conditionId,
                 status: conditionStatus,
+                wonOutcomeIds,
               },
             },
           } = selection
@@ -217,19 +219,16 @@ export const useLegacyBets = (props: UseLegacyBetsProps) => {
             coreAddress,
             odds: +odds,
             marketName,
+            wonOutcomeIds: wonOutcomeIds || null,
             game: {
               id: game.id,
               gameId: game.gameId,
-              slug: '', // TODO add slug in legacy games query
+              slug: game.slug ?? '',
               title: game.title || '',
               startsAt: game.startsAt,
               state: GameState.Finished,
               sport: {
                 ...game.sport,
-                sporthub: {
-                  id: '',
-                  slug: '',
-                },
               },
               league: game.league,
               country: game.league.country,
@@ -245,17 +244,20 @@ export const useLegacyBets = (props: UseLegacyBetsProps) => {
           .sort((a, b) => +a.game.startsAt - +b.game.startsAt)
 
         const bet: Bet = {
-          affiliate: affiliate!,
+          actor: actor as Address,
+          affiliate: affiliate as Address,
           tokenId,
           freebetContractAddress: freebetContractAddress as Address,
           freebetId,
-          txHash,
+          txHash: txHash as Hex,
+          redeemedTxHash: redeemedTxHash as Hex,
           totalOdds,
           status,
           amount,
           possibleWin,
           payout,
           createdAt: +createdAt,
+          resolvedAt: resolvedAt ? +resolvedAt : null,
           cashout,
           isWin,
           isLose,

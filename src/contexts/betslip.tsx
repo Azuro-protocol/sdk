@@ -269,10 +269,8 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
   // }, [ items ])
 
   const changeBetAmount = useCallback((value: string) => {
-    const decimals = ([ base.id, baseSepolia.id ] as number[]).includes(appChain.id) ? 4 : 2
-
-    setBetAmount(formatToFixed(value, decimals))
-  }, [ appChain ])
+    setBetAmount(value)
+  }, [])
 
   // const changeBatchBetAmount = useCallback((item: ChangeBatchBetAmountItem, value: string) => {
   //   const { conditionId, outcomeId } = item
@@ -288,51 +286,6 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
   // }, [ appChain ])
 
   const addItem = useCallback((item: AzuroSDK.BetslipItem) => {
-    // const { gameId, conditionId, outcomeId } = itemProps
-
-    let game: GameInfoFragment | null = null
-    let gameEntityId: string
-
-    // if (coreAddress === liveHostAddress) {
-    //   cache = liveClient!.cache
-    //   gameEntityId = gameId
-    // }
-    // else {
-    //   cache = prematchClient!.cache
-    //   gameEntityId = `${lpAddress.toLowerCase()}_${gameId}`
-    // }
-
-    // game = cache.readFragment<MainGameInfoFragment>({
-    //   id: cache.identify({ __typename: 'Game', id: gameEntityId }),
-    //   fragment: MainGameInfoFragmentDoc,
-    //   fragmentName: 'MainGameInfo',
-    // })
-
-    // if (!game) {
-    //   return
-    // }
-
-    // let marketName = getMarketName({ outcomeId })
-    // let selectionName = getSelectionName({ outcomeId, withPoint: true })
-
-    // if (coreAddress !== liveHostAddress) {
-    //   const conditionEntityId = `${coreAddress.toLowerCase()}_${conditionId}`
-    //   const condition = cache.readFragment<ConditionFragment>({
-    //     id: cache.identify({ __typename: 'Condition', id: conditionEntityId }),
-    //     fragment: ConditionFragmentDoc,
-    //     fragmentName: 'Condition',
-    //   })
-
-    //   if (condition?.title && condition.title !== 'null') {
-    //     marketName = condition.title
-
-    //     const outcome = condition.outcomes.find(outcome => outcome.outcomeId === outcomeId)
-
-    //     if (outcome?.title && outcome.title !== 'null') {
-    //       selectionName = outcome.title
-    //     }
-    //   }
-    // }
 
     setItems(items => {
       let newItems: AzuroSDK.BetslipItem[]
