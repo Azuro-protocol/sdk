@@ -107,7 +107,6 @@ export const useSports = (props: UseSportsProps = {}) => {
         leagueFilter: {},
         gameFilter: {
           state: isLive ? GameState.Live : GameState.Prematch,
-          activeAndStoppedConditionsCount_not: 0,
         },
         gameOrderBy,
         gameOrderDirection: orderDir,
@@ -117,11 +116,13 @@ export const useSports = (props: UseSportsProps = {}) => {
         variables.sportFilter!.activeLiveGamesCount_not = 0
         variables.countryFilter!.activeLiveGamesCount_not = 0
         variables.leagueFilter!.activeLiveGamesCount_not = 0
+        variables.gameFilter!.activeAndStoppedConditionsCount_not = 0
       }
       else {
         variables.sportFilter!.activePrematchGamesCount_not = 0
         variables.countryFilter!.activePrematchGamesCount_not = 0
         variables.leagueFilter!.activePrematchGamesCount_not = 0
+        variables.gameFilter!.activeConditionsCount_not = 0
       }
 
       if (filter.sportSlug) {

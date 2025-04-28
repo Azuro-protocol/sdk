@@ -855,11 +855,11 @@ export const useLiveStatisticsSocket = () => {
 }
 
 export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
+  const { socket: socketUrl } = useChain()
   const [ socket, setSocket ] = useState<WebSocket>()
   const isSocketReady = socket?.readyState === WebSocket.OPEN
 
   const isConnectedRef = useRef(false)
-  const socketUrl = 'wss://dev-streams.azuro.org/v1/streams/statistics/games'
   const prevSocketUrl = useRef(socketUrl) // TODO
   const subscribers = useRef<Record<string, number>>({})
 
@@ -936,7 +936,7 @@ export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
 
     isConnectedRef.current = true
 
-    const newSocket = new WebSocket(socketUrl) // TODO
+    const newSocket = new WebSocket(`${socketUrl}/statistics/games`)
 
     const handleOpen = () => {
       setSocket(newSocket)

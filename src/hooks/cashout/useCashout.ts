@@ -2,7 +2,6 @@ import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useWal
 import { waitForTransactionReceipt } from 'wagmi/actions'
 import { type Hex, type Address, type TransactionReceipt, encodeFunctionData, erc20Abi, formatUnits } from 'viem'
 import {
-  type Selection,
   CashoutState,
   createCashout,
   getCalculatedCashout,
@@ -14,16 +13,16 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { getEventArgsFromTxReceipt } from '../../helpers/getEventArgsFromTxReceipt'
 import { useChain } from '../../contexts/chain'
+import { type Bet } from '../../global'
 import { useAAWalletClient, useExtendedAccount } from '../useAaConnector'
 import { useBetsCache } from '../useBetsCache'
-import { type PrecalculatedCashout } from './usePrecalculatedCashouts'
+import { type PrecalculatedCashoutsQueryData } from './usePrecalculatedCashouts'
 import { useBetTokenBalance } from '../useBetTokenBalance'
 import { useNativeBalance } from '../useNativeBalance'
 
 
-type Props = {
-  tokenId: string
-  selections: Selection[]
+type UseCashoutProps = {
+  bet: Pick<Bet, 'tokenId' | 'outcomes'>
   EIP712Attention?: string
   onSuccess?(receipt?: TransactionReceipt): void
   onError?(err?: Error): void
@@ -39,11 +38,12 @@ const simpleObjReducer = (state: CashoutTxState, newState: Partial<CashoutTxStat
   ...newState,
 })
 
-export const useCashout = (props: Props) => {
+export const useCashout = (props: UseCashoutProps) => {
   const {
-    tokenId, selections, EIP712Attention,
+    bet, EIP712Attention,
     onSuccess, onError,
   } = props
+  const { tokenId, outcomes } = bet
 
   const { appChain, contracts, api, betToken } = useChain()
   const { refetch: refetchBetTokenBalance } = useBetTokenBalance()
@@ -64,18 +64,17 @@ export const useCashout = (props: Props) => {
   )
 
   const updatePrecalculatedCache = () => {
-    const conditionsKey = selections.map(({ conditionId, outcomeId }) => `${conditionId}/${outcomeId}`).join('-')
-    const queryKey = [ 'cashout/precalculate', api, tokenId, conditionsKey ]
+    const queryKey = [ 'cashout/precalculate', api, tokenId ]
 
     // set precalculate query unavailable to cashout
-    queryClient.setQueryData(queryKey, (oldPrecalcCashouts: Record<string, PrecalculatedCashout>) => {
+    queryClient.setQueryData(queryKey, (oldPrecalcCashouts: PrecalculatedCashoutsQueryData) => {
       if (!oldPrecalcCashouts) {
         return oldPrecalcCashouts
       }
 
-      const newPrecalcCashouts = { ...oldPrecalcCashouts }
+      const newPrecalcCashouts = { ...oldPrecalcCashouts.cashouts }
 
-      selections.forEach(({ conditionId, outcomeId }) => {
+      outcomes.forEach(({ conditionId, outcomeId }) => {
         const key = `${conditionId}-${outcomeId}`
         newPrecalcCashouts[key] = {
           ...newPrecalcCashouts[key]!,
@@ -83,27 +82,19 @@ export const useCashout = (props: Props) => {
         }
       })
 
-      return newPrecalcCashouts
+      return {
+        ...oldPrecalcCashouts,
+        cashouts: newPrecalcCashouts,
+      }
     })
   }
 
-  // const isLive = selections[0]!.coreAddress.toLowerCase() === contracts.liveCore?.address.toLowerCase()
-  const isLive = false // TODO
-  // const betCoreAddress = selections[0]!.coreAddress as Address
-  const betCoreAddress = '' as Address // TODO
-  const betNftContractAddress = betCoreAddress.toLowerCase() === contracts.core.address.toLowerCase() ? (
-    contracts.core.address
-  ) : (
-    contracts.azuroBet.address
-  )
-
   const calculationQuery = useQuery({
-    queryKey: [ 'cashout/calculate', api, account.address?.toLowerCase(), tokenId, isLive ],
+    queryKey: [ 'cashout/calculate', api, account.address?.toLowerCase(), tokenId ],
     queryFn: () => getCalculatedCashout({
       chainId: appChain.id,
       account: account.address!,
-      graphBetId: `${betCoreAddress.toLowerCase()}_${tokenId}`,
-      isLive,
+      graphBetId: `${contracts.core.address.toLowerCase()}_${tokenId}`,
     }),
     refetchOnWindowFocus: false,
     retry: () => {
@@ -113,21 +104,19 @@ export const useCashout = (props: Props) => {
     },
     gcTime: 0, // disable cache
     enabled: (
-      // !isLive &&
       !!account.address
     ),
   })
 
   const { data: calculation } = calculationQuery
-  const { calculationId, multiplier, expiredAt, approveExpiredAt } = calculation || {}
+  const { calculationId, cashoutOdds, expiredAt, approveExpiredAt } = calculation || {}
   const isCashoutAvailable = (
-    // !isLive &&
     Boolean(calculationId)
   )
 
   const allowanceTx = useReadContract({
     chainId: appChain.id,
-    address: betNftContractAddress,
+    address: contracts.azuroBet.address,
     abi: contracts.azuroBet.abi,
     functionName: 'isApprovedForAll',
     args: [
@@ -159,7 +148,7 @@ export const useCashout = (props: Props) => {
 
   const approve = async () => {
     const hash = await approveTx.writeContractAsync({
-      address: betNftContractAddress,
+      address: contracts.azuroBet.address,
       abi: contracts.azuroBet.abi,
       functionName: 'setApprovalForAll',
       args: [
@@ -193,7 +182,7 @@ export const useCashout = (props: Props) => {
 
         if (isApproveRequired) {
           const hash = await aaClient!.sendTransaction({
-            to: betNftContractAddress,
+            to: contracts.azuroBet.address,
             data: encodeFunctionData({
               abi: contracts.azuroBet.abi,
               functionName: 'setApprovalForAll',
@@ -218,8 +207,7 @@ export const useCashout = (props: Props) => {
         account: account.address!,
         attention,
         tokenId,
-        betCoreAddress,
-        multiplier: multiplier!,
+        cashoutOdds: cashoutOdds!,
         expiredAt: expiredAt!,
       })
 
@@ -234,7 +222,6 @@ export const useCashout = (props: Props) => {
       const createdCashout = await createCashout({
         chainId: appChain.id,
         calculationId: calculationId!,
-        betCoreAddress,
         attention,
         signature,
       })
@@ -300,17 +287,10 @@ export const useCashout = (props: Props) => {
       allowanceTx.refetch()
       updatePrecalculatedCache()
 
-      // TODO
-      // updateBetCache({
-      //   coreAddress: betCoreAddress,
-      //   tokenId,
-      // }, {
-      //   isCashedOut: true,
-      //   cashout: {
-      //     __typename: 'Cashout',
-      //     payout: formatUnits(receiptArgs?.value || 0n, betToken.decimals),
-      //   },
-      // })
+      updateBetCache(tokenId, {
+        isCashedOut: true,
+        cashout: formatUnits(receiptArgs?.value || 0n, betToken.decimals),
+      })
 
       onSuccess?.(receipt)
     }

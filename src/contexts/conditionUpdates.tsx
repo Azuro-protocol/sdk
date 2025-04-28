@@ -157,18 +157,6 @@ export const ConditionUpdatesProvider: React.FC<any> = ({ children }) => {
       const eventData: ConditionUpdatedData = {
         conditionId: conditionId,
         state,
-        // reinforcement: +reinforcement,
-        // margin: +margin,
-        // winningOutcomesCount: +winningOutcomesCount,
-        // outcomes: outcomes.reduce((acc, { outcomeId, currentOdds }) => {
-        //   acc[String(outcomeId)] = {
-        //     odds: +currentOdds,
-        //     // clearOdds,
-        //     // maxBet: maxStake,
-        //   }
-
-        //   return acc
-        // }, {} as ConditionUpdatedData['outcomes']),
       }
 
       conditionWatcher.dispatch(conditionId, eventData)

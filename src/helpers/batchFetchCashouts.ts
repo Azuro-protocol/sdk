@@ -4,7 +4,11 @@ import { createBatch } from './createBatch'
 import { type PrecalculatedCashout } from '../hooks/cashout/usePrecalculatedCashouts'
 
 
-type Result = Record<string, PrecalculatedCashout>
+type Result = {
+  margin: string
+  minMargin: string
+  cashouts: Record<string, PrecalculatedCashout>
+}
 
 const getCashouts = async (conditionIds: string[], chainId: ChainId) => {
   const data = await getPrecalculatedCashouts({
@@ -12,19 +16,31 @@ const getCashouts = async (conditionIds: string[], chainId: ChainId) => {
     conditionIds,
   })
 
-  return data?.reduce<Result>((acc, { conditionId, available, outcomes }) => {
-    outcomes.forEach(({ outcomeId, multiplier }) => {
+  if (!data) {
+    return undefined
+  }
+
+  const { margin, marginMin, availables } = data
+
+  const cashouts = availables.reduce<Result['cashouts']>((acc, { conditionId, available, outcomes }) => {
+    outcomes.forEach(({ outcomeId, price }) => {
       const key = `${conditionId}-${outcomeId}`
       acc[key] = {
         conditionId,
         outcomeId: outcomeId.toString(),
         isAvailable: available,
-        multiplier,
+        odds: price,
       }
     })
 
     return acc
   }, {})
+
+  return {
+    margin,
+    minMargin: marginMin,
+    cashouts,
+  }
 }
 
 type Func = typeof getCashouts

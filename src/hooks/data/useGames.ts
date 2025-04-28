@@ -75,6 +75,14 @@ export const useGames = (props: UseGamesProps = {}) => {
         },
       }
 
+      if (isLive) {
+        variables.where.activeAndStoppedConditionsCount_not = 0
+      }
+      else {
+
+        variables.where.activeConditionsCount_not = 0
+      }
+
       if (filter.limit) {
         variables.first = filter.limit
       }
