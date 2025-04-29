@@ -7,6 +7,11 @@ import { batchFetchCashouts } from '../../helpers/batchFetchCashouts'
 import { type QueryParameter, type Bet } from '../../global'
 
 
+export type PrecalculatedCashout = {
+  isAvailable: boolean
+  odds: string
+} & Selection
+
 export type PrecalculatedCashoutsQueryData = {
   margin: string,
   minMargin: string,
@@ -17,11 +22,6 @@ type UsePrecalculatedCashoutsProps = {
   bet: Pick<Bet, 'tokenId' | 'amount' | 'outcomes' | 'status' | 'totalOdds'>
   query?: QueryParameter<PrecalculatedCashoutsQueryData>
 }
-
-export type PrecalculatedCashout = {
-  isAvailable: boolean
-  odds: string
-} & Selection
 
 
 const defaultData = {
@@ -58,7 +58,7 @@ export const usePrecalculatedCashouts = ({ bet, query = {} }: UsePrecalculatedCa
     const { margin, minMargin, cashouts } = data
 
     const isAvailable = Object.values(cashouts).every(({ isAvailable }) => isAvailable)
-    let cashoutAmount = +amount * +margin
+    let cashoutAmount = +amount * +minMargin
 
     const isSameOdds = outcomes.every(({ conditionId, outcomeId, odds }) => {
       const key = `${conditionId}-${outcomeId}`
@@ -69,7 +69,7 @@ export const usePrecalculatedCashouts = ({ bet, query = {} }: UsePrecalculatedCa
     if (!isSameOdds) {
       const currentTotal = Object.values(cashouts).reduce((acc, { odds }) => acc + +odds, 0)
 
-      cashoutAmount = +amount * (totalOdds / currentTotal) * +minMargin
+      cashoutAmount = +amount * (totalOdds / currentTotal) * +margin
     }
 
     return {
