@@ -52,6 +52,6 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@azuro-org/toolkit": "5.0.0-beta.10"
+    "@azuro-org/toolkit": "5.0.0-beta.11"
   }
 }
