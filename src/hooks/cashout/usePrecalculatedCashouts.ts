@@ -105,12 +105,13 @@ export const usePrecalculatedCashouts = ({ bet, query = {} }: UsePrecalculatedCa
     refetchInterval: 60_000,
     refetchOnWindowFocus: false,
     select: formatData,
+    ...query,
     enabled: (
+      query.enabled &&
       !isConditionsFromDifferentProviders &&
       Boolean(bet) &&
       status === GraphBetStatus.Accepted
     ),
-    ...query,
   })
 
   return {
