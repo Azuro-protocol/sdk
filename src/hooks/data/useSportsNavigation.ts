@@ -37,7 +37,6 @@ export const useSportsNavigation = (props: UseSportsNavigationProps = {}) => {
     ],
     queryFn: async () => {
       const variables: SportsNavigationQueryVariables = {
-        first: 1000,
         sportFilter: {},
       }
 
