@@ -282,7 +282,7 @@ export const useBet = (props: UseBetProps) => {
           const typedData = getComboBetTypedData(betData)
 
           const signature = isAAWallet
-            ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account })
+            ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account as any })
             : await walletClient!.data!.signTypedData(typedData)
 
 
@@ -307,7 +307,7 @@ export const useBet = (props: UseBetProps) => {
           const typedData = getBetTypedData(betData)
 
           const signature = isAAWallet
-            ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account })
+            ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account as any })
             : await walletClient!.data!.signTypedData(typedData)
 
 

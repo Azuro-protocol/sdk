@@ -860,7 +860,7 @@ export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
   const isSocketReady = socket?.readyState === WebSocket.OPEN
 
   const isConnectedRef = useRef(false)
-  const prevSocketUrl = useRef(socketUrl) // TODO
+  const prevSocketUrl = useRef(socketUrl)
   const subscribers = useRef<Record<string, number>>({})
 
   const subscribe = useCallback((weights: Record<string, number>) => {
