@@ -1,4 +1,5 @@
 import { useContext, createContext, useSyncExternalStore } from 'react'
+//@ts-ignore
 import type { useAccount as useAccountFn, useAAWalletClient as useAAWalletClientFn } from '@azuro-org/sdk-social-aa-connector'
 import { useAccount } from 'wagmi'
 

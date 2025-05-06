@@ -9,18 +9,17 @@ npm install @azuro-org/sdk
 #### Dependencies
 
 ```
-@azuro-org/toolkit@^4.5.3
+@azuro-org/toolkit@^5.0.0
 ```
 
 #### Peer Dependencies
 
 ```
-@apollo/client@^3.11.10
 @azuro-org/dictionaries@^3.0.26
-graphql@^16.9.0
+graphql@^16.11.0
 react@^18.3.1
-viem@^2.23.2
-wagmi@^2.14.11
+viem@^2.29.0
+wagmi@^2.14.16
 ```
 
 Package information can be found in our [Doc](https://gem.azuro.org/sdk/overview)

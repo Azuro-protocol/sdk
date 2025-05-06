@@ -1,31 +1,42 @@
 import { type Selection, getProviderFromId, GraphBetStatus } from '@azuro-org/toolkit'
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
 import { useChain } from '../../contexts/chain'
 import { batchFetchCashouts } from '../../helpers/batchFetchCashouts'
+import { type QueryParameter, type Bet } from '../../global'
 
-
-type Props = {
-  tokenId: string
-  selections: Selection[]
-  graphBetStatus: GraphBetStatus
-  enabled?: boolean
-}
 
 export type PrecalculatedCashout = {
   isAvailable: boolean
-  multiplier: string
-} & Omit<Selection, 'coreAddress'>
+  odds: string
+} & Selection
+
+export type PrecalculatedCashoutsQueryData = {
+  margin: string,
+  minMargin: string,
+  cashouts: Record<string, PrecalculatedCashout>
+} | undefined
+
+type UsePrecalculatedCashoutsProps = {
+  bet: Pick<Bet, 'tokenId' | 'amount' | 'outcomes' | 'status' | 'totalOdds'>
+  query?: QueryParameter<PrecalculatedCashoutsQueryData>
+}
 
 
-export const usePrecalculatedCashouts = ({ tokenId, selections, graphBetStatus, enabled = true }: Props) => {
+const defaultData = {
+  isAvailable: false,
+  cashoutAmount: undefined,
+}
+
+export const usePrecalculatedCashouts = ({ bet, query = {} }: UsePrecalculatedCashoutsProps) => {
+  const { tokenId, amount, outcomes, status, totalOdds } = bet
+
   const { appChain, api } = useChain()
 
-  // const isLive = selections[0]!.coreAddress === contracts.liveCore?.address
   const conditionsKey = useMemo(() => {
-    return selections.map(({ conditionId, outcomeId }) => `${conditionId}/${outcomeId}`).join('-')
-  }, [ selections ])
+    return outcomes.map(({ conditionId, outcomeId }) => `${conditionId}/${outcomeId}`).join('-')
+  }, [ outcomes ])
 
   const isConditionsFromDifferentProviders = useMemo(() => {
     if (!conditionsKey) {
@@ -33,66 +44,78 @@ export const usePrecalculatedCashouts = ({ tokenId, selections, graphBetStatus, 
     }
 
     const providerIds = new Set(
-      selections.map(({ conditionId }) => getProviderFromId(conditionId))
+      outcomes.map(({ conditionId }) => getProviderFromId(conditionId))
     )
 
     return providerIds.size > 1
   }, [ conditionsKey ])
 
-  const queryFn = async () => {
-    const data = await batchFetchCashouts(selections.map(({ conditionId }) => conditionId), appChain.id)
+  const formatData = useCallback((data: PrecalculatedCashoutsQueryData): { isAvailable: boolean, cashoutAmount: number | undefined } => {
+    if (!data) {
+      return defaultData
+    }
 
-    const newCashouts = selections.reduce<Record<string, PrecalculatedCashout>>((acc, { conditionId, outcomeId }) => {
+    const { margin, minMargin, cashouts } = data
+
+    const isAvailable = Object.values(cashouts).every(({ isAvailable }) => isAvailable)
+    let cashoutAmount = +amount * +minMargin
+
+    const isSameOdds = outcomes.every(({ conditionId, outcomeId, odds }) => {
       const key = `${conditionId}-${outcomeId}`
-      const cashout = data?.[key]!
 
-      acc[key] = cashout
+      return +cashouts[key]!.odds === odds
+    })
 
-      return acc
-    }, {})
+    if (!isSameOdds) {
+      const currentTotal = Object.values(cashouts).reduce((acc, { odds }) => acc + +odds, 0)
 
-    return newCashouts
-  }
+      cashoutAmount = +amount * (totalOdds / currentTotal) * +margin
+    }
 
-  const { data: cashouts, isFetching } = useQuery({
-    queryKey: [ 'cashout/precalculate', api, tokenId, conditionsKey ],
-    queryFn,
+    return {
+      isAvailable,
+      cashoutAmount,
+    }
+  }, [ bet ])
+
+  const { data, ...rest } = useQuery({
+    queryKey: [ 'cashout/precalculate', api, tokenId ],
+    queryFn: async () => {
+      const data = await batchFetchCashouts(outcomes.map(({ conditionId }) => conditionId), appChain.id)
+
+      if (!data) {
+        return data
+      }
+
+      const cashouts = outcomes.reduce<Record<string, PrecalculatedCashout>>((acc, { conditionId, outcomeId }) => {
+        const key = `${conditionId}-${outcomeId}`
+        const cashout = data.cashouts[key]!
+
+        acc[key] = cashout
+
+        return acc
+      }, {})
+
+      return {
+        ...data,
+        cashouts,
+      }
+    },
     gcTime: 0, // disable cache
     refetchInterval: 60_000,
     refetchOnWindowFocus: false,
+    select: formatData,
+    ...query,
     enabled: (
-      enabled &&
+      query.enabled &&
       !isConditionsFromDifferentProviders &&
-      Boolean(selections.length) &&
-      graphBetStatus === GraphBetStatus.Accepted
-      // !isLive
+      Boolean(bet) &&
+      status === GraphBetStatus.Accepted
     ),
   })
 
-  const isCashoutAvailable = useMemo(() => {
-    if (!cashouts || !Object.keys(cashouts).length) {
-      return false
-    }
-
-    return Object.values(cashouts).every(({ isAvailable }) => isAvailable)
-  }, [ cashouts ])
-
-  const totalMultiplier = useMemo(() => {
-    if (!cashouts || !Object.keys(cashouts).length) {
-      return 1
-    }
-
-    if (Object.keys(cashouts).length === 1) {
-      return +Object.values(cashouts)[0]!.multiplier
-    }
-
-    return Object.values(cashouts).reduce((acc, { multiplier }) => acc *= +multiplier, 1)
-  }, [ cashouts ])
-
   return {
-    cashouts,
-    totalMultiplier,
-    isCashoutAvailable,
-    isFetching,
+    data: data ?? defaultData,
+    ...rest,
   }
 }

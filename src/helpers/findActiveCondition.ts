@@ -1,17 +1,17 @@
-import { ConditionStatus, type GameMarkets } from '@azuro-org/toolkit'
+import { ConditionState, type GameMarkets } from '@azuro-org/toolkit'
 
 
 type Props = {
-  statuses: Record<string, ConditionStatus>
+  states: Record<string, ConditionState>
   marketsByKey: Record<string, GameMarkets[0]>
   sortedMarketKeys: string[]
   activeMarketKey: string
 }
 
-export const findActiveCondition = ({ statuses, marketsByKey, sortedMarketKeys, activeMarketKey }: Props) => {
+export const findActiveCondition = ({ states, marketsByKey, sortedMarketKeys, activeMarketKey }: Props) => {
   // try to find condition with Created status in active market
-  let nextConditionIndex = marketsByKey[activeMarketKey!]!.outcomeRows.findIndex((outcomes) => {
-    return outcomes.some(({ conditionId }) => statuses[conditionId] === ConditionStatus.Created)
+  let nextConditionIndex = marketsByKey[activeMarketKey!]!.conditions.findIndex(({ conditionId }) => {
+    return states[conditionId] === ConditionState.Active
   })
 
   if (nextConditionIndex !== -1) {
@@ -25,8 +25,8 @@ export const findActiveCondition = ({ statuses, marketsByKey, sortedMarketKeys, 
     nextConditionIndex = 0
 
     const nextMarketKey = sortedMarketKeys.find(marketKey => {
-      return marketsByKey[marketKey]!.outcomeRows.find((outcomes, index) => {
-        const isMatch = statuses[outcomes[0]!.conditionId] === ConditionStatus.Created
+      return marketsByKey[marketKey]!.conditions.find(({ conditionId }, index) => {
+        const isMatch = states[conditionId] === ConditionState.Active
 
         if (isMatch) {
           nextConditionIndex = index

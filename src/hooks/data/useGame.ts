@@ -1,51 +1,43 @@
-import { useMemo } from 'react'
-import { useQuery } from '@apollo/client'
 import { type GameQuery, type GameQueryVariables, GameDocument } from '@azuro-org/toolkit'
+import { useQuery } from '@tanstack/react-query'
 
-import { useApolloClients } from '../../contexts/apollo'
+import { useChain } from '../../contexts/chain'
+import { type QueryParameter } from '../../global'
+import { gqlRequest } from '../../helpers/gqlRequest'
 
 
 type UseGameProps = {
-  gameId: string | bigint
+  gameId: string
+  query?: QueryParameter<GameQuery['game']>
 }
 
 export const useGame = (props: UseGameProps) => {
-  const { gameId } = props
+  const { gameId, query = {} } = props
 
-  const { prematchClient, liveClient } = useApolloClients()
+  const { graphql } = useChain()
 
-  const variables = useMemo<GameQueryVariables>(() => ({
-    gameId: gameId!,
-  }), [ gameId ])
+  const gqlLink = graphql.feed
 
-  const { data: prematchData, loading: isPrematchLoading, error: prematchError } = useQuery<GameQuery, GameQueryVariables>(GameDocument, {
-    variables,
-    ssr: false,
-    client: prematchClient!,
-    skip: !gameId,
+  return useQuery({
+    queryKey: [
+      'game',
+      gqlLink,
+      gameId,
+    ],
+    queryFn: async () => {
+      const variables: GameQueryVariables = {
+        id: gameId,
+      }
+
+      const { game } = await gqlRequest<GameQuery, GameQueryVariables>({
+        url: gqlLink,
+        document: GameDocument,
+        variables,
+      })
+
+      return game
+    },
+    refetchOnWindowFocus: false,
+    ...query,
   })
-
-  const prematchGame = prematchData?.games?.[0]
-  const isPrematchGameStarted = prematchGame ? (
-    Date.now() >= +prematchGame.startsAt * 1000
-  ) : !isPrematchLoading
-
-  const { data: liveData, loading: isLiveLoading, error: liveError } = useQuery<GameQuery, GameQueryVariables>(GameDocument, {
-    variables,
-    ssr: false,
-    client: liveClient!,
-    skip: !gameId || !isPrematchGameStarted,
-  })
-
-  const liveGame = liveData?.games?.[0]
-
-  const game = liveGame || prematchGame
-  const isGameInLive = Boolean(liveGame)
-
-  return {
-    game,
-    loading: isPrematchLoading || isLiveLoading,
-    error: prematchError || liveError,
-    isGameInLive,
-  }
 }

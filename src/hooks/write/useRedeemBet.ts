@@ -8,10 +8,26 @@ import { useChain } from '../../contexts/chain'
 import { useBetsCache } from '../useBetsCache'
 import { type Bet } from '../../global'
 import { useExtendedAccount, useAAWalletClient } from '../useAaConnector'
+import { useBetTokenBalance } from '../useBetTokenBalance'
+import { useNativeBalance } from '../useNativeBalance'
 
+
+const legacyV2LpAbi = [
+  {
+    'inputs': [
+      { 'internalType': 'address', 'name': 'core', 'type': 'address',
+      },
+      { 'internalType': 'uint256', 'name': 'tokenId', 'type': 'uint256',
+      },
+    ], 'name': 'withdrawPayout', 'outputs': [
+      { 'internalType': 'uint128', 'name': 'amount', 'type': 'uint128',
+      },
+    ], 'stateMutability': 'nonpayable', 'type': 'function',
+  },
+] as const
 
 type SubmitProps = {
-  bets: Array<Pick<Bet, 'tokenId' | 'coreAddress' | 'freebetContractAddress' | 'freebetId'>>
+  bets: Array<Pick<Bet, 'tokenId' | 'coreAddress' | 'lpAddress' | 'freebetContractAddress' | 'freebetId'>>
 }
 
 type AaTxState = {
@@ -24,6 +40,8 @@ export const useRedeemBet = () => {
   const { contracts, appChain } = useChain()
   const wagmiConfig = useConfig()
   const { updateBetCache } = useBetsCache()
+  const { refetch: refetchBetTokenBalance } = useBetTokenBalance()
+  const { refetch: refetchNativeBalance } = useNativeBalance()
 
   const redeemTx = useSendTransaction()
   const account = useExtendedAccount()
@@ -42,7 +60,6 @@ export const useRedeemBet = () => {
 
   const submit = async (props: SubmitProps) => {
     const { bets } = props
-    const isBatch = bets.length > 1
 
     redeemTx.reset()
     setAaTxState({
@@ -54,42 +71,50 @@ export const useRedeemBet = () => {
     let data: Hex
     let to: Address
 
-    if (isBatch) {
-      const betsData = bets.map(({ tokenId, coreAddress }) => ({
-        core: coreAddress as Address,
-        tokenId: BigInt(tokenId),
-        isNative: false,
-      }))
+    const { freebetContractAddress, freebetId, coreAddress, lpAddress } = bets[0]!
 
-      to = contracts.proxyFront.address
+    const isSameLp = new Set(bets.map(({ lpAddress }) => lpAddress)).size === 1
+
+    if (!isSameLp) {
+      throw new Error('redeem can\'t be executed for multiple lp contracts')
+    }
+
+    const isBatch = bets.length > 1
+    const isV2 = lpAddress.toLowerCase() !== contracts.lp.address.toLowerCase()
+
+    if (isBatch && isV2) {
+      throw new Error('v2 redeem can\'t be executed for multiple bets')
+    }
+
+    if (isV2) {
+      to = lpAddress
       data = encodeFunctionData({
-        abi: contracts.proxyFront.abi,
-        functionName: 'withdrawPayouts',
-        args: [ betsData ],
+        abi: legacyV2LpAbi,
+        functionName: 'withdrawPayout',
+        args: [
+          coreAddress,
+          BigInt(bets[0]!.tokenId),
+        ],
+      })
+    }
+    else if (freebetContractAddress && freebetId) {
+      to = freebetContractAddress
+      data = encodeFunctionData({
+        abi: freeBetAbi,
+        functionName: 'withdrawPayout',
+        args: [ BigInt(freebetId) ],
       })
     }
     else {
-      const { tokenId, coreAddress, freebetContractAddress, freebetId } = bets[0]!
-
-      if (freebetContractAddress && freebetId) {
-        to = freebetContractAddress
-        data = encodeFunctionData({
-          abi: freeBetAbi,
-          functionName: 'withdrawPayout',
-          args: [ BigInt(freebetId) ],
-        })
-      }
-      else {
-        to = contracts.lp.address
-        data = encodeFunctionData({
-          abi: contracts.lp.abi,
-          functionName: 'withdrawPayout',
-          args: [
-            coreAddress,
-            BigInt(tokenId),
-          ],
-        })
-      }
+      to = lpAddress
+      data = encodeFunctionData({
+        abi: contracts.lp.abi,
+        functionName: 'withdrawPayouts',
+        args: [
+          coreAddress,
+          bets.map(({ tokenId }) => BigInt(tokenId)),
+        ],
+      })
     }
 
     let hash: Hex
@@ -133,14 +158,18 @@ export const useRedeemBet = () => {
       throw new Error(`transaction ${receipt.transactionHash} was reverted`)
     }
 
-    bets.forEach(({ tokenId, coreAddress }) => {
-      updateBetCache({
-        coreAddress,
+    refetchBetTokenBalance()
+    refetchNativeBalance()
+
+    bets.forEach(({ tokenId }) => {
+      updateBetCache(
         tokenId,
-      }, {
-        isRedeemed: true,
-        isRedeemable: false,
-      })
+        {
+          isRedeemed: true,
+          isRedeemable: false,
+        },
+        isV2
+      )
     })
 
     return receipt

@@ -1,21 +1,18 @@
-import { useMemo } from 'react'
-import { useQuery, type QueryHookOptions } from '@apollo/client'
-import { parseUnits } from 'viem'
 import {
-  PrematchGraphGameStatus,
+  type ConditionState,
+  type GamesQuery,
+  type GamesQueryVariables,
+
+  GameState,
   Game_OrderBy,
   OrderDirection,
   GamesDocument,
-  MARGIN_DECIMALS,
-
-  type ConditionStatus,
-  type GamesQuery,
-  type GamesQueryVariables,
 } from '@azuro-org/toolkit'
+import { useQuery } from '@tanstack/react-query'
 
-import { useApolloClients } from '../../contexts/apollo'
-import { getGameStartsAtValue } from '../../helpers'
-import type { SportHub } from '../../global'
+import { useChain } from '../../contexts/chain'
+import { type SportHub, type QueryParameter } from '../../global'
+import { gqlRequest } from '../../helpers/gqlRequest'
 
 
 export type UseGamesProps = {
@@ -26,110 +23,112 @@ export type UseGamesProps = {
     sportSlug?: string
     sportIds?: Array<string | number>
     leagueSlug?: string | string[]
-    maxMargin?: number
-    conditionsStatus?: ConditionStatus | ConditionStatus[]
+    maxMargin?: number | string
+    conditionsState?: ConditionState | ConditionState[]
   }
   orderBy?: Game_OrderBy
   orderDir?: OrderDirection
   isLive?: boolean
+  query?: QueryParameter<GamesQuery['games']>
 }
 
-export const useGames = (props?: UseGamesProps) => {
+export const useGames = (props: UseGamesProps = {}) => {
   const {
-    filter,
+    filter = {},
     orderBy = Game_OrderBy.CreatedBlockTimestamp,
     orderDir = OrderDirection.Desc,
     isLive,
-  } = props || {}
+    query = {},
+  } = props
 
-  const { prematchClient, liveClient } = useApolloClients()
+  const { graphql } = useChain()
 
-  const startsAt = getGameStartsAtValue()
+  const gqlLink = graphql.feed
 
-  const options = useMemo<QueryHookOptions<GamesQuery, GamesQueryVariables>>(() => {
-    const variables: GamesQueryVariables = {
-      first: 1000,
+  return useQuery({
+    queryKey: [
+      'games',
+      gqlLink,
+      isLive,
+      filter.limit,
+      filter.offset,
+      filter.sportHub,
+      filter.sportSlug,
+      filter.sportIds?.join('-'),
+      filter.leagueSlug,
+      filter.maxMargin,
+      filter.conditionsState,
       orderBy,
-      orderDirection: orderDir,
-      where: {
-        hasActiveConditions: true,
-        status_in: [ PrematchGraphGameStatus.Created, PrematchGraphGameStatus.Paused ],
-        conditions_: {},
-        sport_: {},
-        league_: {},
-      },
-    }
+      orderDir,
+    ],
+    queryFn: async () => {
+      const variables: GamesQueryVariables = {
+        first: 1000,
+        orderBy,
+        orderDirection: orderDir,
+        where: {
+          state: isLive ? GameState.Live : GameState.Prematch,
+          activeAndStoppedConditionsCount_not: 0,
+          conditions_: {},
+          sport_: {},
+          league_: {},
+        },
+      }
 
-    if (isLive) {
-      variables.where.startsAt_lt = startsAt
-    }
-    else {
-      variables.where.startsAt_gt = startsAt
-    }
-
-    if (filter?.limit) {
-      variables.first = filter.limit
-    }
-
-    if (filter?.offset) {
-      variables.skip = filter.offset
-    }
-
-    if (filter?.sportHub) {
-      variables.where.sport_!.sporthub = filter.sportHub
-    }
-
-    if (filter?.sportSlug) {
-      variables.where.sport_!.slug_starts_with_nocase = filter.sportSlug
-    }
-
-    if (filter?.sportIds?.length) {
-      variables.where.sport_!.sportId_in = filter?.sportIds
-    }
-
-    if (filter?.leagueSlug) {
-      variables.where.league_!.slug_in = typeof filter.leagueSlug === 'string' ? [ filter.leagueSlug ] : filter.leagueSlug
-    }
-
-    if (filter?.maxMargin) {
-      variables.where.conditions_!.margin_lte = parseUnits(String(filter.maxMargin), MARGIN_DECIMALS).toString()
-    }
-
-    if (filter?.conditionsStatus) {
-      if (typeof filter.conditionsStatus === 'string') {
-        variables.where.conditions_!.status = filter.conditionsStatus
+      if (isLive) {
+        variables.where.activeAndStoppedConditionsCount_not = 0
       }
       else {
-        variables.where.conditions_!.status_in = filter.conditionsStatus
+
+        variables.where.activeConditionsCount_not = 0
       }
-    }
 
-    return {
-      variables,
-      ssr: false,
-      client: isLive ? liveClient! : prematchClient!,
-      notifyOnNetworkStatusChange: true,
-    }
-  }, [
-    filter?.limit,
-    filter?.offset,
-    filter?.sportHub,
-    filter?.sportSlug,
-    filter?.sportIds?.join('-'),
-    filter?.leagueSlug,
-    filter?.maxMargin,
-    filter?.conditionsStatus,
-    orderBy,
-    orderDir,
-    startsAt,
-    isLive,
-  ])
+      if (filter.limit) {
+        variables.first = filter.limit
+      }
 
-  const { data, loading, error } = useQuery<GamesQuery, GamesQueryVariables>(GamesDocument, options)
+      if (filter.offset) {
+        variables.skip = filter.offset
+      }
 
-  return {
-    games: data?.games,
-    loading,
-    error,
-  }
+      if (filter.sportHub) {
+        variables.where.sport_!.sporthub = filter.sportHub
+      }
+
+      if (filter.sportSlug) {
+        variables.where.sport_!.slug_starts_with_nocase = filter.sportSlug
+      }
+
+      if (filter.sportIds?.length) {
+        variables.where.sport_!.sportId_in = filter?.sportIds
+      }
+
+      if (filter.leagueSlug) {
+        variables.where.league_!.slug_in = typeof filter.leagueSlug === 'string' ? [ filter.leagueSlug ] : filter.leagueSlug
+      }
+
+      if (filter.maxMargin) {
+        variables.where.conditions_!.margin_lte = String(filter.maxMargin)
+      }
+
+      if (filter.conditionsState) {
+        if (typeof filter.conditionsState === 'string') {
+          variables.where.conditions_!.state = filter.conditionsState
+        }
+        else {
+          variables.where.conditions_!.state_in = filter.conditionsState
+        }
+      }
+
+      const { games } = await gqlRequest<GamesQuery, GamesQueryVariables>({
+        url: gqlLink,
+        document: GamesDocument,
+        variables,
+      })
+
+      return games
+    },
+    refetchOnWindowFocus: false,
+    ...query,
+  })
 }

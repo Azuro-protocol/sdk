@@ -1,78 +1,69 @@
-import { useMemo } from 'react'
-import { useQuery, type QueryHookOptions } from '@apollo/client'
 import {
-  PrematchGraphGameStatus,
-
   type SportsNavigationQuery,
   type SportsNavigationQueryVariables,
-  SportsNavigationDocument } from '@azuro-org/toolkit'
 
-import { type SportHub } from '../../global'
-import { useApolloClients } from '../../contexts/apollo'
-import { getGameStartsAtValue } from '../../helpers'
+  SportsNavigationDocument,
+} from '@azuro-org/toolkit'
+import { useQuery } from '@tanstack/react-query'
+
+import { type SportHub, type QueryParameter } from '../../global'
+import { useChain } from '../../contexts/chain'
+import { gqlRequest } from '../../helpers/gqlRequest'
 
 
-type UseNavigationProps = {
+type UseSportsNavigationProps = {
   filter?: {
     sportHub?: SportHub
     sportIds?: Array<string | number>
   }
-  withGameCount?: boolean
   isLive?: boolean
+  query?: QueryParameter<SportsNavigationQuery['sports']>
 }
 
-export const useSportsNavigation = (props: UseNavigationProps = {}) => {
-  const { filter, withGameCount = false, isLive } = props
+export const useSportsNavigation = (props: UseSportsNavigationProps = {}) => {
+  const { filter = {}, isLive, query = {} } = props
 
-  const { prematchClient, liveClient } = useApolloClients()
+  const { graphql } = useChain()
 
-  const startsAt = getGameStartsAtValue()
+  const gqlLink = graphql.feed
 
-  const options = useMemo<QueryHookOptions<SportsNavigationQuery, SportsNavigationQueryVariables>>(() => {
-    const variables: SportsNavigationQueryVariables = {
-      first: 1000,
-      withGameCount,
-      sportFilter: {},
-      gameFilter: {
-        hasActiveConditions: true,
-        status_in: [ PrematchGraphGameStatus.Created, PrematchGraphGameStatus.Paused ],
-      },
-    }
+  return useQuery({
+    queryKey: [
+      'sports-navigation',
+      gqlLink,
+      isLive,
+      filter.sportHub,
+      filter.sportIds?.join('-'),
+    ],
+    queryFn: async () => {
+      const variables: SportsNavigationQueryVariables = {
+        sportFilter: {},
+      }
 
-    if (isLive) {
-      variables.gameFilter!.startsAt_lt = startsAt
-    }
-    else {
-      variables.gameFilter!.startsAt_gt = startsAt
-    }
+      if (isLive) {
+        variables.sportFilter!.activeLiveGamesCount_not = 0
+      }
+      else {
+        variables.sportFilter!.activePrematchGamesCount_not = 0
+      }
 
-    if (filter?.sportHub) {
-      variables.sportFilter!.sporthub = filter.sportHub
-    }
+      if (filter.sportHub) {
+        variables.sportFilter!.sporthub = filter.sportHub
+      }
 
-    if (filter?.sportIds?.length) {
-      variables.sportFilter!.sportId_in = filter?.sportIds
-    }
+      if (filter.sportIds?.length) {
+        variables.sportFilter!.sportId_in = filter.sportIds
+      }
 
-    return {
-      variables,
-      ssr: false,
-      client: isLive ? liveClient! : prematchClient!,
-      notifyOnNetworkStatusChange: true,
-    }
-  }, [
-    withGameCount,
-    startsAt,
-    isLive,
-    filter?.sportHub,
-    filter?.sportIds?.join('-'),
-  ])
+      const { sports } = await gqlRequest<SportsNavigationQuery, SportsNavigationQueryVariables>({
+        url: gqlLink,
+        document: SportsNavigationDocument,
+        variables,
+      })
 
-  const { data, loading, error } = useQuery<SportsNavigationQuery, SportsNavigationQueryVariables>(SportsNavigationDocument, options)
-
-  return {
-    sports: data?.sports,
-    loading,
-    error,
-  }
+      return sports
+    },
+    refetchOnWindowFocus: false,
+    ...query,
+  })
 }

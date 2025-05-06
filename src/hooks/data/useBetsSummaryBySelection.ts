@@ -1,59 +1,50 @@
-import { useMemo } from 'react'
-import { useQuery } from '@apollo/client'
+import { useCallback } from 'react'
 import { type Address, formatUnits, parseUnits } from 'viem'
 import {
-  ODDS_DECIMALS,
-  GameStatus,
-  BetResult,
-
   type GameBetsQuery,
   type GameBetsQueryVariables,
-  GameBetsDocument,
-} from '@azuro-org/toolkit'
 
-import { useApolloClients } from '../../contexts/apollo'
+  ODDS_DECIMALS,
+  BetResult,
+  GameBetsDocument,
+  GameState,
+} from '@azuro-org/toolkit'
+import { useQuery } from '@tanstack/react-query'
+
 import { useChain } from '../../contexts/chain'
+import { type QueryParameter } from '../../global'
+import { gqlRequest } from '../../helpers/gqlRequest'
 
 
 export type BetsSummaryBySelection = Record<string, string>
 
-type Props = {
+type UseBetsSummaryBySelectionProps = {
   account: Address
   gameId: string
-  gameStatus: GameStatus
+  gameState: GameState
   keyStruct?: 'outcomeId' | 'conditionId-outcomeId'
+  query?: QueryParameter<GameBetsQuery>
 }
 
 const DIVIDER = 18
+const RAW_ONE = parseUnits('1', ODDS_DECIMALS)
 
-export const useBetsSummaryBySelection = ({ account, gameId, gameStatus, keyStruct = 'outcomeId' }: Props) => {
-  const { prematchClient } = useApolloClients()
-  const { betToken } = useChain()
+export const useBetsSummaryBySelection = (props: UseBetsSummaryBySelectionProps) => {
+  const { account, gameId, gameState, keyStruct = 'outcomeId', query = {} } = props
 
-  const variables = useMemo<GameBetsQueryVariables>(() => ({
-    actor: account?.toLowerCase(),
-    gameId,
-  }), [ account, gameId ])
+  const { betToken, graphql } = useChain()
 
-  const { data, loading, error } = useQuery<GameBetsQuery, GameBetsQueryVariables>(GameBetsDocument, {
-    variables,
-    ssr: false,
-    client: prematchClient!,
-    skip: !account || gameStatus !== GameStatus.Resolved,
-  })
+  const gqlLink = graphql.bets
 
-  const { bets: prematchBets, liveBets } = data || {}
+  const formatData = useCallback(({ bets: prematchBets, liveBets, v3Bets }: GameBetsQuery) => {
 
-  const betsSummary = useMemo<BetsSummaryBySelection>(() => {
-    if (!prematchBets?.length && !liveBets?.length) {
-      return {}
-    }
-
-    const rawOne = parseUnits('1', ODDS_DECIMALS)
-
-    const rawSummary = [ ...(prematchBets || []), ...(liveBets || []) ].reduce<Record<string, bigint>>((acc, bet) => {
-      const { rawAmount: _rawAmount, rawPotentialPayout: _rawPotentialPayout, result, selections } = bet
+    const rawSummary = [ ...(prematchBets || []), ...(liveBets || []), ...(v3Bets || []) ].reduce<Record<string, bigint>>((acc, bet) => {
+      const { rawAmount: _rawAmount, rawPotentialPayout: _rawPotentialPayout, result, selections, isCashedOut } = bet
       const { freebet } = bet as GameBetsQuery['bets'][0]
+
+      if (isCashedOut) {
+        return acc
+      }
 
       const isExpress = selections.length > 1
       const isWin = result === BetResult.Won
@@ -68,7 +59,7 @@ export const useBetsSummaryBySelection = ({ account, gameId, gameStatus, keyStru
         selections.forEach(selection => {
           const { rawOdds } = selection as GameBetsQuery['bets'][0]['selections'][0]
 
-          rawOddsSummary += BigInt(rawOdds) - rawOne
+          rawOddsSummary += BigInt(rawOdds) - RAW_ONE
         })
       }
 
@@ -76,7 +67,11 @@ export const useBetsSummaryBySelection = ({ account, gameId, gameStatus, keyStru
         const { outcome: { outcomeId, condition: { conditionId } } } = selection
 
         if (isExpress) {
-          const { outcome: { condition: { game: { gameId: _gameId } } } } = selection as GameBetsQuery['bets'][0]['selections'][0]
+          const _gameId = (
+            (selection as GameBetsQuery['bets'][0]['selections'][0]).outcome.condition.game.gameId
+          ) || (
+            (selection as GameBetsQuery['v3Bets'][0]['selections'][0]).outcome.condition.gameId
+          )
 
           if (gameId !== _gameId) {
             return
@@ -97,7 +92,7 @@ export const useBetsSummaryBySelection = ({ account, gameId, gameStatus, keyStru
           const { rawOdds: _rawOdds } = selection as GameBetsQuery['bets'][0]['selections'][0]
 
           const rawOdds = BigInt(_rawOdds)
-          const rawSubBetOdds = parseUnits(String(rawOdds - rawOne), DIVIDER)
+          const rawSubBetOdds = parseUnits(String(rawOdds - RAW_ONE), DIVIDER)
           const rawPartialOdds = rawSubBetOdds / rawOddsSummary / BigInt(10 ** (DIVIDER - ODDS_DECIMALS))
           const rawSubBetAmount = rawAmount * rawPartialOdds / BigInt(10 ** ODDS_DECIMALS)
 
@@ -121,11 +116,32 @@ export const useBetsSummaryBySelection = ({ account, gameId, gameStatus, keyStru
 
       return acc
     }, {})
-  }, [ prematchBets, liveBets ])
+  }, [])
 
-  return {
-    betsSummary,
-    loading,
-    error,
-  }
+  return useQuery({
+    queryKey: [
+      'bets-summary-by-selection',
+      gqlLink,
+      account,
+      gameId,
+    ],
+    queryFn: async () => {
+      const variables: GameBetsQueryVariables = {
+        actor: account?.toLowerCase(),
+        gameId,
+      }
+
+      const data = await gqlRequest<GameBetsQuery, GameBetsQueryVariables>({
+        url: gqlLink,
+        document: GameBetsDocument,
+        variables,
+      })
+
+      return data
+    },
+    enabled: Boolean(account) && gameState === GameState.Finished,
+    refetchOnWindowFocus: false,
+    select: formatData,
+    ...query,
+  })
 }

@@ -15,7 +15,7 @@ export const useBetTokenBalance = () => {
     balance: formatUnits(rawBalance, betToken.decimals),
   }), [ betToken.decimals ])
 
-  const { data, isLoading, error, refetch } = useReadContract({
+  return useReadContract({
     address: betToken.address,
     abi: erc20Abi,
     functionName: 'balanceOf',
@@ -26,12 +26,4 @@ export const useBetTokenBalance = () => {
       select: formatBalance,
     },
   })
-
-  return {
-    refetch,
-    loading: isLoading,
-    rawBalance: data?.rawBalance,
-    balance: data?.balance,
-    error,
-  }
 }

@@ -1,61 +1,41 @@
-import { type Condition_Filter, ConditionStatus, MARGIN_DECIMALS } from '@azuro-org/toolkit'
+import { type Condition_Filter, type ConditionsQuery, ConditionState } from '@azuro-org/toolkit'
 import { useMemo } from 'react'
-import { parseUnits } from 'viem'
-import { type FetchPolicy } from '@apollo/client'
 
 import { useConditions } from './useConditions'
+import { type QueryParameter } from '../../global'
 
 
-type UseConditionsProps = {
+type UseActiveConditionsProps = {
   gameId: string | bigint
-  isLive: boolean
-  livePollInterval?: number
   filter?: {
     outcomeIds?: string[]
-    maxMargin?: number
+    maxMargin?: number | string
   }
-  fetchPolicy?: FetchPolicy
+  query?: QueryParameter<ConditionsQuery['conditions']>
 }
 
-export const useActiveConditions = (props: UseConditionsProps) => {
-  const { gameId, isLive, livePollInterval, filter, fetchPolicy } = props
+export const useActiveConditions = (props: UseActiveConditionsProps) => {
+  const { gameId, filter = {}, query = {} } = props
 
   const conditionsFilter = useMemo<Condition_Filter>(() => {
     const _filter: Condition_Filter = {
-      status_not: ConditionStatus.Resolved,
+      state_in: [ ConditionState.Active, ConditionState.Stopped ],
     }
 
-    if (filter?.outcomeIds) {
+    if (filter.outcomeIds) {
       _filter.outcomesIds_contains = filter.outcomeIds
     }
 
-    if (filter?.maxMargin) {
-      _filter.margin_lte = parseUnits(String(filter.maxMargin), MARGIN_DECIMALS).toString()
-      _filter.status = ConditionStatus.Created
+    if (filter.maxMargin) {
+      _filter.margin_lte = String(filter.maxMargin)
     }
 
     return _filter
-  }, [ filter?.outcomeIds, filter?.maxMargin ])
+  }, [ filter.outcomeIds, filter.maxMargin ])
 
-  const { prematchConditions, liveConditions, loading, error } = useConditions({
+  return useConditions({
     gameId,
     filter: conditionsFilter,
-    prematchQuery: {
-      skip: isLive,
-      fetchPolicy,
-    },
-    liveQuery: {
-      pollInterval: livePollInterval,
-      skip: !isLive,
-      fetchPolicy,
-    },
+    query,
   })
-
-  const conditions = isLive ? liveConditions : prematchConditions
-
-  return {
-    conditions,
-    loading,
-    error,
-  }
 }

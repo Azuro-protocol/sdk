@@ -1,52 +1,28 @@
-import { useMemo } from 'react'
-import { type QueryHookOptions, useQuery } from '@apollo/client'
+import { useCallback } from 'react'
 import { formatUnits } from 'viem'
 import { type BettorsQuery, type BettorsQueryVariables, BettorsDocument } from '@azuro-org/toolkit'
+import { useQuery } from '@tanstack/react-query'
 
-import { useApolloClients } from '../../contexts/apollo'
 import { useChain } from '../../contexts/chain'
+import { type QueryParameter } from '../../global'
+import { gqlRequest } from '../../helpers/gqlRequest'
 
 
-type Props = {
+type UseBetsSummaryProps = {
   account: string
   affiliates?: string[]
+  query?: QueryParameter<BettorsQuery['bettors']>
 }
 
-export const useBetsSummary = (props: Props) => {
-  const { account, affiliates } = props
+export const useBetsSummary = (props: UseBetsSummaryProps) => {
+  const { account, affiliates, query = {} } = props
 
-  const { betToken } = useChain()
-  const { prematchClient } = useApolloClients()
+  const { betToken, graphql } = useChain()
 
-  const options = useMemo<QueryHookOptions<BettorsQuery, BettorsQueryVariables>>(() => {
-    const variables: BettorsQueryVariables = {
-      where: {
-        address: account?.toLowerCase(),
-      },
-    }
+  const gqlLink = graphql.bets
 
-    if (affiliates?.length) {
-      variables.where.affiliate_in = affiliates.map(affiliate => affiliate.toLowerCase())
-    }
-
-    return {
-      variables,
-      ssr: false,
-      client: prematchClient!,
-      notifyOnNetworkStatusChange: true,
-      skip: !account,
-    } as const
-  }, [
-    account,
-    affiliates?.join('-'),
-  ])
-
-  const { data, loading, error } = useQuery<BettorsQuery, BettorsQueryVariables>(BettorsDocument, options)
-
-  const { bettors } = data || { bettors: [] }
-
-  const formattedData = useMemo(() => {
-    if (!bettors.length) {
+  const formatData = useCallback((data: BettorsQuery['bettors']) => {
+    if (!data?.length) {
       return {
         toPayout: '0',
         inBets: '0',
@@ -66,7 +42,7 @@ export const useBetsSummary = (props: Props) => {
       betsCount,
       wonBetsCount,
       lostBetsCount,
-    } = bettors.reduce((acc, bettor) => {
+    } = data.reduce((acc, bettor) => {
       const { rawToPayout, rawInBets, rawTotalPayout, rawTotalProfit, betsCount, wonBetsCount, lostBetsCount } = bettor
 
       acc.rawToPayout += BigInt(rawToPayout)
@@ -97,11 +73,36 @@ export const useBetsSummary = (props: Props) => {
       wonBetsCount,
       lostBetsCount,
     }
-  }, [ data ])
+  }, [])
 
-  return {
-    ...formattedData,
-    loading,
-    error,
-  }
+  return useQuery({
+    queryKey: [
+      'bets-summary',
+      gqlLink,
+      account,
+      affiliates?.join('-'),
+    ],
+    queryFn: async () => {
+      const variables: BettorsQueryVariables = {
+        where: {
+          address: account?.toLowerCase(),
+        },
+      }
+
+      if (affiliates?.length) {
+        variables.where.affiliate_in = affiliates.map(affiliate => affiliate.toLowerCase())
+      }
+
+      const { bettors } = await gqlRequest<BettorsQuery, BettorsQueryVariables>({
+        url: gqlLink,
+        document: BettorsDocument,
+        variables,
+      })
+
+      return bettors
+    },
+    select: formatData,
+    refetchOnWindowFocus: false,
+    ...query,
+  })
 }

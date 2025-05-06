@@ -1,6 +1,6 @@
 {
   "name": "@azuro-org/sdk",
-  "version": "5.4.10",
+  "version": "6.0.0",
   "author": "Azuro",
   "type": "module",
   "main": "dist/index.js",
@@ -21,18 +21,16 @@
     "build": "rimraf dist && rollup -c",
     "prepublishOnly": "npm run build",
     "------------------  Lint --------------------------------------------------------------------------------": "",
-    "lint": "next lint && tsc --noEmit",
     "lint-fix": "eslint ./src -c .eslintrc --fix --ext js,ts,tsx",
     "lint-ts": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@apollo/client": "^3.11.10",
     "@azuro-org/dictionaries": "^3.0.26",
-    "@azuro-org/sdk-social-aa-connector": "^1.1.3",
-    "graphql": "^16.9.0",
+    "@azuro-org/sdk-social-aa-connector": "^1.1.7",
+    "graphql": "^16.11.0",
     "react": "^18.3.1",
-    "viem": "^2.23.2",
-    "wagmi": "^2.14.11"
+    "viem": "^2.29.0",
+    "wagmi": "^2.15.2"
   },
   "peerDependenciesMeta": {
     "@azuro-org/sdk-social-aa-connector": {
@@ -40,7 +38,7 @@
     }
   },
   "devDependencies": {
-    "@azuro-org/sdk-social-aa-connector": "^1.1.3",
+    "@azuro-org/sdk-social-aa-connector": "^1.1.6",
     "@rollup/plugin-typescript": "^12.1.1",
     "@types/react": "^18.0.0",
     "@typescript-eslint/eslint-plugin": "^6.19.1",
@@ -54,6 +52,6 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@azuro-org/toolkit": "4.5.4"
+    "@azuro-org/toolkit": "5.0.0"
   }
 }

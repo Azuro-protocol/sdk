@@ -1,84 +1,63 @@
-import { useMemo } from 'react'
-import { type FetchPolicy, useQuery } from '@apollo/client'
 import {
   type Condition_Filter,
+  type ConditionsQuery,
+  type ConditionsQueryVariables,
+  type Condition_OrderBy,
+  type OrderDirection,
 
-  type PrematchConditionsQuery,
-  type PrematchConditionsQueryVariables,
-  PrematchConditionsDocument,
-
-  type LiveConditionsQuery,
-  type LiveConditionsQueryVariables,
-  LiveConditionsDocument,
+  ConditionsDocument,
 } from '@azuro-org/toolkit'
+import { useQuery } from '@tanstack/react-query'
 
-import { useApolloClients } from '../../contexts/apollo'
 import { useChain } from '../../contexts/chain'
+import { type QueryParameter } from '../../global'
+import { gqlRequest } from '../../helpers/gqlRequest'
 
-
-type QueryProps = {
-  pollInterval?: number
-  skip?: boolean
-  fetchPolicy?: FetchPolicy
-}
 
 type UseConditionsProps = {
   gameId: string | bigint
   filter?: Condition_Filter
-  prematchQuery?: QueryProps
-  liveQuery?: QueryProps
-}
-
-const defaultQueryProps: QueryProps = {
-  pollInterval: undefined,
-  skip: false,
+  orderBy?: Condition_OrderBy
+  orderDir?: OrderDirection
+  query?: QueryParameter<ConditionsQuery['conditions']>
 }
 
 export const useConditions = (props: UseConditionsProps) => {
-  const { gameId, filter, prematchQuery = defaultQueryProps, liveQuery = defaultQueryProps } = props
-  const { prematchClient, liveClient } = useApolloClients()
-  const { contracts } = useChain()
+  const { gameId, filter = {}, orderBy, orderDir, query = {} } = props
+  const { graphql } = useChain()
 
-  const variables = useMemo<PrematchConditionsQueryVariables | LiveConditionsQueryVariables>(() => {
-    const vars: PrematchConditionsQueryVariables | LiveConditionsQueryVariables = {
-      where: {
-        game_: {
-          gameId,
+  const gqlLink = graphql.feed
+
+  return useQuery({
+    queryKey: [
+      'conditions',
+      gqlLink,
+      gameId,
+      orderBy,
+      orderDir,
+      filter,
+    ],
+    queryFn: async () => {
+      const variables: ConditionsQueryVariables = {
+        orderBy,
+        orderDirection: orderDir,
+        where: {
+          ...filter,
+          game_: {
+            gameId,
+          },
         },
-        ...(filter || {}),
-      },
-    }
+      }
 
-    return vars
-  }, [ gameId, filter ])
+      const { conditions } = await gqlRequest<ConditionsQuery, ConditionsQueryVariables>({
+        url: gqlLink,
+        document: ConditionsDocument,
+        variables,
+      })
 
-  const {
-    data: prematchData,
-    loading: isPrematchLoading,
-    error: prematchError,
-  } = useQuery<PrematchConditionsQuery, PrematchConditionsQueryVariables>(PrematchConditionsDocument, {
-    variables: variables as PrematchConditionsQueryVariables,
-    ssr: false,
-    client: prematchClient!,
-    notifyOnNetworkStatusChange: true,
-    ...prematchQuery,
+      return conditions
+    },
+    refetchOnWindowFocus: false,
+    ...query,
   })
-  const {
-    data: liveData,
-    loading: isLiveLoading,
-    error: liveError,
-  } = useQuery<LiveConditionsQuery, LiveConditionsQueryVariables>(LiveConditionsDocument, {
-    variables: variables as LiveConditionsQueryVariables,
-    ssr: false,
-    client: liveClient!,
-    ...liveQuery,
-    skip: liveQuery.skip || !contracts.liveCore,
-  })
-
-  return {
-    prematchConditions: prematchData?.conditions,
-    liveConditions: liveData?.conditions,
-    loading: isPrematchLoading || isLiveLoading,
-    error: prematchError || liveError,
-  }
 }

@@ -1,69 +1,35 @@
 import { useMemo } from 'react'
-import { type Market, groupConditionsByMarket, ConditionStatus } from '@azuro-org/toolkit'
+import { groupConditionsByMarket, ConditionState } from '@azuro-org/toolkit'
 
 import { useConditions } from './useConditions'
 
 
-type Props = {
+type UseResolvedMarketsProps = {
   gameId: string
 }
 
-export const useResolvedMarkets = (props: Props) => {
+export const useResolvedMarkets = (props: UseResolvedMarketsProps) => {
   const { gameId } = props
 
-  const { loading, liveConditions, prematchConditions, error } = useConditions({
+  const { data: conditions, ...rest } = useConditions({
     gameId,
     filter: {
-      status: ConditionStatus.Resolved,
+      state: ConditionState.Resolved,
     },
   })
 
-  const prematchConditionIds = prematchConditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('_')
-  const liveConditionIds = liveConditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('_')
+  const conditionIds = conditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('_')
 
-  const prematchMarkets = useMemo(() => {
-    if (!prematchConditions?.length) {
+  const markets = useMemo(() => {
+    if (!conditions?.length) {
       return []
     }
 
-    return groupConditionsByMarket(prematchConditions)
-  }, [ prematchConditionIds ])
-
-  const liveMarkets = useMemo(() => {
-    if (!liveConditions?.length) {
-      return []
-    }
-
-    return groupConditionsByMarket(liveConditions)
-  }, [ liveConditionIds ])
-
-  const groupedMarkets = useMemo(() => {
-    if (!prematchMarkets?.length || !liveMarkets?.length) {
-      if (prematchMarkets?.length) {
-        return prematchMarkets
-      }
-
-      if (liveMarkets?.length) {
-        return liveMarkets
-      }
-    }
-
-    return Object.values([ ...liveMarkets, ...prematchMarkets ].reduce((acc, market) => {
-      const { marketKey } = market
-
-      if (!acc[marketKey]) {
-        acc[marketKey] = market
-      }
-
-      return acc
-    }, {} as Record<string, Market>))
-  }, [ prematchMarkets, liveMarkets ])
+    return groupConditionsByMarket(conditions)
+  }, [ conditionIds ])
 
   return {
-    groupedMarkets,
-    prematchMarkets,
-    liveMarkets,
-    loading,
-    error,
+    data: markets,
+    ...rest,
   }
 }

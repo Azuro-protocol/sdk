@@ -1,33 +1,30 @@
 import { useMemo } from 'react'
-import { GameStatus, groupConditionsByMarket } from '@azuro-org/toolkit'
-import { type FetchPolicy } from '@apollo/client'
+import { type ConditionsQuery, groupConditionsByMarket } from '@azuro-org/toolkit'
 
 import { useActiveConditions } from './useActiveConditions'
+import { type QueryParameter } from '../../global'
 
 
-type Props = {
+type UseActiveMarketsProps = {
   gameId: string
-  gameStatus: GameStatus
   filter?: {
     outcomeIds?: string[]
     maxMargin?: number
   }
-  livePollInterval?: number
-  fetchPolicy?: FetchPolicy
+  query?: QueryParameter<ConditionsQuery['conditions']>
 }
 
-export const useActiveMarkets = (props: Props) => {
-  const { gameId, gameStatus, filter, livePollInterval, fetchPolicy } = props
+export const useActiveMarkets = (props: UseActiveMarketsProps) => {
+  const { gameId, filter, query: queryProps } = props
 
-  const { loading, conditions, error } = useActiveConditions({
+  const query = useActiveConditions({
     gameId,
     filter,
-    isLive: gameStatus === GameStatus.Live,
-    livePollInterval,
-    fetchPolicy,
+    query: queryProps,
   })
 
-  // generate unique key for memo deps
+  const { data: conditions, ...rest } = query
+
   const conditionIds = conditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('_')
 
   const markets = useMemo(() => {
@@ -39,8 +36,7 @@ export const useActiveMarkets = (props: Props) => {
   }, [ conditionIds ])
 
   return {
-    loading,
-    markets,
-    error,
+    data: markets,
+    ...rest,
   }
 }

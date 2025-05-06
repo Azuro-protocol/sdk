@@ -1,39 +1,34 @@
 import React from 'react'
 
 import { ChainProvider, type ChainProviderProps } from './contexts/chain'
-import { ApolloProvider } from './contexts/apollo'
-import { OddsSocketProvider } from './contexts/oddsSocket'
+import { FeedSocketProvider } from './contexts/feedSocket'
+import { ConditionUpdatesProvider } from './contexts/conditionUpdates'
 import { LiveStatisticsSocketProvider } from './contexts/liveStatisticsSocket'
 import { BetslipProvider, type BetslipProviderProps } from './contexts/betslip'
-import { useWatchers } from './hooks/watch/useWatchers'
+import { GameUpdatesProvider } from './contexts/gameUpdates'
 
-
-export function Watchers() {
-  useWatchers()
-
-  return null
-}
 
 type AzuroSDKProviderProps = ChainProviderProps & BetslipProviderProps
 
 export const AzuroSDKProvider: React.FC<AzuroSDKProviderProps> = (props) => {
-  const { children, initialChainId, affiliate, isBatchBetWithSameGameEnabled } = props
+  const { children, initialChainId, affiliate } = props
 
   return (
     <ChainProvider initialChainId={initialChainId}>
-      <OddsSocketProvider>
-        <LiveStatisticsSocketProvider>
-          <ApolloProvider>
-            <BetslipProvider
-              isBatchBetWithSameGameEnabled={isBatchBetWithSameGameEnabled}
-              affiliate={affiliate}
-            >
-              {children}
-            </BetslipProvider>
-          </ApolloProvider>
-          <Watchers />
-        </LiveStatisticsSocketProvider>
-      </OddsSocketProvider>
+      <FeedSocketProvider>
+        <GameUpdatesProvider>
+          <ConditionUpdatesProvider>
+            <LiveStatisticsSocketProvider>
+              <BetslipProvider
+                // isBatchBetWithSameGameEnabled={isBatchBetWithSameGameEnabled}
+                affiliate={affiliate}
+              >
+                {children}
+              </BetslipProvider>
+            </LiveStatisticsSocketProvider>
+          </ConditionUpdatesProvider>
+        </GameUpdatesProvider>
+      </FeedSocketProvider>
     </ChainProvider>
   )
 }
