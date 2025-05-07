@@ -86,7 +86,15 @@ export const useRedeemBet = () => {
       throw new Error('v2 redeem can\'t be executed for multiple bets')
     }
 
-    if (isV2) {
+    if (freebetContractAddress && freebetId) {
+      to = freebetContractAddress
+      data = encodeFunctionData({
+        abi: freeBetAbi,
+        functionName: 'withdrawPayout',
+        args: [ BigInt(freebetId) ],
+      })
+    }
+    else if (isV2) {
       to = lpAddress
       data = encodeFunctionData({
         abi: legacyV2LpAbi,
@@ -95,14 +103,6 @@ export const useRedeemBet = () => {
           coreAddress,
           BigInt(bets[0]!.tokenId),
         ],
-      })
-    }
-    else if (freebetContractAddress && freebetId) {
-      to = freebetContractAddress
-      data = encodeFunctionData({
-        abi: freeBetAbi,
-        functionName: 'withdrawPayout',
-        args: [ BigInt(freebetId) ],
       })
     }
     else {

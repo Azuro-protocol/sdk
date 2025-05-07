@@ -100,7 +100,7 @@ export const useBetsSummaryBySelection = (props: UseBetsSummaryBySelectionProps)
             acc[key]! += rawSubBetAmount * rawOdds / BigInt(10 ** ODDS_DECIMALS)
           }
           else {
-            acc[key]! += rawSubBetAmount
+            acc[key]! -= rawSubBetAmount
           }
         }
         else {
