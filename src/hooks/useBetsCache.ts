@@ -215,7 +215,7 @@ export const useBetsCache = () => {
     const rawPotentialPayout = rawAmount * rawOdds
 
     const potentialPayout = formatUnits(rawPotentialPayout, ODDS_DECIMALS * receiptArgs!.betDatas.length + betToken.decimals)
-    const finalOdds = formatUnits(rawOdds, ODDS_DECIMALS)
+    const finalOdds = formatUnits(rawOdds, ODDS_DECIMALS * receiptArgs!.betDatas.length)
     const amount = formatUnits(rawAmount, betToken.decimals)
     const isFreebet = Boolean(bet.freebetId)
 

@@ -42,7 +42,7 @@ export const useBetsSummaryBySelection = (props: UseBetsSummaryBySelectionProps)
       const { rawAmount: _rawAmount, rawPotentialPayout: _rawPotentialPayout, result, selections, isCashedOut } = bet
       const { freebet } = bet as GameBetsQuery['bets'][0]
 
-      if (isCashedOut) {
+      if (isCashedOut || !result) {
         return acc
       }
 
@@ -68,9 +68,9 @@ export const useBetsSummaryBySelection = (props: UseBetsSummaryBySelectionProps)
 
         if (isExpress) {
           const _gameId = (
-            (selection as GameBetsQuery['bets'][0]['selections'][0]).outcome.condition.game.gameId
+            (selection as GameBetsQuery['bets'][0]['selections'][0]).outcome.condition?.game?.gameId
           ) || (
-            (selection as GameBetsQuery['v3Bets'][0]['selections'][0]).outcome.condition.gameId
+            (selection as GameBetsQuery['v3Bets'][0]['selections'][0]).outcome.condition?.gameId
           )
 
           if (gameId !== _gameId) {
