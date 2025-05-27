@@ -12,12 +12,11 @@ type Result = {
 }
 
 type UseBetFeeProps = {
-  enabled?: boolean
   query?: QueryParameter<Result>
 }
 
 export const useBetFee = (props: UseBetFeeProps = {}) => {
-  const { enabled = true, query = {} } = props
+  const { query = {} } = props
   const { appChain } = useChain()
 
   const queryFn = async () => {
@@ -34,21 +33,11 @@ export const useBetFee = (props: UseBetFeeProps = {}) => {
     }
   }
 
-  let { data, ...rest } = useQuery({
+  return useQuery({
     queryKey: [ '/bet-fee', appChain.id ],
     queryFn,
-    enabled,
     refetchOnWindowFocus: false,
     refetchInterval: 10_000,
     ...query,
   })
-
-  if (!enabled) {
-    data = undefined
-  }
-
-  return {
-    data,
-    ...rest,
-  }
 }

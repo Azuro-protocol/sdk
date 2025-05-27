@@ -125,7 +125,6 @@ export { useNavigation } from './hooks/data/useNavigation'
 export { useBetFee } from './hooks/data/useBetFee'
 export { useBetsSummary } from './hooks/data/useBetsSummary'
 export { useBetsSummaryBySelection, type BetsSummaryBySelection } from './hooks/data/useBetsSummaryBySelection'
-// export { useFreeBets, type FreeBet } from './hooks/data/useFreeBets' // TODO
 export { useMaxBet } from './hooks/data/useMaxBet'
 
 // write hooks
@@ -149,6 +148,11 @@ export { useWrapTokens, WRAP_CHAINS } from './hooks/useWrapTokens'
 // cashout
 export { usePrecalculatedCashouts } from './hooks/cashout/usePrecalculatedCashouts'
 export { useCashout } from './hooks/cashout/useCashout'
+
+// bonus
+
+export { useBonuses } from './hooks/bonus/useBonuses'
+export { useAvailableFreebets } from './hooks/bonus/useAvailableFreebets'
 
 // wave
 export { useWaveLevels } from './hooks/wave/useWaveLevels'

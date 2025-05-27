@@ -203,7 +203,7 @@ export const useLegacyBets = (props: UseLegacyBetsProps) => {
 
           const isWin = result ? result === SelectionResult.Won : null
           const isLose = result ? result === SelectionResult.Lost : null
-          const isCanceled = (
+          const isCanceled = !result && (
             conditionStatus === BetConditionStatus.Canceled
                   || game.status === LegacyGameStatus.Paused
           )
