@@ -164,8 +164,7 @@ export const useLegacyBets = (props: UseLegacyBetsProps) => {
         // so we should validate it by "win"/"canceled" statuses
         const isRedeemed = (isWin || isCanceled) && _isRedeemed
         const isFreebet = Boolean(freebet)
-        const freebetId = freebet?.freebetId
-        const freebetContractAddress = freebet?.contractAddress
+        const freebetId = freebet?.freebetId || null
         const payout = isRedeemable && isWin ? +_payout! : null
         const betDiff = isFreebet ? amount : 0 // for freebet we must exclude bonus value from possible win
         const totalOdds = settledOdds ? +settledOdds : +odds
@@ -247,7 +246,8 @@ export const useLegacyBets = (props: UseLegacyBetsProps) => {
           actor: actor as Address,
           affiliate: affiliate as Address,
           tokenId,
-          freebetContractAddress: freebetContractAddress as Address,
+          isFreebetAmountReturnable: true,
+          paymaster: null,
           freebetId,
           txHash: txHash as Hex,
           redeemedTxHash: redeemedTxHash as Hex,

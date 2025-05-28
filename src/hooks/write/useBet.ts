@@ -210,6 +210,8 @@ export const useBet = (props: UseBetProps) => {
       bets.push({
         rawAmount,
         selections,
+        freebetId: freebet?.id,
+        isFreebetAmountReturnable: freebet?.params?.isSponsoredBetReturnable,
       })
 
       const clientData: BetClientData = {

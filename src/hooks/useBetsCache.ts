@@ -28,8 +28,8 @@ export type NewBetProps = {
   bet: {
     rawAmount: bigint
     selections: Selection[]
-    freebetId?: string
-    freebetContractAddress?: Address
+    freebetId: string | undefined
+    isFreebetAmountReturnable: boolean | undefined
   }
   odds: Record<string, number>
   affiliate: Address
@@ -135,7 +135,7 @@ export const useBetsCache = () => {
 
   const addBet = async (props: NewBetProps) => {
     const { bet, odds, affiliate, receipt } = props
-    const { rawAmount, selections, freebetId } = bet
+    const { rawAmount, selections, freebetId, isFreebetAmountReturnable } = bet
 
     const outcomes: BetOutcome[] = []
 
@@ -214,10 +214,13 @@ export const useBetsCache = () => {
 
     const rawPotentialPayout = rawAmount * rawOdds
 
-    const potentialPayout = formatUnits(rawPotentialPayout, ODDS_DECIMALS * receiptArgs!.betDatas.length + betToken.decimals)
     const finalOdds = formatUnits(rawOdds, ODDS_DECIMALS * receiptArgs!.betDatas.length)
     const amount = formatUnits(rawAmount, betToken.decimals)
-    const isFreebet = Boolean(bet.freebetId)
+
+    const isFreebet = Boolean(freebetId)
+    const betDiff = isFreebet && isFreebetAmountReturnable ? +amount : 0 // for freebet we must exclude bonus value from possible win
+
+    const potentialPayout = +formatUnits(rawPotentialPayout, ODDS_DECIMALS * receiptArgs!.betDatas.length + betToken.decimals) - betDiff
 
     queryClient.setQueriesData({
       predicate: ({ queryKey }) => (
@@ -237,14 +240,15 @@ export const useBetsCache = () => {
         actor: address!,
         affiliate,
         tokenId,
-        freebetContractAddress: bet.freebetContractAddress as Address,
-        freebetId: bet.freebetId,
+        freebetId: freebetId || null,
+        isFreebetAmountReturnable: isFreebetAmountReturnable ?? null,
+        paymaster: contracts.paymaster.address,
         txHash: receipt.transactionHash,
         redeemedTxHash: null,
         totalOdds: +finalOdds,
         status: GraphBetStatus.Accepted,
         amount,
-        possibleWin: +potentialPayout - (isFreebet ? +amount : 0),
+        possibleWin: potentialPayout,
         payout: null,
         createdAt: Math.floor(Date.now() / 1000),
         resolvedAt: null,

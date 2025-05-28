@@ -19,7 +19,7 @@ export type PrecalculatedCashoutsQueryData = {
 } | undefined
 
 type UsePrecalculatedCashoutsProps = {
-  bet: Pick<Bet, 'tokenId' | 'amount' | 'outcomes' | 'status' | 'totalOdds'>
+  bet: Pick<Bet, 'tokenId' | 'amount' | 'outcomes' | 'status' | 'totalOdds' | 'freebetId'>
   query?: QueryParameter<PrecalculatedCashoutsQueryData>
 }
 
@@ -110,7 +110,8 @@ export const usePrecalculatedCashouts = ({ bet, query = {} }: UsePrecalculatedCa
       query.enabled &&
       !isConditionsFromDifferentProviders &&
       Boolean(bet) &&
-      status === GraphBetStatus.Accepted
+      status === GraphBetStatus.Accepted &&
+      bet.freebetId === null
     ),
   })
 

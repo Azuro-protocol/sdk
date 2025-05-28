@@ -57,8 +57,9 @@ export type Bet = {
   actor: Address
   affiliate: Address
   tokenId: string
-  freebetId?: string
-  freebetContractAddress?: Address
+  freebetId: string | null
+  isFreebetAmountReturnable: boolean | null
+  paymaster: Address | null
   totalOdds: number
   coreAddress: Address
   lpAddress: Address
