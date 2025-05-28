@@ -3,6 +3,7 @@ import { type Address, formatUnits, parseUnits } from 'viem'
 import {
   type GameBetsQuery,
   type GameBetsQueryVariables,
+  type ChainId,
 
   ODDS_DECIMALS,
   BetResult,
@@ -11,28 +12,29 @@ import {
 } from '@azuro-org/toolkit'
 import { useQuery } from '@tanstack/react-query'
 
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
 import { type QueryParameter } from '../../global'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
 
 export type BetsSummaryBySelection = Record<string, string>
 
-type UseBetsSummaryBySelectionProps = {
+type Props = {
   account: Address
   gameId: string
   gameState: GameState
   keyStruct?: 'outcomeId' | 'conditionId-outcomeId'
+  chainId?: ChainId
   query?: QueryParameter<GameBetsQuery>
 }
 
 const DIVIDER = 18
 const RAW_ONE = parseUnits('1', ODDS_DECIMALS)
 
-export const useBetsSummaryBySelection = (props: UseBetsSummaryBySelectionProps) => {
-  const { account, gameId, gameState, keyStruct = 'outcomeId', query = {} } = props
+export const useBetsSummaryBySelection = (props: Props) => {
+  const { account, gameId, gameState, keyStruct = 'outcomeId', chainId, query = {} } = props
 
-  const { betToken, graphql } = useChain()
+  const { betToken, graphql } = useOptionalChain(chainId)
 
   const gqlLink = graphql.bets
 

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
-import { getBetFee } from '@azuro-org/toolkit'
+import { type ChainId, getBetFee } from '@azuro-org/toolkit'
 
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
 import { type QueryParameter } from '../../global'
 
 
@@ -11,13 +11,13 @@ type Result = {
   formattedRelayerFeeAmount: string,
 }
 
-type UseBetFeeProps = {
+type Props = {
+  chainId?: ChainId
   query?: QueryParameter<Result>
 }
 
-export const useBetFee = (props: UseBetFeeProps = {}) => {
-  const { query = {} } = props
-  const { appChain } = useChain()
+export const useBetFee = ({ chainId, query = {} }: Props = {}) => {
+  const { chain: appChain } = useOptionalChain(chainId)
 
   const queryFn = async () => {
     const {

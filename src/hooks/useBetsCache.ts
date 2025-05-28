@@ -7,6 +7,7 @@ import {
   type GameQuery,
   type GameQueryVariables,
   type Selection,
+  type ChainId,
 
   ConditionDocument,
   GameDocument,
@@ -18,7 +19,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 
 import { getEventArgsFromTxReceipt } from '../helpers/getEventArgsFromTxReceipt'
-import { useChain } from '../contexts/chain'
+import { useOptionalChain } from '../contexts/chain'
 import { useExtendedAccount } from '../hooks/useAaConnector'
 import { gqlRequest } from '../helpers/gqlRequest'
 import { type Bet, type BetOutcome, BetType } from '../global'
@@ -36,10 +37,11 @@ export type NewBetProps = {
   receipt: TransactionReceipt
 }
 
-export const useBetsCache = () => {
+export const useBetsCache = (chainId?: ChainId) => {
   const queryClient = useQueryClient()
-  const { contracts, betToken, graphql } = useChain()
   const { address } = useExtendedAccount()
+
+  const { contracts, betToken, graphql } = useOptionalChain(chainId)
 
   const updateBetCache = (
     tokenId: string | bigint,

@@ -1,19 +1,22 @@
 import { type Address } from 'viem'
 import { useQuery } from '@tanstack/react-query'
-import { type WaveId, getWaveLeaderBoard } from '@azuro-org/toolkit'
+import { type ChainId, type WaveId, getWaveLeaderBoard, type WaveLeaderBoardItem } from '@azuro-org/toolkit'
 
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
+import { type QueryParameter } from '../../global'
 
 
 type Props = {
   waveId?: WaveId
   account?: Address
   startsAt?: number
-  enabled?: boolean
+  chainId?: ChainId
+  query?: QueryParameter<WaveLeaderBoardItem[] | null>
 }
 
-export const useWaveLeaderBoard = ({ waveId = 'active', account, startsAt, enabled }: Props) => {
-  const { appChain, api } = useChain()
+export const useWaveLeaderBoard = (props: Props) => {
+  const { waveId = 'active', account, startsAt, chainId, query = {} } = props
+  const { chain: appChain, api } = useOptionalChain(chainId)
 
   const queryFn = () => (
     getWaveLeaderBoard({
@@ -27,7 +30,7 @@ export const useWaveLeaderBoard = ({ waveId = 'active', account, startsAt, enabl
   return useQuery({
     queryKey: [ 'wave/leaderboard', waveId, api, account?.toLowerCase(), startsAt ],
     queryFn,
+    ...query,
     refetchOnWindowFocus: false,
-    enabled,
   })
 }

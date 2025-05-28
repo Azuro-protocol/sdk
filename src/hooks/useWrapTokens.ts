@@ -1,10 +1,11 @@
 import { useConfig, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi'
 import { useState } from 'react'
+import { type ChainId } from '@azuro-org/toolkit'
 import { encodeFunctionData, type Hex, parseUnits } from 'viem'
 import { base, baseSepolia, gnosis } from 'viem/chains'
 import { waitForTransactionReceipt } from 'wagmi/actions'
 
-import { useChain } from '../contexts/chain'
+import { useOptionalChain } from '../contexts/chain'
 import { formatToFixed } from '../helpers/formatToFixed'
 import { useBetTokenBalance } from './useBetTokenBalance'
 import { useNativeBalance } from './useNativeBalance'
@@ -44,8 +45,11 @@ type AaTxState = {
   isPending: boolean
 }
 
-export const useWrapTokens = () => {
-  const { appChain, betToken } = useChain()
+type Props = {
+  chainId?: ChainId
+}
+
+export const useWrapTokens = ({ chainId }: Props = {}) => {
   const account = useExtendedAccount()
   const aaClient = useAAWalletClient()
   const wagmiConfig = useConfig()
@@ -53,6 +57,8 @@ export const useWrapTokens = () => {
   const withdrawTx = useSendTransaction()
   const { refetch: refetchBetTokenBalance } = useBetTokenBalance()
   const { refetch: refetchNativeBalance } = useNativeBalance()
+
+  const { chain: appChain, betToken } = useOptionalChain(chainId)
 
   const [ aaDepositTxState, setAaDepositTxState ] = useState<AaTxState>({
     data: undefined,

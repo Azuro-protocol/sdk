@@ -2,6 +2,8 @@ import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useWal
 import { waitForTransactionReceipt } from 'wagmi/actions'
 import { type Hex, type Address, type TransactionReceipt, encodeFunctionData, erc20Abi, formatUnits } from 'viem'
 import {
+  type ChainId,
+
   CashoutState,
   createCashout,
   getCalculatedCashout,
@@ -12,7 +14,7 @@ import { useReducer } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { getEventArgsFromTxReceipt } from '../../helpers/getEventArgsFromTxReceipt'
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
 import { type Bet } from '../../global'
 import { useAAWalletClient, useExtendedAccount } from '../useAaConnector'
 import { useBetsCache } from '../useBetsCache'
@@ -21,8 +23,9 @@ import { useBetTokenBalance } from '../useBetTokenBalance'
 import { useNativeBalance } from '../useNativeBalance'
 
 
-type UseCashoutProps = {
+type Props = {
   bet: Pick<Bet, 'tokenId' | 'outcomes'>
+  chainId?: ChainId
   EIP712Attention?: string
   onSuccess?(receipt?: TransactionReceipt): void
   onError?(err?: Error): void
@@ -38,14 +41,14 @@ const simpleObjReducer = (state: CashoutTxState, newState: Partial<CashoutTxStat
   ...newState,
 })
 
-export const useCashout = (props: UseCashoutProps) => {
+export const useCashout = (props: Props) => {
   const {
-    bet, EIP712Attention,
+    bet, EIP712Attention, chainId,
     onSuccess, onError,
   } = props
   const { tokenId, outcomes } = bet
 
-  const { appChain, contracts, api, betToken } = useChain()
+  const { chain: appChain, contracts, api, betToken } = useOptionalChain(chainId)
   const { refetch: refetchBetTokenBalance } = useBetTokenBalance()
   const { refetch: refetchNativeBalance } = useNativeBalance()
   const { updateBetCache } = useBetsCache()

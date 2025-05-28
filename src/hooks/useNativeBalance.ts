@@ -1,15 +1,22 @@
-import { useBalance } from 'wagmi'
+import { useBalance, type UseBalanceParameters } from 'wagmi'
 import { formatUnits } from 'viem'
-import { useCallback } from 'react'
 import type { GetBalanceData } from 'wagmi/query'
+import { useCallback } from 'react'
+import { type ChainId } from '@azuro-org/toolkit'
 
 import { useExtendedAccount } from '../hooks/useAaConnector'
-import { useChain } from '../contexts/chain'
+import { useOptionalChain } from '../contexts/chain'
 
 
-export const useNativeBalance = () => {
-  const { appChain } = useChain()
+type Props = {
+  chainId?: ChainId
+  query?: UseBalanceParameters['query']
+}
+
+export const useNativeBalance = ({ chainId, query = {} }: Props = {}) => {
   const { address } = useExtendedAccount()
+
+  const { chain: appChain } = useOptionalChain(chainId)
 
   const formatBalance = useCallback((data: GetBalanceData) => ({
     rawBalance: data.value,
@@ -20,6 +27,7 @@ export const useNativeBalance = () => {
     chainId: appChain.id,
     address,
     query: {
+      ...query,
       enabled: Boolean(address),
       select: formatBalance,
     },

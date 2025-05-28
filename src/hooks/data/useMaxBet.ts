@@ -1,23 +1,24 @@
 import { useQuery } from '@tanstack/react-query'
-import { getMaxBet, type Selection } from '@azuro-org/toolkit'
+import { type ChainId, getMaxBet, type Selection } from '@azuro-org/toolkit'
 import { useEffect, useMemo } from 'react'
 
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
 import { type QueryParameter } from '../../global'
 import { conditionWatcher } from '../../modules/conditionWatcher'
 import { useConditionUpdates } from '../../contexts/conditionUpdates'
 import { formatToFixed } from '../../helpers/formatToFixed'
 
 
-type MaxBetProps = {
+type Props = {
   selections: Selection[]
+  chainId?: ChainId
   query?: QueryParameter<string>
 }
 
-export const useMaxBet = (props: MaxBetProps) => {
-  const { selections, query = {} } = props
+export const useMaxBet = (props: Props) => {
+  const { selections, chainId, query = {} } = props
 
-  const { appChain } = useChain()
+  const { chain: appChain } = useOptionalChain(chainId)
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useConditionUpdates()
 
   const selectionsKey = useMemo(() => (

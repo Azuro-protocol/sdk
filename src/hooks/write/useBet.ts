@@ -13,6 +13,7 @@ import {
   type BetClientData,
   type CreateBetResponse,
   type Freebet,
+  type ChainId,
 
   ODDS_DECIMALS,
   BetState,
@@ -25,7 +26,7 @@ import {
 } from '@azuro-org/toolkit'
 import { useQueryClient } from '@tanstack/react-query'
 
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
 import { DEFAULT_DEADLINE } from '../../config'
 import { formatToFixed } from '../../helpers/formatToFixed'
 import { useBetsCache, type NewBetProps } from '../useBetsCache'
@@ -44,6 +45,7 @@ type UseBetProps = {
   selections: Selection[]
   odds: Record<string, number>
   totalOdds: number
+  chainId?: ChainId
   freebet?: Freebet
   EIP712Attention?: string
   deadline?: number
@@ -64,7 +66,7 @@ const simpleObjReducer = (state: BetTxState, newState: Partial<BetTxState>) => (
 export const useBet = (props: UseBetProps) => {
   const {
     betAmount, slippage, deadline, affiliate, selections, odds,
-    totalOdds, freebet, EIP712Attention, onSuccess, onError,
+    totalOdds, chainId, freebet, EIP712Attention, onSuccess, onError,
   } = props
 
   const isCombo = selections.length > 1
@@ -75,7 +77,7 @@ export const useBet = (props: UseBetProps) => {
   const isAAWallet = Boolean(account.isAAWallet)
   const aaClient = useAAWalletClient()
 
-  const { appChain, contracts, betToken, api } = useChain()
+  const { chain: appChain, contracts, betToken, api } = useOptionalChain(chainId)
   const queryClient = useQueryClient()
   const wagmiConfig = useConfig()
   const walletClient = useWalletClient()
@@ -84,7 +86,7 @@ export const useBet = (props: UseBetProps) => {
     isFetching: isRelayerFeeFetching,
   } = useBetFee()
   const { relayerFeeAmount: rawRelayerFeeAmount, formattedRelayerFeeAmount: relayerFeeAmount } = betFeeData || {}
-  const { addBet } = useBetsCache()
+  const { addBet } = useBetsCache(appChain.id)
   const { refetch: refetchBetTokenBalance } = useBetTokenBalance()
   const { refetch: refetchNativeBalance } = useNativeBalance()
 

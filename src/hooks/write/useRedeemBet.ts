@@ -2,9 +2,9 @@ import { useWaitForTransactionReceipt, useSendTransaction, useConfig } from 'wag
 import { waitForTransactionReceipt } from 'wagmi/actions'
 import { type Address, type Hex, encodeFunctionData } from 'viem'
 import { useState } from 'react'
-import { paymasterAbi } from '@azuro-org/toolkit'
+import { type ChainId, paymasterAbi } from '@azuro-org/toolkit'
 
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
 import { useBetsCache } from '../useBetsCache'
 import { type Bet } from '../../global'
 import { useExtendedAccount, useAAWalletClient } from '../useAaConnector'
@@ -53,10 +53,14 @@ type AaTxState = {
   error: any
 }
 
-export const useRedeemBet = () => {
-  const { contracts, appChain } = useChain()
+type Props = {
+  chainId?: ChainId
+}
+
+export const useRedeemBet = ({ chainId }: Props = {}) => {
+  const { contracts, chain: appChain } = useOptionalChain(chainId)
   const wagmiConfig = useConfig()
-  const { updateBetCache } = useBetsCache()
+  const { updateBetCache } = useBetsCache(appChain.id)
   const { refetch: refetchBetTokenBalance } = useBetTokenBalance()
   const { refetch: refetchNativeBalance } = useNativeBalance()
 

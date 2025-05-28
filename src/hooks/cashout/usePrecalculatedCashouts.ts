@@ -1,8 +1,8 @@
-import { type Selection, getProviderFromId, GraphBetStatus } from '@azuro-org/toolkit'
+import { type Selection, type ChainId, getProviderFromId, GraphBetStatus } from '@azuro-org/toolkit'
 import { useCallback, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
 import { batchFetchCashouts } from '../../helpers/batchFetchCashouts'
 import { type QueryParameter, type Bet } from '../../global'
 
@@ -18,21 +18,21 @@ export type PrecalculatedCashoutsQueryData = {
   cashouts: Record<string, PrecalculatedCashout>
 } | undefined
 
-type UsePrecalculatedCashoutsProps = {
+type Props = {
   bet: Pick<Bet, 'tokenId' | 'amount' | 'outcomes' | 'status' | 'totalOdds' | 'freebetId'>
+  chainId?: ChainId
   query?: QueryParameter<PrecalculatedCashoutsQueryData>
 }
-
 
 const defaultData = {
   isAvailable: false,
   cashoutAmount: undefined,
 }
 
-export const usePrecalculatedCashouts = ({ bet, query = {} }: UsePrecalculatedCashoutsProps) => {
+export const usePrecalculatedCashouts = ({ bet, chainId, query = {} }: Props) => {
   const { tokenId, amount, outcomes, status, totalOdds } = bet
 
-  const { appChain, api } = useChain()
+  const { chain: appChain, api } = useOptionalChain(chainId)
 
   const conditionsKey = useMemo(() => {
     return outcomes.map(({ conditionId, outcomeId }) => `${conditionId}/${outcomeId}`).join('-')

@@ -3,6 +3,7 @@ import {
   type BetsQuery,
   type GamesQuery,
   type GamesQueryVariables,
+  type ChainId,
 
   SelectionKind,
   OrderDirection,
@@ -19,7 +20,7 @@ import { type Hex, type Address } from 'viem'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
 import { BetType, type Bet, type BetOutcome, type InfiniteQueryParameters } from '../../global'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
@@ -35,6 +36,7 @@ export type UseBetsProps = {
     affiliate?: string
     type?: BetType
   }
+  chainId?: ChainId
   itemsPerPage?: number
   orderBy?: Bet_OrderBy
   orderDir?: OrderDirection
@@ -44,13 +46,14 @@ export type UseBetsProps = {
 export const useBets = (props: UseBetsProps) => {
   const {
     filter,
+    chainId,
     itemsPerPage = 100,
     orderBy = Bet_OrderBy.CreatedBlockTimestamp,
     orderDir = OrderDirection.Asc,
     query,
   } = props
 
-  const { graphql } = useChain()
+  const { graphql } = useOptionalChain(chainId)
 
   const gqlLink = graphql.bets
 

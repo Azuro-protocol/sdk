@@ -3,6 +3,7 @@ import {
   type LegacyBetsQuery,
   type LegacyLiveGamesQueryVariables,
   type LegacyLiveGamesQuery,
+  type ChainId,
 
   OrderDirection,
   Legacy_Bet_OrderBy,
@@ -19,7 +20,7 @@ import { type Hex, type Address } from 'viem'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
 import { BetType, type Bet, type BetOutcome, type InfiniteQueryParameters } from '../../global'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
@@ -29,7 +30,7 @@ type QueryResult = {
   nextPage: number | undefined,
 }
 
-export type UseLegacyBetsProps = {
+export type Props = {
   filter: {
     bettor: Address
     affiliate?: string
@@ -38,19 +39,21 @@ export type UseLegacyBetsProps = {
   itemsPerPage?: number
   orderBy?: Legacy_Bet_OrderBy
   orderDir?: OrderDirection
+  chainId?: ChainId
   query?: InfiniteQueryParameters<QueryResult>
 }
 
-export const useLegacyBets = (props: UseLegacyBetsProps) => {
+export const useLegacyBets = (props: Props) => {
   const {
     filter,
     itemsPerPage = 100,
     orderBy = Legacy_Bet_OrderBy.CreatedBlockTimestamp,
     orderDir = OrderDirection.Asc,
+    chainId,
     query,
   } = props
 
-  const { graphql } = useChain()
+  const { graphql } = useOptionalChain(chainId)
 
   const gqlLink = graphql.bets
 

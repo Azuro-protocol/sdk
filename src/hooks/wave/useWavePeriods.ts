@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import { type WaveId, getWavePeriods } from '@azuro-org/toolkit'
+import { type ChainId, type WaveId, getWavePeriods } from '@azuro-org/toolkit'
 
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
+import { type QueryParameter } from '../../global'
 
 
 export type WavePeriod = {
@@ -14,10 +15,12 @@ export type WavePeriod = {
 
 type Props = {
   waveId?: WaveId
+  chainId?: ChainId
+  query?: QueryParameter<WavePeriod[] | null>
 }
 
-export const useWavePeriods = ({ waveId }: Props = { waveId: 'active' }) => {
-  const { appChain, api } = useChain()
+export const useWavePeriods = ({ waveId, chainId, query = {} }: Props = { waveId: 'active' }) => {
+  const { chain: appChain, api } = useOptionalChain(chainId)
 
   const queryFn = async () => {
     const data = await getWavePeriods({
@@ -46,6 +49,7 @@ export const useWavePeriods = ({ waveId }: Props = { waveId: 'active' }) => {
   return useQuery({
     queryKey: [ 'wave/periods', waveId, api ],
     queryFn,
+    ...query,
     refetchOnWindowFocus: false,
   })
 }

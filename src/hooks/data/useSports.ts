@@ -1,6 +1,7 @@
 import {
   type SportsQuery,
   type SportsQueryVariables,
+  type ChainId,
 
   GameState,
   Game_OrderBy,
@@ -10,12 +11,12 @@ import {
 import { useQuery } from '@tanstack/react-query'
 import { useCallback } from 'react'
 
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
 import { type SportHub, type QueryParameter } from '../../global'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
 
-export type UseSportsProps = {
+type Props = {
   filter?: {
     limit?: number
     sportHub?: SportHub
@@ -27,19 +28,21 @@ export type UseSportsProps = {
   gameOrderBy?: Game_OrderBy.Turnover | Game_OrderBy.StartsAt
   orderDir?: OrderDirection
   isLive?: boolean
+  chainId?: ChainId
   query?: QueryParameter<SportsQuery['sports']>
 }
 
-export const useSports = (props: UseSportsProps = {}) => {
+export const useSports = (props: Props = {}) => {
   const {
     filter = {},
     gameOrderBy = Game_OrderBy.StartsAt,
     orderDir = OrderDirection.Asc,
     isLive,
+    chainId,
     query = {},
   } = props
 
-  const { graphql } = useChain()
+  const { graphql } = useOptionalChain(chainId)
 
   const gqlLink = graphql.feed
 
