@@ -77,7 +77,7 @@ export const useBet = (props: UseBetProps) => {
   const isAAWallet = Boolean(account.isAAWallet)
   const aaClient = useAAWalletClient()
 
-  const { chain: appChain, contracts, betToken, api } = useOptionalChain(chainId)
+  const { chain: appChain, contracts, betToken } = useOptionalChain(chainId)
   const queryClient = useQueryClient()
   const wagmiConfig = useConfig()
   const walletClient = useWalletClient()
@@ -337,9 +337,9 @@ export const useBet = (props: UseBetProps) => {
 
       if (isFreeBet) {
         queryClient.invalidateQueries({
-          queryKey: [ 'available-freebets', api, account?.address?.toLowerCase(), affiliate?.toLowerCase(), selections.map(({ conditionId, outcomeId }) => `${conditionId}/${outcomeId}`).join('-') ],
+          queryKey: [ 'available-freebets', appChain.id, account?.address?.toLowerCase(), affiliate?.toLowerCase(), selections.map(({ conditionId, outcomeId }) => `${conditionId}/${outcomeId}`).join('-') ],
         })
-        queryClient.invalidateQueries({ queryKey: [ 'bonuses', api, account?.address?.toLowerCase(), affiliate?.toLowerCase() ] })
+        queryClient.invalidateQueries({ queryKey: [ 'bonuses', appChain.id, account?.address?.toLowerCase(), affiliate?.toLowerCase() ] })
       }
 
       if (receipt) {

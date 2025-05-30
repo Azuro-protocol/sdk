@@ -17,14 +17,10 @@ type Props = {
 export const useBonuses = (props: Props) => {
   const { account, affiliate, chainId, query = {} } = props
 
-  const { chain: appChain, api } = useOptionalChain(chainId)
-
-  const formatData = useCallback((data: Bonus[]) => {
-    return data.filter(({ chainId }) => +chainId === appChain.id)
-  }, [ appChain.id ])
+  const { chain: appChain } = useOptionalChain(chainId)
 
   return useQuery({
-    queryKey: [ 'bonuses', api, account?.toLowerCase(), affiliate?.toLowerCase() ],
+    queryKey: [ 'bonuses', appChain.id, account?.toLowerCase(), affiliate?.toLowerCase() ],
     queryFn: async () => {
       const bonuses = await getBonuses({
         chainId: appChain.id,
@@ -39,7 +35,6 @@ export const useBonuses = (props: Props) => {
       return bonuses
     },
     refetchOnWindowFocus: false,
-    select: formatData,
     ...query,
   })
 }

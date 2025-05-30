@@ -23,7 +23,6 @@ type Props = {
   account: Address
   gameId: string
   gameState: GameState
-  keyStruct?: 'outcomeId' | 'conditionId-outcomeId'
   chainId?: ChainId
   query?: QueryParameter<GameBetsQuery>
 }
@@ -32,7 +31,7 @@ const DIVIDER = 18
 const RAW_ONE = parseUnits('1', ODDS_DECIMALS)
 
 export const useBetsSummaryBySelection = (props: Props) => {
-  const { account, gameId, gameState, keyStruct = 'outcomeId', chainId, query = {} } = props
+  const { account, gameId, gameState, chainId, query = {} } = props
 
   const { betToken, graphql } = useOptionalChain(chainId)
 
@@ -80,11 +79,7 @@ export const useBetsSummaryBySelection = (props: Props) => {
           }
         }
 
-        let key = outcomeId
-
-        if (keyStruct === 'conditionId-outcomeId') {
-          key = `${conditionId}-${outcomeId}`
-        }
+        const key = outcomeId
 
         if (!acc[key]) {
           acc[key] = 0n

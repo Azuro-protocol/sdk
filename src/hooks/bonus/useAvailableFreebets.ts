@@ -18,18 +18,14 @@ type Props = {
 export const useAvailableFreebets = (props: Props) => {
   const { account, affiliate, selections, chainId, query = {} } = props
 
-  const { chain: appChain, api } = useOptionalChain(chainId)
+  const { chain: appChain } = useOptionalChain(chainId)
 
   const selectionsKey = useMemo(() => (
     selections.map(({ conditionId, outcomeId }) => `${conditionId}/${outcomeId}`).join('-')
   ), [ selections ])
 
-  const formatData = useCallback((data: Freebet[]) => {
-    return data.filter(({ chainId }) => +chainId === appChain.id)
-  }, [ appChain.id ])
-
   return useQuery({
-    queryKey: [ 'available-freebets', api, account?.toLowerCase(), affiliate?.toLowerCase(), selectionsKey ],
+    queryKey: [ 'available-freebets', appChain.id, account?.toLowerCase(), affiliate?.toLowerCase(), selectionsKey ],
     queryFn: async () => {
       const freebets = await getAvailableFreebets({
         chainId: appChain.id,
@@ -45,7 +41,6 @@ export const useAvailableFreebets = (props: Props) => {
       return freebets
     },
     refetchOnWindowFocus: false,
-    select: formatData,
     ...query,
   })
 }

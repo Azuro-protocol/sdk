@@ -1,4 +1,4 @@
-import { useReadContract, type UseReadContractParameters } from 'wagmi'
+import { useReadContract, type UseReadContractReturnType, type UseReadContractParameters } from 'wagmi'
 import { erc20Abi, formatUnits } from 'viem'
 import { useCallback } from 'react'
 import { type ChainId } from '@azuro-org/toolkit'
@@ -12,7 +12,7 @@ type Props = {
   query?: UseReadContractParameters<typeof erc20Abi, 'balanceOf'>['query']
 }
 
-export const useBetTokenBalance = ({ chainId, query = {} }: Props = {}) => {
+export const useBetTokenBalance = ({ chainId, query = {} }: Props = {}): UseReadContractReturnType<typeof erc20Abi, 'balanceOf', any, { rawBalance: BigInt, balance: string }> => {
   const { address } = useExtendedAccount()
 
   const { chain: appChain, betToken } = useOptionalChain(chainId)
