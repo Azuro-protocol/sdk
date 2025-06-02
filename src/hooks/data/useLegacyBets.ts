@@ -17,7 +17,7 @@ import {
   LegacyLiveGamesDocument,
 } from '@azuro-org/toolkit'
 import { type Hex, type Address } from 'viem'
-import { useInfiniteQuery, type UseInfiniteQueryResult } from '@tanstack/react-query'
+import { type InfiniteData, useInfiniteQuery, type UseInfiniteQueryResult } from '@tanstack/react-query'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 
 import { useOptionalChain } from '../../contexts/chain'
@@ -43,7 +43,7 @@ export type UseLegacyBetsProps = {
   query?: InfiniteQueryParameters<UseLegacyBetsResult>
 }
 
-export type UseLegacyBets = (props: UseLegacyBetsProps) => UseInfiniteQueryResult<UseLegacyBetsResult>
+export type UseLegacyBets = (props: UseLegacyBetsProps) => UseInfiniteQueryResult<InfiniteData<UseLegacyBetsResult>>
 
 export const useLegacyBets: UseLegacyBets = (props) => {
   const {

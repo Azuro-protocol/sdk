@@ -1,6 +1,6 @@
 {
   "name": "@azuro-org/sdk",
-  "version": "6.1.1",
+  "version": "6.1.2",
   "description": "One-stop solution for building betting dApps on the Azuro Protocol.",
   "author": "Azuro",
   "type": "module",
