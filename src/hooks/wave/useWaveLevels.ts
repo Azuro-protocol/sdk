@@ -1,15 +1,18 @@
 import { useQuery } from '@tanstack/react-query'
-import { type WaveId, getWaveLevels } from '@azuro-org/toolkit'
+import { type ChainId, type WaveId, type WaveLevelData, getWaveLevels } from '@azuro-org/toolkit'
 
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
+import { type QueryParameter } from '../../global'
 
 
 type Props = {
   waveId?: WaveId
+  chainId?: ChainId
+  query?: QueryParameter<WaveLevelData[] | null>
 }
 
-export const useWaveLevels = ({ waveId }: Props = { waveId: 'active' }) => {
-  const { appChain, api } = useChain()
+export const useWaveLevels = ({ waveId, chainId, query = {} }: Props = { waveId: 'active' }) => {
+  const { chain: appChain, api } = useOptionalChain(chainId)
 
   const queryFn = () => (
     getWaveLevels({
@@ -21,6 +24,7 @@ export const useWaveLevels = ({ waveId }: Props = { waveId: 'active' }) => {
   return useQuery({
     queryKey: [ 'wave/levels', waveId, api ],
     queryFn,
+    ...query,
     refetchOnWindowFocus: false,
   })
 }

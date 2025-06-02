@@ -1,21 +1,25 @@
-import { type Condition_Filter, type ConditionsQuery, ConditionState } from '@azuro-org/toolkit'
+import { type ChainId, type Condition_Filter, type ConditionsQuery, ConditionState } from '@azuro-org/toolkit'
 import { useMemo } from 'react'
+import { type UseQueryResult } from '@tanstack/react-query'
 
 import { useConditions } from './useConditions'
 import { type QueryParameter } from '../../global'
 
 
-type UseActiveConditionsProps = {
+export type UseActiveConditionsProps = {
   gameId: string | bigint
   filter?: {
     outcomeIds?: string[]
     maxMargin?: number | string
   }
+  chainId?: ChainId
   query?: QueryParameter<ConditionsQuery['conditions']>
 }
 
-export const useActiveConditions = (props: UseActiveConditionsProps) => {
-  const { gameId, filter = {}, query = {} } = props
+export type UseActiveConditions = (props: UseActiveConditionsProps) => UseQueryResult<ConditionsQuery['conditions']>
+
+export const useActiveConditions: UseActiveConditions = (props) => {
+  const { gameId, filter = {}, chainId, query = {} } = props
 
   const conditionsFilter = useMemo<Condition_Filter>(() => {
     const _filter: Condition_Filter = {
@@ -36,6 +40,7 @@ export const useActiveConditions = (props: UseActiveConditionsProps) => {
   return useConditions({
     gameId,
     filter: conditionsFilter,
+    chainId,
     query,
   })
 }

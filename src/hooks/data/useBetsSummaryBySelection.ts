@@ -3,36 +3,37 @@ import { type Address, formatUnits, parseUnits } from 'viem'
 import {
   type GameBetsQuery,
   type GameBetsQueryVariables,
+  type ChainId,
 
   ODDS_DECIMALS,
   BetResult,
   GameBetsDocument,
   GameState,
 } from '@azuro-org/toolkit'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
 import { type QueryParameter } from '../../global'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
 
-export type BetsSummaryBySelection = Record<string, string>
-
-type UseBetsSummaryBySelectionProps = {
+export type UseBetsSummaryBySelectionProps = {
   account: Address
   gameId: string
   gameState: GameState
-  keyStruct?: 'outcomeId' | 'conditionId-outcomeId'
+  chainId?: ChainId
   query?: QueryParameter<GameBetsQuery>
 }
+
+export type UseBetsSummaryBySelection = (props: UseBetsSummaryBySelectionProps) => UseQueryResult<Record<string, string>>
 
 const DIVIDER = 18
 const RAW_ONE = parseUnits('1', ODDS_DECIMALS)
 
-export const useBetsSummaryBySelection = (props: UseBetsSummaryBySelectionProps) => {
-  const { account, gameId, gameState, keyStruct = 'outcomeId', query = {} } = props
+export const useBetsSummaryBySelection: UseBetsSummaryBySelection = (props) => {
+  const { account, gameId, gameState, chainId, query = {} } = props
 
-  const { betToken, graphql } = useChain()
+  const { betToken, graphql } = useOptionalChain(chainId)
 
   const gqlLink = graphql.bets
 
@@ -78,11 +79,7 @@ export const useBetsSummaryBySelection = (props: UseBetsSummaryBySelectionProps)
           }
         }
 
-        let key = outcomeId
-
-        if (keyStruct === 'conditionId-outcomeId') {
-          key = `${conditionId}-${outcomeId}`
-        }
+        const key = outcomeId
 
         if (!acc[key]) {
           acc[key] = 0n

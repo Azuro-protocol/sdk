@@ -111,44 +111,47 @@ export {
 } from './contexts/liveStatisticsSocket'
 
 // data hooks
-export { useBets, type UseBetsProps } from './hooks/data/useBets'
+export { useBets, type UseBetsProps, type UseBets } from './hooks/data/useBets'
 export { useLegacyBets, type UseLegacyBetsProps } from './hooks/data/useLegacyBets'
-export { useConditions } from './hooks/data/useConditions'
-export { useActiveConditions } from './hooks/data/useActiveConditions'
-export { useGame } from './hooks/data/useGame'
-export { useActiveMarkets } from './hooks/data/useActiveMarkets'
-export { useResolvedMarkets } from './hooks/data/useResolvedMarkets'
+export { useConditions, type UseConditionsProps, type UseConditions } from './hooks/data/useConditions'
+export { useActiveConditions, type UseActiveConditionsProps, type UseActiveConditions } from './hooks/data/useActiveConditions'
+export { useGame, type UseGameProps, type UseGame } from './hooks/data/useGame'
+export { useActiveMarkets, type UseActiveMarketsProps, type UseActiveMarkets } from './hooks/data/useActiveMarkets'
+export { useResolvedMarkets, type UseResolvedMarketsProps, type UseResolvedMarkets } from './hooks/data/useResolvedMarkets'
 export { useGames, type UseGamesProps } from './hooks/data/useGames'
-export { useSports, type UseSportsProps } from './hooks/data/useSports'
-export { useSportsNavigation } from './hooks/data/useSportsNavigation'
-export { useNavigation } from './hooks/data/useNavigation'
-export { useBetFee } from './hooks/data/useBetFee'
-export { useBetsSummary } from './hooks/data/useBetsSummary'
-export { useBetsSummaryBySelection, type BetsSummaryBySelection } from './hooks/data/useBetsSummaryBySelection'
-// export { useFreeBets, type FreeBet } from './hooks/data/useFreeBets' // TODO
-export { useMaxBet } from './hooks/data/useMaxBet'
+export { useSports, type UseSportsProps, type UseSports } from './hooks/data/useSports'
+export { useSportsNavigation, type UseSportsNavigationProps, type UseSportsNavigation } from './hooks/data/useSportsNavigation'
+export { useNavigation, type UseNavigationProps, type UseNavigation } from './hooks/data/useNavigation'
+export { useBetFee, type UseBetFeeProps, type UseBetFee } from './hooks/data/useBetFee'
+export { useBetsSummary, type UseBetsSummaryProps, type UseBetsSummary } from './hooks/data/useBetsSummary'
+export { useBetsSummaryBySelection, type UseBetsSummaryBySelectionProps, type UseBetsSummaryBySelection } from './hooks/data/useBetsSummaryBySelection'
+export { useMaxBet, type UseMaxBetProps, type UseMaxBet } from './hooks/data/useMaxBet'
 
 // write hooks
 export { useRedeemBet } from './hooks/write/useRedeemBet'
 export { useBet } from './hooks/write/useBet'
 
 // watch hooks
-export { useOdds } from './hooks/watch/useOdds'
-export { useSelectionOdds } from './hooks/watch/useSelectionOdds'
-export { useConditionState } from './hooks/watch/useConditionState'
-export { useConditionsState } from './hooks/watch/useConditionsState'
-export { useGameState } from './hooks/watch/useGameState'
-export { useLiveStatistics } from './hooks/watch/useLiveStatistics'
-export { useActiveMarket } from './hooks/watch/useActiveMarket'
+export { useOdds, type UseOddsProps } from './hooks/watch/useOdds'
+export { useSelectionOdds, type UseSelectionOddsProps } from './hooks/watch/useSelectionOdds'
+export { useConditionState, type UseConditionStateProps } from './hooks/watch/useConditionState'
+export { useConditionsState, type UseConditionsStateProps } from './hooks/watch/useConditionsState'
+export { useGameState, type UseGameStateProps } from './hooks/watch/useGameState'
+export { useLiveStatistics, type UseLiveStatisticsProps } from './hooks/watch/useLiveStatistics'
+export { useActiveMarket, type UseActiveMarketProps } from './hooks/watch/useActiveMarket'
 
 // other hooks
-export { useBetTokenBalance } from './hooks/useBetTokenBalance'
-export { useNativeBalance } from './hooks/useNativeBalance'
+export { useBetTokenBalance, type UseBetTokenBalanceProps, type UseBetTokenBalance } from './hooks/useBetTokenBalance'
+export { useNativeBalance, type UseNativeBalanceProps, type UseNativeBalance } from './hooks/useNativeBalance'
 export { useWrapTokens, WRAP_CHAINS } from './hooks/useWrapTokens'
 
 // cashout
-export { usePrecalculatedCashouts } from './hooks/cashout/usePrecalculatedCashouts'
-export { useCashout } from './hooks/cashout/useCashout'
+export { usePrecalculatedCashouts, type UsePrecalculatedCashoutsProps, type UsePrecalculatedCashouts } from './hooks/cashout/usePrecalculatedCashouts'
+export { useCashout, type UseCashoutProps, type UseCashout } from './hooks/cashout/useCashout'
+
+// bonus
+export { useBonuses, type UseBonusesProps, type UseBonuses } from './hooks/bonus/useBonuses'
+export { useAvailableFreebets, type UseAvailableFreebetsProps, type UseAvailableFreebets } from './hooks/bonus/useAvailableFreebets'
 
 // wave
 export { useWaveLevels } from './hooks/wave/useWaveLevels'

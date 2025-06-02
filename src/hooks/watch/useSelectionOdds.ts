@@ -7,12 +7,12 @@ import { useConditionUpdates } from '../../contexts/conditionUpdates'
 import { batchFetchConditions } from '../../helpers/batchFetchConditions'
 
 
-type Props = {
+export type UseSelectionOddsProps = {
   selection: Selection
   initialOdds?: number
 }
 
-export const useSelectionOdds = ({ selection, initialOdds }: Props) => {
+export const useSelectionOdds = ({ selection, initialOdds }: UseSelectionOddsProps) => {
   const { conditionId, outcomeId } = selection
 
   const { graphql } = useChain()

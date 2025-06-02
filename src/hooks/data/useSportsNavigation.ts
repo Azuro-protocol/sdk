@@ -1,17 +1,19 @@
 import {
   type SportsNavigationQuery,
   type SportsNavigationQueryVariables,
+  type ChainId,
 
   SportsNavigationDocument,
 } from '@azuro-org/toolkit'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
 import { type SportHub, type QueryParameter } from '../../global'
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
 
-type UseSportsNavigationProps = {
+export type UseSportsNavigationProps = {
+  chainId?: ChainId
   filter?: {
     sportHub?: SportHub
     sportIds?: Array<string | number>
@@ -20,12 +22,14 @@ type UseSportsNavigationProps = {
   query?: QueryParameter<SportsNavigationQuery['sports']>
 }
 
-export const useSportsNavigation = (props: UseSportsNavigationProps = {}) => {
-  const { filter = {}, isLive, query = {} } = props
+export type UseSportsNavigation = (props?: UseSportsNavigationProps) => UseQueryResult<SportsNavigationQuery['sports']>
 
-  const { graphql } = useChain()
+export const useSportsNavigation: UseSportsNavigation = (props = {}) => {
+  const { chainId, filter = {}, isLive, query = {} } = props
 
-  const gqlLink = graphql.feed
+  const chainData = useOptionalChain(chainId)
+
+  const gqlLink = chainData.graphql.feed
 
   return useQuery({
     queryKey: [

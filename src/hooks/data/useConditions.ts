@@ -4,27 +4,31 @@ import {
   type ConditionsQueryVariables,
   type Condition_OrderBy,
   type OrderDirection,
+  type ChainId,
 
   ConditionsDocument,
 } from '@azuro-org/toolkit'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
 import { type QueryParameter } from '../../global'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
 
-type UseConditionsProps = {
+export type UseConditionsProps = {
   gameId: string | bigint
   filter?: Condition_Filter
   orderBy?: Condition_OrderBy
   orderDir?: OrderDirection
+  chainId?: ChainId
   query?: QueryParameter<ConditionsQuery['conditions']>
 }
 
-export const useConditions = (props: UseConditionsProps) => {
-  const { gameId, filter = {}, orderBy, orderDir, query = {} } = props
-  const { graphql } = useChain()
+export type UseConditions = (props: UseConditionsProps) => UseQueryResult<ConditionsQuery['conditions']>
+
+export const useConditions: UseConditions = (props) => {
+  const { gameId, filter = {}, orderBy, orderDir, chainId, query = {} } = props
+  const { graphql } = useOptionalChain(chainId)
 
   const gqlLink = graphql.feed
 

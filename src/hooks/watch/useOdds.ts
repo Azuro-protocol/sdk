@@ -8,11 +8,11 @@ import { batchFetchConditions } from '../../helpers/batchFetchConditions'
 import { formatToFixed } from '../../helpers/formatToFixed'
 
 
-type Props = {
+export type UseOddsProps = {
   selections: Selection[]
 }
 
-export const useOdds = ({ selections }: Props) => {
+export const useOdds = ({ selections }: UseOddsProps) => {
   const { graphql } = useChain()
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useConditionUpdates()
 

@@ -5,12 +5,12 @@ import { gameWathcer } from '../../modules/gameWathcer'
 import { useGameUpdates } from '../../contexts/gameUpdates'
 
 
-type Props = {
+export type UseGameStateProps = {
   gameId: string
   initialState: GameState
 }
 
-export const useGameState = ({ gameId, initialState }: Props) => {
+export const useGameState = ({ gameId, initialState }: UseGameStateProps) => {
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useGameUpdates()
 
   const skip = initialState === GameState.Finished

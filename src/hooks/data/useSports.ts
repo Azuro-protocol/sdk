@@ -1,16 +1,17 @@
 import {
   type SportsQuery,
   type SportsQueryVariables,
+  type ChainId,
 
   GameState,
   Game_OrderBy,
   OrderDirection,
   SportsDocument,
 } from '@azuro-org/toolkit'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { useCallback } from 'react'
 
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
 import { type SportHub, type QueryParameter } from '../../global'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
@@ -27,19 +28,23 @@ export type UseSportsProps = {
   gameOrderBy?: Game_OrderBy.Turnover | Game_OrderBy.StartsAt
   orderDir?: OrderDirection
   isLive?: boolean
+  chainId?: ChainId
   query?: QueryParameter<SportsQuery['sports']>
 }
 
-export const useSports = (props: UseSportsProps = {}) => {
+export type UseSports = (props?: UseSportsProps) => UseQueryResult<SportsQuery['sports']>
+
+export const useSports: UseSports = (props = {}) => {
   const {
     filter = {},
     gameOrderBy = Game_OrderBy.StartsAt,
     orderDir = OrderDirection.Asc,
     isLive,
+    chainId,
     query = {},
   } = props
 
-  const { graphql } = useChain()
+  const { graphql } = useOptionalChain(chainId)
 
   const gqlLink = graphql.feed
 
@@ -83,6 +88,8 @@ export const useSports = (props: UseSportsProps = {}) => {
         }
       }).sort((a, b) => +a.countries[0]!.leagues[0]!.games[0]!.startsAt - +b.countries[0]!.leagues[0]!.games[0]!.startsAt)
     }
+
+    return filteredSports
   }, [])
 
   return useQuery({

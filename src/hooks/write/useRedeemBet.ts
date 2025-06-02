@@ -1,10 +1,10 @@
 import { useWaitForTransactionReceipt, useSendTransaction, useConfig } from 'wagmi'
 import { waitForTransactionReceipt } from 'wagmi/actions'
 import { type Address, type Hex, encodeFunctionData } from 'viem'
-import { freeBetAbi } from '@azuro-org/toolkit'
 import { useState } from 'react'
+import { type ChainId, paymasterAbi } from '@azuro-org/toolkit'
 
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
 import { useBetsCache } from '../useBetsCache'
 import { type Bet } from '../../global'
 import { useExtendedAccount, useAAWalletClient } from '../useAaConnector'
@@ -15,19 +15,36 @@ import { useNativeBalance } from '../useNativeBalance'
 const legacyV2LpAbi = [
   {
     'inputs': [
-      { 'internalType': 'address', 'name': 'core', 'type': 'address',
+      { 'internalType': 'address', 'name': 'core', 'type': 'address' },
+      { 'internalType': 'uint256', 'name': 'tokenId', 'type': 'uint256' },
+    ],
+    'name': 'withdrawPayout',
+    'outputs': [
+      {
+        'internalType': 'uint128', 'name': 'amount', 'type': 'uint128',
       },
-      { 'internalType': 'uint256', 'name': 'tokenId', 'type': 'uint256',
-      },
-    ], 'name': 'withdrawPayout', 'outputs': [
-      { 'internalType': 'uint128', 'name': 'amount', 'type': 'uint128',
-      },
-    ], 'stateMutability': 'nonpayable', 'type': 'function',
+    ],
+    'stateMutability': 'nonpayable',
+    'type': 'function',
+  },
+] as const
+
+const legacyV2FreebetAbi = [
+  {
+    'inputs': [
+      { 'internalType': 'uint256', 'name': 'freeBetId', 'type': 'uint256' },
+    ],
+    'name': 'withdrawPayout',
+    'outputs': [],
+    'stateMutability': 'nonpayable',
+    'type': 'function',
   },
 ] as const
 
 type SubmitProps = {
-  bets: Array<Pick<Bet, 'tokenId' | 'coreAddress' | 'lpAddress' | 'freebetContractAddress' | 'freebetId'>>
+  bets: Array<Pick<Bet, 'tokenId' | 'coreAddress' | 'lpAddress' | 'freebetId' | 'paymaster'> & {
+    freebetContractAddress?: Address
+  }>
 }
 
 type AaTxState = {
@@ -36,10 +53,14 @@ type AaTxState = {
   error: any
 }
 
-export const useRedeemBet = () => {
-  const { contracts, appChain } = useChain()
+type Props = {
+  chainId?: ChainId
+}
+
+export const useRedeemBet = ({ chainId }: Props = {}) => {
+  const { contracts, chain: appChain } = useOptionalChain(chainId)
   const wagmiConfig = useConfig()
-  const { updateBetCache } = useBetsCache()
+  const { updateBetCache } = useBetsCache(appChain.id)
   const { refetch: refetchBetTokenBalance } = useBetTokenBalance()
   const { refetch: refetchNativeBalance } = useNativeBalance()
 
@@ -71,7 +92,7 @@ export const useRedeemBet = () => {
     let data: Hex
     let to: Address
 
-    const { freebetContractAddress, freebetId, coreAddress, lpAddress } = bets[0]!
+    const { freebetContractAddress, freebetId, coreAddress, lpAddress, paymaster } = bets[0]!
 
     const isSameLp = new Set(bets.map(({ lpAddress }) => lpAddress)).size === 1
 
@@ -86,13 +107,23 @@ export const useRedeemBet = () => {
       throw new Error('v2 redeem can\'t be executed for multiple bets')
     }
 
-    if (freebetContractAddress && freebetId) {
-      to = freebetContractAddress
-      data = encodeFunctionData({
-        abi: freeBetAbi,
-        functionName: 'withdrawPayout',
-        args: [ BigInt(freebetId) ],
-      })
+    if (freebetId) {
+      if (freebetContractAddress) {
+        to = freebetContractAddress
+        data = encodeFunctionData({
+          abi: legacyV2FreebetAbi,
+          functionName: 'withdrawPayout',
+          args: [ BigInt(freebetId) ],
+        })
+      }
+      else {
+        to = paymaster!
+        data = encodeFunctionData({
+          abi: paymasterAbi,
+          functionName: 'withdrawPayouts',
+          args: [ [ BigInt(freebetId) ] ],
+        })
+      }
     }
     else if (isV2) {
       to = lpAddress
@@ -112,7 +143,7 @@ export const useRedeemBet = () => {
         functionName: 'withdrawPayouts',
         args: [
           coreAddress,
-          bets.map(({ tokenId }) => BigInt(tokenId)),
+          bets.filter(bet => !bet.freebetId).map(({ tokenId }) => BigInt(tokenId)),
         ],
       })
     }

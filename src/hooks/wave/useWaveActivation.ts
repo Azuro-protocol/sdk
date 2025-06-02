@@ -1,18 +1,19 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { type Address } from 'viem'
-import { type WaveId, activateWave } from '@azuro-org/toolkit'
+import { type ChainId, type WaveId, activateWave } from '@azuro-org/toolkit'
 
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
 
 
 type Props = {
   account: Address
   waveId?: WaveId
+  chainId?: ChainId
 }
 
-export const useWaveActivation = ({ account, waveId = 'active' }: Props) => {
+export const useWaveActivation = ({ account, waveId = 'active', chainId }: Props) => {
   const queryClient = useQueryClient()
-  const { appChain, api } = useChain()
+  const { chain: appChain, api } = useOptionalChain(chainId)
 
   const mutationFn = () => (
     activateWave({

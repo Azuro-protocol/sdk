@@ -3,6 +3,7 @@ import {
   type LegacyBetsQuery,
   type LegacyLiveGamesQueryVariables,
   type LegacyLiveGamesQuery,
+  type ChainId,
 
   OrderDirection,
   Legacy_Bet_OrderBy,
@@ -16,10 +17,10 @@ import {
   LegacyLiveGamesDocument,
 } from '@azuro-org/toolkit'
 import { type Hex, type Address } from 'viem'
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, type UseInfiniteQueryResult } from '@tanstack/react-query'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
 import { BetType, type Bet, type BetOutcome, type InfiniteQueryParameters } from '../../global'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
@@ -38,19 +39,23 @@ export type UseLegacyBetsProps = {
   itemsPerPage?: number
   orderBy?: Legacy_Bet_OrderBy
   orderDir?: OrderDirection
+  chainId?: ChainId
   query?: InfiniteQueryParameters<QueryResult>
 }
 
-export const useLegacyBets = (props: UseLegacyBetsProps) => {
+export type UseLegacyBets = (props: UseLegacyBetsProps) => UseInfiniteQueryResult<QueryResult>
+
+export const useLegacyBets: UseLegacyBets = (props) => {
   const {
     filter,
     itemsPerPage = 100,
     orderBy = Legacy_Bet_OrderBy.CreatedBlockTimestamp,
     orderDir = OrderDirection.Asc,
+    chainId,
     query,
   } = props
 
-  const { graphql } = useChain()
+  const { graphql } = useOptionalChain(chainId)
 
   const gqlLink = graphql.bets
 
@@ -164,8 +169,7 @@ export const useLegacyBets = (props: UseLegacyBetsProps) => {
         // so we should validate it by "win"/"canceled" statuses
         const isRedeemed = (isWin || isCanceled) && _isRedeemed
         const isFreebet = Boolean(freebet)
-        const freebetId = freebet?.freebetId
-        const freebetContractAddress = freebet?.contractAddress
+        const freebetId = freebet?.freebetId || null
         const payout = isRedeemable && isWin ? +_payout! : null
         const betDiff = isFreebet ? amount : 0 // for freebet we must exclude bonus value from possible win
         const totalOdds = settledOdds ? +settledOdds : +odds
@@ -203,7 +207,7 @@ export const useLegacyBets = (props: UseLegacyBetsProps) => {
 
           const isWin = result ? result === SelectionResult.Won : null
           const isLose = result ? result === SelectionResult.Lost : null
-          const isCanceled = (
+          const isCanceled = !result && (
             conditionStatus === BetConditionStatus.Canceled
                   || game.status === LegacyGameStatus.Paused
           )
@@ -247,7 +251,8 @@ export const useLegacyBets = (props: UseLegacyBetsProps) => {
           actor: actor as Address,
           affiliate: affiliate as Address,
           tokenId,
-          freebetContractAddress: freebetContractAddress as Address,
+          isFreebetAmountReturnable: true,
+          paymaster: null,
           freebetId,
           txHash: txHash as Hex,
           redeemedTxHash: redeemedTxHash as Hex,

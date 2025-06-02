@@ -7,12 +7,12 @@ import { batchFetchConditions } from '../../helpers/batchFetchConditions'
 import { useChain } from '../../contexts/chain'
 
 
-type Props = {
+export type UseConditionsStateProps = {
   conditionIds: string[]
   initialStates?: Record<string, ConditionState>
 }
 
-export const useConditionsState = ({ conditionIds, initialStates }: Props) => {
+export const useConditionsState = ({ conditionIds, initialStates }: UseConditionsStateProps) => {
   const { graphql } = useChain()
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useConditionUpdates()
 

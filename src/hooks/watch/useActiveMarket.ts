@@ -5,11 +5,11 @@ import { useConditionsState } from './useConditionsState'
 import { findActiveCondition } from '../../helpers/findActiveCondition'
 
 
-type Props = {
+export type UseActiveMarketProps = {
   markets: GameMarkets
 }
 
-export const useActiveMarket = ({ markets }: Props) => {
+export const useActiveMarket = ({ markets }: UseActiveMarketProps) => {
   const { sortedMarketKeys, marketsByKey } = useMemo(() => {
     const defaultValue = {
       sortedMarketKeys: [] as string[],

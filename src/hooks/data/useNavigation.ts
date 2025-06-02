@@ -1,29 +1,33 @@
 import {
   type NavigationQuery,
   type NavigationQueryVariables,
+  type ChainId,
 
   NavigationDocument,
 } from '@azuro-org/toolkit'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
 import { type SportHub, type QueryParameter } from '../../global'
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
 
-type UseNavigationProps = {
+export type UseNavigationProps = {
   filter?: {
     sportHub?: SportHub
     sportIds?: Array<string | number>
   }
   isLive?: boolean
+  chainId?: ChainId
   query?: QueryParameter<NavigationQuery['sports']>
 }
 
-export const useNavigation = (props: UseNavigationProps = {}) => {
-  const { filter = {}, isLive, query = {} } = props
+export type UseNavigation = (props?: UseNavigationProps) => UseQueryResult<NavigationQuery['sports']>
 
-  const { graphql } = useChain()
+export const useNavigation: UseNavigation = (props = {}) => {
+  const { filter = {}, isLive, chainId, query = {} } = props
+
+  const { graphql } = useOptionalChain(chainId)
 
   const gqlLink = graphql.feed
 

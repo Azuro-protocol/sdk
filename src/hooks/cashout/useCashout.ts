@@ -1,7 +1,11 @@
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useWalletClient, useConfig } from 'wagmi'
 import { waitForTransactionReceipt } from 'wagmi/actions'
-import { type Hex, type Address, type TransactionReceipt, encodeFunctionData, erc20Abi, formatUnits } from 'viem'
+import { type Hex, type TransactionReceipt, encodeFunctionData, erc20Abi, formatUnits, type WaitForTransactionReceiptReturnType } from 'viem'
+import { type polygon } from 'viem/chains'
 import {
+  type ChainId,
+  type GetCalculatedCashout,
+
   CashoutState,
   createCashout,
   getCalculatedCashout,
@@ -9,10 +13,10 @@ import {
   getCashoutTypedData,
 } from '@azuro-org/toolkit'
 import { useReducer } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
 
 import { getEventArgsFromTxReceipt } from '../../helpers/getEventArgsFromTxReceipt'
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
 import { type Bet } from '../../global'
 import { useAAWalletClient, useExtendedAccount } from '../useAaConnector'
 import { useBetsCache } from '../useBetsCache'
@@ -21,8 +25,9 @@ import { useBetTokenBalance } from '../useBetTokenBalance'
 import { useNativeBalance } from '../useNativeBalance'
 
 
-type UseCashoutProps = {
+export type UseCashoutProps = {
   bet: Pick<Bet, 'tokenId' | 'outcomes'>
+  chainId?: ChainId
   EIP712Attention?: string
   onSuccess?(receipt?: TransactionReceipt): void
   onError?(err?: Error): void
@@ -38,14 +43,34 @@ const simpleObjReducer = (state: CashoutTxState, newState: Partial<CashoutTxStat
   ...newState,
 })
 
-export const useCashout = (props: UseCashoutProps) => {
+export type UseCashout = (props: UseCashoutProps) => {
+  submit: () => Promise<void>
+  calculationQuery: UseQueryResult<GetCalculatedCashout, Error>
+  approveTx: {
+    data: Hex | undefined
+    receipt: WaitForTransactionReceiptReturnType<typeof polygon> | undefined
+    isPending: boolean
+    isProcessing: boolean
+  }
+  cashoutTx: {
+    data: Hex | undefined
+    receipt: WaitForTransactionReceiptReturnType<typeof polygon> | undefined
+    isPending: boolean
+    isProcessing: boolean
+  }
+  isAllowanceFetching: boolean
+  isCashoutAvailable: boolean
+  isApproveRequired: boolean
+}
+
+export const useCashout: UseCashout = (props) => {
   const {
-    bet, EIP712Attention,
+    bet, EIP712Attention, chainId,
     onSuccess, onError,
   } = props
   const { tokenId, outcomes } = bet
 
-  const { appChain, contracts, api, betToken } = useChain()
+  const { chain: appChain, contracts, api, betToken } = useOptionalChain(chainId)
   const { refetch: refetchBetTokenBalance } = useBetTokenBalance()
   const { refetch: refetchNativeBalance } = useNativeBalance()
   const { updateBetCache } = useBetsCache()
@@ -315,6 +340,8 @@ export const useCashout = (props: UseCashoutProps) => {
     submit,
     calculationQuery,
     approveTx: {
+      data: approveTx.data,
+      receipt: approveReceipt.data,
       isPending: approveTx.isPending,
       isProcessing: approveReceipt.isLoading,
     },
@@ -329,3 +356,5 @@ export const useCashout = (props: UseCashoutProps) => {
     isApproveRequired,
   }
 }
+
+type test = ReturnType<typeof useCashout>

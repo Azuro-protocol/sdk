@@ -2,15 +2,16 @@ import {
   type ConditionState,
   type GamesQuery,
   type GamesQueryVariables,
+  type ChainId,
 
   GameState,
   Game_OrderBy,
   OrderDirection,
   GamesDocument,
 } from '@azuro-org/toolkit'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
 import { type SportHub, type QueryParameter } from '../../global'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
@@ -29,19 +30,23 @@ export type UseGamesProps = {
   orderBy?: Game_OrderBy
   orderDir?: OrderDirection
   isLive?: boolean
+  chainId?: ChainId
   query?: QueryParameter<GamesQuery['games']>
 }
 
-export const useGames = (props: UseGamesProps = {}) => {
+export type UseGames = (props?: UseGamesProps) => UseQueryResult<GamesQuery['games']>
+
+export const useGames: UseGames = (props = {}) => {
   const {
     filter = {},
     orderBy = Game_OrderBy.CreatedBlockTimestamp,
     orderDir = OrderDirection.Desc,
     isLive,
+    chainId,
     query = {},
   } = props
 
-  const { graphql } = useChain()
+  const { graphql } = useOptionalChain(chainId)
 
   const gqlLink = graphql.feed
 

@@ -7,6 +7,7 @@ import {
   type GameQuery,
   type GameQueryVariables,
   type Selection,
+  type ChainId,
 
   ConditionDocument,
   GameDocument,
@@ -18,7 +19,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 
 import { getEventArgsFromTxReceipt } from '../helpers/getEventArgsFromTxReceipt'
-import { useChain } from '../contexts/chain'
+import { useOptionalChain } from '../contexts/chain'
 import { useExtendedAccount } from '../hooks/useAaConnector'
 import { gqlRequest } from '../helpers/gqlRequest'
 import { type Bet, type BetOutcome, BetType } from '../global'
@@ -28,18 +29,19 @@ export type NewBetProps = {
   bet: {
     rawAmount: bigint
     selections: Selection[]
-    freebetId?: string
-    freebetContractAddress?: Address
+    freebetId: string | undefined
+    isFreebetAmountReturnable: boolean | undefined
   }
   odds: Record<string, number>
   affiliate: Address
   receipt: TransactionReceipt
 }
 
-export const useBetsCache = () => {
+export const useBetsCache = (chainId?: ChainId) => {
   const queryClient = useQueryClient()
-  const { contracts, betToken, graphql } = useChain()
   const { address } = useExtendedAccount()
+
+  const { contracts, betToken, graphql } = useOptionalChain(chainId)
 
   const updateBetCache = (
     tokenId: string | bigint,
@@ -135,7 +137,7 @@ export const useBetsCache = () => {
 
   const addBet = async (props: NewBetProps) => {
     const { bet, odds, affiliate, receipt } = props
-    const { rawAmount, selections, freebetId } = bet
+    const { rawAmount, selections, freebetId, isFreebetAmountReturnable } = bet
 
     const outcomes: BetOutcome[] = []
 
@@ -214,10 +216,13 @@ export const useBetsCache = () => {
 
     const rawPotentialPayout = rawAmount * rawOdds
 
-    const potentialPayout = formatUnits(rawPotentialPayout, ODDS_DECIMALS * receiptArgs!.betDatas.length + betToken.decimals)
     const finalOdds = formatUnits(rawOdds, ODDS_DECIMALS * receiptArgs!.betDatas.length)
     const amount = formatUnits(rawAmount, betToken.decimals)
-    const isFreebet = Boolean(bet.freebetId)
+
+    const isFreebet = Boolean(freebetId)
+    const betDiff = isFreebet && isFreebetAmountReturnable ? +amount : 0 // for freebet we must exclude bonus value from possible win
+
+    const potentialPayout = +formatUnits(rawPotentialPayout, ODDS_DECIMALS * receiptArgs!.betDatas.length + betToken.decimals) - betDiff
 
     queryClient.setQueriesData({
       predicate: ({ queryKey }) => (
@@ -237,14 +242,15 @@ export const useBetsCache = () => {
         actor: address!,
         affiliate,
         tokenId,
-        freebetContractAddress: bet.freebetContractAddress as Address,
-        freebetId: bet.freebetId,
+        freebetId: freebetId || null,
+        isFreebetAmountReturnable: isFreebetAmountReturnable ?? null,
+        paymaster: contracts.paymaster.address,
         txHash: receipt.transactionHash,
         redeemedTxHash: null,
         totalOdds: +finalOdds,
         status: GraphBetStatus.Accepted,
         amount,
-        possibleWin: +potentialPayout - (isFreebet ? +amount : 0),
+        possibleWin: potentialPayout,
         payout: null,
         createdAt: Math.floor(Date.now() / 1000),
         resolvedAt: null,

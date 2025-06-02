@@ -6,14 +6,14 @@ import { liveStatisticWatcher } from '../../modules/liveStatisticWatcher'
 import { LIVE_STATISTICS_SUPPORTED_PROVIDERS, LIVE_STATISTICS_SUPPORTED_SPORTS } from '../../config'
 
 
-type Props = {
+export type UseLiveStatisticsProps = {
   gameId: string
   sportId: number | string
   gameState: GameState
   enabled?: boolean
 }
 
-export const useLiveStatistics = ({ gameId, sportId, gameState, enabled = true }: Props) => {
+export const useLiveStatistics = ({ gameId, sportId, gameState, enabled = true }: UseLiveStatisticsProps) => {
   const [ statistics, setStatistics ] = useState<LiveStatistics | null>()
   const { subscribeToUpdates, unsubscribeToUpdates, isSocketReady } = useLiveStatisticsSocket()
 

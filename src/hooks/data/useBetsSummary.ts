@@ -1,23 +1,36 @@
 import { useCallback } from 'react'
 import { formatUnits } from 'viem'
-import { type BettorsQuery, type BettorsQueryVariables, BettorsDocument } from '@azuro-org/toolkit'
-import { useQuery } from '@tanstack/react-query'
+import { type BettorsQuery, type BettorsQueryVariables, type ChainId, BettorsDocument } from '@azuro-org/toolkit'
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
 import { type QueryParameter } from '../../global'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
 
-type UseBetsSummaryProps = {
+type UseBetsSummaryResult = {
+  toPayout: string
+  inBets: string
+  totalPayout: string
+  totalProfit: string
+  betsCount: number
+  wonBetsCount: number
+  lostBetsCount: number
+}
+
+export type UseBetsSummaryProps = {
   account: string
+  chainId?: ChainId
   affiliates?: string[]
   query?: QueryParameter<BettorsQuery['bettors']>
 }
 
-export const useBetsSummary = (props: UseBetsSummaryProps) => {
-  const { account, affiliates, query = {} } = props
+export type UseBetsSummary = (props: UseBetsSummaryProps) => UseQueryResult<UseBetsSummaryResult>
 
-  const { betToken, graphql } = useChain()
+export const useBetsSummary: UseBetsSummary = (props) => {
+  const { account, affiliates, chainId, query = {} } = props
+
+  const { betToken, graphql } = useOptionalChain(chainId)
 
   const gqlLink = graphql.bets
 

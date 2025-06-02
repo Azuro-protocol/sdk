@@ -1,35 +1,37 @@
 import { useMemo } from 'react'
-import { type ConditionsQuery, groupConditionsByMarket } from '@azuro-org/toolkit'
+import { type ChainId, type ConditionsQuery, type GameMarkets, groupConditionsByMarket } from '@azuro-org/toolkit'
 
 import { useActiveConditions } from './useActiveConditions'
-import { type QueryParameter } from '../../global'
+import { type WrapperUseQueryResult, type QueryParameter } from '../../global'
 
 
-type UseActiveMarketsProps = {
+export type UseActiveMarketsProps = {
   gameId: string
   filter?: {
     outcomeIds?: string[]
     maxMargin?: number
   }
+  chainId?: ChainId
   query?: QueryParameter<ConditionsQuery['conditions']>
 }
 
-export const useActiveMarkets = (props: UseActiveMarketsProps) => {
-  const { gameId, filter, query: queryProps } = props
+export type UseActiveMarkets = (props: UseActiveMarketsProps) => WrapperUseQueryResult<GameMarkets | undefined, ConditionsQuery['conditions']>
 
-  const query = useActiveConditions({
+export const useActiveMarkets: UseActiveMarkets = (props) => {
+  const { gameId, filter, chainId, query = {} } = props
+
+  const { data: conditions, ...rest } = useActiveConditions({
     gameId,
     filter,
-    query: queryProps,
+    chainId,
+    query,
   })
-
-  const { data: conditions, ...rest } = query
 
   const conditionIds = conditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('_')
 
   const markets = useMemo(() => {
     if (!conditions?.length) {
-      return []
+      return undefined
     }
 
     return groupConditionsByMarket(conditions)

@@ -1,6 +1,7 @@
 {
   "name": "@azuro-org/sdk",
-  "version": "6.0.2",
+  "version": "6.1.0",
+  "description": "One-stop solution for building betting dApps on the Azuro Protocol.",
   "author": "Azuro",
   "type": "module",
   "main": "dist/index.js",
@@ -17,6 +18,16 @@
     "url": "git+https://github.com/Azuro-protocol/sdk.git"
   },
   "homepage": "https://github.com/Azuro-protocol/sdk#readme",
+  "bugs": {
+    "url": "https://github.com/Azuro-protocol/sdk/issues"
+  },
+  "keywords": [
+    "azuro",
+    "azuro-protocol",
+    "sdk",
+    "react",
+    "dapps"
+  ],
   "scripts": {
     "build": "rimraf dist && rollup -c",
     "prepublishOnly": "npm run build",
@@ -25,12 +36,12 @@
     "lint-ts": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@azuro-org/dictionaries": "^3.0.26",
+    "@azuro-org/dictionaries": "^3.0.27",
     "@azuro-org/sdk-social-aa-connector": "^1.1.7",
     "graphql": "^16.11.0",
-    "react": "^18.3.1",
-    "viem": "^2.29.0",
-    "wagmi": "^2.15.2"
+    "react": "^19.1.0",
+    "viem": "^2.30.4",
+    "wagmi": "^2.15.4"
   },
   "peerDependenciesMeta": {
     "@azuro-org/sdk-social-aa-connector": {
@@ -38,9 +49,9 @@
     }
   },
   "devDependencies": {
-    "@azuro-org/sdk-social-aa-connector": "^1.1.6",
+    "@azuro-org/sdk-social-aa-connector": "^1.1.7",
     "@rollup/plugin-typescript": "^12.1.1",
-    "@types/react": "^18.0.0",
+    "@types/react": "^19.1.5",
     "@typescript-eslint/eslint-plugin": "^6.19.1",
     "eslint": "^8.56.0",
     "eslint-import-resolver-typescript": "^3.6.1",
@@ -52,6 +63,6 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@azuro-org/toolkit": "5.0.1"
+    "@azuro-org/toolkit": "5.1.0"
   }
 }

@@ -3,6 +3,7 @@ import {
   type BetsQuery,
   type GamesQuery,
   type GamesQueryVariables,
+  type ChainId,
 
   SelectionKind,
   OrderDirection,
@@ -16,15 +17,15 @@ import {
   GamesDocument,
 } from '@azuro-org/toolkit'
 import { type Hex, type Address } from 'viem'
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, type UseInfiniteQueryResult } from '@tanstack/react-query'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
 import { BetType, type Bet, type BetOutcome, type InfiniteQueryParameters } from '../../global'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
 
-type QueryResult = {
+type UseBetsResult = {
   bets: Bet[],
   nextPage: number | undefined,
 }
@@ -35,22 +36,26 @@ export type UseBetsProps = {
     affiliate?: string
     type?: BetType
   }
+  chainId?: ChainId
   itemsPerPage?: number
   orderBy?: Bet_OrderBy
   orderDir?: OrderDirection
-  query?: InfiniteQueryParameters<QueryResult>
+  query?: InfiniteQueryParameters<UseBetsResult>
 }
 
-export const useBets = (props: UseBetsProps) => {
+export type UseBets = (props: UseBetsProps) => UseInfiniteQueryResult<UseBetsResult>
+
+export const useBets: UseBets = (props) => {
   const {
     filter,
+    chainId,
     itemsPerPage = 100,
     orderBy = Bet_OrderBy.CreatedBlockTimestamp,
     orderDir = OrderDirection.Asc,
     query,
   } = props
 
-  const { graphql } = useChain()
+  const { graphql } = useOptionalChain(chainId)
 
   const gqlLink = graphql.bets
 
@@ -141,7 +146,10 @@ export const useBets = (props: UseBetsProps) => {
       const bets = v3Bets.map((rawBet) => {
         const {
           tokenId, actor, status, amount, odds, settledOdds, createdAt, resolvedAt, result, affiliate, selections,
-          cashout: _cashout, isCashedOut, payout: _payout, isRedeemed: _isRedeemed, isRedeemable, freebet, txHash,
+          cashout: _cashout, isCashedOut, payout: _payout, isRedeemed: _isRedeemed, isRedeemable, txHash,
+          freebetId,
+          isFreebetAmountReturnable,
+          paymasterContractAddress,
           redeemedTxHash,
           core: {
             address: coreAddress,
@@ -157,11 +165,9 @@ export const useBets = (props: UseBetsProps) => {
         // express bets have a specific feature - protocol redeems LOST expresses to release liquidity,
         // so we should validate it by "win"/"canceled" statuses
         const isRedeemed = (isWin || isCanceled) && _isRedeemed
-        const isFreebet = Boolean(freebet)
-        const freebetId = freebet?.freebetId
-        const freebetContractAddress = freebet?.contractAddress
+        const isFreebet = Boolean(freebetId)
         const payout = isRedeemable && isWin ? +_payout! : null
-        const betDiff = isFreebet ? amount : 0 // for freebet we must exclude bonus value from possible win
+        const betDiff = isFreebet && isFreebetAmountReturnable ? amount : 0 // for freebet we must exclude bonus value from possible win
         const totalOdds = settledOdds ? +settledOdds : +odds
         const possibleWin = +amount * totalOdds - +betDiff
         const cashout = isCashedOut ? _cashout?.payout : undefined
@@ -189,7 +195,7 @@ export const useBets = (props: UseBetsProps) => {
 
             const isWin = result ? result === SelectionResult.Won : null
             const isLose = result ? result === SelectionResult.Lost : null
-            const isCanceled = (
+            const isCanceled = !result && (
               conditionStatus === BetConditionStatus.Canceled
                   || game.state === GameState.Stopped
             )
@@ -219,8 +225,9 @@ export const useBets = (props: UseBetsProps) => {
           actor: actor as Address,
           affiliate: affiliate as Address,
           tokenId,
-          freebetContractAddress: freebetContractAddress as Address,
-          freebetId,
+          freebetId: freebetId || null,
+          isFreebetAmountReturnable: isFreebetAmountReturnable ?? null,
+          paymaster: paymasterContractAddress as Address || null,
           txHash: txHash as Hex,
           redeemedTxHash: redeemedTxHash as Hex,
           totalOdds,

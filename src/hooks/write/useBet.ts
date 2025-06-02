@@ -9,22 +9,28 @@ import {
 } from 'viem'
 import { useMemo, useReducer } from 'react'
 import {
-  type Selection, type BetClientData, ODDS_DECIMALS, BetState,
+  type Selection,
+  type BetClientData,
+  type CreateBetResponse,
+  type Freebet,
+  type ChainId,
+
+  ODDS_DECIMALS,
+  BetState,
   calcMindOdds,
   getBetTypedData,
-  createBet,
-  getBet,
   getComboBetTypedData,
+  createBet,
   createComboBet,
-  type CreateBetResponse,
+  getBet,
 } from '@azuro-org/toolkit'
+import { useQueryClient } from '@tanstack/react-query'
 
-import { useChain } from '../../contexts/chain'
+import { useOptionalChain } from '../../contexts/chain'
 import { DEFAULT_DEADLINE } from '../../config'
 import { formatToFixed } from '../../helpers/formatToFixed'
 import { useBetsCache, type NewBetProps } from '../useBetsCache'
 import { useBetFee } from '../data/useBetFee'
-// import { type FreeBet } from '../data/useFreeBets'
 import { useAAWalletClient, useExtendedAccount } from '../useAaConnector'
 import { useBetTokenBalance } from '../useBetTokenBalance'
 import { useNativeBalance } from '../useNativeBalance'
@@ -38,7 +44,8 @@ type UseBetProps = {
   selections: Selection[]
   odds: Record<string, number>
   totalOdds: number
-  // freeBet?: FreeBet // TODO
+  chainId?: ChainId
+  freebet?: Pick<Freebet, 'id' | 'params'>
   EIP712Attention?: string
   deadline?: number
   onSuccess?(receipt?: TransactionReceipt): void
@@ -58,20 +65,19 @@ const simpleObjReducer = (state: BetTxState, newState: Partial<BetTxState>) => (
 export const useBet = (props: UseBetProps) => {
   const {
     betAmount, slippage, deadline, affiliate, selections, odds,
-    totalOdds, EIP712Attention, onSuccess, onError,
+    totalOdds, chainId, freebet, EIP712Attention, onSuccess, onError,
   } = props
 
   const isCombo = selections.length > 1
   // const isBatch = isCombo && typeof _betAmount === 'object'
-  // const isFreeBet = Boolean(freeBet) && !isCombo && !isBatch
-  // const isFreeBet = Boolean(freeBet) && !isCombo
-  const isFreeBet = false
+  const isFreeBet = Boolean(freebet)
 
   const account = useExtendedAccount()
   const isAAWallet = Boolean(account.isAAWallet)
   const aaClient = useAAWalletClient()
 
-  const { appChain, contracts, betToken, api } = useChain()
+  const { chain: appChain, contracts, betToken } = useOptionalChain(chainId)
+  const queryClient = useQueryClient()
   const wagmiConfig = useConfig()
   const walletClient = useWalletClient()
   const {
@@ -79,13 +85,12 @@ export const useBet = (props: UseBetProps) => {
     isFetching: isRelayerFeeFetching,
   } = useBetFee()
   const { relayerFeeAmount: rawRelayerFeeAmount, formattedRelayerFeeAmount: relayerFeeAmount } = betFeeData || {}
-  const { addBet } = useBetsCache()
+  const { addBet } = useBetsCache(appChain.id)
   const { refetch: refetchBetTokenBalance } = useBetTokenBalance()
   const { refetch: refetchNativeBalance } = useNativeBalance()
 
   const [ betTx, setBetTx ] = useReducer(simpleObjReducer, { data: undefined, isPending: false })
 
-  // const approveAddress = isLiveBet ? contracts.liveRelayer?.address : contracts.proxyFront.address
   const approveAddress = contracts.relayer.address
 
   const allowanceTx = useReadContract({
@@ -171,189 +176,146 @@ export const useBet = (props: UseBetProps) => {
       isPending: true,
     })
 
-    if (isAAWallet && aaClient) {
-      await aaClient.switchChain({ id: appChain.id })
-    }
-
     try {
-      if (isFreeBet) {
-        // const { coreAddress, conditionId, outcomeId } = selections[0]!
-        // const { id, expiresAt, contractAddress, rawMinOdds, rawAmount, signature, chainId } = freeBet!
-
-        // const fixedSelectionMinOdds = calcMindOdds({ odds: odds[`${conditionId}-${outcomeId}`]!, slippage })
-        // const rawSelectionMinOdds = parseUnits(fixedSelectionMinOdds, ODDS_DECIMALS)
-        // const rawFreeBetMinOdds = rawMinOdds > rawSelectionMinOdds ? rawMinOdds : rawSelectionMinOdds
-
-        // bets.push({
-        //   rawAmount,
-        //   selections,
-        //   freebetContractAddress: contractAddress,
-        //   freebetId: String(id),
-        // })
-
-        // const data = encodeFunctionData({
-        //   abi: freeBetAbi,
-        //   functionName: 'bet',
-        //   args: [
-        //     {
-        //       chainId: BigInt(chainId),
-        //       expiresAt: BigInt(Math.floor(expiresAt / 1000)),
-        //       amount: rawAmount,
-        //       freeBetId: BigInt(id),
-        //       minOdds: rawMinOdds,
-        //       owner: account.address!,
-        //     },
-        //     signature,
-        //     coreAddress as Address,
-        //     BigInt(conditionId),
-        //     BigInt(outcomeId),
-        //     rawDeadline,
-        //     rawFreeBetMinOdds,
-        //   ],
-        // })
-
-        // txHash = isAAWallet ? (
-        //   await aaClient!.sendTransaction({ to: contractAddress, data, chain: appChain })
-        // ) : (
-        //   await betTx.sendTransactionAsync({
-        //     to: contractAddress,
-        //     data,
-        //     ...(betGas || {}),
-        //   })
-        // )
+      if (isAAWallet && aaClient) {
+        await aaClient.switchChain({ id: appChain.id })
       }
-      else {
-        const fixedAmount = formatToFixed(betAmount, betToken.decimals)
-        const rawAmount = parseUnits(fixedAmount, betToken.decimals)
-        const expiresAt = Math.floor(Date.now() / 1000) + (deadline || DEFAULT_DEADLINE)
-        const fixedMinOdds = calcMindOdds({ odds: totalOdds, slippage })
-        const rawMinOdds = parseUnits(fixedMinOdds, ODDS_DECIMALS)
-        const { conditionId, outcomeId } = selections[0]!
 
-        if (isAAWallet && isApproveRequired) {
-          const hash = await aaClient!.sendTransaction({
-            to: betToken.address!,
-            data: encodeFunctionData({
-              abi: erc20Abi,
-              functionName: 'approve',
-              args: [
-                approveAddress!,
-                maxUint256,
-              ],
-            }),
-          })
+      const fixedAmount = formatToFixed(betAmount, betToken.decimals)
+      const rawAmount = parseUnits(fixedAmount, betToken.decimals)
+      const expiresAt = Math.floor(Date.now() / 1000) + (deadline || DEFAULT_DEADLINE)
+      const fixedMinOdds = calcMindOdds({ odds: totalOdds, slippage })
+      const rawMinOdds = parseUnits(fixedMinOdds, ODDS_DECIMALS)
+      const { conditionId, outcomeId } = selections[0]!
 
-          await waitForTransactionReceipt(wagmiConfig, {
-            hash,
-            chainId: appChain.id,
-            confirmations: 1,
-          })
-        }
-
-        bets.push({
-          rawAmount,
-          selections,
+      if (isAAWallet && isApproveRequired) {
+        const hash = await aaClient!.sendTransaction({
+          to: betToken.address!,
+          data: encodeFunctionData({
+            abi: erc20Abi,
+            functionName: 'approve',
+            args: [
+              approveAddress!,
+              maxUint256,
+            ],
+          }),
         })
 
-        const clientData: BetClientData = {
-          attention: EIP712Attention || 'By signing this transaction, I agree to place a bet for a live event on \'Azuro SDK Example',
-          affiliate,
-          core: contracts.core.address,
-          expiresAt,
+        await waitForTransactionReceipt(wagmiConfig, {
+          hash,
           chainId: appChain.id,
-          relayerFeeAmount: String(rawRelayerFeeAmount),
-          isBetSponsored: false,
-          isFeeSponsored: false,
-          isSponsoredBetReturnable: false,
+          confirmations: 1,
+        })
+      }
+
+      bets.push({
+        rawAmount,
+        selections,
+        freebetId: freebet?.id,
+        isFreebetAmountReturnable: freebet?.params?.isSponsoredBetReturnable,
+      })
+
+      const clientData: BetClientData = {
+        attention: EIP712Attention || 'By signing this transaction, I agree to place a bet for a live event on \'Azuro SDK Example',
+        affiliate,
+        core: contracts.core.address,
+        expiresAt,
+        chainId: appChain.id,
+        relayerFeeAmount: String(rawRelayerFeeAmount),
+        isBetSponsored: freebet?.params?.isBetSponsored || false,
+        isFeeSponsored: freebet?.params?.isFeeSponsored || false,
+        isSponsoredBetReturnable: freebet?.params?.isSponsoredBetReturnable || false,
+      }
+
+      let createdOrder: CreateBetResponse | null
+
+      if (isCombo) {
+        const betData = {
+          account: account.address!,
+          clientData,
+          amount: rawAmount,
+          minOdds: rawMinOdds,
+          nonce: String(Date.now()),
+          bets: selections,
         }
 
-        let createdOrder: CreateBetResponse | null
+        const typedData = getComboBetTypedData(betData)
 
-        if (isCombo) {
-          const betData = {
-            account: account.address!,
-            clientData,
+        const signature = isAAWallet
+          ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account as any })
+          : await walletClient!.data!.signTypedData(typedData)
+
+
+        createdOrder = await createComboBet({
+          ...betData,
+          bonusId: freebet?.id,
+          signature,
+        })
+      }
+      else {
+        const betData = {
+          account: account.address!,
+          clientData,
+          bet: {
+            conditionId,
+            outcomeId,
             amount: rawAmount,
             minOdds: rawMinOdds,
             nonce: String(Date.now()),
-            bets: selections,
-          }
-
-          const typedData = getComboBetTypedData(betData)
-
-          const signature = isAAWallet
-            ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account as any })
-            : await walletClient!.data!.signTypedData(typedData)
-
-
-          createdOrder = await createComboBet({
-            ...betData,
-            signature,
-          })
-        }
-        else {
-          const betData = {
-            account: account.address!,
-            clientData,
-            bet: {
-              conditionId: conditionId,
-              outcomeId,
-              amount: rawAmount,
-              minOdds: rawMinOdds,
-              nonce: String(Date.now()),
-            },
-          }
-
-          const typedData = getBetTypedData(betData)
-
-          const signature = isAAWallet
-            ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account as any })
-            : await walletClient!.data!.signTypedData(typedData)
-
-
-          createdOrder = await createBet({
-            ...betData,
-            signature,
-          })
+          },
         }
 
-        const {
-          id: orderId,
-          state: newOrderState,
-          errorMessage,
-        } = createdOrder!
+        const typedData = getBetTypedData(betData)
 
-        if (newOrderState === BetState.Created) {
-          txHash = await new Promise<Hex>((res, rej) => {
-            const interval = setInterval(async () => {
-              const order = await getBet({
-                chainId: appChain.id,
-                orderId,
-              })
+        const signature = isAAWallet
+          ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account as any })
+          : await walletClient!.data!.signTypedData(typedData)
 
-              const { state, txHash, errorMessage } = order!
 
-              if (state === BetState.Rejected) {
-                clearInterval(interval)
-                rej(errorMessage)
-              }
-
-              if (txHash) {
-                clearInterval(interval)
-                res(txHash as Hex)
-              }
-            }, 1000)
-          })
-
-          setBetTx({
-            data: txHash,
-            isPending: false,
-          })
-        }
-        else {
-          throw Error(errorMessage)
-        }
+        createdOrder = await createBet({
+          ...betData,
+          bonusId: freebet?.id,
+          signature,
+        })
       }
+
+      const {
+        id: orderId,
+        state: newOrderState,
+        errorMessage,
+      } = createdOrder!
+
+      if (newOrderState === BetState.Created) {
+        txHash = await new Promise<Hex>((res, rej) => {
+          const interval = setInterval(async () => {
+            const order = await getBet({
+              chainId: appChain.id,
+              orderId,
+            })
+
+            const { state, txHash, errorMessage } = order!
+
+            if (state === BetState.Rejected) {
+              clearInterval(interval)
+              rej(errorMessage)
+            }
+
+            if (txHash) {
+              clearInterval(interval)
+              res(txHash as Hex)
+            }
+          }, 1000)
+        })
+
+        setBetTx({
+          data: txHash,
+          isPending: false,
+        })
+      }
+      else {
+        throw Error(errorMessage)
+      }
+
 
       const receipt = await waitForTransactionReceipt(wagmiConfig, {
         hash: txHash!,
@@ -373,16 +335,10 @@ export const useBet = (props: UseBetProps) => {
       allowanceTx.refetch()
 
       if (isFreeBet) {
-        // const queryKey = [ 'freebets', api, account.address!.toLowerCase(), affiliate.toLowerCase() ]
-        // await queryClient.cancelQueries({ queryKey })
-
-        // queryClient.setQueryData(queryKey, (oldFreeBets: FreeBet[]) => {
-        //   const newFreeBets = [ ...oldFreeBets ].filter(({ id, contractAddress }) => {
-        //     return contractAddress.toLowerCase() !== freeBet!.contractAddress.toLowerCase() || id !== freeBet!.id
-        //   })
-
-        //   return newFreeBets
-        // })
+        queryClient.invalidateQueries({
+          queryKey: [ 'available-freebets', appChain.id, account?.address?.toLowerCase(), affiliate?.toLowerCase(), selections.map(({ conditionId, outcomeId }) => `${conditionId}/${outcomeId}`).join('-') ],
+        })
+        queryClient.invalidateQueries({ queryKey: [ 'bonuses', appChain.id, account?.address?.toLowerCase(), affiliate?.toLowerCase() ] })
       }
 
       if (receipt) {
