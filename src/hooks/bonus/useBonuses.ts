@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { type Bonus, type ChainId, getBonuses } from '@azuro-org/toolkit'
+import { type Bonus, type BonusStatus, type ChainId, getBonuses } from '@azuro-org/toolkit'
 import { type Address } from 'viem'
 import { useCallback } from 'react'
 
@@ -10,21 +10,23 @@ import { type QueryParameter } from '../../global'
 type Props = {
   account: Address
   affiliate: Address
+  bonusStatus?: BonusStatus
   chainId?: ChainId
   query?: QueryParameter<Bonus[]>
 }
 
 export const useBonuses = (props: Props) => {
-  const { account, affiliate, chainId, query = {} } = props
+  const { account, affiliate, bonusStatus, chainId, query = {} } = props
 
   const { chain: appChain } = useOptionalChain(chainId)
 
   return useQuery({
-    queryKey: [ 'bonuses', appChain.id, account?.toLowerCase(), affiliate?.toLowerCase() ],
+    queryKey: [ 'bonuses', appChain.id, account?.toLowerCase(), affiliate?.toLowerCase(), bonusStatus ],
     queryFn: async () => {
       const bonuses = await getBonuses({
         chainId: appChain.id,
         account,
+        bonusStatus,
         affiliate,
       })
 

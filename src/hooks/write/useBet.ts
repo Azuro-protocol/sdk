@@ -19,10 +19,10 @@ import {
   BetState,
   calcMindOdds,
   getBetTypedData,
-  createBet,
-  getBet,
   getComboBetTypedData,
+  createBet,
   createComboBet,
+  getBet,
 } from '@azuro-org/toolkit'
 import { useQueryClient } from '@tanstack/react-query'
 
@@ -31,7 +31,6 @@ import { DEFAULT_DEADLINE } from '../../config'
 import { formatToFixed } from '../../helpers/formatToFixed'
 import { useBetsCache, type NewBetProps } from '../useBetsCache'
 import { useBetFee } from '../data/useBetFee'
-// import { type FreeBet } from '../data/useFreeBets'
 import { useAAWalletClient, useExtendedAccount } from '../useAaConnector'
 import { useBetTokenBalance } from '../useBetTokenBalance'
 import { useNativeBalance } from '../useNativeBalance'
@@ -46,7 +45,7 @@ type UseBetProps = {
   odds: Record<string, number>
   totalOdds: number
   chainId?: ChainId
-  freebet?: Freebet
+  freebet?: Pick<Freebet, 'id' | 'params'>
   EIP712Attention?: string
   deadline?: number
   onSuccess?(receipt?: TransactionReceipt): void
@@ -258,7 +257,7 @@ export const useBet = (props: UseBetProps) => {
           account: account.address!,
           clientData,
           bet: {
-            conditionId: conditionId,
+            conditionId,
             outcomeId,
             amount: rawAmount,
             minOdds: rawMinOdds,
