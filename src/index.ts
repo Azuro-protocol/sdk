@@ -146,8 +146,8 @@ export { useNativeBalance, type UseNativeBalanceProps, type UseNativeBalance } f
 export { useWrapTokens, WRAP_CHAINS } from './hooks/useWrapTokens'
 
 // cashout
-export { usePrecalculatedCashouts, type UsePrecalculatedCashoutsProps } from './hooks/cashout/usePrecalculatedCashouts'
-export { useCashout, type UseCashoutProps } from './hooks/cashout/useCashout'
+export { usePrecalculatedCashouts, type UsePrecalculatedCashoutsProps, type UsePrecalculatedCashouts } from './hooks/cashout/usePrecalculatedCashouts'
+export { useCashout, type UseCashoutProps, type UseCashout } from './hooks/cashout/useCashout'
 
 // bonus
 export { useBonuses, type UseBonusesProps, type UseBonuses } from './hooks/bonus/useBonuses'

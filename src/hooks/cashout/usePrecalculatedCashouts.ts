@@ -1,6 +1,6 @@
 import { type Selection, type ChainId, getProviderFromId, GraphBetStatus } from '@azuro-org/toolkit'
 import { useCallback, useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
 import { useOptionalChain } from '../../contexts/chain'
 import { batchFetchCashouts } from '../../helpers/batchFetchCashouts'
@@ -24,12 +24,14 @@ export type UsePrecalculatedCashoutsProps = {
   query?: QueryParameter<PrecalculatedCashoutsQueryData>
 }
 
+export type UsePrecalculatedCashouts = (props: UsePrecalculatedCashoutsProps) => UseQueryResult<{ isAvailable: boolean, cashoutAmount: number | undefined }>
+
 const defaultData = {
   isAvailable: false,
   cashoutAmount: undefined,
 }
 
-export const usePrecalculatedCashouts = ({ bet, chainId, query = {} }: UsePrecalculatedCashoutsProps) => {
+export const usePrecalculatedCashouts: UsePrecalculatedCashouts = ({ bet, chainId, query = {} }) => {
   const { tokenId, amount, outcomes, status, totalOdds } = bet
 
   const { chain: appChain, api } = useOptionalChain(chainId)
@@ -78,7 +80,7 @@ export const usePrecalculatedCashouts = ({ bet, chainId, query = {} }: UsePrecal
     }
   }, [ bet ])
 
-  const { data, ...rest } = useQuery({
+  return useQuery({
     queryKey: [ 'cashout/precalculate', api, tokenId ],
     queryFn: async () => {
       const data = await batchFetchCashouts(outcomes.map(({ conditionId }) => conditionId), appChain.id)
@@ -114,9 +116,4 @@ export const usePrecalculatedCashouts = ({ bet, chainId, query = {} }: UsePrecal
       bet.freebetId === null
     ),
   })
-
-  return {
-    data: data ?? defaultData,
-    ...rest,
-  }
 }
