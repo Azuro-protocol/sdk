@@ -17,7 +17,7 @@ import {
   GamesDocument,
 } from '@azuro-org/toolkit'
 import { type Hex, type Address } from 'viem'
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, type UseInfiniteQueryResult } from '@tanstack/react-query'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 
 import { useOptionalChain } from '../../contexts/chain'
@@ -25,7 +25,7 @@ import { BetType, type Bet, type BetOutcome, type InfiniteQueryParameters } from
 import { gqlRequest } from '../../helpers/gqlRequest'
 
 
-type QueryResult = {
+type UseBetsResult = {
   bets: Bet[],
   nextPage: number | undefined,
 }
@@ -40,10 +40,12 @@ export type UseBetsProps = {
   itemsPerPage?: number
   orderBy?: Bet_OrderBy
   orderDir?: OrderDirection
-  query?: InfiniteQueryParameters<QueryResult>
+  query?: InfiniteQueryParameters<UseBetsResult>
 }
 
-export const useBets = (props: UseBetsProps) => {
+export type UseBets = (props: UseBetsProps) => UseInfiniteQueryResult<UseBetsResult>
+
+export const useBets: UseBets = (props) => {
   const {
     filter,
     chainId,

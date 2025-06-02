@@ -1,13 +1,13 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { type ChainId, type Freebet, type Selection, getAvailableFreebets } from '@azuro-org/toolkit'
 import { type Address } from 'viem'
-import { useCallback, useMemo } from 'react'
+import { useMemo } from 'react'
 
 import { useOptionalChain } from '../../contexts/chain'
 import { type QueryParameter } from '../../global'
 
 
-type Props = {
+export type UseAvailableFreebetsProps = {
   account: Address
   affiliate: Address
   selections: Selection[]
@@ -15,7 +15,9 @@ type Props = {
   query?: QueryParameter<Freebet[]>
 }
 
-export const useAvailableFreebets = (props: Props) => {
+export type UseAvailableFreebets = (props: UseAvailableFreebetsProps) => UseQueryResult<Freebet[]>
+
+export const useAvailableFreebets: UseAvailableFreebets = (props) => {
   const { account, affiliate, selections, chainId, query = {} } = props
 
   const { chain: appChain } = useOptionalChain(chainId)

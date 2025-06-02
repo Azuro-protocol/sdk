@@ -17,7 +17,7 @@ import {
   LegacyLiveGamesDocument,
 } from '@azuro-org/toolkit'
 import { type Hex, type Address } from 'viem'
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, type UseInfiniteQueryResult } from '@tanstack/react-query'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 
 import { useOptionalChain } from '../../contexts/chain'
@@ -30,7 +30,7 @@ type QueryResult = {
   nextPage: number | undefined,
 }
 
-export type Props = {
+export type UseLegacyBetsProps = {
   filter: {
     bettor: Address
     affiliate?: string
@@ -43,7 +43,9 @@ export type Props = {
   query?: InfiniteQueryParameters<QueryResult>
 }
 
-export const useLegacyBets = (props: Props) => {
+export type UseLegacyBets = (props: UseLegacyBetsProps) => UseInfiniteQueryResult<QueryResult>
+
+export const useLegacyBets: UseLegacyBets = (props) => {
   const {
     filter,
     itemsPerPage = 100,

@@ -5,14 +5,14 @@ import {
 
   NavigationDocument,
 } from '@azuro-org/toolkit'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
 import { type SportHub, type QueryParameter } from '../../global'
 import { useOptionalChain } from '../../contexts/chain'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
 
-type Props = {
+export type UseNavigationProps = {
   filter?: {
     sportHub?: SportHub
     sportIds?: Array<string | number>
@@ -22,7 +22,9 @@ type Props = {
   query?: QueryParameter<NavigationQuery['sports']>
 }
 
-export const useNavigation = (props: Props = {}) => {
+export type UseNavigation = (props?: UseNavigationProps) => UseQueryResult<NavigationQuery['sports']>
+
+export const useNavigation: UseNavigation = (props = {}) => {
   const { filter = {}, isLive, chainId, query = {} } = props
 
   const { graphql } = useOptionalChain(chainId)

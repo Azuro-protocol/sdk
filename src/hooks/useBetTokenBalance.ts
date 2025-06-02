@@ -7,12 +7,14 @@ import { useOptionalChain } from '../contexts/chain'
 import { useExtendedAccount } from '../hooks/useAaConnector'
 
 
-type Props = {
+export type UseBetTokenBalanceProps = {
   chainId?: ChainId
   query?: UseReadContractParameters<typeof erc20Abi, 'balanceOf'>['query']
 }
 
-export const useBetTokenBalance = ({ chainId, query = {} }: Props = {}): UseReadContractReturnType<typeof erc20Abi, 'balanceOf', any, { rawBalance: BigInt, balance: string }> => {
+export type UseBetTokenBalance = (props?: UseBetTokenBalanceProps) => UseReadContractReturnType<typeof erc20Abi, 'balanceOf', any, { rawBalance: BigInt, balance: string }>
+
+export const useBetTokenBalance: UseBetTokenBalance = ({ chainId, query = {} } = {}) => {
   const { address } = useExtendedAccount()
 
   const { chain: appChain, betToken } = useOptionalChain(chainId)

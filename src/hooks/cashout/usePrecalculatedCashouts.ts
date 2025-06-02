@@ -18,7 +18,7 @@ export type PrecalculatedCashoutsQueryData = {
   cashouts: Record<string, PrecalculatedCashout>
 } | undefined
 
-type Props = {
+export type UsePrecalculatedCashoutsProps = {
   bet: Pick<Bet, 'tokenId' | 'amount' | 'outcomes' | 'status' | 'totalOdds' | 'freebetId'>
   chainId?: ChainId
   query?: QueryParameter<PrecalculatedCashoutsQueryData>
@@ -29,7 +29,7 @@ const defaultData = {
   cashoutAmount: undefined,
 }
 
-export const usePrecalculatedCashouts = ({ bet, chainId, query = {} }: Props) => {
+export const usePrecalculatedCashouts = ({ bet, chainId, query = {} }: UsePrecalculatedCashoutsProps) => {
   const { tokenId, amount, outcomes, status, totalOdds } = bet
 
   const { chain: appChain, api } = useOptionalChain(chainId)

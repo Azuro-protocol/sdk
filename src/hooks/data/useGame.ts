@@ -1,18 +1,20 @@
 import { type GameQuery, type GameQueryVariables, type ChainId, GameDocument } from '@azuro-org/toolkit'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
 import { useOptionalChain } from '../../contexts/chain'
 import { type QueryParameter } from '../../global'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
 
-type UseGameProps = {
+export type UseGameProps = {
   gameId: string
   chainId?: ChainId
   query?: QueryParameter<GameQuery['game']>
 }
 
-export const useGame = (props: UseGameProps) => {
+export type UseGame = (props: UseGameProps) => UseQueryResult<GameQuery['game']>
+
+export const useGame: UseGame = (props) => {
   const { gameId, chainId, query = {} } = props
 
   const { graphql } = useOptionalChain(chainId)

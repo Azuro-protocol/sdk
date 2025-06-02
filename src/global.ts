@@ -1,6 +1,6 @@
 import { type Address, type Hex } from 'viem'
 import { type Selection, type GraphBetStatus, type GameQuery } from '@azuro-org/toolkit'
-import { type UseInfiniteQueryOptions, type DefaultError, type QueryKey, type UseQueryOptions } from '@tanstack/react-query'
+import { type UseInfiniteQueryOptions, type DefaultError, type QueryKey, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query'
 
 
 export type QueryParameter<
@@ -9,6 +9,11 @@ export type QueryParameter<
   data = queryFnData,
   queryKey extends QueryKey = QueryKey,
 > = Omit<UseQueryOptions<queryFnData, error, data, queryKey>, 'queryFn' | 'queryHash' | 'queryKey' | 'queryKeyHashFn' | 'throwOnError' | 'select'> | undefined
+
+
+export type WrapperUseQueryResult<D, T> = {
+  data: D
+} & Omit<UseQueryResult<T>, 'data'>
 
 export type InfiniteQueryParameters<
   queryFnData = unknown,

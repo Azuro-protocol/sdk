@@ -8,7 +8,7 @@ import {
   OrderDirection,
   SportsDocument,
 } from '@azuro-org/toolkit'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { useCallback } from 'react'
 
 import { useOptionalChain } from '../../contexts/chain'
@@ -16,7 +16,7 @@ import { type SportHub, type QueryParameter } from '../../global'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
 
-type Props = {
+export type UseSportsProps = {
   filter?: {
     limit?: number
     sportHub?: SportHub
@@ -32,7 +32,9 @@ type Props = {
   query?: QueryParameter<SportsQuery['sports']>
 }
 
-export const useSports = (props: Props = {}) => {
+export type UseSports = (props?: UseSportsProps) => UseQueryResult<SportsQuery['sports']>
+
+export const useSports: UseSports = (props = {}) => {
   const {
     filter = {},
     gameOrderBy = Game_OrderBy.StartsAt,
@@ -86,6 +88,8 @@ export const useSports = (props: Props = {}) => {
         }
       }).sort((a, b) => +a.countries[0]!.leagues[0]!.games[0]!.startsAt - +b.countries[0]!.leagues[0]!.games[0]!.startsAt)
     }
+
+    return filteredSports
   }, [])
 
   return useQuery({

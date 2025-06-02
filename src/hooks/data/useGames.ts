@@ -9,14 +9,14 @@ import {
   OrderDirection,
   GamesDocument,
 } from '@azuro-org/toolkit'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
 import { useOptionalChain } from '../../contexts/chain'
 import { type SportHub, type QueryParameter } from '../../global'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
 
-export type Props = {
+export type UseGamesProps = {
   filter?: {
     limit?: number
     offset?: number
@@ -34,7 +34,9 @@ export type Props = {
   query?: QueryParameter<GamesQuery['games']>
 }
 
-export const useGames = (props: Props = {}) => {
+export type UseGames = (props?: UseGamesProps) => UseQueryResult<GamesQuery['games']>
+
+export const useGames: UseGames = (props = {}) => {
   const {
     filter = {},
     orderBy = Game_OrderBy.CreatedBlockTimestamp,

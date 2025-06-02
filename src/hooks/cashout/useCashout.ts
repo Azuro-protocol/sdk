@@ -23,7 +23,7 @@ import { useBetTokenBalance } from '../useBetTokenBalance'
 import { useNativeBalance } from '../useNativeBalance'
 
 
-type Props = {
+export type UseCashoutProps = {
   bet: Pick<Bet, 'tokenId' | 'outcomes'>
   chainId?: ChainId
   EIP712Attention?: string
@@ -41,7 +41,7 @@ const simpleObjReducer = (state: CashoutTxState, newState: Partial<CashoutTxStat
   ...newState,
 })
 
-export const useCashout = (props: Props) => {
+export const useCashout = (props: UseCashoutProps) => {
   const {
     bet, EIP712Attention, chainId,
     onSuccess, onError,

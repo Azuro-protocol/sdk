@@ -10,16 +10,14 @@ import {
   GameBetsDocument,
   GameState,
 } from '@azuro-org/toolkit'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
 import { useOptionalChain } from '../../contexts/chain'
 import { type QueryParameter } from '../../global'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
 
-export type BetsSummaryBySelection = Record<string, string>
-
-type Props = {
+export type UseBetsSummaryBySelectionProps = {
   account: Address
   gameId: string
   gameState: GameState
@@ -27,10 +25,12 @@ type Props = {
   query?: QueryParameter<GameBetsQuery>
 }
 
+export type UseBetsSummaryBySelection = (props: UseBetsSummaryBySelectionProps) => UseQueryResult<Record<string, string>>
+
 const DIVIDER = 18
 const RAW_ONE = parseUnits('1', ODDS_DECIMALS)
 
-export const useBetsSummaryBySelection = (props: Props) => {
+export const useBetsSummaryBySelection: UseBetsSummaryBySelection = (props) => {
   const { account, gameId, gameState, chainId, query = {} } = props
 
   const { betToken, graphql } = useOptionalChain(chainId)
