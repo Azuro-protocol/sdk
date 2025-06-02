@@ -25,7 +25,7 @@ import { BetType, type Bet, type BetOutcome, type InfiniteQueryParameters } from
 import { gqlRequest } from '../../helpers/gqlRequest'
 
 
-type QueryResult = {
+type UseLegacyBetsResult = {
   bets: Bet[],
   nextPage: number | undefined,
 }
@@ -40,10 +40,10 @@ export type UseLegacyBetsProps = {
   orderBy?: Legacy_Bet_OrderBy
   orderDir?: OrderDirection
   chainId?: ChainId
-  query?: InfiniteQueryParameters<QueryResult>
+  query?: InfiniteQueryParameters<UseLegacyBetsResult>
 }
 
-export type UseLegacyBets = (props: UseLegacyBetsProps) => UseInfiniteQueryResult<QueryResult>
+export type UseLegacyBets = (props: UseLegacyBetsProps) => UseInfiniteQueryResult<UseLegacyBetsResult>
 
 export const useLegacyBets: UseLegacyBets = (props) => {
   const {
