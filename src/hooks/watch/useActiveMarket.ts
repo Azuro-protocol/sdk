@@ -80,7 +80,7 @@ export const useActiveMarket = ({ markets }: UseActiveMarketProps) => {
       setActiveMarketKey(nextMarketKey)
     }
 
-    if (nextConditionIndex) {
+    if (typeof nextConditionIndex !== 'undefined') {
       setActiveConditionIndex(nextConditionIndex)
     }
   }, [ states ])

@@ -132,7 +132,7 @@ export const useBet = (props: UseBetProps) => {
       return false
     }
 
-    const approveAmount = betAmount + +relayerFeeAmount!
+    const approveAmount: number = +betAmount + +relayerFeeAmount
 
     return allowanceTx.data < parseUnits(String(approveAmount), betToken.decimals)
   }, [ allowanceTx.data, relayerFeeAmount, betAmount ])
