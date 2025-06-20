@@ -23,6 +23,11 @@ export enum BetslipDisableReason {
   BetAmountLowerThanMinBet = 'BetAmountLowerThanMinBet',
   ComboWithForbiddenItem = 'ComboWithForbiddenItem',
   ComboWithSameGame = 'ComboWithSameGame',
+  SelectedOutcomesTemporarySuspended = 'SelectedOutcomesTemporarySuspended',
+
+  /**
+    * @deprecated Only for v2
+  */
   PrematchConditionInStartedGame = 'PrematchConditionInStartedGame',
   FreeBetExpired = 'FreeBetExpired',
 }
@@ -110,7 +115,6 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
 
   const { odds, totalOdds } = oddsData
   const isCombo = items.length > 1
-  // const isCombo = !isBatch && items.length > 1
 
   const checkDifferentGames = (items: AzuroSDK.BetslipItem[]) => {
     const gameIds = items.map(({ gameId }) => gameId)
@@ -147,10 +151,6 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
   [ betAmount, selectedFreebet ]
   )
 
-  // const isLiveBet = useMemo(() => {
-  //   return items.some(({ coreAddress }) => coreAddress === liveHostAddress)
-  // }, [ items ])
-
   const isConditionsInActiveState = useMemo(() => {
     return Object.values(states).every(state => state === ConditionState.Active)
   }, [ states ])
@@ -171,24 +171,18 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     return !isCombo || isComboWithDifferentGames && items.every(({ isExpressForbidden }) => !isExpressForbidden)
   }, [ isCombo, items ])
 
-  // const isPrematchBetAllowed = useMemo(() => {
-  //   return items.every(({ game: { startsAt } }) => {
-
-  //     return startsAt * 1000 > Date.now()
-  //   })
-  // }, [ items ])
-
   // const minBet = isLiveBet && !appChain?.testnet ? MIN_LIVE_BET_AMOUNT : undefined
   const minBet = undefined // TODO
 
+  const isMaxBetBiggerThanZero = typeof maxBet !== 'undefined' ? +maxBet > 0 : true
   const isAmountLowerThanMaxBet = Boolean(betAmount) && typeof maxBet !== 'undefined' ? +betAmount <= +maxBet : true
   const isAmountBiggerThanMinBet = Boolean(betAmount) && typeof minBet !== 'undefined' ? +betAmount >= minBet : true
 
   const isBetAllowed = (
     isConditionsInActiveState
     && isComboAllowed
-    // && isPrematchBetAllowed
     && isFreeBetAllowed
+    && isMaxBetBiggerThanZero
     && isAmountLowerThanMaxBet
     && isAmountBiggerThanMinBet
   )
@@ -211,9 +205,9 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
       }
     }
 
-    // if (!isPrematchBetAllowed) {
-    //   return BetslipDisableReason.PrematchConditionInStartedGame
-    // }
+    if (!isMaxBetBiggerThanZero) {
+      return BetslipDisableReason.SelectedOutcomesTemporarySuspended
+    }
 
     if (!isAmountLowerThanMaxBet) {
       return BetslipDisableReason.BetAmountGreaterThanMaxBet
