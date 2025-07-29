@@ -197,7 +197,7 @@ export const useBets: UseBets = (props) => {
             const isLose = result ? result === SelectionResult.Lost : null
             const isCanceled = !result && (
               conditionStatus === BetConditionStatus.Canceled
-                  || game.state === GameState.Stopped
+                  || game?.state === GameState.Stopped
             )
             const isLive = conditionKind === SelectionKind.Live
 
@@ -219,7 +219,7 @@ export const useBets: UseBets = (props) => {
               isLive,
             }
           })
-          .sort((a, b) => +a.game.startsAt - +b.game.startsAt)
+          .sort((a, b) => +(a.game?.startsAt || 0) - +(b.game?.startsAt || 0))
 
         const bet: Bet = {
           actor: actor as Address,
