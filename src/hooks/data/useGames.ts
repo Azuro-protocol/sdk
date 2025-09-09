@@ -84,7 +84,6 @@ export const useGames: UseGames = (props = {}) => {
         variables.where.activeAndStoppedConditionsCount_not = 0
       }
       else {
-
         variables.where.activeConditionsCount_not = 0
       }
 

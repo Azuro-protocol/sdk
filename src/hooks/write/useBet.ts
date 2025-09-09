@@ -295,9 +295,9 @@ export const useBet = (props: UseBetProps) => {
 
             const { state, txHash, errorMessage } = order!
 
-            if (state === BetState.Rejected) {
+            if (state === BetState.Rejected || state === BetState.Canceled) {
               clearInterval(interval)
-              rej(errorMessage)
+              rej(errorMessage || state)
             }
 
             if (txHash) {
@@ -313,7 +313,7 @@ export const useBet = (props: UseBetProps) => {
         })
       }
       else {
-        throw Error(errorMessage)
+        throw Error(errorMessage || newOrderState)
       }
 
 
