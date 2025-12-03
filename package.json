@@ -1,6 +1,6 @@
 {
   "name": "@azuro-org/sdk",
-  "version": "6.1.9",
+  "version": "6.1.10",
   "description": "One-stop solution for building betting dApps on the Azuro Protocol.",
   "author": "Azuro",
   "type": "module",
@@ -37,7 +37,7 @@
   },
   "peerDependencies": {
     "@azuro-org/dictionaries": "^3.0.28",
-    "@azuro-org/sdk-social-aa-connector": "^1.1.7",
+    "@azuro-org/sdk-social-aa-connector": "^1.1.8",
     "graphql": "^16.11.0",
     "react": "^19.1.0",
     "viem": "^2.37.4",
@@ -63,6 +63,6 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@azuro-org/toolkit": "^5.1.4"
+    "@azuro-org/toolkit": "^5.1.5"
   }
 }
