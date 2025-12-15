@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { type Selection } from '@azuro-org/toolkit'
+import { calcMindOdds, type Selection } from '@azuro-org/toolkit'
 
 import { outcomeWatcher } from '../../modules/outcomeWatcher'
 import { useChain } from '../../contexts/chain'
@@ -41,7 +41,7 @@ export const useOdds = ({ selections }: UseOddsProps) => {
   prevSelectionsKeyRef.current = selectionsKey
 
   const totalOdds = useMemo(() => {
-    return +formatToFixed(Object.keys(odds).reduce((acc, key) => acc * +odds[key]!, 1), 5)
+    return +formatToFixed(calcMindOdds({ odds: Object.values(odds), slippage: 0 }), 2)
   }, [ odds ])
 
   useEffect(() => {
