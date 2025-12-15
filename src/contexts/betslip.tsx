@@ -24,6 +24,7 @@ export enum BetslipDisableReason {
   ComboWithForbiddenItem = 'ComboWithForbiddenItem',
   ComboWithSameGame = 'ComboWithSameGame',
   SelectedOutcomesTemporarySuspended = 'SelectedOutcomesTemporarySuspended',
+  TotalOddsTooLow = 'TotalOddsTooLow',
 
   /**
     * @deprecated Only for v2
@@ -177,6 +178,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
   const isMaxBetBiggerThanZero = typeof maxBet !== 'undefined' ? +maxBet > 0 : true
   const isAmountLowerThanMaxBet = Boolean(betAmount) && typeof maxBet !== 'undefined' ? +betAmount <= +maxBet : true
   const isAmountBiggerThanMinBet = Boolean(betAmount) && typeof minBet !== 'undefined' ? +betAmount >= minBet : true
+  const isTotalOddsFits = totalOdds && typeof totalOdds === 'number' ? totalOdds > 1 : true
 
   const isBetAllowed = (
     isConditionsInActiveState
@@ -185,6 +187,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     && isMaxBetBiggerThanZero
     && isAmountLowerThanMaxBet
     && isAmountBiggerThanMinBet
+    && isTotalOddsFits
   )
 
   let disableReason = (() => {
@@ -215,6 +218,10 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
 
     if (!isAmountBiggerThanMinBet) {
       return BetslipDisableReason.BetAmountLowerThanMinBet
+    }
+
+    if (!isTotalOddsFits) {
+      return BetslipDisableReason.TotalOddsTooLow
     }
   })()
 
