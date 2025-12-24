@@ -15,6 +15,7 @@ import {
   BetConditionStatus,
   GameState,
   GamesDocument,
+  calcMindOdds,
 } from '@azuro-org/toolkit'
 import { type Hex, type Address } from 'viem'
 import { type InfiniteData, useInfiniteQuery, type UseInfiniteQueryResult } from '@tanstack/react-query'
@@ -23,6 +24,7 @@ import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 import { useOptionalChain } from '../../contexts/chain'
 import { BetType, type Bet, type BetOutcome, type InfiniteQueryParameters } from '../../global'
 import { gqlRequest } from '../../helpers/gqlRequest'
+import { formatToFixed } from '../../helpers/formatToFixed'
 
 
 type UseBetsResult = {
@@ -168,9 +170,10 @@ export const useBets: UseBets = (props) => {
         const isFreebet = Boolean(freebetId)
         const payout = isRedeemable && isWin ? +_payout! : null
         const betDiff = isFreebet && isFreebetAmountReturnable ? amount : 0 // for freebet we must exclude bonus value from possible win
-        const totalOdds = settledOdds ? +settledOdds : +odds
-        const possibleWin = +amount * totalOdds - +betDiff
         const cashout = isCashedOut ? _cashout?.payout : undefined
+
+        const isCombo = selections.length > 1
+        let subBetOdds: number[] = []
 
         const outcomes: BetOutcome[] = selections
           .map((selection) => {
@@ -201,6 +204,10 @@ export const useBets: UseBets = (props) => {
             )
             const isLive = conditionKind === SelectionKind.Live
 
+            if (isCombo && !isCanceled) {
+              subBetOdds.push(+odds)
+            }
+
             const marketName = customMarketName && customMarketName !== 'null' ? customMarketName : getMarketName({ outcomeId })
             const selectionName = customSelectionName && customSelectionName !== 'null' ? customSelectionName : getSelectionName({ outcomeId, withPoint: true })
 
@@ -220,6 +227,12 @@ export const useBets: UseBets = (props) => {
             }
           })
           .sort((a, b) => +(a.game?.startsAt || 0) - +(b.game?.startsAt || 0))
+
+        let totalOdds = isCombo
+          ? +formatToFixed(calcMindOdds({ odds: subBetOdds, slippage: 0 }), 2)
+          : settledOdds ? +settledOdds : +odds
+
+        const possibleWin = +amount * totalOdds - +betDiff
 
         const bet: Bet = {
           actor: actor as Address,
