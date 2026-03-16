@@ -44,7 +44,8 @@ export type UseGames = (props?: UseGamesProps) => UseQueryResult<GetGamesByFilte
  * import { useGames } from '@azuro-org/sdk'
  *
  * const { data, isLoading } = useGames({
- *   filter: { sportSlug: 'football', limit: 50 },
+ *   filter: { sportSlug: 'football' },
+ *   perPage: 50,
  *   isLive: false
  * })
  *

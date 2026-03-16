@@ -7,10 +7,6 @@ import { type WrapperUseQueryResult, type QueryParameter } from '../../global'
 
 export type UseActiveMarketsProps = {
   gameId: string
-  // filter?: {
-  //   outcomeIds?: string[]
-  //   maxMargin?: number
-  // }
   chainId?: ChainId
   query?: QueryParameter<ConditionDetailedData[]>
 }

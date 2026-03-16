@@ -15,7 +15,10 @@ import { type QueryParameter } from '../../global'
 
 export type UseSportsProps = {
   filter?: {
+    /** @deprecated pass `maxGamesPerLeague` instead */
     limit?: number
+    /** default and minimum value in API is `10` */
+    maxGamesPerLeague?: number
     sportSlug?: string
     countrySlug?: string
     leagueSlug?: string
@@ -43,7 +46,7 @@ export type UseSports = (props?: UseSportsProps) => UseQueryResult<SportData[]>
  * import { useSports } from '@azuro-org/sdk'
  *
  * const { data: sports, isLoading } = useSports({
- *   filter: { sportHub: 'sports' },
+ *   filter: { sportHub: 'sports', maxGamesPerLeague: 20 },
  *   isLive: false
  * })
  * */
@@ -58,6 +61,7 @@ export const useSports: UseSports = (props = {}) => {
   } = props
 
   const { chain } = useOptionalChain(chainId)
+  const maxGamesPerLeague = filter.maxGamesPerLeague ?? filter.limit
 
   const formatData = useCallback((data: SportData[]) => {
     const filteredSports = data.map(sport => {
@@ -110,7 +114,7 @@ export const useSports: UseSports = (props = {}) => {
       chain.id,
       gameOrderBy,
       orderDir,
-      filter.limit,
+      maxGamesPerLeague,
       // filter.sportHub,
       filter.sportSlug,
       filter.countrySlug,
@@ -125,6 +129,7 @@ export const useSports: UseSports = (props = {}) => {
         sportSlug: filter.sportSlug,
         // sportHub: filter.sportHub,
         countrySlug: filter.countrySlug,
+        numberOfGames: maxGamesPerLeague,
         leagueSlug: filter.leagueSlug,
         orderBy: gameOrderBy,
         orderDir,
