@@ -1,15 +1,12 @@
 import {
-  type SportsNavigationQuery,
-  type SportsNavigationQueryVariables,
   type ChainId,
-
-  SportsNavigationDocument,
+  getNavigation,
+  type GetNavigationResult,
 } from '@azuro-org/toolkit'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
 import { type SportHub, type QueryParameter } from '../../global'
 import { useOptionalChain } from '../../contexts/chain'
-import { gqlRequest } from '../../helpers/gqlRequest'
 
 
 export type UseSportsNavigationProps = {
@@ -19,11 +16,22 @@ export type UseSportsNavigationProps = {
     sportIds?: Array<string | number>
   }
   isLive?: boolean
-  query?: QueryParameter<SportsNavigationQuery['sports']>
+  query?: QueryParameter<GetNavigationResult>
 }
 
-export type UseSportsNavigation = (props?: UseSportsNavigationProps) => UseQueryResult<SportsNavigationQuery['sports']>
+export type UseSportsNavigation = (props?: UseSportsNavigationProps) => UseQueryResult<GetNavigationResult>
 
+/**
+ * Get sports navigation data with countries and leagues hierarchy.
+ * Returns a flat list of sports with nested countries and leagues.
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/data-hooks/useSportsNavigation
+ *
+ * @example
+ * import { useSportsNavigation } from '@azuro-org/sdk'
+ *
+ * const { data: sports, isFetching } = useSportsNavigation({ isLive: false })
+ * */
 export const useSportsNavigation: UseSportsNavigation = (props = {}) => {
   const { chainId, filter = {}, isLive, query = {} } = props
 
@@ -40,32 +48,11 @@ export const useSportsNavigation: UseSportsNavigation = (props = {}) => {
       filter.sportIds?.join('-'),
     ],
     queryFn: async () => {
-      const variables: SportsNavigationQueryVariables = {
-        sportFilter: {},
-      }
-
-      if (isLive) {
-        variables.sportFilter!.activeLiveGamesCount_not = 0
-      }
-      else {
-        variables.sportFilter!.activePrematchGamesCount_not = 0
-      }
-
-      if (filter.sportHub) {
-        variables.sportFilter!.sporthub = filter.sportHub
-      }
-
-      if (filter.sportIds?.length) {
-        variables.sportFilter!.sportId_in = filter.sportIds
-      }
-
-      const { sports } = await gqlRequest<SportsNavigationQuery, SportsNavigationQueryVariables>({
-        url: gqlLink,
-        document: SportsNavigationDocument,
-        variables,
+      return getNavigation({
+        chainId: chainData.chain.id,
+        sportIds: filter.sportIds,
+        sportHub: filter.sportHub,
       })
-
-      return sports
     },
     refetchOnWindowFocus: false,
     ...query,

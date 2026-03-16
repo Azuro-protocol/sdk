@@ -1,63 +1,59 @@
 import {
-  type Condition_Filter,
-  type ConditionsQuery,
-  type ConditionsQueryVariables,
-  type Condition_OrderBy,
-  type OrderDirection,
   type ChainId,
 
-  ConditionsDocument,
+  getConditionsByGameIds,
+  type GetConditionsByGameIdsParams,
+  type ConditionDetailedData,
+  ConditionState,
 } from '@azuro-org/toolkit'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
 import { useOptionalChain } from '../../contexts/chain'
 import { type QueryParameter } from '../../global'
-import { gqlRequest } from '../../helpers/gqlRequest'
 
 
 export type UseConditionsProps = {
-  gameId: string | bigint
-  filter?: Condition_Filter
-  orderBy?: Condition_OrderBy
-  orderDir?: OrderDirection
+  gameId: GetConditionsByGameIdsParams['gameIds']
+  onlyActiveOrStopped?: boolean
   chainId?: ChainId
-  query?: QueryParameter<ConditionsQuery['conditions']>
+  query?: QueryParameter<ConditionDetailedData[]>
 }
 
-export type UseConditions = (props: UseConditionsProps) => UseQueryResult<ConditionsQuery['conditions']>
+export type UseConditions = typeof useConditions
 
-export const useConditions: UseConditions = (props) => {
-  const { gameId, filter = {}, orderBy, orderDir, chainId, query = {} } = props
-  const { graphql } = useOptionalChain(chainId)
-
-  const gqlLink = graphql.feed
+/**
+ * Use it to fetch [Conditions](https://gem.azuro.org/knowledge-hub/how-azuro-works/components/conditions) of a
+ * specific game.
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/data-hooks/useConditions
+ *
+ * @example
+ * import { useConditions } from '@azuro-org/sdk'
+ *
+ * // gameData from useGames() or useGame()
+ * const gameId = gameData.gameId
+ * const { data, isLoading, error } = useConditions({ gameId })
+ * */
+export const useConditions = (props: UseConditionsProps): UseQueryResult<ConditionDetailedData[]> => {
+  const { gameId, chainId, onlyActiveOrStopped, query = {} } = props
+  const { chain } = useOptionalChain(chainId)
 
   return useQuery({
     queryKey: [
       'conditions',
-      gqlLink,
+      chain.id,
       gameId,
-      orderBy,
-      orderDir,
-      filter,
+      onlyActiveOrStopped,
     ],
     queryFn: async () => {
-      const variables: ConditionsQueryVariables = {
-        orderBy,
-        orderDirection: orderDir,
-        where: {
-          ...filter,
-          game_: {
-            gameId,
-          },
-        },
-      }
-
-      const { conditions } = await gqlRequest<ConditionsQuery, ConditionsQueryVariables>({
-        url: gqlLink,
-        document: ConditionsDocument,
-        variables,
+      const conditions = await getConditionsByGameIds({
+        chainId: chain.id,
+        gameIds: gameId,
       })
+
+      if (onlyActiveOrStopped) {
+        return conditions.filter(({ state }) => state === ConditionState.Active || ConditionState.Stopped)
+      }
 
       return conditions
     },

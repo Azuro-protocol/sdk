@@ -9,6 +9,20 @@ export type UseActiveMarketProps = {
   markets: GameMarkets
 }
 
+/**
+ * Manages active market selection and automatically switches to the next available market when conditions become inactive.
+ * Tracks condition states across all markets and provides organized market data.
+ *
+ * Returns active market key, condition index, and organized market structures for navigation.
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/watch/useActiveMarket
+ *
+ * @example
+ * import { useActiveMarket } from '@azuro-org/sdk'
+ *
+ * const { data, isFetching } = useActiveMarket({ markets })
+ * const { activeMarketKey, activeConditionIndex, otherMarkets, states } = data
+ * */
 export const useActiveMarket = ({ markets }: UseActiveMarketProps) => {
   const { sortedMarketKeys, marketsByKey } = useMemo(() => {
     const defaultValue = {

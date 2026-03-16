@@ -18,6 +18,20 @@ export type UseBetFeeProps = {
 
 export type UseBetFee = (props?: UseBetFeeProps) => UseQueryResult<UseBetFeeResult>
 
+/**
+ * Fetches current bet placement fee information including gas and relayer fees.
+ * Auto-refetches every 10 seconds to keep fee estimates up to date.
+ *
+ * Returns gas amount, relayer fee amount (as bigint), and formatted relayer fee.
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/data-hooks/useBetFee
+ *
+ * @example
+ * import { useBetFee } from '@azuro-org/sdk'
+ *
+ * const { data, isLoading } = useBetFee()
+ * const { gasAmount, relayerFeeAmount, formattedRelayerFeeAmount } = data || {}
+ * */
 export const useBetFee: UseBetFee = ({ chainId, query = {} } = {}) => {
   const { chain: appChain } = useOptionalChain(chainId)
 

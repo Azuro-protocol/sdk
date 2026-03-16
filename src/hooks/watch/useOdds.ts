@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { calcMindOdds, type Selection } from '@azuro-org/toolkit'
+import { calcMinOdds, type Selection } from '@azuro-org/toolkit'
 
 import { outcomeWatcher } from '../../modules/outcomeWatcher'
 import { useChain } from '../../contexts/chain'
@@ -12,8 +12,43 @@ export type UseOddsProps = {
   selections: Selection[]
 }
 
+
+/**
+ * Watch real-time odds updates for multiple selections (betslip).
+ * Subscribes to condition updates via websocket and calculates total odds with slippage protection.
+ *
+ * Returns individual odds for each selection and combined total odds.
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/watch/useOdds
+ *
+ * @example
+ * import { useOdds } from '@azuro-org/sdk'
+ *
+ * // ...
+ *
+ * const selections = [
+ *   { conditionId: '123...', outcomeId: '1' },
+ *   { conditionId: '456...', outcomeId: '2' }
+ * ]
+ * const { data, isFetching } = useOdds({ selections })
+ * const { odds, totalOdds } = data
+ *
+ *
+ * return selections.map(({ conditionId, outcomeId }) => {
+ *   const key = `${conditionId}-${outcomeId}`
+ *
+ *   return (
+ *     <SelectionView
+ *       key={key}
+ *       conditionId={conditionId}
+ *       outcomeId={outcomeId}
+ *       odds={odds[key]}
+ *     />
+ *   )
+ * }
+ * */
 export const useOdds = ({ selections }: UseOddsProps) => {
-  const { graphql } = useChain()
+  const { appChain } = useChain()
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useConditionUpdates()
 
   const [ odds, setOdds ] = useState<Record<string, number>>({})
@@ -41,7 +76,7 @@ export const useOdds = ({ selections }: UseOddsProps) => {
   prevSelectionsKeyRef.current = selectionsKey
 
   const totalOdds = useMemo(() => {
-    return +formatToFixed(calcMindOdds({ odds: Object.values(odds), slippage: 0 }), 2)
+    return +formatToFixed(calcMinOdds({ odds: Object.values(odds), slippage: 0 }), 2)
   }, [ odds ])
 
   useEffect(() => {
@@ -83,7 +118,7 @@ export const useOdds = ({ selections }: UseOddsProps) => {
     }
 
     ;(async () => {
-      const data = await batchFetchConditions(conditionIds, graphql.feed)
+      const data = await batchFetchConditions(conditionIds, appChain.id)
 
       const newOdds = selections.reduce<Record<string, number>>((acc, { conditionId, outcomeId }) => {
         acc[`${conditionId}-${outcomeId}`] = +(data[conditionId]?.outcomes[outcomeId]?.odds || 1)
@@ -94,7 +129,7 @@ export const useOdds = ({ selections }: UseOddsProps) => {
       setOdds(newOdds)
       setFetching(false)
     })()
-  }, [ selectionsKey, graphql.feed ])
+  }, [ selectionsKey, appChain.id ])
 
   return {
     data: {

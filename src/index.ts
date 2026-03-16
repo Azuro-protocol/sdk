@@ -111,7 +111,9 @@ export {
 } from './contexts/liveStatisticsSocket'
 
 // data hooks
-export { useBets, type UseBetsProps, type UseBets } from './hooks/data/useBets'
+// temp useBets from graph
+export { useBets, type UseBetsProps, type UseBets } from './hooks/data/useBetsGraph'
+// export { useBets, type UseBetsProps, type UseBets } from './hooks/data/useBets'
 export { useLegacyBets, type UseLegacyBetsProps } from './hooks/data/useLegacyBets'
 export { useConditions, type UseConditionsProps, type UseConditions } from './hooks/data/useConditions'
 export { useActiveConditions, type UseActiveConditionsProps, type UseActiveConditions } from './hooks/data/useActiveConditions'
@@ -119,17 +121,18 @@ export { useGame, type UseGameProps, type UseGame } from './hooks/data/useGame'
 export { useActiveMarkets, type UseActiveMarketsProps, type UseActiveMarkets } from './hooks/data/useActiveMarkets'
 export { useResolvedMarkets, type UseResolvedMarketsProps, type UseResolvedMarkets } from './hooks/data/useResolvedMarkets'
 export { useGames, type UseGamesProps } from './hooks/data/useGames'
+export { useSearchGames, type UseSearchGamesProps } from './hooks/data/useSearchGames'
 export { useSports, type UseSportsProps, type UseSports } from './hooks/data/useSports'
 export { useSportsNavigation, type UseSportsNavigationProps, type UseSportsNavigation } from './hooks/data/useSportsNavigation'
 export { useNavigation, type UseNavigationProps, type UseNavigation } from './hooks/data/useNavigation'
 export { useBetFee, type UseBetFeeProps, type UseBetFee } from './hooks/data/useBetFee'
 export { useBetsSummary, type UseBetsSummaryProps, type UseBetsSummary } from './hooks/data/useBetsSummary'
 export { useBetsSummaryBySelection, type UseBetsSummaryBySelectionProps, type UseBetsSummaryBySelection } from './hooks/data/useBetsSummaryBySelection'
-export { useMaxBet, type UseMaxBetProps, type UseMaxBet } from './hooks/data/useMaxBet'
+export { useBetCalculation, type UseBetCalculationProps } from './hooks/data/useBetCalculation'
 
 // write hooks
 export { useRedeemBet } from './hooks/write/useRedeemBet'
-export { useBet } from './hooks/write/useBet'
+export { useBet, BetOrderError } from './hooks/write/useBet'
 
 // watch hooks
 export { useOdds, type UseOddsProps } from './hooks/watch/useOdds'

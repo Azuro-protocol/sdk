@@ -12,8 +12,25 @@ export type UseConditionStateProps = {
   initialState?: ConditionState
 }
 
+/**
+ * Watch real-time condition state updates for a single condition.
+ * Subscribes to condition updates via websocket and tracks state changes (Active, Stopped, Resolved, etc.).
+ * Requires `FeedSocketProvider` and `ConditionUpdatesProvider` (both are included in `AzuroSDKProvider`).
+ *
+ * Returns `isLocked` helper to check if the condition is not Active.
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/watch/useConditionState
+ *
+ * @example
+ * import { useConditionState } from '@azuro-org/sdk'
+ *
+ * const { data: state, isLocked, isFetching } = useConditionState({
+ *   conditionId: condition.conditionId,
+ *   initialState: condition.state
+ * })
+ * */
 export const useConditionState = ({ conditionId, initialState }: UseConditionStateProps) => {
-  const { graphql } = useChain()
+  const { appChain, graphql } = useChain()
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useConditionUpdates()
 
   const [ state, setState ] = useState(initialState || ConditionState.Active)
@@ -58,7 +75,7 @@ export const useConditionState = ({ conditionId, initialState }: UseConditionSta
     setFetching(true)
 
     ;(async () => {
-      const data = await batchFetchConditions([ conditionId ], graphql.feed)
+      const data = await batchFetchConditions([ conditionId ], appChain.id)
 
       setState(data?.[conditionId]?.state || ConditionState.Active)
       setFetching(false)

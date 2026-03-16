@@ -63,6 +63,23 @@ export type UseCashout = (props: UseCashoutProps) => {
   isApproveRequired: boolean
 }
 
+/**
+ * Cash out a bet before the event is finished.
+ * Handles the full cashout flow including approval (if required) and EIP712 signature.
+ *
+ * For AA wallets, automatically handles chain switching and approval in a single transaction.
+ * For EOA wallets, requires separate approval transaction if `isApproveRequired` is true.
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/cashout/useCashout
+ *
+ * @example
+ * import { useCashout } from '@azuro-org/sdk'
+ *
+ * const { submit, isCashoutAvailable, isApproveRequired, calculationQuery } = useCashout({
+ *   bet: { tokenId: '123', outcomes: [...] },
+ *   onSuccess: (receipt) => console.log('Cashout successful'),
+ * })
+ * */
 export const useCashout: UseCashout = (props) => {
   const {
     bet, EIP712Attention, chainId,

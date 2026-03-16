@@ -57,6 +57,33 @@ type Props = {
   chainId?: ChainId
 }
 
+/**
+ * Redeem winnings from winning or canceled bets.
+ * Supports both single and batch redemption of bets from the same LP contract.
+ *
+ * Handles legacy V2 contracts, freebets, and regular bets.
+ * Supports both regular wallets and Account Abstraction (AA) wallets.
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/write/useRedeemBet
+ *
+ * @example
+ * import { useBets, useRedeemBet } from '@azuro-org/sdk'
+ *
+ * // Bet list component
+ * const { data, isFetching } = useBets({ filter: { ... } })
+ * const allBets = data?.pages.flatMap(page => page.bets) || []
+ *
+ * // ... Single bet component
+ * const { submit, isPending, isProcessing } = useRedeemBet()
+ *
+ * const handleRedeem = async () => {
+ *   if (isPending || isProcessing || bet.isRedeemed || !bet.isRedeemable) {
+ *     return
+ *   }
+ *
+ *   await submit({ bets: [ bet ] })
+ * }
+ * */
 export const useRedeemBet = ({ chainId }: Props = {}) => {
   const { contracts, chain: appChain } = useOptionalChain(chainId)
   const wagmiConfig = useConfig()
@@ -72,6 +99,7 @@ export const useRedeemBet = ({ chainId }: Props = {}) => {
 
   const receipt = useWaitForTransactionReceipt({
     hash: aaTxState.data || redeemTx.data,
+    confirmations: 2,
     query: {
       enabled: Boolean(aaTxState.data) || Boolean(redeemTx.data),
     },
@@ -177,6 +205,7 @@ export const useRedeemBet = ({ chainId }: Props = {}) => {
     const receipt = await waitForTransactionReceipt(wagmiConfig, {
       hash,
       chainId: appChain.id,
+      confirmations: 2,
     })
 
     if (receipt?.status === 'reverted') {

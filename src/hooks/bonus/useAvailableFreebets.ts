@@ -17,6 +17,21 @@ export type UseAvailableFreebetsProps = {
 
 export type UseAvailableFreebets = (props: UseAvailableFreebetsProps) => UseQueryResult<Freebet[]>
 
+/**
+ * Retrieves available freebets for a specific account, affiliate, and bet selections.
+ * Only returns freebets that can be applied to the provided selections.
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/bonus/useAvailableFreebets
+ *
+ * @example
+ * import { useAvailableFreebets } from '@azuro-org/sdk'
+ *
+ * const { data: freebets, isLoading } = useAvailableFreebets({
+ *   account: '0x...',
+ *   affiliate: '0x...',
+ *   selections: [{ conditionId: '123', outcomeId: '1' }],
+ * })
+ * */
 export const useAvailableFreebets: UseAvailableFreebets = (props) => {
   const { account, affiliate, selections, chainId, query = {} } = props
 

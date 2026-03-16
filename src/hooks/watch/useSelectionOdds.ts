@@ -12,10 +12,26 @@ export type UseSelectionOddsProps = {
   initialOdds?: number
 }
 
+/**
+ * Watch real-time odds updates for a single selection.
+ * Subscribes to condition updates via websocket and tracks odds changes.
+ *
+ * Optionally accepts `initialOdds` to skip initial fetch if odds are already known.
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/watch/useSelectionOdds
+ *
+ * @example
+ * import { useSelectionOdds } from '@azuro-org/sdk'
+ *
+ * const { data: odds, isFetching } = useSelectionOdds({
+ *   selection: { conditionId: '123', outcomeId: '1' },
+ *   initialOdds: 1.5
+ * })
+ * */
 export const useSelectionOdds = ({ selection, initialOdds }: UseSelectionOddsProps) => {
   const { conditionId, outcomeId } = selection
 
-  const { graphql } = useChain()
+  const { appChain } = useChain()
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useConditionUpdates()
 
   const [ odds, setOdds ] = useState(initialOdds || 0)
@@ -49,12 +65,12 @@ export const useSelectionOdds = ({ selection, initialOdds }: UseSelectionOddsPro
     }
 
     ;(async () => {
-      const data = await batchFetchConditions([ conditionId ], graphql.feed)
+      const data = await batchFetchConditions([ conditionId ], appChain.id)
 
       setOdds(+(data?.[conditionId]?.outcomes?.[outcomeId]?.odds || 0))
       setFetching(false)
     })()
-  }, [ conditionId, outcomeId, graphql.feed ])
+  }, [ conditionId, outcomeId, appChain.id ])
 
   return {
     data: odds,

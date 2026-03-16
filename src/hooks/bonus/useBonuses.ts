@@ -16,6 +16,22 @@ export type UseBonusesProps = {
 
 export type UseBonuses = (props: UseBonusesProps) => UseQueryResult<Bonus[]>
 
+/**
+ * Retrieves bonuses (freebets) for a specific account and affiliate address.
+ * Optionally filter by bonus status: active (BonusStatus.Available) or redeemed (BonusStatus.Used).
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/bonus/useBonuses
+ *
+ * @example
+ * import { BonusStatus } from '@azuro-org/toolkit'
+ * import { useBonuses } from '@azuro-org/sdk'
+ *
+ * const { data: bonuses, isLoading } = useBonuses({
+ *   account: '0x...',
+ *   affiliate: '0x...',
+ *   bonusStatus: BonusStatus.Available,
+ * })
+ * */
 export const useBonuses: UseBonuses = (props) => {
   const { account, affiliate, bonusStatus, chainId, query = {} } = props
 

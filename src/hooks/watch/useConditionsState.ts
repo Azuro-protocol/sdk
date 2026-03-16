@@ -12,8 +12,15 @@ export type UseConditionsStateProps = {
   initialStates?: Record<string, ConditionState>
 }
 
+/**
+ * Watch real-time state updates for a list of conditions.
+ * Subscribes to condition updates via websocket and tracks state changes (Active, Stopped, Resolved, etc.).
+ * Requires `FeedSocketProvider` and `ConditionUpdatesProvider` (both are included in `AzuroSDKProvider`).
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/watch-hooks/useConditionsState
+ * */
 export const useConditionsState = ({ conditionIds, initialStates }: UseConditionsStateProps) => {
-  const { graphql } = useChain()
+  const { appChain } = useChain()
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useConditionUpdates()
 
   const [ states, setStates ] = useState<Record<string, ConditionState>>(initialStates ?? {})
@@ -72,7 +79,7 @@ export const useConditionsState = ({ conditionIds, initialStates }: UseCondition
     }
 
     ;(async () => {
-      const data = await batchFetchConditions(conditionIds, graphql.feed)
+      const data = await batchFetchConditions(conditionIds, appChain.id)
 
       const newStatuses = (conditionIds || []).reduce<Record<string, ConditionState>>((acc, conditionId) => {
         if (conditionId && data?.[conditionId]) {
@@ -85,7 +92,7 @@ export const useConditionsState = ({ conditionIds, initialStates }: UseCondition
       setStatesFetching(false)
       setStates(newStatuses)
     })()
-  }, [ conditionsKey ])
+  }, [ conditionsKey, appChain.id ])
 
   return {
     data: states,

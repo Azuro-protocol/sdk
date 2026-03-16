@@ -1,5 +1,5 @@
 import { type Address, type Hex } from 'viem'
-import { type Selection, type GraphBetStatus, type GameQuery } from '@azuro-org/toolkit'
+import { type Selection, type GraphBetStatus, type GameData, type BetOrderState } from '@azuro-org/toolkit'
 import { type UseInfiniteQueryOptions, type DefaultError, type QueryKey, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query'
 
 
@@ -35,11 +35,11 @@ declare global {
 export enum SportHub {
   Sports = 'sports',
   Esports = 'esports',
-  Unique = 'unique'
 }
 
 export enum BetType {
   Unredeemed = 'unredeemed',
+  Pending = 'pending',
   Accepted = 'accepted',
   Settled = 'settled',
   CashedOut = 'cashedOut',
@@ -49,7 +49,7 @@ export type BetOutcome = {
   selectionName: string
   odds: number
   marketName: string
-  game: NonNullable<GameQuery['game']>
+  game: GameData
   wonOutcomeIds: string[] | null
   isLive: boolean
   isWin: boolean | null
@@ -58,6 +58,8 @@ export type BetOutcome = {
 } & Selection
 
 export type Bet = {
+  /** bettorAddressLowerCase_nonce */
+  orderId: string
   actor: Address
   affiliate: Address
   tokenId: string
@@ -68,29 +70,39 @@ export type Bet = {
   coreAddress: Address
   lpAddress: Address
   outcomes: BetOutcome[]
-  txHash: Hex
+  txHash: Hex | null
   redeemedTxHash: Hex | null
-  status: GraphBetStatus
+  orderState: BetOrderState
+  /**
+   * graphql bet status,
+   * it can be null for bet with `orderState` in
+   * Created, Placed, Sent, Canceled, Rejected
+   * */
+  status: GraphBetStatus | null
+  /** contract error code if bet state is BetState.Rejected */
+  rejectedErrorCode: string | null
   amount: string
   possibleWin: number
   payout: number | null
   createdAt: number
   resolvedAt: number | null
+  redeemedAt?: number | null
   cashout?: string
   isWin: boolean
   isLose: boolean
   isRedeemable: boolean
   isRedeemed: boolean
   isCanceled: boolean
+  isRejected: boolean
   isCashedOut: boolean
 }
 
 export type BetsSummary = {
-  toPayout: string,
-  inBets: string,
-  totalPayout: string,
-  totalProfit: string,
-  betsCount: number,
-  wonBetsCount: number,
-  lostBetsCount: number,
+  toPayout: string
+  inBets: string
+  totalPayout: string
+  totalProfit: string
+  betsCount: number
+  wonBetsCount: number
+  lostBetsCount: number
 }

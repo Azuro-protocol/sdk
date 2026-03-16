@@ -1,44 +1,52 @@
-import { type GameQuery, type GameQueryVariables, type ChainId, GameDocument } from '@azuro-org/toolkit'
+import {
+  type ChainId,
+  getGamesByIds,
+  type GameData,
+} from '@azuro-org/toolkit'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
 import { useOptionalChain } from '../../contexts/chain'
 import { type QueryParameter } from '../../global'
-import { gqlRequest } from '../../helpers/gqlRequest'
 
 
 export type UseGameProps = {
   gameId: string
   chainId?: ChainId
-  query?: QueryParameter<GameQuery['game']>
+  query?: QueryParameter<GameData | null>
 }
 
-export type UseGame = (props: UseGameProps) => UseQueryResult<GameQuery['game']>
+export type UseGame = (props: UseGameProps) => UseQueryResult<GameData | null>
 
+/**
+ * Use it to fetch a specific game by gameId parameter.
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/data-hooks/useGame
+ *
+ * @example
+ * import { useGame } from '@azuro-org/sdk'
+ *
+ * // e.g., game page your-app-url/polygon/football/.../{gameId}
+ * const { gameId } = useParams<{ gameId: string }>()
+ * const { data, isLoading, error } = useGame({ gameId })
+ * */
 export const useGame: UseGame = (props) => {
   const { gameId, chainId, query = {} } = props
 
-  const { graphql } = useOptionalChain(chainId)
-
-  const gqlLink = graphql.feed
+  const { chain } = useOptionalChain(chainId)
 
   return useQuery({
     queryKey: [
       'game',
-      gqlLink,
+      chain.id,
       gameId,
     ],
     queryFn: async () => {
-      const variables: GameQueryVariables = {
-        id: gameId,
-      }
-
-      const { game } = await gqlRequest<GameQuery, GameQueryVariables>({
-        url: gqlLink,
-        document: GameDocument,
-        variables,
+      const games = await getGamesByIds({
+        chainId: chain.id,
+        gameIds: [ gameId ],
       })
 
-      return game
+      return games?.[0] || null
     },
     refetchOnWindowFocus: false,
     ...query,

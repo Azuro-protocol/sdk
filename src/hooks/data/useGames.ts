@@ -1,136 +1,96 @@
 import {
-  type ConditionState,
-  type GamesQuery,
-  type GamesQueryVariables,
   type ChainId,
-
   GameState,
-  Game_OrderBy,
   OrderDirection,
-  GamesDocument,
+  GameOrderBy,
+  getGamesByFilters,
+  type GetGamesByFiltersResult,
 } from '@azuro-org/toolkit'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
 import { useOptionalChain } from '../../contexts/chain'
 import { type SportHub, type QueryParameter } from '../../global'
-import { gqlRequest } from '../../helpers/gqlRequest'
 
 
 export type UseGamesProps = {
   filter?: {
-    limit?: number
-    offset?: number
     sportHub?: SportHub
     sportSlug?: string
     sportIds?: Array<string | number>
-    leagueSlug?: string | string[]
-    maxMargin?: number | string
-    conditionsState?: ConditionState | ConditionState[]
+    leagueSlug?: string
   }
-  orderBy?: Game_OrderBy
+  /** page number (1-based), default: 1 */
+  page?: number
+  /** items per page, default: 100 */
+  perPage?: number
+  orderBy?: GameOrderBy
   orderDir?: OrderDirection
   isLive?: boolean
   chainId?: ChainId
-  query?: QueryParameter<GamesQuery['games']>
+  query?: QueryParameter<GetGamesByFiltersResult>
 }
 
-export type UseGames = (props?: UseGamesProps) => UseQueryResult<GamesQuery['games']>
+export type UseGames = (props?: UseGamesProps) => UseQueryResult<GetGamesByFiltersResult>
 
+/**
+ * Fetches a list of games with optional filtering and sorting.
+ * Supports filtering by sport, league, game state (live/prematch), and more.
+ *
+ * Use `isLive` prop to switch between live and prematch games.
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/data-hooks/useGames
+ *
+ * @example
+ * import { useGames } from '@azuro-org/sdk'
+ *
+ * const { data, isLoading } = useGames({
+ *   filter: { sportSlug: 'football', limit: 50 },
+ *   isLive: false
+ * })
+ *
+ * const { games, page, total, totalPages } = data || {}
+ * */
 export const useGames: UseGames = (props = {}) => {
   const {
     filter = {},
-    orderBy = Game_OrderBy.CreatedBlockTimestamp,
+    orderBy = GameOrderBy.StartsAt,
     orderDir = OrderDirection.Desc,
     isLive,
     chainId,
+    perPage,
+    page,
     query = {},
   } = props
 
-  const { graphql } = useOptionalChain(chainId)
-
-  const gqlLink = graphql.feed
+  const { chain } = useOptionalChain(chainId)
 
   return useQuery({
     queryKey: [
       'games',
-      gqlLink,
+      chain.id,
       isLive,
-      filter.limit,
-      filter.offset,
+      perPage,
+      page,
       filter.sportHub,
       filter.sportSlug,
       filter.sportIds?.join('-'),
       filter.leagueSlug,
-      filter.maxMargin,
-      filter.conditionsState,
       orderBy,
       orderDir,
     ],
     queryFn: async () => {
-      const variables: GamesQueryVariables = {
-        first: 1000,
+      return getGamesByFilters({
+        chainId: chain.id,
+        state: isLive ? GameState.Live : GameState.Prematch,
+        leagueSlug: filter.leagueSlug,
+        sportIds: filter.sportIds,
+        sportHub: filter.sportHub,
+        sportSlug: filter.sportSlug,
         orderBy,
-        orderDirection: orderDir,
-        where: {
-          state: isLive ? GameState.Live : GameState.Prematch,
-          activeAndStoppedConditionsCount_not: 0,
-          conditions_: {},
-          sport_: {},
-          league_: {},
-        },
-      }
-
-      if (isLive) {
-        variables.where.activeAndStoppedConditionsCount_not = 0
-      }
-      else {
-        variables.where.activeConditionsCount_not = 0
-      }
-
-      if (filter.limit) {
-        variables.first = filter.limit
-      }
-
-      if (filter.offset) {
-        variables.skip = filter.offset
-      }
-
-      if (filter.sportHub) {
-        variables.where.sport_!.sporthub = filter.sportHub
-      }
-
-      if (filter.sportSlug) {
-        variables.where.sport_!.slug_starts_with_nocase = filter.sportSlug
-      }
-
-      if (filter.sportIds?.length) {
-        variables.where.sport_!.sportId_in = filter?.sportIds
-      }
-
-      if (filter.leagueSlug) {
-        variables.where.league_!.slug_in = typeof filter.leagueSlug === 'string' ? [ filter.leagueSlug ] : filter.leagueSlug
-      }
-
-      if (filter.maxMargin) {
-        variables.where.conditions_!.margin_lte = String(filter.maxMargin)
-      }
-
-      if (filter.conditionsState) {
-        if (typeof filter.conditionsState === 'string') {
-          variables.where.conditions_!.state = filter.conditionsState
-        }
-        else {
-          variables.where.conditions_!.state_in = filter.conditionsState
-        }
-      }
-
-      const { games } = await gqlRequest<GamesQuery, GamesQueryVariables>({
-        url: gqlLink,
-        document: GamesDocument,
-        variables,
+        orderDir,
+        perPage,
+        page,
       })
-
-      return games
     },
     refetchOnWindowFocus: false,
     ...query,

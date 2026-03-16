@@ -13,6 +13,23 @@ export type UseLiveStatisticsProps = {
   enabled?: boolean
 }
 
+/**
+ * Watch real-time live game statistics (scores, periods, etc.) via websocket.
+ * Only works for live games from supported providers and sports.
+ *
+ * Returns `isAvailable` to check if statistics are supported for the game.
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/watch/useLiveStatistics
+ *
+ * @example
+ * import { useLiveStatistics, GameState } from '@azuro-org/sdk'
+ *
+ * const { data: statistics, isFetching, isAvailable } = useLiveStatistics({
+ *   gameId: '123456789',
+ *   sportId: 33,
+ *   gameState: GameState.Live
+ * })
+ * */
 export const useLiveStatistics = ({ gameId, sportId, gameState, enabled = true }: UseLiveStatisticsProps) => {
   const [ statistics, setStatistics ] = useState<LiveStatistics | null>()
   const { subscribeToUpdates, unsubscribeToUpdates, isSocketReady } = useLiveStatisticsSocket()

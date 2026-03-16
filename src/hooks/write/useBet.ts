@@ -1,40 +1,46 @@
 import {
-  useReadContract, useWriteContract,
-  useWaitForTransactionReceipt, useWalletClient, useConfig,
-} from 'wagmi'
-import { waitForTransactionReceipt } from 'wagmi/actions'
-import {
-  parseUnits, maxUint256, encodeFunctionData,
-  type Address, erc20Abi, type TransactionReceipt, type Hex,
-} from 'viem'
-import { useMemo, useReducer } from 'react'
-import {
-  type Selection,
-  type BetClientData,
-  type CreateBetResponse,
-  type Freebet,
-  type ChainId,
-
-  ODDS_DECIMALS,
-  BetState,
-  calcMindOdds,
-  getBetTypedData,
-  getComboBetTypedData,
-  createBet,
-  createComboBet,
-  getBet,
+  type BetClientData, BetOrderState, calcMinOdds, type ChainId, createBet, type CreateBetResult, createComboBet,
+  type Freebet, getBet, getBetTypedData, getComboBetTypedData, ODDS_DECIMALS, type Selection,
 } from '@azuro-org/toolkit'
 import { useQueryClient } from '@tanstack/react-query'
-
-import { useOptionalChain } from '../../contexts/chain'
+import { useMemo, useReducer } from 'react'
+import {
+  type Address, encodeFunctionData, erc20Abi, type Hex, maxUint256, parseUnits, type TransactionReceipt,
+} from 'viem'
+import { useConfig, useReadContract, useWaitForTransactionReceipt, useWalletClient, useWriteContract } from 'wagmi'
+import { waitForTransactionReceipt } from 'wagmi/actions'
 import { DEFAULT_DEADLINE } from '../../config'
+import { useOptionalChain } from '../../contexts/chain'
+
+import { BetType } from '../../global'
 import { formatToFixed } from '../../helpers/formatToFixed'
-import { useBetsCache, type NewBetProps } from '../useBetsCache'
 import { useBetFee } from '../data/useBetFee'
 import { useAAWalletClient, useExtendedAccount } from '../useAaConnector'
 import { useBetTokenBalance } from '../useBetTokenBalance'
 import { useNativeBalance } from '../useNativeBalance'
 
+
+export class BetOrderError extends Error {
+  orderId: string
+  orderState: BetOrderState
+  errorCode: string | undefined | null
+
+  constructor(
+    errorMessage: string,
+    args: {
+      cause?: Error
+      orderState: BetOrderState
+      orderId: string
+      errorCode?: string | null
+    }
+  ) {
+    super(errorMessage || args.errorCode || args.orderState, args?.cause ? { cause: args.cause } : undefined)
+
+    this.orderId = args.orderId
+    this.orderState = args.orderState
+    this.errorCode = args.errorCode
+  }
+}
 
 type UseBetProps = {
   // betAmount: string | Record<string, string>
@@ -48,13 +54,16 @@ type UseBetProps = {
   freebet?: Pick<Freebet, 'id' | 'params'>
   EIP712Attention?: string
   deadline?: number
+  onBetOrderCreated?(order: CreateBetResult): void
   onSuccess?(receipt?: TransactionReceipt): void
   onError?(err?: Error): void
 }
 
 type BetTxState = {
-  isPending: boolean
+  isPendingTransaction: boolean
   data: Hex | undefined
+  orderId: string | undefined
+  isPendingOrderPlacing: boolean
 }
 
 const simpleObjReducer = (state: BetTxState, newState: Partial<BetTxState>) => ({
@@ -62,10 +71,33 @@ const simpleObjReducer = (state: BetTxState, newState: Partial<BetTxState>) => (
   ...newState,
 })
 
+/**
+ * Place a bet on outcomes (single or combo bet).
+ * Handles token approval, EIP-712 signature, and transaction submission through the Azuro relayer.
+ *
+ * Supports both regular wallets and Account Abstraction (AA) wallets.
+ * For AA wallets, approval is handled automatically within the bet transaction.
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/write/useBet
+ *
+ * @example
+ * import { useBet } from '@azuro-org/sdk'
+ *
+ * const { submit, approveTx, betTx, isApproveRequired } = useBet({
+ *   betAmount: '10',
+ *   slippage: 5,
+ *   affiliate: '0x...',
+ *   selections: [{ conditionId: '123', outcomeId: '1' }],
+ *   odds: { '123-1': 1.5 },
+ *   totalOdds: 1.5,
+ *   onBetOrderCreated: (order) => console.log('Bet order created!', order),
+ *   onSuccess: (receipt) => console.log('Bet placed to blockchain!', receipt),
+ * })
+ * */
 export const useBet = (props: UseBetProps) => {
   const {
     betAmount, slippage, deadline, affiliate, selections, odds,
-    totalOdds, chainId, freebet, EIP712Attention, onSuccess, onError,
+    totalOdds, chainId, freebet, EIP712Attention, onSuccess, onError, onBetOrderCreated,
   } = props
 
   const isCombo = selections.length > 1
@@ -76,7 +108,7 @@ export const useBet = (props: UseBetProps) => {
   const isAAWallet = Boolean(account.isAAWallet)
   const aaClient = useAAWalletClient()
 
-  const { chain: appChain, contracts, betToken } = useOptionalChain(chainId)
+  const { chain: appChain, contracts, betToken, graphql } = useOptionalChain(chainId)
   const queryClient = useQueryClient()
   const wagmiConfig = useConfig()
   const walletClient = useWalletClient()
@@ -85,11 +117,10 @@ export const useBet = (props: UseBetProps) => {
     isFetching: isRelayerFeeFetching,
   } = useBetFee()
   const { relayerFeeAmount: rawRelayerFeeAmount, formattedRelayerFeeAmount: relayerFeeAmount } = betFeeData || {}
-  const { addBet } = useBetsCache(appChain.id)
   const { refetch: refetchBetTokenBalance } = useBetTokenBalance()
   const { refetch: refetchNativeBalance } = useNativeBalance()
 
-  const [ betTx, setBetTx ] = useReducer(simpleObjReducer, { data: undefined, isPending: false })
+  const [ betTx, setBetTx ] = useReducer(simpleObjReducer, { data: undefined, isPendingOrderPlacing: false, isPendingTransaction: false, orderId: undefined })
 
   const approveAddress = contracts.relayer.address
 
@@ -167,13 +198,13 @@ export const useBet = (props: UseBetProps) => {
       return
     }
 
-    let bets: NewBetProps['bet'][] = []
-
     let txHash: Hex
 
     setBetTx({
       data: undefined,
-      isPending: true,
+      orderId: undefined,
+      isPendingOrderPlacing: true,
+      isPendingTransaction: false,
     })
 
     try {
@@ -184,7 +215,7 @@ export const useBet = (props: UseBetProps) => {
       const fixedAmount = formatToFixed(betAmount, betToken.decimals)
       const rawAmount = parseUnits(fixedAmount, betToken.decimals)
       const expiresAt = Math.floor(Date.now() / 1000) + (deadline || DEFAULT_DEADLINE)
-      const fixedMinOdds = calcMindOdds({ odds: totalOdds, slippage })
+      const fixedMinOdds = calcMinOdds({ odds: totalOdds, slippage })
       const rawMinOdds = parseUnits(fixedMinOdds, ODDS_DECIMALS)
       const { conditionId, outcomeId } = selections[0]!
 
@@ -208,15 +239,8 @@ export const useBet = (props: UseBetProps) => {
         })
       }
 
-      bets.push({
-        rawAmount,
-        selections,
-        freebetId: freebet?.id,
-        isFreebetAmountReturnable: freebet?.params?.isSponsoredBetReturnable,
-      })
-
       const clientData: BetClientData = {
-        attention: EIP712Attention || 'By signing this transaction, I agree to place a bet for a live event on \'Azuro SDK Example',
+        attention: EIP712Attention || 'By signing this transaction, I agree to place a bet for an event on Azuro Protocol',
         affiliate,
         core: contracts.core.address,
         expiresAt,
@@ -227,7 +251,7 @@ export const useBet = (props: UseBetProps) => {
         isSponsoredBetReturnable: freebet?.params?.isSponsoredBetReturnable || false,
       }
 
-      let createdOrder: CreateBetResponse | null
+      let createdOrder: CreateBetResult | null
 
       if (isCombo) {
         const betData = {
@@ -283,9 +307,29 @@ export const useBet = (props: UseBetProps) => {
         id: orderId,
         state: newOrderState,
         errorMessage,
+        error: errorCode,
       } = createdOrder!
 
-      if (newOrderState === BetState.Created) {
+      const accountLowerCased = account?.address?.toLowerCase()
+
+      if (newOrderState === BetOrderState.Created) {
+        setBetTx({
+          orderId,
+          isPendingOrderPlacing: false,
+          isPendingTransaction: true,
+        })
+
+        queryClient.invalidateQueries({
+          predicate: ({ queryKey }) => (
+            queryKey[0] === 'bets' &&
+            queryKey[1] === appChain.id &&
+            queryKey[2] === accountLowerCased &&
+            (!queryKey[3] || queryKey[3] === BetType.Accepted || queryKey[3] === BetType.Pending)
+          )
+        })
+
+        onBetOrderCreated?.(createdOrder)
+
         txHash = await new Promise<Hex>((res, rej) => {
           const interval = setInterval(async () => {
             const order = await getBet({
@@ -293,11 +337,15 @@ export const useBet = (props: UseBetProps) => {
               orderId,
             })
 
-            const { state, txHash, errorMessage } = order!
+            const { state, txHash, errorMessage, error } = order!
 
-            if (state === BetState.Rejected || state === BetState.Canceled) {
+            if (state === BetOrderState.Rejected || state === BetOrderState.Canceled) {
               clearInterval(interval)
-              rej(errorMessage || state)
+              rej(new BetOrderError(errorMessage || state, {
+                orderId,
+                orderState: state,
+                errorCode: error,
+              }))
             }
 
             if (txHash) {
@@ -309,11 +357,17 @@ export const useBet = (props: UseBetProps) => {
 
         setBetTx({
           data: txHash,
-          isPending: false,
+          orderId,
+          isPendingOrderPlacing: false,
+          isPendingTransaction: false,
         })
       }
       else {
-        throw Error(errorMessage || newOrderState)
+        throw new BetOrderError(errorMessage || 'An error occured during placing a bet', {
+          orderId,
+          orderState: newOrderState,
+          errorCode,
+        })
       }
 
 
@@ -323,11 +377,11 @@ export const useBet = (props: UseBetProps) => {
       })
 
       if (receipt?.status === 'reverted') {
-        setBetTx({
-          data: undefined,
-          isPending: false,
+        throw new BetOrderError(`transaction ${receipt.transactionHash} was reverted`, {
+          orderId,
+          orderState: newOrderState,
+          errorCode: receipt?.status,
         })
-        throw new Error(`transaction ${receipt.transactionHash} was reverted`)
       }
 
       refetchBetTokenBalance()
@@ -336,27 +390,34 @@ export const useBet = (props: UseBetProps) => {
 
       if (isFreeBet) {
         queryClient.invalidateQueries({
-          queryKey: [ 'available-freebets', appChain.id, account?.address?.toLowerCase(), affiliate?.toLowerCase(), selections.map(({ conditionId, outcomeId }) => `${conditionId}/${outcomeId}`).join('-') ],
+          queryKey: [ 'available-freebets', appChain.id, accountLowerCased, affiliate?.toLowerCase() ],
         })
-        queryClient.invalidateQueries({ queryKey: [ 'bonuses', appChain.id, account?.address?.toLowerCase(), affiliate?.toLowerCase() ] })
+        queryClient.invalidateQueries({
+          queryKey: [ 'bonuses', appChain.id, accountLowerCased, affiliate?.toLowerCase() ],
+        })
       }
 
-      if (receipt) {
-        bets.forEach((bet) => {
-          addBet({
-            receipt,
-            affiliate,
-            odds,
-            bet,
-          })
-        })
-      }
+      queryClient.invalidateQueries({
+        predicate: ({ queryKey }) => (
+          queryKey[0] === 'bets' &&
+          queryKey[1] === appChain.id &&
+          queryKey[2] === accountLowerCased &&
+          (!queryKey[3] || queryKey[3] === BetType.Accepted || queryKey[3] === BetType.Pending)
+        )
+      })
+
+      queryClient.invalidateQueries({
+        queryKey: [ 'bets-summary', graphql.bets, accountLowerCased ],
+      })
 
       onSuccess?.(receipt)
     }
     catch (err) {
       setBetTx({
-        isPending: false,
+        data: undefined,
+        orderId: undefined,
+        isPendingTransaction: false,
+        isPendingOrderPlacing: false,
       })
 
       onError?.(err as any)
@@ -379,8 +440,10 @@ export const useBet = (props: UseBetProps) => {
     },
     betTx: {
       data: betTx.data,
+      orderId: betTx.orderId,
       receipt: betReceipt.data,
-      isPending: betTx.isPending,
+      isPending: betTx.isPendingOrderPlacing || betTx.isPendingTransaction,
+      isSubmittingOrder: betTx.isPendingOrderPlacing,
       isProcessing: betReceipt.isLoading,
     },
     relayerFeeAmount,

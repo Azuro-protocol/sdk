@@ -27,6 +27,23 @@ export type UseBetsSummaryBySelectionProps = {
 
 export type UseBetsSummaryBySelection = (props: UseBetsSummaryBySelectionProps) => UseQueryResult<Record<string, string>>
 
+/**
+ * Get a betting summary by selection (outcome) for a specific game.
+ * Returns a map of outcomeId to profit/loss amount. Only enabled for finished games.
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/data-hooks/useBetsSummaryBySelection
+ *
+ * @example
+ * import { useBetsSummaryBySelection, GameState } from '@azuro-org/sdk'
+ *
+ * const { data, isFetching } = useBetsSummaryBySelection({
+ *   account: '0x...',
+ *   gameId: '123',
+ *   gameState: GameState.Finished
+ * })
+ * // data: { '1': '100.5', '2': '-50.25' } - outcomeId -> profit/loss
+ * */
+
 const DIVIDER = 18
 const RAW_ONE = parseUnits('1', ODDS_DECIMALS)
 

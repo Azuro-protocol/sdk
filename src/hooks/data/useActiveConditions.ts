@@ -1,46 +1,58 @@
-import { type ChainId, type Condition_Filter, type ConditionsQuery, ConditionState } from '@azuro-org/toolkit'
-import { useMemo } from 'react'
+import {
+  type ChainId,
+  type ConditionDetailedData,
+} from '@azuro-org/toolkit'
 import { type UseQueryResult } from '@tanstack/react-query'
 
-import { useConditions } from './useConditions'
-import { type QueryParameter } from '../../global'
+import { useConditions, type UseConditionsProps } from './useConditions'
 
 
 export type UseActiveConditionsProps = {
-  gameId: string | bigint
-  filter?: {
-    outcomeIds?: string[]
-    maxMargin?: number | string
-  }
+  gameId: UseConditionsProps['gameId']
+  // filter?: {
+  //   outcomeIds?: string[]
+  // }
   chainId?: ChainId
-  query?: QueryParameter<ConditionsQuery['conditions']>
+  query?: UseConditionsProps['query']
 }
 
-export type UseActiveConditions = (props: UseActiveConditionsProps) => UseQueryResult<ConditionsQuery['conditions']>
+export type UseActiveConditions = typeof useActiveConditions
 
-export const useActiveConditions: UseActiveConditions = (props) => {
-  const { gameId, filter = {}, chainId, query = {} } = props
+/**
+ * Fetch all active conditions for a game. Wraps `useConditions` hook.
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/data-hooks/useActiveConditions
+ *
+ * @example
+ * import { useActiveConditions } from '@azuro-org/sdk'
+ *
+ * // gameData from useGames() or useGame()
+ * const gameId = gameData.gameId
+ * const { data, isFetching } = useActiveConditions({ gameId })
+ * */
+export const useActiveConditions = (props: UseActiveConditionsProps): UseQueryResult<ConditionDetailedData[]> => {
+  const { gameId, chainId, query = {} } = props
 
-  const conditionsFilter = useMemo<Condition_Filter>(() => {
-    const _filter: Condition_Filter = {
-      state_in: [ ConditionState.Active, ConditionState.Stopped ],
-    }
-
-    if (filter.outcomeIds) {
-      _filter.outcomesIds_contains = filter.outcomeIds
-    }
-
-    if (filter.maxMargin) {
-      _filter.margin_lte = String(filter.maxMargin)
-    }
-
-    return _filter
-  }, [ filter.outcomeIds, filter.maxMargin ])
+  // const conditionsFilter = useMemo(() => {
+  //   const _filter: UseConditionsProps['filter'] = {
+  //     states: [ ConditionState.Active, ConditionState.Stopped ],
+  //   }
+  //
+  //   if (filter.outcomeIds) {
+  //     _filter.outcomeIds = filter.outcomeIds
+  //   }
+  //
+  //   if (filter.maxMargin) {
+  //     _filter.maxMargin = filter.maxMargin
+  //   }
+  //
+  //   return _filter
+  // }, [ filter.outcomeIds, filter.maxMargin ])
 
   return useConditions({
     gameId,
-    filter: conditionsFilter,
     chainId,
+    onlyActiveOrStopped: true,
     query,
   })
 }

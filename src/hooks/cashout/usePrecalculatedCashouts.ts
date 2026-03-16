@@ -31,6 +31,23 @@ const defaultData = {
   cashoutAmount: undefined,
 }
 
+/**
+ * Get precalculated cashout data for a bet including availability and cashout amount.
+ * Automatically refetches every 60 seconds to keep data up to date.
+ *
+ * Only works for accepted bets without freebet and from the same provider.
+ * Calculates cashout amount based on current odds and margin.
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/cashout/usePrecalculatedCashouts
+ *
+ * @example
+ * import { usePrecalculatedCashouts } from '@azuro-org/sdk'
+ *
+ * const { data, isFetching } = usePrecalculatedCashouts({
+ *   bet: { tokenId: '123', amount: '100', outcomes: [...], status: 'Accepted', totalOdds: 2.5, freebetId: null },
+ * })
+ * const { isAvailable, cashoutAmount } = data || {}
+ * */
 export const usePrecalculatedCashouts: UsePrecalculatedCashouts = ({ bet, chainId, query = {} }) => {
   const { tokenId, amount, outcomes, status, totalOdds } = bet
 

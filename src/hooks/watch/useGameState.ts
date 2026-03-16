@@ -10,6 +10,22 @@ export type UseGameStateProps = {
   initialState: GameState
 }
 
+/**
+ * Watch real-time game state updates (e.g., Prematch, Live, Finished).
+ * Subscribes to game updates via websocket and tracks state changes.
+ *
+ * Automatically skips subscription if the game is already finished.
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/watch/useGameState
+ *
+ * @example
+ * import { useGameState, GameState } from '@azuro-org/sdk'
+ *
+ * const { data: state } = useGameState({
+ *   gameId: game.gameId,
+ *   initialState: GameState.Prematch
+ * })
+ * */
 export const useGameState = ({ gameId, initialState }: UseGameStateProps) => {
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useGameUpdates()
 

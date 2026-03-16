@@ -1,33 +1,26 @@
 import {
-  type ConditionState,
-  type ConditionsBatchQuery,
-  type ConditionsBatchQueryVariables,
-  ConditionsBatchDocument,
+  getConditionsState,
+  type ConditionStateData,
+  type ChainId,
 } from '@azuro-org/toolkit'
 
 import { createBatch } from './createBatch'
-import { gqlRequest } from './gqlRequest'
 
 
-type Result = Record<string, Omit<ConditionsBatchQuery['conditions'][0], 'outcomes'> & {
-  outcomes: Record<string, ConditionsBatchQuery['conditions'][0]['outcomes'][0]>
+type Result = Record<string, Omit<ConditionStateData, 'outcomes'> & {
+  outcomes: Record<string, ConditionStateData['outcomes'][0]>
 }>
 
-const getConditions = async (conditionEntityIds: string[], gqlLink: string) => {
-  const { conditions } = await gqlRequest<ConditionsBatchQuery, ConditionsBatchQueryVariables>({
-    url: gqlLink,
-    document: ConditionsBatchDocument,
-    variables: {
-      conditionFilter: {
-        id_in: conditionEntityIds,
-      },
-    },
+const getConditions = async (conditionEntityIds: string[], chainId: ChainId) => {
+  const conditions = await getConditionsState({
+    chainId,
+    conditionIds: conditionEntityIds,
   })
 
   return conditions.reduce<Result>((acc, condition) => {
     const { conditionId, outcomes: _outcomes } = condition
 
-    const outcomes = _outcomes.reduce<Record<string, ConditionsBatchQuery['conditions'][0]['outcomes'][0]>>((acc, outcome) => {
+    const outcomes = _outcomes.reduce<Record<string, ConditionStateData['outcomes'][0]>>((acc, outcome) => {
       acc[outcome.outcomeId] = outcome
 
       return acc

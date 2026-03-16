@@ -1,54 +1,65 @@
 import {
-  type SportsQuery,
-  type SportsQueryVariables,
   type ChainId,
-
   GameState,
-  Game_OrderBy,
   OrderDirection,
-  SportsDocument,
+  GameOrderBy,
+  getSports,
+  type SportData,
 } from '@azuro-org/toolkit'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { useCallback } from 'react'
 
 import { useOptionalChain } from '../../contexts/chain'
-import { type SportHub, type QueryParameter } from '../../global'
-import { gqlRequest } from '../../helpers/gqlRequest'
+import { type QueryParameter } from '../../global'
 
 
 export type UseSportsProps = {
   filter?: {
     limit?: number
-    sportHub?: SportHub
     sportSlug?: string
     countrySlug?: string
     leagueSlug?: string
     sportIds?: Array<string | number>
   }
-  gameOrderBy?: Game_OrderBy.Turnover | Game_OrderBy.StartsAt
+  gameOrderBy?: GameOrderBy
   orderDir?: OrderDirection
   isLive?: boolean
   chainId?: ChainId
-  query?: QueryParameter<SportsQuery['sports']>
+  query?: QueryParameter<SportData[]>
 }
 
-export type UseSports = (props?: UseSportsProps) => UseQueryResult<SportsQuery['sports']>
+export type UseSports = (props?: UseSportsProps) => UseQueryResult<SportData[]>
 
+/**
+ * Fetches sports data with nested country and league information.
+ * Automatically filters out empty sports/countries/leagues (those without games).
+ *
+ * Use `isLive` prop to switch between live and prematch sports.
+ * Supports custom sorting by turnover or game start time.
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/data-hooks/useSports
+ *
+ * @example
+ * import { useSports } from '@azuro-org/sdk'
+ *
+ * const { data: sports, isLoading } = useSports({
+ *   filter: { sportHub: 'sports' },
+ *   isLive: false
+ * })
+ * */
 export const useSports: UseSports = (props = {}) => {
   const {
     filter = {},
-    gameOrderBy = Game_OrderBy.StartsAt,
+    gameOrderBy = GameOrderBy.StartsAt,
     orderDir = OrderDirection.Asc,
     isLive,
     chainId,
     query = {},
   } = props
 
-  const { graphql } = useOptionalChain(chainId)
+  const { chain } = useOptionalChain(chainId)
 
-  const gqlLink = graphql.feed
-
-  const formatData = useCallback((data: SportsQuery['sports']) => {
+  const formatData = useCallback((data: SportData[]) => {
     const filteredSports = data.map(sport => {
       const { countries } = sport
 
@@ -65,11 +76,11 @@ export const useSports: UseSports = (props = {}) => {
       }
     }).filter(sport => sport.countries.length)
 
-    if (gameOrderBy === Game_OrderBy.Turnover) {
+    if (gameOrderBy === GameOrderBy.Turnover) {
       return filteredSports.sort((a, b) => +b.turnover - +a.turnover)
     }
 
-    if (gameOrderBy === Game_OrderBy.StartsAt) {
+    if (gameOrderBy === GameOrderBy.StartsAt) {
       return filteredSports.map(sport => {
         const { countries } = sport
 
@@ -96,69 +107,28 @@ export const useSports: UseSports = (props = {}) => {
     queryKey: [
       'sports',
       isLive,
-      gqlLink,
+      chain.id,
       gameOrderBy,
       orderDir,
       filter.limit,
-      filter.sportHub,
+      // filter.sportHub,
       filter.sportSlug,
       filter.countrySlug,
       filter.leagueSlug,
       filter.sportIds?.join('-'),
     ],
     queryFn: async () => {
-      const variables: SportsQueryVariables = {
-        first: filter.limit ?? 1000,
-        sportFilter: {},
-        countryFilter: {},
-        leagueFilter: {},
-        gameFilter: {
-          state: isLive ? GameState.Live : GameState.Prematch,
-        },
-        gameOrderBy,
-        gameOrderDirection: orderDir,
-      }
-
-      if (isLive) {
-        variables.sportFilter!.activeLiveGamesCount_not = 0
-        variables.countryFilter!.activeLiveGamesCount_not = 0
-        variables.leagueFilter!.activeLiveGamesCount_not = 0
-        variables.gameFilter!.activeAndStoppedConditionsCount_not = 0
-      }
-      else {
-        variables.sportFilter!.activePrematchGamesCount_not = 0
-        variables.countryFilter!.activePrematchGamesCount_not = 0
-        variables.leagueFilter!.activePrematchGamesCount_not = 0
-        variables.gameFilter!.activeConditionsCount_not = 0
-      }
-
-      if (filter.sportSlug) {
-        variables.sportFilter!.slug = filter.sportSlug
-      }
-
-      if (filter.sportHub) {
-        variables.sportFilter!.sporthub = filter.sportHub
-      }
-
-      if (filter.sportIds?.length) {
-        variables.sportFilter!.sportId_in = filter.sportIds
-      }
-
-      if (filter.countrySlug) {
-        variables.countryFilter!.slug = filter.countrySlug
-      }
-
-      if (filter.leagueSlug) {
-        variables.leagueFilter!.slug = filter.leagueSlug
-      }
-
-      const { sports } = await gqlRequest<SportsQuery, SportsQueryVariables>({
-        url: gqlLink,
-        document: SportsDocument,
-        variables,
+      return getSports({
+        chainId: chain.id,
+        gameState: isLive ? GameState.Live : GameState.Prematch,
+        sportIds: filter.sportIds,
+        sportSlug: filter.sportSlug,
+        // sportHub: filter.sportHub,
+        countrySlug: filter.countrySlug,
+        leagueSlug: filter.leagueSlug,
+        orderBy: gameOrderBy,
+        orderDir,
       })
-
-      return sports
     },
     select: formatData,
     refetchOnWindowFocus: false,

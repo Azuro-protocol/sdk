@@ -1,27 +1,14 @@
-import {
-  type LegacyBetsQueryVariables,
-  type LegacyBetsQuery,
-  type LegacyLiveGamesQueryVariables,
-  type LegacyLiveGamesQuery,
-  type ChainId,
-
-  OrderDirection,
-  Legacy_Bet_OrderBy,
-  GraphBetStatus,
-  LegacyBetsDocument,
-  BetResult,
-  SelectionResult,
-  BetConditionStatus,
-  GameState,
-  LegacyGameStatus,
-  LegacyLiveGamesDocument,
-} from '@azuro-org/toolkit'
-import { type Hex, type Address } from 'viem'
-import { type InfiniteData, useInfiniteQuery, type UseInfiniteQueryResult } from '@tanstack/react-query'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
+import {
+  BetConditionStatus, BetOrderState, BetResult, type ChainId, GameState, GraphBetStatus, Legacy_Bet_OrderBy,
+  LegacyBetsDocument, type LegacyBetsQuery, type LegacyBetsQueryVariables, LegacyGameStatus, LegacyLiveGamesDocument,
+  type LegacyLiveGamesQuery, type LegacyLiveGamesQueryVariables, OrderDirection, SelectionResult,
+} from '@azuro-org/toolkit'
+import { type InfiniteData, useInfiniteQuery, type UseInfiniteQueryResult } from '@tanstack/react-query'
+import { type Address, type Hex } from 'viem'
 
 import { useOptionalChain } from '../../contexts/chain'
-import { BetType, type Bet, type BetOutcome, type InfiniteQueryParameters } from '../../global'
+import { type Bet, type BetOutcome, BetType, type InfiniteQueryParameters, SportHub } from '../../global'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
 
@@ -45,6 +32,22 @@ export type UseLegacyBetsProps = {
 
 export type UseLegacyBets = (props: UseLegacyBetsProps) => UseInfiniteQueryResult<InfiniteData<UseLegacyBetsResult>>
 
+/**
+ * Fetches betting history from legacy Azuro contracts (v2) with infinite scroll pagination.
+ * Supports filtering by bet type (Unredeemed, Accepted, Settled, CashedOut).
+ *
+ * Use this hook for historical bets placed on legacy contracts. For current bets, use `useBets` instead.
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/data-hooks/useLegacyBets
+ *
+ * @example
+ * import { useLegacyBets } from '@azuro-org/sdk'
+ *
+ * const { data, isFetching, hasNextPage, fetchNextPage } = useLegacyBets({
+ *   filter: { bettor: '0x...' },
+ * })
+ * const allBets = data?.pages.flatMap(page => page.bets) || []
+ * */
 export const useLegacyBets: UseLegacyBets = (props) => {
   const {
     filter,
@@ -55,14 +58,14 @@ export const useLegacyBets: UseLegacyBets = (props) => {
     query,
   } = props
 
-  const { graphql } = useOptionalChain(chainId)
+  const { graphql, chain } = useOptionalChain(chainId)
 
   const gqlLink = graphql.bets
 
   return useInfiniteQuery({
     queryKey: [
       'legacy-bets',
-      gqlLink,
+      chain.id,
       filter.bettor,
       filter.type,
       filter.affiliate,
@@ -71,6 +74,13 @@ export const useLegacyBets: UseLegacyBets = (props) => {
       orderDir,
     ],
     queryFn: async ({ pageParam }) => {
+      if (filter.type === BetType.Pending) {
+        return {
+          bets: [],
+          nextPage: undefined,
+        }
+      }
+
       const variables: LegacyBetsQueryVariables = {
         first: itemsPerPage,
         skip: itemsPerPage * (pageParam - 1),
@@ -233,10 +243,17 @@ export const useLegacyBets: UseLegacyBets = (props) => {
               state: GameState.Finished,
               sport: {
                 ...game.sport,
+                sporthub: {
+                  ...game.sport.sporthub,
+                  slug: game.sport.sporthub.slug as SportHub,
+                }
               },
               league: game.league,
               country: game.league.country,
-              participants: game.participants,
+              participants: game.participants.map((participant) => ({
+                name: participant.name,
+                image: participant.image,
+              })),
               turnover: '0',
             },
             isWin,
@@ -247,10 +264,24 @@ export const useLegacyBets: UseLegacyBets = (props) => {
         })
           .sort((a, b) => +a.game.startsAt - +b.game.startsAt)
 
+        const mapStatusToState = (status: GraphBetStatus): BetOrderState => {
+          switch (status) {
+            case GraphBetStatus.Canceled:
+              return BetOrderState.Canceled
+            case GraphBetStatus.Accepted:
+              return BetOrderState.Accepted
+            case GraphBetStatus.Resolved:
+              return BetOrderState.Settled
+          }
+        }
+
         const bet: Bet = {
+          orderId: `${actor.toLowerCase()}_${tokenId}`,
           actor: actor as Address,
           affiliate: affiliate as Address,
           tokenId,
+          orderState: mapStatusToState(status),
+          redeemedAt: null,
           isFreebetAmountReturnable: true,
           paymaster: null,
           freebetId,
@@ -264,6 +295,8 @@ export const useLegacyBets: UseLegacyBets = (props) => {
           createdAt: +createdAt,
           resolvedAt: resolvedAt ? +resolvedAt : null,
           cashout,
+          isRejected: false,
+          rejectedErrorCode: null,
           isWin,
           isLose,
           isRedeemable,
@@ -287,6 +320,7 @@ export const useLegacyBets: UseLegacyBets = (props) => {
     getNextPageParam: lastPage => lastPage.nextPage ?? undefined,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 60,
     ...(query || {}),
   })
 }

@@ -27,6 +27,18 @@ export type UseBetsSummaryProps = {
 
 export type UseBetsSummary = (props: UseBetsSummaryProps) => UseQueryResult<UseBetsSummaryResult>
 
+/**
+ * Get betting summary statistics for a given account.
+ * Returns total amounts in bets, payouts, profits, and counts of won/lost bets.
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/data-hooks/useBetsSummary
+ *
+ * @example
+ * import { useBetsSummary } from '@azuro-org/sdk'
+ *
+ * const { data, isFetching } = useBetsSummary({ account: '0x...' })
+ * const { toPayout, inBets, totalPayout, totalProfit, betsCount, wonBetsCount, lostBetsCount } = data || {}
+ * */
 export const useBetsSummary: UseBetsSummary = (props) => {
   const { account, affiliates, chainId, query = {} } = props
 
@@ -92,7 +104,7 @@ export const useBetsSummary: UseBetsSummary = (props) => {
     queryKey: [
       'bets-summary',
       gqlLink,
-      account,
+      account?.toLowerCase(),
       affiliates?.join('-'),
     ],
     queryFn: async () => {
@@ -116,6 +128,7 @@ export const useBetsSummary: UseBetsSummary = (props) => {
     },
     select: formatData,
     refetchOnWindowFocus: false,
+    staleTime: 5000,
     ...query,
   })
 }

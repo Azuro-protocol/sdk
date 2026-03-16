@@ -13,7 +13,7 @@ import { useOdds } from '../hooks/watch/useOdds'
 import { useConditionsState } from '../hooks/watch/useConditionsState'
 import { useAvailableFreebets } from '../hooks/bonus/useAvailableFreebets'
 import useForceUpdate from '../hooks/helpers/useForceUpdate'
-import { useMaxBet } from '../hooks/data/useMaxBet'
+import { useBetCalculation } from '../hooks/data/useBetCalculation'
 import { useExtendedAccount } from '../hooks/useAaConnector'
 
 
@@ -63,7 +63,9 @@ export type DetailedBetslipContextValue = {
   isStatesFetching: boolean
   isOddsFetching: boolean
   isFreebetsFetching: boolean
+  /** @deprecated use `isBetCalculationFetching` instead */
   isMaxBetFetching: boolean
+  isBetCalculationFetching: boolean
   isBetAllowed: boolean
 }
 
@@ -112,7 +114,10 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
   const { data: states, isFetching: isStatesFetching } = useConditionsState({
     conditionIds: items.map(({ conditionId }) => conditionId),
   })
-  const { data: maxBet, isFetching: isMaxBetFetching } = useMaxBet({ selections: items })
+  const { data: betCalcData, isFetching: isBetCalculationFetching } = useBetCalculation({
+    selections: items,
+    account: account?.address,
+  })
 
   const { odds, totalOdds } = oddsData
   const isCombo = items.length > 1
@@ -170,14 +175,14 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
 
   const isComboAllowed = useMemo(() => {
     return !isCombo || isComboWithDifferentGames && items.every(({ isExpressForbidden }) => !isExpressForbidden)
-  }, [ isCombo, items ])
+  }, [ isCombo, isComboWithDifferentGames, items ])
 
-  // const minBet = isLiveBet && !appChain?.testnet ? MIN_LIVE_BET_AMOUNT : undefined
-  const minBet = undefined // TODO
+  const minBet = betCalcData?.minBet
+  const maxBet = betCalcData?.maxBet
 
   const isMaxBetBiggerThanZero = typeof maxBet !== 'undefined' ? +maxBet > 0 : true
   const isAmountLowerThanMaxBet = Boolean(betAmount) && typeof maxBet !== 'undefined' ? +betAmount <= +maxBet : true
-  const isAmountBiggerThanMinBet = Boolean(betAmount) && typeof minBet !== 'undefined' ? +betAmount >= minBet : true
+  const isAmountBiggerThanMinBet = Boolean(betAmount) && typeof minBet !== 'undefined' ? +betAmount >= +minBet : true
   const isTotalOddsFits = totalOdds && typeof totalOdds === 'number' ? totalOdds > 1 : true
 
   const isBetAllowed = (
@@ -404,7 +409,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     odds,
     totalOdds,
     maxBet: +(maxBet || 0),
-    minBet,
+    minBet: +(minBet || 0),
     selectedFreebet,
     freebets,
     states,
@@ -417,7 +422,8 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     isStatesFetching,
     isOddsFetching,
     isFreebetsFetching,
-    isMaxBetFetching,
+    isMaxBetFetching: isBetCalculationFetching,
+    isBetCalculationFetching,
     isBetAllowed,
   }), [
     totalBetAmount,
@@ -438,8 +444,8 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     isStatesFetching,
     isOddsFetching,
     isFreebetsFetching,
-    isMaxBetFetching,
-    isBetAllowed,
+    isBetCalculationFetching,
+    isBetAllowed
   ])
 
   return (
