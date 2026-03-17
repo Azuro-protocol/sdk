@@ -15,14 +15,17 @@ import { type QueryParameter } from '../../global'
 
 export type UseSportsProps = {
   filter?: {
-    /** @deprecated pass `maxGamesPerLeague` instead */
-    limit?: number
-    /** default and minimum value in API is `10` */
-    maxGamesPerLeague?: number
     sportSlug?: string
     countrySlug?: string
     leagueSlug?: string
     sportIds?: Array<string | number>
+    /**
+     * default: 1000,
+     * minimum: 10
+     * */
+    maxGamesPerLeague?: number
+    /** @deprecated pass `maxGamesPerLeague` instead */
+    limit?: number
   }
   gameOrderBy?: GameOrderBy
   orderDir?: OrderDirection
@@ -61,7 +64,7 @@ export const useSports: UseSports = (props = {}) => {
   } = props
 
   const { chain } = useOptionalChain(chainId)
-  const maxGamesPerLeague = filter.maxGamesPerLeague ?? filter.limit
+  const maxGamesPerLeague = filter.maxGamesPerLeague ?? filter.limit ?? 1000
 
   const formatData = useCallback((data: SportData[]) => {
     const filteredSports = data.map(sport => {
