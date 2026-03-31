@@ -6,14 +6,15 @@ import {
   getSports,
   type SportData,
 } from '@azuro-org/toolkit'
-import { useQuery, type UseQueryResult } from '@tanstack/react-query'
-import { useCallback } from 'react'
+import { useQuery, queryOptions, type UseQueryResult } from '@tanstack/react-query'
 
 import { useOptionalChain } from '../../contexts/chain'
-import { type QueryParameter } from '../../global'
+import { type QueryParameterWithSelect } from '../../global'
 
 
-export type UseSportsProps = {
+export type UseSportsQueryFnData = SportData[]
+
+export type UseSportsProps<TData = UseSportsQueryFnData> = {
   filter?: {
     sportSlug?: string
     countrySlug?: string
@@ -29,12 +30,106 @@ export type UseSportsProps = {
   }
   gameOrderBy?: GameOrderBy
   orderDir?: OrderDirection
+  /** if false or undefined, follows games sorting order */
+  sortLeaguesAndCountriesByName?: boolean
   isLive?: boolean
   chainId?: ChainId
-  query?: QueryParameter<SportData[]>
+  query?: QueryParameterWithSelect<UseSportsQueryFnData, TData>
 }
 
-export type UseSports = (props?: UseSportsProps) => UseQueryResult<SportData[]>
+export type GetUseSportsQueryOptionsProps<TData = UseSportsQueryFnData> = UseSportsProps<TData> & {
+  chainId: ChainId
+}
+
+export type UseSports<TData = UseSportsQueryFnData> = (props?: UseSportsProps<TData>) => UseQueryResult<TData>
+
+export const getUseSportsQueryOptions = <TData = UseSportsQueryFnData>(params: GetUseSportsQueryOptionsProps<TData>) => {
+  const {
+    filter = {},
+    gameOrderBy = GameOrderBy.StartsAt,
+    orderDir = OrderDirection.Asc,
+    sortLeaguesAndCountriesByName,
+    isLive,
+    chainId,
+    query,
+  } = params
+
+  const maxGamesPerLeague = filter.maxGamesPerLeague ?? filter.limit ?? 1000
+
+  return queryOptions({
+    queryKey: [
+      'sports',
+      isLive,
+      chainId,
+      gameOrderBy,
+      orderDir,
+      maxGamesPerLeague,
+      // filter.sportHub,
+      filter.sportSlug,
+      filter.countrySlug,
+      filter.leagueSlug,
+      filter.sportIds?.join('-'),
+      sortLeaguesAndCountriesByName,
+    ],
+    queryFn: async () => {
+      const data = await getSports({
+        chainId,
+        gameState: isLive ? GameState.Live : GameState.Prematch,
+        sportIds: filter.sportIds,
+        sportSlug: filter.sportSlug,
+        countrySlug: filter.countrySlug,
+        numberOfGames: maxGamesPerLeague,
+        leagueSlug: filter.leagueSlug,
+        orderBy: gameOrderBy,
+        orderDir,
+      })
+
+      const sports = data.map((sport) => {
+        const countries = sport.countries.map(country => {
+          const leagues = country.leagues.slice().sort((a, b) => {
+            const value = +a.games[0]!.startsAt - +b.games[0]!.startsAt
+
+            if (sortLeaguesAndCountriesByName || value === 0) {
+              return a.name.localeCompare(b.name)
+            }
+
+            return value
+          })
+
+          return {
+            ...country,
+            leagues,
+          }
+        })
+
+        return {
+          ...sport,
+          countries: countries.sort((a, b) => {
+            const value = +a.leagues[0]!.games[0]!.startsAt - +b.leagues[0]!.games[0]!.startsAt
+
+            if (sortLeaguesAndCountriesByName || value === 0) {
+              return a.name.localeCompare(b.name)
+            }
+
+            return value
+          }),
+        }
+      })
+
+      return sports.sort((a, b) => {
+        const value = +a.countries[0]!.leagues[0]!.games[0]!.startsAt - +b.countries[0]!.leagues[0]!.games[0]!.startsAt
+
+        if (value === 0) {
+          return a.name.localeCompare(b.name)
+        }
+
+        return value
+      })
+    },
+    refetchOnWindowFocus: false,
+    ...query,
+  })
+}
 
 /**
  * Fetches sports data with nested country and league information.
@@ -53,93 +148,8 @@ export type UseSports = (props?: UseSportsProps) => UseQueryResult<SportData[]>
  *   isLive: false
  * })
  * */
-export const useSports: UseSports = (props = {}) => {
-  const {
-    filter = {},
-    gameOrderBy = GameOrderBy.StartsAt,
-    orderDir = OrderDirection.Asc,
-    isLive,
-    chainId,
-    query = {},
-  } = props
+export const useSports = <TData = UseSportsQueryFnData>(props: UseSportsProps<TData> = {}) => {
+  const { chain } = useOptionalChain(props.chainId)
 
-  const { chain } = useOptionalChain(chainId)
-  const maxGamesPerLeague = filter.maxGamesPerLeague ?? filter.limit ?? 1000
-
-  const formatData = useCallback((data: SportData[]) => {
-    const filteredSports = data.map(sport => {
-      const { countries } = sport
-
-      const filteredCountries = countries.map((country) => {
-        return {
-          ...country,
-          leagues: country.leagues.filter((league) => league.games.length),
-        }
-      }).filter((country) => country.leagues.length)
-
-      return {
-        ...sport,
-        countries: filteredCountries,
-      }
-    }).filter(sport => sport.countries.length)
-
-    if (gameOrderBy === GameOrderBy.Turnover) {
-      return filteredSports.sort((a, b) => +b.turnover - +a.turnover)
-    }
-
-    if (gameOrderBy === GameOrderBy.StartsAt) {
-      return filteredSports.map(sport => {
-        const { countries } = sport
-
-        const sortedCountries = countries.map(country => {
-          const { leagues } = country
-
-          return {
-            ...country,
-            leagues: [ ...leagues ].sort((a, b) => +a.games[0]!.startsAt - +b.games[0]!.startsAt),
-          }
-        }).sort((a, b) => +a.leagues[0]!.games[0]!.startsAt - +b.leagues[0]!.games[0]!.startsAt)
-
-        return {
-          ...sport,
-          countries: sortedCountries,
-        }
-      }).sort((a, b) => +a.countries[0]!.leagues[0]!.games[0]!.startsAt - +b.countries[0]!.leagues[0]!.games[0]!.startsAt)
-    }
-
-    return filteredSports
-  }, [])
-
-  return useQuery({
-    queryKey: [
-      'sports',
-      isLive,
-      chain.id,
-      gameOrderBy,
-      orderDir,
-      maxGamesPerLeague,
-      // filter.sportHub,
-      filter.sportSlug,
-      filter.countrySlug,
-      filter.leagueSlug,
-      filter.sportIds?.join('-'),
-    ],
-    queryFn: async () => {
-      return getSports({
-        chainId: chain.id,
-        gameState: isLive ? GameState.Live : GameState.Prematch,
-        sportIds: filter.sportIds,
-        sportSlug: filter.sportSlug,
-        // sportHub: filter.sportHub,
-        countrySlug: filter.countrySlug,
-        numberOfGames: maxGamesPerLeague,
-        leagueSlug: filter.leagueSlug,
-        orderBy: gameOrderBy,
-        orderDir,
-      })
-    },
-    select: formatData,
-    refetchOnWindowFocus: false,
-    ...query,
-  })
+  return useQuery(getUseSportsQueryOptions({ ...props, chainId: chain.id }))
 }

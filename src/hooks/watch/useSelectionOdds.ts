@@ -51,7 +51,7 @@ export const useSelectionOdds = ({ selection, initialOdds }: UseSelectionOddsPro
 
   useEffect(() => {
     const unsubscribe = outcomeWatcher.subscribe(`${conditionId}-${outcomeId}`, (data) => {
-      setOdds( data.odds)
+      setOdds(data.odds)
     })
 
     return () => {

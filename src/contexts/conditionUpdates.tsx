@@ -21,32 +21,46 @@ enum Event {
 }
 
 export type ConditionData = {
-  id: string, // conditionId
-  gameId: string,
-  maxConditionPayout: string,
-  maxOutcomePayout: string,
-  isPrematchEnabled: boolean,
-  isLiveEnabled: boolean,
-  state: ConditionState,
+  // conditionId
+  id: string
+  gameId: string
+  maxConditionPotentialLoss: string
+  maxOutcomePotentialLoss: string
+  isPrematchEnabled: boolean
+  isLiveEnabled: boolean
+  isCashoutEnabled: boolean
+  state: ConditionState
   outcomes: {
-    outcomeId: number,
-    title: string | null,
+    outcomeId: number
+    title: string | null
     currentOdds: string
+    turnover: string
   }[]
 }
 
 export type SocketData = {
-  event: string
+  event: Event
   data: ConditionData
 }
 
 export type ConditionUpdatedData = {
   conditionId: string
-  state: ConditionState,
+  state: ConditionState
+  gameId: string
+  isLiveEnabled: boolean
+  isPrematchEnabled: boolean
+  isCashoutEnabled: boolean
+  outcomes: {
+    outcomeId: number
+    title: string | null
+    currentOdds: string
+    turnover: string
+  }[]
 }
 
 export type OutcomeUpdateData = {
   odds: number
+  turnover: string
 }
 
 const ConditionUpdatesContext = createContext<ConditionUpdatesContextValue | null>(null)
@@ -152,18 +166,24 @@ export const ConditionUpdatesProvider: React.FC<any> = ({ children }) => {
         return
       }
 
-      const { id: conditionId, outcomes, state } = data
+      const { id: conditionId, outcomes, state, isLiveEnabled, isPrematchEnabled, isCashoutEnabled, gameId } = data
 
       const eventData: ConditionUpdatedData = {
         conditionId: conditionId,
         state,
+        gameId,
+        isCashoutEnabled,
+        isLiveEnabled,
+        isPrematchEnabled,
+        outcomes,
       }
 
       conditionWatcher.dispatch(conditionId, eventData)
 
-      outcomes.forEach(({ outcomeId, currentOdds }) => {
+      outcomes.forEach(({ outcomeId, currentOdds, turnover }) => {
         outcomeWatcher.dispatch(`${conditionId}-${outcomeId}`, {
           odds: +currentOdds,
+          turnover,
         })
       })
     }

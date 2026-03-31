@@ -6,13 +6,14 @@ import {
   getGamesByFilters,
   type GetGamesByFiltersResult,
 } from '@azuro-org/toolkit'
-import { useQuery, type UseQueryResult } from '@tanstack/react-query'
+import { useQuery, queryOptions, type UseQueryResult } from '@tanstack/react-query'
 
 import { useOptionalChain } from '../../contexts/chain'
-import { type SportHub, type QueryParameter } from '../../global'
+import { type SportHub, type QueryParameterWithSelect } from '../../global'
 
+export type UseGamesQueryFnData = GetGamesByFiltersResult
 
-export type UseGamesProps = {
+export type UseGamesProps<TData = UseGamesQueryFnData> = {
   filter?: {
     sportHub?: SportHub
     sportSlug?: string
@@ -27,10 +28,57 @@ export type UseGamesProps = {
   orderDir?: OrderDirection
   isLive?: boolean
   chainId?: ChainId
-  query?: QueryParameter<GetGamesByFiltersResult>
+  query?: QueryParameterWithSelect<UseGamesQueryFnData, TData>
 }
 
-export type UseGames = (props?: UseGamesProps) => UseQueryResult<GetGamesByFiltersResult>
+export type GetUseGamesQueryOptionsProps<TData = UseGamesQueryFnData> = UseGamesProps<TData> & {
+  chainId: ChainId
+}
+
+export const getUseGamesQueryOptions = <TData = UseGamesQueryFnData>(params: GetUseGamesQueryOptionsProps<TData>) => {
+  const {
+    filter = {},
+    orderBy = GameOrderBy.StartsAt,
+    orderDir = OrderDirection.Desc,
+    isLive,
+    chainId,
+    perPage,
+    page,
+    query,
+  } = params
+
+  return queryOptions({
+    queryKey: [
+      'games',
+      chainId,
+      isLive,
+      perPage,
+      page,
+      filter.sportHub,
+      filter.sportSlug,
+      filter.sportIds,
+      filter.leagueSlug,
+      orderBy,
+      orderDir,
+    ],
+    queryFn: async () => {
+      return getGamesByFilters({
+        chainId,
+        state: isLive ? GameState.Live : GameState.Prematch,
+        leagueSlug: filter.leagueSlug,
+        sportIds: filter.sportIds,
+        sportHub: filter.sportHub,
+        sportSlug: filter.sportSlug,
+        orderBy,
+        orderDir,
+        perPage,
+        page,
+      })
+    },
+    refetchOnWindowFocus: false,
+    ...query,
+  })
+}
 
 /**
  * Fetches a list of games with optional filtering and sorting.
@@ -51,49 +99,8 @@ export type UseGames = (props?: UseGamesProps) => UseQueryResult<GetGamesByFilte
  *
  * const { games, page, total, totalPages } = data || {}
  * */
-export const useGames: UseGames = (props = {}) => {
-  const {
-    filter = {},
-    orderBy = GameOrderBy.StartsAt,
-    orderDir = OrderDirection.Desc,
-    isLive,
-    chainId,
-    perPage,
-    page,
-    query = {},
-  } = props
+export const useGames = <TData = UseGamesQueryFnData>(props: UseGamesProps<TData> = {}): UseQueryResult<TData> => {
+  const { chain } = useOptionalChain(props.chainId)
 
-  const { chain } = useOptionalChain(chainId)
-
-  return useQuery({
-    queryKey: [
-      'games',
-      chain.id,
-      isLive,
-      perPage,
-      page,
-      filter.sportHub,
-      filter.sportSlug,
-      filter.sportIds?.join('-'),
-      filter.leagueSlug,
-      orderBy,
-      orderDir,
-    ],
-    queryFn: async () => {
-      return getGamesByFilters({
-        chainId: chain.id,
-        state: isLive ? GameState.Live : GameState.Prematch,
-        leagueSlug: filter.leagueSlug,
-        sportIds: filter.sportIds,
-        sportHub: filter.sportHub,
-        sportSlug: filter.sportSlug,
-        orderBy,
-        orderDir,
-        perPage,
-        page,
-      })
-    },
-    refetchOnWindowFocus: false,
-    ...query,
-  })
+  return useQuery(getUseGamesQueryOptions({ ...props, chainId: chain.id }))
 }

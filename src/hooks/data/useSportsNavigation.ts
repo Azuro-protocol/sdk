@@ -3,23 +3,52 @@ import {
   getNavigation,
   type GetNavigationResult,
 } from '@azuro-org/toolkit'
-import { useQuery, type UseQueryResult } from '@tanstack/react-query'
+import { queryOptions, useQuery, type UseQueryResult } from '@tanstack/react-query'
 
-import { type SportHub, type QueryParameter } from '../../global'
+import { type SportHub, type QueryParameterWithSelect } from '../../global'
 import { useOptionalChain } from '../../contexts/chain'
 
 
-export type UseSportsNavigationProps = {
+export type UseSportsNavigationQueryFnData = GetNavigationResult
+
+export type UseSportsNavigationProps<TData = UseSportsNavigationQueryFnData> = {
   chainId?: ChainId
   filter?: {
     sportHub?: SportHub
     sportIds?: Array<string | number>
   }
   isLive?: boolean
-  query?: QueryParameter<GetNavigationResult>
+  query?: QueryParameterWithSelect<UseSportsNavigationQueryFnData, TData>
 }
 
-export type UseSportsNavigation = (props?: UseSportsNavigationProps) => UseQueryResult<GetNavigationResult>
+export type GetUseSportsNavigationQueryOptionsProps<TData = UseSportsNavigationQueryFnData> = UseSportsNavigationProps<TData> & {
+  chainId: ChainId
+}
+
+export type UseSportsNavigation = <TData = UseSportsNavigationQueryFnData>(props?: UseSportsNavigationProps<TData>) => UseQueryResult<TData>
+
+export const getUseSportsNavigationQueryOptions = <TData = UseSportsNavigationQueryFnData>(params: GetUseSportsNavigationQueryOptionsProps<TData>) => {
+  const { chainId, filter = {}, isLive, query } = params
+
+  return queryOptions({
+    queryKey: [
+      'sports-navigation',
+      chainId,
+      isLive,
+      filter.sportHub,
+      filter.sportIds,
+    ],
+    queryFn: async () => {
+      return getNavigation({
+        chainId,
+        sportIds: filter.sportIds,
+        sportHub: filter.sportHub,
+      })
+    },
+    refetchOnWindowFocus: false,
+    ...query,
+  })
+}
 
 /**
  * Get sports navigation data with countries and leagues hierarchy.
@@ -32,29 +61,8 @@ export type UseSportsNavigation = (props?: UseSportsNavigationProps) => UseQuery
  *
  * const { data: sports, isFetching } = useSportsNavigation({ isLive: false })
  * */
-export const useSportsNavigation: UseSportsNavigation = (props = {}) => {
-  const { chainId, filter = {}, isLive, query = {} } = props
+export const useSportsNavigation = <TData>(props: UseSportsNavigationProps<TData> = {}) => {
+  const { chain } = useOptionalChain(props.chainId)
 
-  const chainData = useOptionalChain(chainId)
-
-  const gqlLink = chainData.graphql.feed
-
-  return useQuery({
-    queryKey: [
-      'sports-navigation',
-      gqlLink,
-      isLive,
-      filter.sportHub,
-      filter.sportIds?.join('-'),
-    ],
-    queryFn: async () => {
-      return getNavigation({
-        chainId: chainData.chain.id,
-        sportIds: filter.sportIds,
-        sportHub: filter.sportHub,
-      })
-    },
-    refetchOnWindowFocus: false,
-    ...query,
-  })
+  return useQuery(getUseSportsNavigationQueryOptions({ ...props, chainId: chain.id }))
 }

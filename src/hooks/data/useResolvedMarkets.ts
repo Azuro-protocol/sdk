@@ -1,14 +1,12 @@
-import { useMemo } from 'react'
 import {
   groupConditionsByMarket,
   ConditionState,
   type ChainId,
-  type GameMarkets,
   type ConditionDetailedData,
 } from '@azuro-org/toolkit'
 
 import { useConditions } from './useConditions'
-import { type WrapperUseQueryResult, type QueryParameter } from '../../global'
+import { type QueryParameter } from '../../global'
 
 
 export type UseResolvedMarketsProps = {
@@ -17,7 +15,20 @@ export type UseResolvedMarketsProps = {
   query?: QueryParameter<ConditionDetailedData[]>
 }
 
-export type UseResolvedMarkets = (props: UseResolvedMarketsProps) => WrapperUseQueryResult<GameMarkets | undefined, ConditionDetailedData[]>
+export type UseResolvedMarkets = typeof useResolvedMarkets
+
+const select = (conditions: ConditionDetailedData[]) => {
+  if (!conditions?.length) {
+    return undefined
+  }
+
+  return groupConditionsByMarket(
+    conditions.filter((condition) => (
+      condition.state === ConditionState.Resolved ||
+      condition.state === ConditionState.Canceled
+    ))
+  )
+}
 
 /**
  * Get resolved markets grouped by market type for a specific game.
@@ -30,32 +41,15 @@ export type UseResolvedMarkets = (props: UseResolvedMarketsProps) => WrapperUseQ
  *
  * const { data: markets, isFetching } = useResolvedMarkets({ gameId: '123' })
  * */
-export const useResolvedMarkets: UseResolvedMarkets = (props) => {
+export const useResolvedMarkets = (props: UseResolvedMarketsProps) => {
   const { gameId, chainId, query = {} } = props
 
-  const { data: conditions, ...rest } = useConditions({
+  return useConditions({
     gameId,
     chainId,
-    query,
+    query: {
+      ...query,
+      select,
+    },
   })
-
-  const conditionIds = conditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('_')
-
-  const markets = useMemo(() => {
-    if (!conditions?.length) {
-      return undefined
-    }
-
-    return groupConditionsByMarket(
-      conditions.filter((condition) => (
-        condition.state === ConditionState.Resolved ||
-        condition.state === ConditionState.Canceled
-      ))
-    )
-  }, [ conditionIds ])
-
-  return {
-    data: markets,
-    ...rest,
-  }
 }

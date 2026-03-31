@@ -10,8 +10,8 @@ export type UseActiveMarketProps = {
 }
 
 /**
- * Manages active market selection and automatically switches to the next available market when conditions become inactive.
- * Tracks condition states across all markets and provides organized market data.
+ * Manages active market selection and automatically switches to the next available market when conditions become
+ * inactive. Tracks condition states across all markets and provides organized market data.
  *
  * Returns active market key, condition index, and organized market structures for navigation.
  *
@@ -52,20 +52,17 @@ export const useActiveMarket = ({ markets }: UseActiveMarketProps) => {
   }, [ activeMarketKey, sortedMarketKeys ])
 
   const conditions = useMemo(() => {
-    return markets.reduce<Record<string, ConditionState>>((acc, market) => {
+    return markets.reduce<{ conditionId: string, state: ConditionState, hidden?: boolean }[]>((acc, market) => {
       const { conditions } = market
 
-      conditions.forEach(({ conditionId, state }) => {
-        acc[conditionId] = state
-      })
+      acc.push(...conditions)
 
       return acc
-    }, {})
+    }, [])
   }, [ markets ])
 
   const { data: states, isFetching } = useConditionsState({
-    conditionIds: Object.keys(conditions),
-    initialStates: conditions,
+    conditions,
   })
 
   useEffect(() => {

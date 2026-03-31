@@ -1,10 +1,10 @@
-import { useQuery, type UseQueryResult } from '@tanstack/react-query'
-import { type ChainId, getBetCalculation, type Selection } from '@azuro-org/toolkit'
+import { useQuery, queryOptions, type UseQueryResult } from '@tanstack/react-query'
+import { type ChainId, chainsData, getBetCalculation, type Selection } from '@azuro-org/toolkit'
 import { useEffect, useMemo } from 'react'
 import { type Address } from 'viem'
 
 import { useOptionalChain } from '../../contexts/chain'
-import { type QueryParameter } from '../../global'
+import { type QueryParameterWithSelect } from '../../global'
 import { conditionWatcher } from '../../modules/conditionWatcher'
 import { useConditionUpdates } from '../../contexts/conditionUpdates'
 import { formatToFixed } from '../../helpers/formatToFixed'
@@ -15,11 +15,54 @@ type BetCalculation = {
   maxBet: string
 }
 
-export type UseBetCalculationProps = {
+export type UseBetCalculationQueryFnData = BetCalculation
+
+export type UseBetCalculationProps<TData = UseBetCalculationQueryFnData> = {
   selections: Selection[]
   chainId?: ChainId
   account: Address | undefined
-  query?: QueryParameter<BetCalculation>
+  query?: QueryParameterWithSelect<UseBetCalculationQueryFnData, TData>
+}
+
+export type GetUseBetCalculationQueryOptionsProps<TData = UseBetCalculationQueryFnData> = UseBetCalculationProps<TData> & {
+  chainId: ChainId
+}
+
+export const getUseBetCalculationQueryOptions = <TData = UseBetCalculationQueryFnData>(params: GetUseBetCalculationQueryOptionsProps<TData>) => {
+  const { selections, chainId, account, query = {} } = params
+
+  const { betToken } = chainsData[chainId]
+
+  return queryOptions({
+    queryKey: [ 'bet-calc', chainId, account, selections ],
+    queryFn: async () => {
+      const data = await getBetCalculation({
+        chainId,
+        selections,
+        account,
+      })
+
+      let result: BetCalculation = {
+        minBet: undefined,
+        maxBet: '0'
+      }
+
+      if (typeof data?.minBet !== 'undefined') {
+        result.minBet = formatToFixed(data.minBet, betToken.decimals)
+      }
+
+      if (data?.maxBet) {
+        result.maxBet = formatToFixed(data!.maxBet, betToken.decimals)
+      }
+
+      return result
+    },
+    // disable cache
+    gcTime: 0,
+    refetchOnWindowFocus: false,
+    enabled: Boolean(selections.length),
+    ...query,
+  })
 }
 
 /**
@@ -41,45 +84,17 @@ export type UseBetCalculationProps = {
  *
  * const { minBet, maxBet, isBetCalculationFetching } = useDetailedBetslip()
  * */
-export const useBetCalculation = (props: UseBetCalculationProps): UseQueryResult<BetCalculation> => {
+export const useBetCalculation = <TData = UseBetCalculationQueryFnData>(props: UseBetCalculationProps<TData>): UseQueryResult<TData> => {
   const { selections, chainId, account, query = {} } = props
 
-  const { chain: appChain, betToken } = useOptionalChain(chainId)
+  const { chain: appChain } = useOptionalChain(chainId)
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useConditionUpdates()
 
   const selectionsKey = useMemo(() => (
     selections.map(({ conditionId, outcomeId }) => `${conditionId}/${outcomeId}`).join('-')
   ), [ selections ])
 
-  const queryData = useQuery({
-    queryKey: [ 'bet-calc', appChain.id, account, selectionsKey ],
-    queryFn: async () => {
-      const data = await getBetCalculation({
-        chainId: appChain.id,
-        selections,
-        account,
-      })
-
-      let result: BetCalculation = {
-        minBet: undefined,
-        maxBet: '0'
-      }
-
-      if (typeof data?.minBet !== 'undefined') {
-        result.minBet = formatToFixed(data.minBet, betToken.decimals)
-      }
-
-      if (data?.maxBet) {
-        result.maxBet = formatToFixed(data!.maxBet, betToken.decimals)
-      }
-
-      return result
-    },
-    gcTime: 0, // disable cache
-    refetchOnWindowFocus: false,
-    enabled: Boolean(selections.length),
-    ...query,
-  })
+  const queryData = useQuery(getUseBetCalculationQueryOptions({ selections, chainId: appChain.id, account, query }))
 
   const { refetch } = queryData
 

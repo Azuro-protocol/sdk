@@ -1,8 +1,8 @@
-import { useQuery, type UseQueryResult } from '@tanstack/react-query'
+import { useQuery, queryOptions, type UseQueryResult } from '@tanstack/react-query'
 import { type ChainId, getBetFee } from '@azuro-org/toolkit'
 
 import { useOptionalChain } from '../../contexts/chain'
-import { type QueryParameter } from '../../global'
+import { type QueryParameterWithSelect } from '../../global'
 
 
 type UseBetFeeResult = {
@@ -11,12 +11,40 @@ type UseBetFeeResult = {
   formattedRelayerFeeAmount: string
 }
 
-export type UseBetFeeProps = {
+export type UseBetFeeQueryFnData = UseBetFeeResult
+
+export type UseBetFeeProps<TData = UseBetFeeQueryFnData> = {
   chainId?: ChainId
-  query?: QueryParameter<UseBetFeeResult>
+  query?: QueryParameterWithSelect<UseBetFeeQueryFnData, TData>
 }
 
-export type UseBetFee = (props?: UseBetFeeProps) => UseQueryResult<UseBetFeeResult>
+export type UseBetFee = <TData = UseBetFeeQueryFnData>(props?: UseBetFeeProps<TData>) => UseQueryResult<TData>
+
+export type GetUseBetFeeQueryOptionsProps<TData> = UseBetFeeProps<TData> & {
+  chainId: ChainId
+}
+
+export const getUseBetFeeQueryOptions = <TData = UseBetFeeQueryFnData>({ chainId, query = {} }: GetUseBetFeeQueryOptionsProps<TData>) => {
+  return queryOptions({
+    queryKey: [ 'bet-fee', chainId ] as const,
+    queryFn: async () => {
+      const {
+        gasAmount,
+        relayerFeeAmount,
+        beautyRelayerFeeAmount,
+      } = await getBetFee(chainId)
+
+      return {
+        gasAmount: BigInt(gasAmount),
+        relayerFeeAmount: BigInt(relayerFeeAmount),
+        formattedRelayerFeeAmount: beautyRelayerFeeAmount,
+      }
+    },
+    refetchOnWindowFocus: false,
+    refetchInterval: 10_000,
+    ...query,
+  })
+}
 
 /**
  * Fetches current bet placement fee information including gas and relayer fees.
@@ -32,28 +60,8 @@ export type UseBetFee = (props?: UseBetFeeProps) => UseQueryResult<UseBetFeeResu
  * const { data, isLoading } = useBetFee()
  * const { gasAmount, relayerFeeAmount, formattedRelayerFeeAmount } = data || {}
  * */
-export const useBetFee: UseBetFee = ({ chainId, query = {} } = {}) => {
+export const useBetFee = <TData = UseBetFeeResult>({ chainId, query }: UseBetFeeProps<TData> = {}) => {
   const { chain: appChain } = useOptionalChain(chainId)
 
-  const queryFn = async () => {
-    const {
-      gasAmount,
-      relayerFeeAmount,
-      beautyRelayerFeeAmount,
-    } = await getBetFee(appChain.id)
-
-    return {
-      gasAmount: BigInt(gasAmount),
-      relayerFeeAmount: BigInt(relayerFeeAmount),
-      formattedRelayerFeeAmount: beautyRelayerFeeAmount,
-    }
-  }
-
-  return useQuery({
-    queryKey: [ '/bet-fee', appChain.id ],
-    queryFn,
-    refetchOnWindowFocus: false,
-    refetchInterval: 10_000,
-    ...query,
-  })
+  return useQuery(getUseBetFeeQueryOptions({ chainId: appChain.id, query }))
 }

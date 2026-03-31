@@ -4,13 +4,15 @@ import {
   searchGames,
   type SearchGamesResult,
 } from '@azuro-org/toolkit'
-import { useQuery, type UseQueryResult } from '@tanstack/react-query'
+import { useQuery, queryOptions, type UseQueryResult } from '@tanstack/react-query'
 
 import { useOptionalChain } from '../../contexts/chain'
-import { type QueryParameter } from '../../global'
+import { type QueryParameterWithSelect } from '../../global'
 
 
-export type UseSearchGamesProps = {
+export type UseSearchGamesQueryFnData = SearchGamesResult
+
+export type UseSearchGamesProps<TData = UseSearchGamesQueryFnData> = {
   input: string
   chainId?: ChainId
   /** page number (1-based), default: 1 */
@@ -18,10 +20,34 @@ export type UseSearchGamesProps = {
   /** items per page, default: 10 */
   perPage?: number
   debounceMs?: number
-  query?: QueryParameter<SearchGamesResult>
+  query?: QueryParameterWithSelect<UseSearchGamesQueryFnData, TData>
 }
 
-export type UseSearchGames = (props: UseSearchGamesProps) => UseQueryResult<SearchGamesResult>
+export type GetUseSearchGamesQueryOptionsProps<TData = UseSearchGamesQueryFnData> =  UseSearchGamesProps<TData> & {
+  chainId: ChainId
+}
+
+export const getUseSearchGamesQueryOptions = <TData = UseSearchGamesQueryFnData>(params: GetUseSearchGamesQueryOptionsProps<TData>) => {
+  const { input, chainId, page, perPage, query = {} } = params
+
+  const isQueryValid = input?.length >= 3
+  const enabled = Boolean(isQueryValid && (typeof query?.enabled === 'boolean' ? query.enabled : true))
+
+  return queryOptions({
+    queryKey: [ 'searchGames', chainId, input, page, perPage ] as const,
+    queryFn: async () => searchGames({
+      chainId,
+      query: input,
+      page,
+      perPage,
+    }),
+    refetchOnWindowFocus: false,
+    ...query,
+    enabled,
+  })
+}
+
+export type UseSearchGames = <TData = UseSearchGamesQueryFnData>(props: UseSearchGamesProps<TData>) => UseQueryResult<TData>
 
 /**
  * Search active prematch and live games by text.
@@ -37,7 +63,7 @@ export type UseSearchGames = (props: UseSearchGamesProps) => UseQueryResult<Sear
  * const { data, isFetching } = useSearchGames({ input: 'Man' })
  * const { games, page, perPage, total, totalPages } = data || {}
  * */
-export const useSearchGames: UseSearchGames = (props) => {
+export const useSearchGames = <TData = UseSearchGamesQueryFnData>(props: UseSearchGamesProps<TData>) => {
   const {
     input: searchQuery,
     chainId,
@@ -59,24 +85,13 @@ export const useSearchGames: UseSearchGames = (props) => {
     return () => clearTimeout(timer)
   }, [ searchQuery, debounceMs ])
 
-  const isQueryValid = debouncedQuery?.length >= 3
-
-  return useQuery({
-    queryKey: [
-      'searchGames',
-      chain.id,
-      debouncedQuery,
-      page,
-      perPage,
-    ],
-    queryFn: async () => searchGames({
+  return useQuery(
+    getUseSearchGamesQueryOptions({
+      input: debouncedQuery,
       chainId: chain.id,
-      query: debouncedQuery,
       page,
       perPage,
-    }),
-    refetchOnWindowFocus: false,
-    ...query,
-    enabled: Boolean(isQueryValid && (typeof query?.enabled === 'boolean' ? query.enabled : true)),
-  })
+      query,
+    })
+  )
 }

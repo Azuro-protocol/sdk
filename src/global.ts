@@ -10,6 +10,12 @@ export type QueryParameter<
   queryKey extends QueryKey = QueryKey,
 > = Omit<UseQueryOptions<queryFnData, error, data, queryKey>, 'queryFn' | 'queryHash' | 'queryKey' | 'queryKeyHashFn' | 'throwOnError' | 'select'> | undefined
 
+export type QueryParameterWithSelect<
+  QueryFnData = unknown,
+  TData = QueryFnData,
+  TError = DefaultError,
+  TQueryKey extends QueryKey = QueryKey,
+> = Omit<UseQueryOptions<QueryFnData, TError, TData, TQueryKey>, 'queryFn' | 'queryHash' | 'queryKey' | 'queryKeyHashFn' | 'throwOnError'> | undefined
 
 export type WrapperUseQueryResult<D, T> = {
   data: D
@@ -22,6 +28,14 @@ export type InfiniteQueryParameters<
   queryKey extends QueryKey = QueryKey,
   pageParam = number,
 > = Omit<UseInfiniteQueryOptions<queryFnData, error, data, queryKey, pageParam>, 'queryFn' | 'queryHash' | 'queryKey' | 'queryKeyHashFn' | 'throwOnError' | 'select' | 'initialData' | 'getNextPageParam' | 'initialPageParam'>
+
+export type InfiniteQueryParametersWithSelect<
+  queryFnData = unknown,
+  data = queryFnData,
+  error = DefaultError,
+  queryKey extends QueryKey = QueryKey,
+  pageParam = number,
+> = Omit<UseInfiniteQueryOptions<queryFnData, error, data, queryKey, pageParam>, 'queryFn' | 'queryHash' | 'queryKey' | 'queryKeyHashFn' | 'throwOnError' | 'initialData' | 'getNextPageParam' | 'initialPageParam'>
 
 declare global {
   namespace AzuroSDK {

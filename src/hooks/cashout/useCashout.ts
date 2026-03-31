@@ -373,5 +373,3 @@ export const useCashout: UseCashout = (props) => {
     isApproveRequired,
   }
 }
-
-type test = ReturnType<typeof useCashout>

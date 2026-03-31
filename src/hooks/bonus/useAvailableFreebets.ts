@@ -1,21 +1,50 @@
-import { useQuery, type UseQueryResult } from '@tanstack/react-query'
+import { useQuery, queryOptions, type UseQueryResult } from '@tanstack/react-query'
 import { type ChainId, type Freebet, type Selection, getAvailableFreebets } from '@azuro-org/toolkit'
 import { type Address } from 'viem'
-import { useMemo } from 'react'
 
 import { useOptionalChain } from '../../contexts/chain'
-import { type QueryParameter } from '../../global'
+import { type QueryParameterWithSelect } from '../../global'
 
 
-export type UseAvailableFreebetsProps = {
+export type UseAvailableFreebetsQueryFnData = Freebet[]
+
+export type UseAvailableFreebetsProps<TData = UseAvailableFreebetsQueryFnData> = {
   account: Address
   affiliate: Address
   selections: Selection[]
   chainId?: ChainId
-  query?: QueryParameter<Freebet[]>
+  query?: QueryParameterWithSelect<UseAvailableFreebetsQueryFnData, TData>
 }
 
-export type UseAvailableFreebets = (props: UseAvailableFreebetsProps) => UseQueryResult<Freebet[]>
+export type UseAvailableFreebets = <TData = UseAvailableFreebetsQueryFnData>(props: UseAvailableFreebetsProps<TData>) => UseQueryResult<TData>
+
+export type GetUseAvailableFreebetsQueryOptionsProps<TData = UseAvailableFreebetsQueryFnData> = UseAvailableFreebetsProps<TData> & {
+  chainId: ChainId
+}
+
+export const getUseAvailableFreebetsQueryOptions = <TData = UseAvailableFreebetsQueryFnData>(params: GetUseAvailableFreebetsQueryOptionsProps<TData>) => {
+  const { account, affiliate, selections, chainId, query = {} } = params
+
+  return queryOptions({
+    queryKey: [ 'available-freebets', chainId, account?.toLowerCase(), affiliate?.toLowerCase(), selections ],
+    queryFn: async (): Promise<Freebet[]> => {
+      const freebets = await getAvailableFreebets({
+        chainId,
+        account,
+        affiliate,
+        selections,
+      })
+
+      if (!freebets) {
+        return []
+      }
+
+      return freebets
+    },
+    refetchOnWindowFocus: false,
+    ...query,
+  })
+}
 
 /**
  * Retrieves available freebets for a specific account, affiliate, and bet selections.
@@ -32,32 +61,8 @@ export type UseAvailableFreebets = (props: UseAvailableFreebetsProps) => UseQuer
  *   selections: [{ conditionId: '123', outcomeId: '1' }],
  * })
  * */
-export const useAvailableFreebets: UseAvailableFreebets = (props) => {
-  const { account, affiliate, selections, chainId, query = {} } = props
+export const useAvailableFreebets = <TData = UseAvailableFreebetsQueryFnData>(props: UseAvailableFreebetsProps<TData>) => {
+  const { chain: appChain } = useOptionalChain(props.chainId)
 
-  const { chain: appChain } = useOptionalChain(chainId)
-
-  const selectionsKey = useMemo(() => (
-    selections.map(({ conditionId, outcomeId }) => `${conditionId}/${outcomeId}`).join('-')
-  ), [ selections ])
-
-  return useQuery({
-    queryKey: [ 'available-freebets', appChain.id, account?.toLowerCase(), affiliate?.toLowerCase(), selectionsKey ],
-    queryFn: async () => {
-      const freebets = await getAvailableFreebets({
-        chainId: appChain.id,
-        account,
-        affiliate,
-        selections,
-      })
-
-      if (!freebets) {
-        return []
-      }
-
-      return freebets
-    },
-    refetchOnWindowFocus: false,
-    ...query,
-  })
+  return useQuery(getUseAvailableFreebetsQueryOptions({ ...props, chainId: appChain.id }))
 }

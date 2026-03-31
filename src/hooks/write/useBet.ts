@@ -3,7 +3,7 @@ import {
   type Freebet, getBet, getBetTypedData, getComboBetTypedData, ODDS_DECIMALS, type Selection,
 } from '@azuro-org/toolkit'
 import { useQueryClient } from '@tanstack/react-query'
-import { useMemo, useReducer } from 'react'
+import { useMemo, useReducer, useRef } from 'react'
 import {
   type Address, encodeFunctionData, erc20Abi, type Hex, maxUint256, parseUnits, type TransactionReceipt,
 } from 'viem'
@@ -42,7 +42,7 @@ export class BetOrderError extends Error {
   }
 }
 
-type UseBetProps = {
+export type UseBetProps = {
   // betAmount: string | Record<string, string>
   betAmount: string
   slippage: number
@@ -104,14 +104,18 @@ export const useBet = (props: UseBetProps) => {
   // const isBatch = isCombo && typeof _betAmount === 'object'
   const isFreeBet = Boolean(freebet)
 
-  const account = useExtendedAccount()
-  const isAAWallet = Boolean(account.isAAWallet)
+  const { address, isReady, isAAWallet } = useExtendedAccount()
   const aaClient = useAAWalletClient()
+  const aaClientRef = useRef(aaClient)
+  aaClientRef.current = aaClient
 
   const { chain: appChain, contracts, betToken, graphql } = useOptionalChain(chainId)
   const queryClient = useQueryClient()
   const wagmiConfig = useConfig()
-  const walletClient = useWalletClient()
+  const { data: walletClient, isFetching: isFetchingWalletClient } = useWalletClient({ chainId: appChain?.id })
+  const walletClientRef = useRef(walletClient)
+  walletClientRef.current = walletClient
+
   const {
     data: betFeeData,
     isFetching: isRelayerFeeFetching,
@@ -130,11 +134,11 @@ export const useBet = (props: UseBetProps) => {
     abi: erc20Abi,
     functionName: 'allowance',
     args: [
-      account.address!,
+      address!,
       approveAddress!,
     ],
     query: {
-      enabled: Boolean(account.address) && Boolean(approveAddress) && !isFreeBet,
+      enabled: Boolean(address && approveAddress) && !isFreeBet,
     },
   })
 
@@ -208,8 +212,24 @@ export const useBet = (props: UseBetProps) => {
     })
 
     try {
-      if (isAAWallet && aaClient) {
-        await aaClient.switchChain({ id: appChain.id })
+      const account = address!
+      const aaClient = aaClientRef.current!
+      const walletClient = walletClientRef.current!
+
+      if (!account) {
+        throw new Error('Account is not connected')
+      }
+
+      if (isAAWallet && !aaClient) {
+        throw new Error('Smart-account wallet client is not initialized')
+      }
+
+      if (!isAAWallet && !walletClient) {
+        throw new Error('Wallet client is not initialized')
+      }
+
+      if (isAAWallet && aaClient.chain?.id !== appChain.id) {
+        await aaClientRef.current!.switchChain({ id: appChain.id })
       }
 
       const fixedAmount = formatToFixed(betAmount, betToken.decimals)
@@ -220,7 +240,7 @@ export const useBet = (props: UseBetProps) => {
       const { conditionId, outcomeId } = selections[0]!
 
       if (isAAWallet && isApproveRequired) {
-        const hash = await aaClient!.sendTransaction({
+        const hash = await aaClient.sendTransaction({
           to: betToken.address!,
           data: encodeFunctionData({
             abi: erc20Abi,
@@ -255,7 +275,7 @@ export const useBet = (props: UseBetProps) => {
 
       if (isCombo) {
         const betData = {
-          account: account.address!,
+          account,
           clientData,
           amount: rawAmount,
           minOdds: rawMinOdds,
@@ -266,8 +286,8 @@ export const useBet = (props: UseBetProps) => {
         const typedData = getComboBetTypedData(betData)
 
         const signature = isAAWallet
-          ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account as any })
-          : await walletClient!.data!.signTypedData(typedData)
+          ? await aaClient.signTypedData(typedData)
+          : await walletClient.signTypedData(typedData)
 
 
         createdOrder = await createComboBet({
@@ -278,7 +298,7 @@ export const useBet = (props: UseBetProps) => {
       }
       else {
         const betData = {
-          account: account.address!,
+          account,
           clientData,
           bet: {
             conditionId,
@@ -292,8 +312,8 @@ export const useBet = (props: UseBetProps) => {
         const typedData = getBetTypedData(betData)
 
         const signature = isAAWallet
-          ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account as any })
-          : await walletClient!.data!.signTypedData(typedData)
+          ? await aaClient.signTypedData(typedData)
+          : await walletClient.signTypedData(typedData)
 
 
         createdOrder = await createBet({
@@ -310,7 +330,7 @@ export const useBet = (props: UseBetProps) => {
         error: errorCode,
       } = createdOrder!
 
-      const accountLowerCased = account?.address?.toLowerCase()
+      const accountLowerCased = account.toLowerCase()
 
       if (newOrderState === BetOrderState.Created) {
         setBetTx({
@@ -412,7 +432,7 @@ export const useBet = (props: UseBetProps) => {
 
       onSuccess?.(receipt)
     }
-    catch (err) {
+    catch (err: any) {
       setBetTx({
         data: undefined,
         orderId: undefined,
@@ -420,7 +440,7 @@ export const useBet = (props: UseBetProps) => {
         isPendingOrderPlacing: false,
       })
 
-      onError?.(err as any)
+      onError?.(err)
     }
   }
 
@@ -434,6 +454,7 @@ export const useBet = (props: UseBetProps) => {
 
   return {
     submit,
+    isWalletReadyToSubmit: Boolean(isReady && !isFetchingWalletClient && (isAAWallet ? aaClient : walletClient)),
     approveTx: {
       isPending: approveTx.isPending,
       isProcessing: approveReceipt.isLoading,

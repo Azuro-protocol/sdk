@@ -1,15 +1,19 @@
 import {
   type ChainId,
+  chainsData,
   getNavigation,
   type NavigationSportData,
 } from '@azuro-org/toolkit'
-import { useQuery, type UseQueryResult } from '@tanstack/react-query'
+import { queryOptions, useQuery, type UseQueryResult } from '@tanstack/react-query'
 
-import { type SportHub, type QueryParameter } from '../../global'
+import { type SportHub, type QueryParameterWithSelect } from '../../global'
 import { useOptionalChain } from '../../contexts/chain'
 
+export type UseNavigationQueryFnData<ReturnMapValue extends boolean = false> = ReturnMapValue extends true
+  ? Record<'prematch' | 'live', NavigationSportData[]>
+  : NavigationSportData[]
 
-export type UseNavigationProps<ReturnMapValue extends boolean> = {
+export type UseNavigationProps<ReturnMapValue extends boolean = false, TData = UseNavigationQueryFnData<ReturnMapValue>> = {
   filter?: {
     sportHub?: SportHub
     sportIds?: Array<string | number>
@@ -17,39 +21,32 @@ export type UseNavigationProps<ReturnMapValue extends boolean> = {
   isLive?: boolean
   returnAsPrematchAndLiveMap?: ReturnMapValue
   chainId?: ChainId
-  query?: QueryParameter<ReturnMapValue extends true ? Record<'prematch' | 'live', NavigationSportData[]> : NavigationSportData[]>
+  query?: QueryParameterWithSelect<UseNavigationQueryFnData<ReturnMapValue>, TData>
 }
 
 export type UseNavigation = typeof useNavigation
 
-/**
- * Get navigation data for sports, countries, and leagues with active games counts.
- * Can return data as a prematch/live/all map or filtered by `isLive` prop.
- *
- * - Docs: https://gem.azuro.org/hub/apps/sdk/data-hooks/useNavigation
- *
- * @example
- * import { useNavigation } from '@azuro-org/sdk'
- *
- * const { data, isFetching } = useNavigation({ isLive: false })
- * */
-export const useNavigation = <ReturnMapValue extends boolean>(props: UseNavigationProps<ReturnMapValue> = {}) => {
-  const { filter = {}, returnAsPrematchAndLiveMap = false, isLive, chainId, query = {} } = props
+export type GetUseNavigationQueryOptionsProps<ReturnMapValue extends boolean = false, TData = UseNavigationQueryFnData<ReturnMapValue>> = UseNavigationProps<ReturnMapValue, TData> & {
+  chainId: ChainId
+}
 
-  const { chain, api } = useOptionalChain(chainId)
+export const getUseNavigationQueryOptions = <ReturnMapValue extends boolean = false, TData = UseNavigationQueryFnData<ReturnMapValue>>(params: GetUseNavigationQueryOptionsProps<ReturnMapValue, TData>) => {
+  const { filter = {}, returnAsPrematchAndLiveMap = false, isLive, chainId, query } = params
 
-  return useQuery({
+  const api = chainsData[chainId].api
+
+  return queryOptions({
     queryKey: [
       'navigation',
       api,
       isLive,
       filter.sportHub,
-      filter.sportIds?.join('-'),
+      filter.sportIds,
       returnAsPrematchAndLiveMap,
     ],
-    queryFn: async (): Promise<ReturnMapValue extends true ? Record<'prematch' | 'live' | 'all', NavigationSportData[]> : NavigationSportData[]> => {
+    queryFn: async (): Promise<UseNavigationQueryFnData<ReturnMapValue>> => {
       const sports = await getNavigation({
-        chainId: chain.id,
+        chainId,
         sportIds: filter.sportIds,
         sportHub: filter.sportHub,
       })
@@ -93,12 +90,35 @@ export const useNavigation = <ReturnMapValue extends boolean>(props: UseNavigati
       result.all = sports
 
       if (returnAsPrematchAndLiveMap) {
-        return result as ReturnMapValue extends true ? Record<'prematch' | 'live' | 'all', NavigationSportData[]> : NavigationSportData[]
+        return result as UseNavigationQueryFnData<ReturnMapValue>
       }
 
-      return (isLive ? result.live : result.prematch) as ReturnMapValue extends true ? Record<'prematch' | 'live' | 'all', NavigationSportData[]> : NavigationSportData[]
+      return (
+        isLive
+          ? result.live
+          : result.prematch
+      ) as UseNavigationQueryFnData<ReturnMapValue>
     },
     refetchOnWindowFocus: false,
     ...query,
-  }) as UseQueryResult<ReturnMapValue extends true ? Record<'prematch' | 'live' | 'all', NavigationSportData[]> : NavigationSportData[]>
+  })
+}
+
+/**
+ * Get navigation data for sports, countries, and leagues with active games counts.
+ * Can return data as a prematch/live/all map or filtered by `isLive` prop.
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/data-hooks/useNavigation
+ *
+ * @example
+ * import { useNavigation } from '@azuro-org/sdk'
+ *
+ * const { data, isFetching } = useNavigation({ isLive: false })
+ * */
+export const useNavigation = <ReturnMapValue extends boolean = false, TData = UseNavigationQueryFnData<ReturnMapValue>>(props: UseNavigationProps<ReturnMapValue, TData> = {}) => {
+  const { chain } = useOptionalChain(props.chainId)
+
+  return useQuery(
+    getUseNavigationQueryOptions<ReturnMapValue, TData>({ ...props, chainId: chain.id })
+  ) as UseQueryResult<TData>
 }

@@ -190,6 +190,7 @@ export const useBets: UseBets = (props) => {
             const isCanceled = !result && (
               conditionStatus === BetConditionStatus.Canceled
               || game?.state === GameState.Stopped
+              || game?.state === GameState.Canceled
             )
             const isLive = conditionKind === SelectionKind.Live
 

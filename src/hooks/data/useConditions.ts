@@ -6,17 +6,49 @@ import {
   type ConditionDetailedData,
   ConditionState,
 } from '@azuro-org/toolkit'
-import { useQuery, type UseQueryResult } from '@tanstack/react-query'
+import { useQuery, queryOptions, type UseQueryResult } from '@tanstack/react-query'
 
 import { useOptionalChain } from '../../contexts/chain'
-import { type QueryParameter } from '../../global'
+import { type QueryParameterWithSelect } from '../../global'
 
+export type UseConditionsQueryFnData = ConditionDetailedData[]
 
-export type UseConditionsProps = {
+export type UseConditionsProps<TData = UseConditionsQueryFnData> = {
   gameId: GetConditionsByGameIdsParams['gameIds']
   onlyActiveOrStopped?: boolean
   chainId?: ChainId
-  query?: QueryParameter<ConditionDetailedData[]>
+  query?: QueryParameterWithSelect<UseConditionsQueryFnData, TData>
+}
+
+export type GetUseConditionsQueryOptionsProps<TData = UseConditionsQueryFnData> = UseConditionsProps<TData> & {
+  chainId: ChainId
+}
+
+export const getUseConditionsQueryOptions = <TData = UseConditionsQueryFnData>(params: GetUseConditionsQueryOptionsProps<TData>) => {
+  const { gameId, chainId, onlyActiveOrStopped, query } = params
+
+  return queryOptions({
+    queryKey: [
+      'conditions',
+      chainId,
+      gameId,
+      onlyActiveOrStopped,
+    ],
+    queryFn: async (): Promise<UseConditionsQueryFnData> => {
+      const conditions = await getConditionsByGameIds({
+        chainId,
+        gameIds: gameId,
+      })
+
+      if (onlyActiveOrStopped) {
+        return conditions.filter(({ state }) => state === ConditionState.Active || ConditionState.Stopped)
+      }
+
+      return conditions
+    },
+    refetchOnWindowFocus: false,
+    ...query,
+  })
 }
 
 export type UseConditions = typeof useConditions
@@ -34,30 +66,8 @@ export type UseConditions = typeof useConditions
  * const gameId = gameData.gameId
  * const { data, isLoading, error } = useConditions({ gameId })
  * */
-export const useConditions = (props: UseConditionsProps): UseQueryResult<ConditionDetailedData[]> => {
-  const { gameId, chainId, onlyActiveOrStopped, query = {} } = props
-  const { chain } = useOptionalChain(chainId)
+export const useConditions = <TData = UseConditionsQueryFnData>(props: UseConditionsProps<TData>): UseQueryResult<TData> => {
+  const { chain } = useOptionalChain(props.chainId)
 
-  return useQuery({
-    queryKey: [
-      'conditions',
-      chain.id,
-      gameId,
-      onlyActiveOrStopped,
-    ],
-    queryFn: async () => {
-      const conditions = await getConditionsByGameIds({
-        chainId: chain.id,
-        gameIds: gameId,
-      })
-
-      if (onlyActiveOrStopped) {
-        return conditions.filter(({ state }) => state === ConditionState.Active || ConditionState.Stopped)
-      }
-
-      return conditions
-    },
-    refetchOnWindowFocus: false,
-    ...query,
-  })
+  return useQuery(getUseConditionsQueryOptions({ ...props, chainId: chain.id }))
 }

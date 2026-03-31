@@ -1,20 +1,49 @@
-import { useQuery, type UseQueryResult } from '@tanstack/react-query'
+import { useQuery, queryOptions, type UseQueryResult } from '@tanstack/react-query'
 import { type Bonus, type BonusStatus, type ChainId, getBonuses } from '@azuro-org/toolkit'
 import { type Address } from 'viem'
 
 import { useOptionalChain } from '../../contexts/chain'
-import { type QueryParameter } from '../../global'
+import { type QueryParameterWithSelect } from '../../global'
 
 
-export type UseBonusesProps = {
+export type UseBonusesQueryFnData = Bonus[]
+
+export type UseBonusesProps<TData = UseBonusesQueryFnData> = {
   account: Address
   affiliate: Address
   bonusStatus?: BonusStatus
   chainId?: ChainId
-  query?: QueryParameter<Bonus[]>
+  query?: QueryParameterWithSelect<UseBonusesQueryFnData, TData>
+}
+export type GetUseBonusesQueryOptionsProps<TData = UseBonusesQueryFnData> = UseBonusesProps<TData> & {
+  chainId: ChainId
 }
 
-export type UseBonuses = (props: UseBonusesProps) => UseQueryResult<Bonus[]>
+export type UseBonuses = <TData = UseBonusesQueryFnData>(props: UseBonusesProps<TData>) => UseQueryResult<TData>
+
+export const getUseBonusesQueryOptions = <TData = UseBonusesQueryFnData>(params: GetUseBonusesQueryOptionsProps<TData>) => {
+  const { account, affiliate, bonusStatus, chainId, query = {} } = params
+
+  return queryOptions({
+    queryKey: [ 'bonuses', chainId, account?.toLowerCase(), affiliate?.toLowerCase(), bonusStatus ],
+    queryFn: async (): Promise<UseBonusesQueryFnData> => {
+      const bonuses = await getBonuses({
+        chainId,
+        account,
+        bonusStatus,
+        affiliate,
+      })
+
+      if (!bonuses) {
+        return []
+      }
+
+      return bonuses
+    },
+    refetchOnWindowFocus: false,
+    ...query,
+  })
+}
 
 /**
  * Retrieves bonuses (freebets) for a specific account and affiliate address.
@@ -32,28 +61,8 @@ export type UseBonuses = (props: UseBonusesProps) => UseQueryResult<Bonus[]>
  *   bonusStatus: BonusStatus.Available,
  * })
  * */
-export const useBonuses: UseBonuses = (props) => {
-  const { account, affiliate, bonusStatus, chainId, query = {} } = props
+export const useBonuses: UseBonuses = <TData = UseBonusesQueryFnData>(props: UseBonusesProps<TData>): UseQueryResult<TData> => {
+  const { chain: appChain } = useOptionalChain(props.chainId)
 
-  const { chain: appChain } = useOptionalChain(chainId)
-
-  return useQuery({
-    queryKey: [ 'bonuses', appChain.id, account?.toLowerCase(), affiliate?.toLowerCase(), bonusStatus ],
-    queryFn: async () => {
-      const bonuses = await getBonuses({
-        chainId: appChain.id,
-        account,
-        bonusStatus,
-        affiliate,
-      })
-
-      if (!bonuses) {
-        return []
-      }
-
-      return bonuses
-    },
-    refetchOnWindowFocus: false,
-    ...query,
-  })
+  return useQuery(getUseBonusesQueryOptions({ ...props, chainId: appChain.id }))
 }

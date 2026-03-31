@@ -1,8 +1,8 @@
-import { useMemo } from 'react'
+import { type UseQueryResult } from '@tanstack/react-query'
 import { type ChainId, type ConditionDetailedData, type GameMarkets, groupConditionsByMarket } from '@azuro-org/toolkit'
 
 import { useActiveConditions } from './useActiveConditions'
-import { type WrapperUseQueryResult, type QueryParameter } from '../../global'
+import { type QueryParameter } from '../../global'
 
 
 export type UseActiveMarketsProps = {
@@ -11,7 +11,16 @@ export type UseActiveMarketsProps = {
   query?: QueryParameter<ConditionDetailedData[]>
 }
 
-export type UseActiveMarkets = (props: UseActiveMarketsProps) => WrapperUseQueryResult<GameMarkets | undefined, ConditionDetailedData[]>
+export type UseActiveMarkets = (props: UseActiveMarketsProps) => UseQueryResult<GameMarkets | undefined>
+
+const select = (conditions: ConditionDetailedData[]) => {
+  if (!conditions?.length) {
+    return undefined
+  }
+
+  return groupConditionsByMarket(conditions)
+}
+
 
 /**
  * Get active markets grouped by market type for a specific game.
@@ -27,24 +36,12 @@ export type UseActiveMarkets = (props: UseActiveMarketsProps) => WrapperUseQuery
 export const useActiveMarkets: UseActiveMarkets = (props) => {
   const { gameId, chainId, query = {} } = props
 
-  const { data: conditions, ...rest } = useActiveConditions({
+  return useActiveConditions({
     gameId,
     chainId,
-    query,
+    query: {
+      ...query,
+      select,
+    },
   })
-
-  const conditionIds = conditions?.map(({ id, outcomes }) => `${id}-${outcomes.length}`).join('_')
-
-  const markets = useMemo(() => {
-    if (!conditions?.length) {
-      return undefined
-    }
-
-    return groupConditionsByMarket(conditions)
-  }, [ conditionIds ])
-
-  return {
-    data: markets,
-    ...rest,
-  }
 }

@@ -132,16 +132,18 @@ export const useBetsSummaryBySelection: UseBetsSummaryBySelection = (props) => {
     }, {})
   }, [])
 
+  const accountLowerCased = account?.toLowerCase()
+
   return useQuery({
     queryKey: [
       'bets-summary-by-selection',
       gqlLink,
-      account,
+      accountLowerCased,
       gameId,
     ],
     queryFn: async () => {
       const variables: GameBetsQueryVariables = {
-        actor: account?.toLowerCase(),
+        actor: accountLowerCased,
         gameId,
       }
 
