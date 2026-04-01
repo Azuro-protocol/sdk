@@ -218,11 +218,7 @@ export const useBets: UseBets = (props) => {
 
             const isWin = result ? result === SelectionResult.Won : null
             const isLose = result ? result === SelectionResult.Lost : null
-            const isCanceled = !result && (
-              conditionStatus === BetConditionStatus.Canceled
-                  || game?.state === GameState.Stopped
-                  || game?.state === GameState.Canceled
-            )
+            const isCanceled = !result && conditionStatus === BetConditionStatus.Canceled
 
             const isLive = gameState === GameState.Live
 
