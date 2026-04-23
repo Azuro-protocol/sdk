@@ -248,7 +248,10 @@ export const useLegacyBets: UseLegacyBets = (props) => {
                   slug: game.sport.sporthub.slug as SportHub,
                 }
               },
-              league: game.league,
+              league: {
+                ...game.league,
+                isTopLeague: false,
+              },
               country: game.league.country,
               participants: game.participants.map((participant) => ({
                 name: participant.name,

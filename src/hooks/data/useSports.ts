@@ -4,6 +4,7 @@ import {
   OrderDirection,
   GameOrderBy,
   getSports,
+  type GetSportsParams,
   type SportData,
 } from '@azuro-org/toolkit'
 import { useQuery, queryOptions, type UseQueryResult } from '@tanstack/react-query'
@@ -19,6 +20,8 @@ export type UseSportsProps<TData = UseSportsQueryFnData> = {
     sportSlug?: string
     countrySlug?: string
     leagueSlug?: string
+    /** Filter for leagues, if not set, returns all leagues */
+    topLeagueFilter?: GetSportsParams['topLeagueFilter']
     sportIds?: Array<string | number>
     /**
      * default: 1000,
@@ -69,6 +72,7 @@ export const getUseSportsQueryOptions = <TData = UseSportsQueryFnData>(params: G
       filter.countrySlug,
       filter.leagueSlug,
       filter.sportIds?.join('-'),
+      filter.topLeagueFilter,
       sortLeaguesAndCountriesByName,
     ],
     queryFn: async () => {
@@ -78,8 +82,9 @@ export const getUseSportsQueryOptions = <TData = UseSportsQueryFnData>(params: G
         sportIds: filter.sportIds,
         sportSlug: filter.sportSlug,
         countrySlug: filter.countrySlug,
-        numberOfGames: maxGamesPerLeague,
         leagueSlug: filter.leagueSlug,
+        topLeagueFilter: filter.topLeagueFilter,
+        numberOfGames: maxGamesPerLeague,
         orderBy: gameOrderBy,
         orderDir,
       })

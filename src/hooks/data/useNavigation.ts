@@ -10,7 +10,7 @@ import { type SportHub, type QueryParameterWithSelect } from '../../global'
 import { useOptionalChain } from '../../contexts/chain'
 
 export type UseNavigationQueryFnData<ReturnMapValue extends boolean = false> = ReturnMapValue extends true
-  ? Record<'prematch' | 'live', NavigationSportData[]>
+  ? Record<'prematch' | 'live' | 'all', NavigationSportData[]>
   : NavigationSportData[]
 
 export type UseNavigationProps<ReturnMapValue extends boolean = false, TData = UseNavigationQueryFnData<ReturnMapValue>> = {
@@ -51,7 +51,7 @@ export const getUseNavigationQueryOptions = <ReturnMapValue extends boolean = fa
         sportHub: filter.sportHub,
       })
 
-      const result = sports.reduce<Record<'prematch' | 'live' | 'all', NavigationSportData[]>>((acc, sport) => {
+      const result = sports.reduce<UseNavigationQueryFnData<true>>((acc, sport) => {
         const liveCountries: NavigationSportData['countries'] = []
         const prematchCountries: NavigationSportData['countries'] = []
 
