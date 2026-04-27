@@ -45,4 +45,4 @@ const getCashouts = async (conditionIds: string[], chainId: ChainId) => {
 
 type Func = typeof getCashouts
 
-export const batchFetchCashouts = createBatch<Result, Func>(getCashouts)
+export const batchFetchCashouts = createBatch<Result | undefined, Func>(getCashouts)

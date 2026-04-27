@@ -1,7 +1,5 @@
 import {
   type ChainId,
-
-  getConditionsByGameIds,
   type GetConditionsByGameIdsParams,
   type ConditionDetailedData,
   ConditionState,
@@ -10,6 +8,7 @@ import { useQuery, queryOptions, type UseQueryResult } from '@tanstack/react-que
 
 import { useOptionalChain } from '../../contexts/chain'
 import { type QueryParameterWithSelect } from '../../global'
+import { batchFetchGameConditions } from '../../helpers/batchFetchGameConditions'
 
 export type UseConditionsQueryFnData = ConditionDetailedData[]
 
@@ -35,13 +34,12 @@ export const getUseConditionsQueryOptions = <TData = UseConditionsQueryFnData>(p
       onlyActiveOrStopped,
     ],
     queryFn: async (): Promise<UseConditionsQueryFnData> => {
-      const conditions = await getConditionsByGameIds({
-        chainId,
-        gameIds: gameId,
-      })
+      const gameIds = Array.isArray(gameId) ? gameId : [ gameId ]
+      const conditionsByGameIdMap = await batchFetchGameConditions(gameIds, chainId)
+      const conditions = gameIds.flatMap((id) => conditionsByGameIdMap?.[id] || [])
 
       if (onlyActiveOrStopped) {
-        return conditions.filter(({ state }) => state === ConditionState.Active || ConditionState.Stopped)
+        return conditions.filter(({ state }) => state === ConditionState.Active || state === ConditionState.Stopped)
       }
 
       return conditions

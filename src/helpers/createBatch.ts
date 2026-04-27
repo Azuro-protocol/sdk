@@ -1,13 +1,18 @@
 import { debounce } from './debounce'
 
 
-export const createBatch = <Result, T extends (ids: string[], ...rest: any) => Promise<Result | undefined> | Result | undefined>(fn: T, isSet = true): T => {
+type Settler<Result> = {
+  resolve: (value: Result) => void
+  reject: (reason?: unknown) => void
+}
+
+export const createBatch = <Result, T extends (ids: string[], ...rest: any) => Promise<Result> | Result>(fn: T, isSet = true): T => {
   let idsWaitList: Set<string> | string[] = isSet ? new Set<string>() : []
-  let resolversWaitList: Array<(value?: Result) => void> = []
+  let settlersWaitList: Array<Settler<Result>> = []
 
   const request = debounce(async (fn: T, ...rest) => {
     const ids = [ ...idsWaitList ]
-    const resolvers = resolversWaitList
+    const settlers = settlersWaitList
 
     if (idsWaitList instanceof Set) {
       idsWaitList.clear()
@@ -15,18 +20,18 @@ export const createBatch = <Result, T extends (ids: string[], ...rest: any) => P
     else {
       idsWaitList = []
     }
-    resolversWaitList = []
+    settlersWaitList = []
 
     try {
       const data = await fn(ids, ...rest)
 
-      resolvers.forEach((resolve) => {
+      settlers.forEach(({ resolve }) => {
         resolve(data)
       })
     }
     catch (err) {
-      resolvers.forEach((resolve) => {
-        resolve(undefined)
+      settlers.forEach(({ reject }) => {
+        reject(err)
       })
     }
   }, 50, true)
@@ -42,8 +47,8 @@ export const createBatch = <Result, T extends (ids: string[], ...rest: any) => P
       }
     })
 
-    return new Promise<Result | undefined>((resolve) => {
-      resolversWaitList.push(resolve)
+    return new Promise<Result>((resolve, reject) => {
+      settlersWaitList.push({ resolve, reject })
     })
   }
 

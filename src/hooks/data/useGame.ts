@@ -1,9 +1,9 @@
 import {
   type ChainId,
-  getGamesByIds,
   type GameData,
 } from '@azuro-org/toolkit'
 import { useQuery, queryOptions, type UseQueryResult } from '@tanstack/react-query'
+import { batchFetchGames } from '../../helpers/batchFetchGames'
 
 import { useOptionalChain } from '../../contexts/chain'
 import { type QueryParameterWithSelect } from '../../global'
@@ -33,12 +33,9 @@ export const getUseGameQueryOptions = <TData = UseGameQueryFnData>(props: GetUse
       gameId,
     ],
     queryFn: async () => {
-      const games = await getGamesByIds({
-        chainId,
-        gameIds: [ gameId ],
-      })
+      const result = await batchFetchGames([ gameId ], chainId)
 
-      return games?.[0] || null
+      return result?.[gameId] || null
     },
     refetchOnWindowFocus: false,
     ...query,
