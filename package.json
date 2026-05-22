@@ -13,6 +13,9 @@
     ".": "./dist/index.js"
   },
   "sideEffects": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Azuro-protocol/sdk.git"
@@ -32,7 +35,7 @@
     "build": "rimraf dist && rollup -c",
     "prepublishOnly": "npm run build",
     "------------------  Lint --------------------------------------------------------------------------------": "",
-    "lint-fix": "eslint ./src -c .eslintrc --fix --ext js,ts,tsx",
+    "lint-fix": "eslint ./src --fix",
     "lint-ts": "tsc --noEmit"
   },
   "peerDependencies": {
@@ -50,17 +53,18 @@
   },
   "devDependencies": {
     "@azuro-org/sdk-social-aa-connector": "^2.0.0",
-    "@rollup/plugin-typescript": "^12.1.1",
+    "@rollup/plugin-typescript": "^12.3.0",
     "@types/react": "^19.1.5",
-    "@typescript-eslint/eslint-plugin": "^8.56.1",
+    "@typescript-eslint/eslint-plugin": "^8.59.3",
     "eslint": "^9.39.4",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.32.0",
-    "rimraf": "^5.0.10",
+    "rimraf": "^6.1.3",
     "rollup": "^4.59.0",
     "rollup-plugin-preserve-directives": "^0.4.0",
     "ts-node": "^10.9.1",
-    "typescript": "^5.1.6"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.59.3"
   },
   "dependencies": {
     "@azuro-org/toolkit": "^6.1.0"

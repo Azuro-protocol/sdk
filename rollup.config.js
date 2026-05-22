@@ -27,6 +27,8 @@ export default {
   plugins: [
     typescript({
       tsconfig: './tsconfig.json',
+      outDir: 'dist',
+      declarationDir: 'dist',
     }),
   ],
   onwarn: (warning, warn) => {
