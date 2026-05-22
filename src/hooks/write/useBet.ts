@@ -161,6 +161,7 @@ export const useBet = (props: UseBetProps) => {
   const isApproveRequired = useMemo(() => {
     if (
       !betAmount
+      || isFreeBet
       || typeof allowanceTx?.data === 'undefined'
       || typeof relayerFeeAmount === 'undefined'
     ) {
@@ -170,7 +171,7 @@ export const useBet = (props: UseBetProps) => {
     const approveAmount: number = +betAmount + +relayerFeeAmount
 
     return allowanceTx.data < parseUnits(String(approveAmount), betToken.decimals)
-  }, [ allowanceTx.data, relayerFeeAmount, betAmount ])
+  }, [ allowanceTx.data, relayerFeeAmount, betAmount, isFreeBet ])
 
   const approve = async () => {
     const hash = await approveTx.writeContractAsync({
