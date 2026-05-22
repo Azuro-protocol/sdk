@@ -19,7 +19,7 @@ export type UseActiveConditions = typeof useActiveConditions
  * const gameId = gameData.gameId
  * const { data, isFetching } = useActiveConditions({ gameId })
  * */
-export const useActiveConditions =<TData = UseConditionsQueryFnData>(props: UseActiveConditionsProps<TData>): UseQueryResult<TData> => {
+export const useActiveConditions = <TData = UseConditionsQueryFnData>(props: UseActiveConditionsProps<TData>): UseQueryResult<TData> => {
   const { gameId, chainId, query = {} } = props
 
   return useConditions({

@@ -9,6 +9,7 @@ import { queryOptions, useQuery, type UseQueryResult } from '@tanstack/react-que
 import { type SportHub, type QueryParameterWithSelect } from '../../global'
 import { useOptionalChain } from '../../contexts/chain'
 
+
 export type UseNavigationQueryFnData<ReturnMapValue extends boolean = false> = ReturnMapValue extends true
   ? Record<'prematch' | 'live' | 'all', NavigationSportData[]>
   : NavigationSportData[]
@@ -63,6 +64,7 @@ export const getUseNavigationQueryOptions = <ReturnMapValue extends boolean = fa
             if (league.activeLiveGamesCount) {
               liveLeagues.push(league)
             }
+
             if (league.activePrematchGamesCount) {
               prematchLeagues.push(league)
             }
@@ -71,6 +73,7 @@ export const getUseNavigationQueryOptions = <ReturnMapValue extends boolean = fa
           if (liveLeagues.length) {
             liveCountries.push({ ...country, leagues: liveLeagues })
           }
+
           if (prematchLeagues.length) {
             prematchCountries.push({ ...country, leagues: prematchLeagues })
           }

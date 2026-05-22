@@ -9,9 +9,9 @@ import {
 } from 'viem'
 import { useConfig, useReadContract, useWaitForTransactionReceipt, useWalletClient, useWriteContract } from 'wagmi'
 import { waitForTransactionReceipt } from 'wagmi/actions'
+
 import { DEFAULT_DEADLINE } from '../../config'
 import { useOptionalChain } from '../../contexts/chain'
-
 import { BetType } from '../../global'
 import { formatToFixed } from '../../helpers/formatToFixed'
 import { useBetFee } from '../data/useBetFee'
@@ -346,7 +346,7 @@ export const useBet = (props: UseBetProps) => {
             queryKey[1] === appChain.id &&
             queryKey[2] === accountLowerCased &&
             (!queryKey[3] || queryKey[3] === BetType.Accepted || queryKey[3] === BetType.Pending)
-          )
+          ),
         })
 
         onBetOrderCreated?.(createdOrder)
@@ -424,7 +424,7 @@ export const useBet = (props: UseBetProps) => {
           queryKey[1] === appChain.id &&
           queryKey[2] === accountLowerCased &&
           (!queryKey[3] || queryKey[3] === BetType.Accepted || queryKey[3] === BetType.Pending)
-        )
+        ),
       })
 
       queryClient.invalidateQueries({

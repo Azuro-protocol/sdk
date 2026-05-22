@@ -133,7 +133,7 @@ export const useConditionsState = ({ conditionIds: _conditionIds, initialStates,
               [conditionId]: {
                 state: newState,
                 // if condition got an update, then it isn't dead, mark it as visible
-                hidden: false
+                hidden: false,
               },
             },
           }

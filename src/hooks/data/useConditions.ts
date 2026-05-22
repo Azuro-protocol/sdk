@@ -10,6 +10,7 @@ import { useOptionalChain } from '../../contexts/chain'
 import { type QueryParameterWithSelect } from '../../global'
 import { batchFetchGameConditions } from '../../helpers/batchFetchGameConditions'
 
+
 export type UseConditionsQueryFnData = ConditionDetailedData[]
 
 export type UseConditionsProps<TData = UseConditionsQueryFnData> = {

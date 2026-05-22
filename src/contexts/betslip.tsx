@@ -445,7 +445,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     isOddsFetching,
     isFreebetsFetching,
     isBetCalculationFetching,
-    isBetAllowed
+    isBetAllowed,
   ])
 
   return (

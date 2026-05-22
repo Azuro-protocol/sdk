@@ -1,4 +1,5 @@
-import type { GraphBetStatus, BetResult } from '@azuro-org/toolkit';
+import type { GraphBetStatus, BetResult } from '@azuro-org/toolkit'
+
 
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;

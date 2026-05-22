@@ -44,7 +44,7 @@ export const getUseBetCalculationQueryOptions = <TData = UseBetCalculationQueryF
 
       let result: BetCalculation = {
         minBet: undefined,
-        maxBet: '0'
+        maxBet: '0',
       }
 
       if (typeof data?.minBet !== 'undefined') {
