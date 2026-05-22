@@ -299,3 +299,37 @@ export { useWaveStats } from './hooks/wave/useWaveStats'
 export { useWavePeriods, type WavePeriod } from './hooks/wave/useWavePeriods'
 export { useWaveLeaderBoard } from './hooks/wave/useWaveLeaderBoard'
 export { useWaveActivation } from './hooks/wave/useWaveActivation'
+
+/**
+ * Auth hooks
+ * */
+export {
+  useAuth,
+  AuthError,
+  type UseAuthProps,
+  type UseAuthResult,
+  type AuthErrorCode,
+} from './hooks/user/useAuth'
+export { getAuthStorageKey, type StoredAuth } from './helpers/authStorage'
+
+/**
+ * User hooks
+ * */
+export {
+  useUserFavorites,
+  type UseUserFavoritesProps,
+  type UseUserFavorites,
+  getUseUserFavoritesQueryOptions,
+  type GetUseUserFavoritesQueryOptionsProps,
+  type UseUserFavoritesQueryFnData,
+} from './hooks/user/useUserFavorites'
+export {
+  useCreateUserFavorite,
+  type UseCreateUserFavoriteProps,
+  type CreateUserFavoriteVariables,
+} from './hooks/user/useCreateUserFavorite'
+export {
+  useDeleteUserFavorite,
+  type UseDeleteUserFavoriteProps,
+  type DeleteUserFavoriteVariables,
+} from './hooks/user/useDeleteUserFavorite'
