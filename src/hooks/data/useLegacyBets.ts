@@ -8,7 +8,7 @@ import { type InfiniteData, useInfiniteQuery, type UseInfiniteQueryResult } from
 import { type Address, type Hex } from 'viem'
 
 import { useOptionalChain } from '../../contexts/chain'
-import { type Bet, type BetOutcome, BetType, type InfiniteQueryParameters, SportHub } from '../../global'
+import { type SportHub, type Bet, type BetOutcome, BetType, type InfiniteQueryParameters } from '../../global'
 import { gqlRequest } from '../../helpers/gqlRequest'
 
 
@@ -110,7 +110,7 @@ export const useLegacyBets: UseLegacyBets = (props) => {
       }
 
       if (filter.affiliate) {
-        variables.where.affiliate = filter.affiliate
+        variables.where.affiliate = filter.affiliate.toLowerCase()
       }
 
       const { bets: prematchBets, liveBets } = await gqlRequest<LegacyBetsQuery, LegacyBetsQueryVariables>({
@@ -246,7 +246,7 @@ export const useLegacyBets: UseLegacyBets = (props) => {
                 sporthub: {
                   ...game.sport.sporthub,
                   slug: game.sport.sporthub.slug as SportHub,
-                }
+                },
               },
               league: {
                 ...game.league,
