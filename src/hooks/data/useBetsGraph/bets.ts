@@ -1,6 +1,9 @@
-import gql from 'graphql-tag';
-import type { GraphBetStatus, BetResult, SelectionResult, SelectionKind, BetConditionStatus } from '@azuro-org/toolkit';
-import { Exact, V3_Bet_Filter } from './types';
+import gql from 'graphql-tag'
+import type { GraphBetStatus, BetResult, SelectionResult, SelectionKind, BetConditionStatus } from '@azuro-org/toolkit'
+
+import type { Exact, V3_Bet_Filter } from './types'
+
+
 export type BetsQueryVariables = Exact<{
   first?: number;
   skip?: number;
@@ -126,4 +129,4 @@ export const BetsDocument = gql`
     }
   }
 }
-    `;
+    `

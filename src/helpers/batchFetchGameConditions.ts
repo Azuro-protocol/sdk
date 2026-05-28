@@ -9,8 +9,8 @@ import { createBatch } from './createBatch'
 
 type Result = Record<string, ConditionDetailedData[]>
 
-const getGamesConditions = async (gameIds: string[], chainId: ChainId) => {
-  const conditions = await getConditionsByGameIds({ gameIds, chainId })
+const getGamesConditions = async (gameIds: string[], chainId: ChainId, extended: boolean = false) => {
+  const conditions = await getConditionsByGameIds({ gameIds, chainId, extended })
 
   return conditions.reduce<Result>((acc, condition) => {
     const { gameId } = condition.game

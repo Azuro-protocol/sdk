@@ -9,7 +9,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useOptionalChain } from '../contexts/chain'
 import { useExtendedAccount } from '../hooks/useAaConnector'
 // import { gqlRequest } from '../helpers/gqlRequest'
-import { type Bet, /*type BetOutcome, BetType*/ } from '../global'
+import { type Bet /*type BetOutcome, BetType*/ } from '../global'
 
 
 export type NewBetProps = {

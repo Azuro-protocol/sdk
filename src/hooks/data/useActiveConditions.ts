@@ -3,7 +3,7 @@ import { type UseQueryResult } from '@tanstack/react-query'
 import { useConditions, type UseConditionsProps, type UseConditionsQueryFnData } from './useConditions'
 
 
-export type UseActiveConditionsProps<TData = UseConditionsQueryFnData> = Pick<UseConditionsProps<TData>, 'gameId' | 'query' | 'chainId'>
+export type UseActiveConditionsProps<TData = UseConditionsQueryFnData> = Pick<UseConditionsProps<TData>, 'gameId' | 'query' | 'chainId' | 'extended'>
 
 export type UseActiveConditions = typeof useActiveConditions
 
@@ -19,13 +19,14 @@ export type UseActiveConditions = typeof useActiveConditions
  * const gameId = gameData.gameId
  * const { data, isFetching } = useActiveConditions({ gameId })
  * */
-export const useActiveConditions =<TData = UseConditionsQueryFnData>(props: UseActiveConditionsProps<TData>): UseQueryResult<TData> => {
-  const { gameId, chainId, query = {} } = props
+export const useActiveConditions = <TData = UseConditionsQueryFnData>(props: UseActiveConditionsProps<TData>): UseQueryResult<TData> => {
+  const { gameId, chainId, extended, query = {} } = props
 
   return useConditions({
     gameId,
     chainId,
     onlyActiveOrStopped: true,
+    extended,
     query,
   })
 }

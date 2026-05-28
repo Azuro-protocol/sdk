@@ -9,9 +9,9 @@ import {
 } from 'viem'
 import { useConfig, useReadContract, useWaitForTransactionReceipt, useWalletClient, useWriteContract } from 'wagmi'
 import { waitForTransactionReceipt } from 'wagmi/actions'
+
 import { DEFAULT_DEADLINE } from '../../config'
 import { useOptionalChain } from '../../contexts/chain'
-
 import { BetType } from '../../global'
 import { formatToFixed } from '../../helpers/formatToFixed'
 import { useBetFee } from '../data/useBetFee'
@@ -161,6 +161,7 @@ export const useBet = (props: UseBetProps) => {
   const isApproveRequired = useMemo(() => {
     if (
       !betAmount
+      || isFreeBet
       || typeof allowanceTx?.data === 'undefined'
       || typeof relayerFeeAmount === 'undefined'
     ) {
@@ -170,7 +171,7 @@ export const useBet = (props: UseBetProps) => {
     const approveAmount: number = +betAmount + +relayerFeeAmount
 
     return allowanceTx.data < parseUnits(String(approveAmount), betToken.decimals)
-  }, [ allowanceTx.data, relayerFeeAmount, betAmount ])
+  }, [ allowanceTx.data, relayerFeeAmount, betAmount, isFreeBet ])
 
   const approve = async () => {
     const hash = await approveTx.writeContractAsync({
@@ -345,7 +346,7 @@ export const useBet = (props: UseBetProps) => {
             queryKey[1] === appChain.id &&
             queryKey[2] === accountLowerCased &&
             (!queryKey[3] || queryKey[3] === BetType.Accepted || queryKey[3] === BetType.Pending)
-          )
+          ),
         })
 
         onBetOrderCreated?.(createdOrder)
@@ -423,7 +424,7 @@ export const useBet = (props: UseBetProps) => {
           queryKey[1] === appChain.id &&
           queryKey[2] === accountLowerCased &&
           (!queryKey[3] || queryKey[3] === BetType.Accepted || queryKey[3] === BetType.Pending)
-        )
+        ),
       })
 
       queryClient.invalidateQueries({

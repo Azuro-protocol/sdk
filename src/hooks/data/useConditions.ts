@@ -10,11 +10,14 @@ import { useOptionalChain } from '../../contexts/chain'
 import { type QueryParameterWithSelect } from '../../global'
 import { batchFetchGameConditions } from '../../helpers/batchFetchGameConditions'
 
+
 export type UseConditionsQueryFnData = ConditionDetailedData[]
 
 export type UseConditionsProps<TData = UseConditionsQueryFnData> = {
   gameId: GetConditionsByGameIdsParams['gameIds']
   onlyActiveOrStopped?: boolean
+  /** To receive new conditions ("5...") that are not in the "dictionaries" package (managed via API only) */
+  extended?: boolean
   chainId?: ChainId
   query?: QueryParameterWithSelect<UseConditionsQueryFnData, TData>
 }
@@ -24,7 +27,7 @@ export type GetUseConditionsQueryOptionsProps<TData = UseConditionsQueryFnData> 
 }
 
 export const getUseConditionsQueryOptions = <TData = UseConditionsQueryFnData>(params: GetUseConditionsQueryOptionsProps<TData>) => {
-  const { gameId, chainId, onlyActiveOrStopped, query } = params
+  const { gameId, chainId, onlyActiveOrStopped, extended, query } = params
 
   return queryOptions({
     queryKey: [
@@ -32,10 +35,11 @@ export const getUseConditionsQueryOptions = <TData = UseConditionsQueryFnData>(p
       chainId,
       gameId,
       onlyActiveOrStopped,
+      extended,
     ],
     queryFn: async (): Promise<UseConditionsQueryFnData> => {
       const gameIds = Array.isArray(gameId) ? gameId : [ gameId ]
-      const conditionsByGameIdMap = await batchFetchGameConditions(gameIds, chainId)
+      const conditionsByGameIdMap = await batchFetchGameConditions(gameIds, chainId, extended)
       const conditions = gameIds.flatMap((id) => conditionsByGameIdMap?.[id] || [])
 
       if (onlyActiveOrStopped) {

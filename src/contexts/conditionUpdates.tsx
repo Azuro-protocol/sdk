@@ -98,7 +98,7 @@ export const ConditionUpdatesProvider: React.FC<any> = ({ children }) => {
     socket.send(JSON.stringify({
       event: Event.Subscribe,
       data: {
-        conditionIds: Object.keys(weights),
+        conditionIds: newSubscribers,
         environment,
       },
     }))
@@ -147,11 +147,23 @@ export const ConditionUpdatesProvider: React.FC<any> = ({ children }) => {
   const runAction = useCallback(createQueueAction(subscribe, unsubscribe), [ subscribe, unsubscribe ])
 
   const subscribeToUpdates = useCallback((conditionIds: string[]) => {
-    runAction('subscribe', conditionIds)
+    const filtered = conditionIds.filter(Boolean)
+
+    if (!filtered.length) {
+      return
+    }
+
+    runAction('subscribe', filtered)
   }, [ runAction ])
 
   const unsubscribeToUpdates = useCallback((conditionIds: string[]) => {
-    runAction('unsubscribe', conditionIds)
+    const filtered = conditionIds.filter(Boolean)
+
+    if (!filtered.length) {
+      return
+    }
+
+    runAction('unsubscribe', filtered)
   }, [ runAction ])
 
   useEffect(() => {

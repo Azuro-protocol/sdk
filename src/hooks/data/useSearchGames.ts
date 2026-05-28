@@ -23,7 +23,7 @@ export type UseSearchGamesProps<TData = UseSearchGamesQueryFnData> = {
   query?: QueryParameterWithSelect<UseSearchGamesQueryFnData, TData>
 }
 
-export type GetUseSearchGamesQueryOptionsProps<TData = UseSearchGamesQueryFnData> =  UseSearchGamesProps<TData> & {
+export type GetUseSearchGamesQueryOptionsProps<TData = UseSearchGamesQueryFnData> = UseSearchGamesProps<TData> & {
   chainId: ChainId
 }
 

@@ -80,7 +80,7 @@ export const useOdds = ({ selections }: UseOddsProps) => {
   }, [ odds ])
 
   useEffect(() => {
-    if (!isSocketReady) {
+    if (!isSocketReady || !conditionsKey.length) {
       return
     }
 
@@ -111,11 +111,11 @@ export const useOdds = ({ selections }: UseOddsProps) => {
   }, [ selectionsKey ])
 
   useEffect(() => {
-    const conditionIds = conditionsKey?.split('-')
-
-    if (!conditionIds.length) {
+    if (!conditionsKey.length) {
       return
     }
+
+    const conditionIds = conditionsKey.split('-')
 
     ;(async () => {
       const data = await batchFetchConditions(conditionIds, appChain.id)

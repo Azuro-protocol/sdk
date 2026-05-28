@@ -10,4 +10,5 @@ export const cookieKeys = {
 
 export const localStorageKeys = {
   betslipItems: 'betslipItems-v3',
+  authPrefix: 'azuro:auth:',
 }

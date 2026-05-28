@@ -11,6 +11,7 @@ import { useQuery, queryOptions, type UseQueryResult } from '@tanstack/react-que
 import { useOptionalChain } from '../../contexts/chain'
 import { type SportHub, type QueryParameterWithSelect } from '../../global'
 
+
 export type UseGamesQueryFnData = GetGamesByFiltersResult
 
 export type UseGamesProps<TData = UseGamesQueryFnData> = {

@@ -3,8 +3,8 @@ import {
   type GameData,
 } from '@azuro-org/toolkit'
 import { useQuery, queryOptions, type UseQueryResult } from '@tanstack/react-query'
-import { batchFetchGames } from '../../helpers/batchFetchGames'
 
+import { batchFetchGames } from '../../helpers/batchFetchGames'
 import { useOptionalChain } from '../../contexts/chain'
 import { type QueryParameterWithSelect } from '../../global'
 

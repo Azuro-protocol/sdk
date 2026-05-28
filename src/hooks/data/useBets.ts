@@ -8,6 +8,7 @@ import {
 import { type InfiniteData, useInfiniteQuery, type UseInfiniteQueryResult } from '@tanstack/react-query'
 import { type Address, type Hex } from 'viem'
 
+import { batchFetchConditions } from '../../helpers/batchFetchConditions'
 import { useOptionalChain } from '../../contexts/chain'
 import { type Bet, type BetOutcome, BetType, type InfiniteQueryParameters } from '../../global'
 import { formatToFixed } from '../../helpers/formatToFixed'
@@ -129,18 +130,26 @@ export const useBets: UseBets = (props) => {
         })
       }
 
-      const gameIds = v3Bets.reduce((acc, order) => {
-        order.conditions.forEach((condition) => {
-          acc.add(condition.gameId)
+      const { gameIds, conditionV5Ids } = v3Bets.reduce((acc, order) => {
+        order.conditions.forEach((condition, index) => {
+          acc.gameIds.add(condition.gameId)
+
+          // @ts-expect-error
+          if (condition.conditionId[0] === '5' && !condition.title && !order.meta?.selections?.[index]?.outcome?.condition?.title) {
+            conditionV5Ids.add(condition.conditionId)
+          }
         })
 
         return acc
-      }, new Set<string>())
+      }, { gameIds: new Set<string>(), conditionV5Ids: new Set<string>() })
 
-      const games = await getGamesByIds({
-        chainId: chain.id,
-        gameIds: [...gameIds],
-      })
+      const [ games, conditionsFeedData ] = await Promise.all([
+        getGamesByIds({
+          chainId: chain.id,
+          gameIds: Array.from(gameIds),
+        }),
+        conditionV5Ids.size > 0 ? batchFetchConditions(Array.from(conditionV5Ids), chain.id) : Promise.resolve(null),
+      ])
 
       const gameByGameId = games.reduce((acc, game) => {
         acc[game.gameId] = game
@@ -149,16 +158,16 @@ export const useBets: UseBets = (props) => {
       }, {} as Record<string, GameData>)
 
       const bets = v3Bets.map((order) => {
-        const  {
+        const {
           id: orderId,
           betType, state: orderState, meta: rawBet, core: coreAddress, bonusId: freebetId, isFreebet, odds,
-          result: orderResult, affiliate, isSponsoredBetReturnable
+          result: orderResult, affiliate, isSponsoredBetReturnable,
         } = order
 
         const {
           // amount,
           resolvedBlockTimestamp: resolvedAt,
-          status, settledOdds,  result, selections,
+          status, settledOdds, result, selections,
           cashout: _cashout, payout: _payout,
           paymasterContractAddress,
           redeemedTxHash,
@@ -209,9 +218,9 @@ export const useBets: UseBets = (props) => {
             } = selectionsByConditionId?.[conditionId] || {}
 
             // @ts-ignore
-            const customSelectionName = outcome?.title
+            const _customSelectionName = outcome?.title
             // @ts-ignore
-            const customMarketName = outcome?.condition?.title
+            const _customMarketName = outcome?.condition?.title
             const wonOutcomeIds = outcome?.condition?.wonOutcomeIds
 
             const game = gameByGameId[gameId]!
@@ -226,8 +235,23 @@ export const useBets: UseBets = (props) => {
               subBetOdds.push(+selectionOdds)
             }
 
-            const marketName = customMarketName && customMarketName !== 'null' ? customMarketName : getMarketName({ outcomeId })
-            const selectionName = customSelectionName && customSelectionName !== 'null' ? customSelectionName : getSelectionName({ outcomeId, withPoint: true })
+            const isConditionV5 = conditionId[0] === '5'
+
+            const customSelectionName = _customSelectionName && _customSelectionName !== 'null'
+              ? _customSelectionName
+              : conditionsFeedData?.[conditionId]?.outcomes[outcomeId]?.title as string | undefined
+
+            const customMarketName = _customMarketName && _customMarketName !== 'null'
+              ? _customMarketName
+              : conditionsFeedData?.[conditionId]?.title as string | undefined
+
+            const marketName = isConditionV5
+              ? customMarketName || 'missed_market_title'
+              : customMarketName || getMarketName({ outcomeId })
+
+            const selectionName = isConditionV5
+              ? customSelectionName || 'missed_outcome_title'
+              : customSelectionName || getSelectionName({ outcomeId, withPoint: true })
 
             return {
               selectionName,
