@@ -12,6 +12,7 @@ import { type QueryParameter } from '../../global'
 export type UseResolvedMarketsProps = {
   gameId: string
   chainId?: ChainId
+  extended?: boolean
   query?: QueryParameter<ConditionDetailedData[]>
 }
 
@@ -42,11 +43,12 @@ const select = (conditions: ConditionDetailedData[]) => {
  * const { data: markets, isFetching } = useResolvedMarkets({ gameId: '123' })
  * */
 export const useResolvedMarkets = (props: UseResolvedMarketsProps) => {
-  const { gameId, chainId, query = {} } = props
+  const { gameId, chainId, extended, query = {} } = props
 
   return useConditions({
     gameId,
     chainId,
+    extended,
     query: {
       ...query,
       select,
