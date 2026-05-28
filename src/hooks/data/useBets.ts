@@ -239,12 +239,10 @@ export const useBets: UseBets = (props) => {
 
             const customSelectionName = _customSelectionName && _customSelectionName !== 'null'
               ? _customSelectionName
-              // @ts-expect-error
               : conditionsFeedData?.[conditionId]?.outcomes[outcomeId]?.title as string | undefined
 
             const customMarketName = _customMarketName && _customMarketName !== 'null'
               ? _customMarketName
-              // @ts-expect-error
               : conditionsFeedData?.[conditionId]?.title as string | undefined
 
             const marketName = isConditionV5
