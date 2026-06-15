@@ -139,6 +139,14 @@ export {
   type UseConditionsQueryFnData,
 } from './hooks/data/useConditions'
 export {
+  usePredefinedCombo,
+  type UsePredefinedComboProps,
+  type UsePredefinedCombo,
+  getUsePredefinedComboQueryOptions,
+  type GetUsePredefinedComboQueryOptionsProps,
+  type UsePredefinedComboQueryFnData,
+} from './hooks/data/usePredefinedCombo'
+export {
   useActiveConditions,
   type UseActiveConditionsProps,
   type UseActiveConditions,

@@ -40,6 +40,7 @@ type RemoveItemProps = Selection
 export type BaseBetslipContextValue = {
   items: AzuroSDK.BetslipItem[]
   addItem: (itemProps: AzuroSDK.BetslipItem) => void
+  addItems: (items: AzuroSDK.BetslipItem[], replace?: boolean) => void
   removeItem: (itemProps: RemoveItemProps) => void
   clear: () => void
 }
@@ -303,6 +304,34 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
   []
   )
 
+  const addItems = useCallback((itemsToAdd: AzuroSDK.BetslipItem[], replace = false) => {
+    setItems(items => {
+      let newItems: AzuroSDK.BetslipItem[]
+
+      if (replace) {
+        newItems = [ ...itemsToAdd ]
+      }
+      else {
+        newItems = [ ...items ]
+
+        itemsToAdd.forEach((item) => {
+          const replaceIndex = newItems.findIndex(({ gameId }) => gameId === item.gameId)
+
+          if (replaceIndex !== -1) {
+            newItems[replaceIndex] = item
+          }
+          else {
+            newItems.push(item)
+          }
+        })
+      }
+
+      localStorage.setItem(localStorageKeys.betslipItems, JSON.stringify(newItems))
+
+      return newItems
+    })
+  }, [])
+
   const removeItem = useCallback((itemProps: RemoveItemProps) => {
     const { conditionId, outcomeId } = itemProps
 
@@ -394,11 +423,13 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
   const baseValue = useMemo(() => ({
     items,
     addItem,
+    addItems,
     removeItem,
     clear,
   }), [
     items,
     addItem,
+    addItems,
     removeItem,
     clear,
   ])
