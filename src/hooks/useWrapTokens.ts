@@ -9,7 +9,7 @@ import { useOptionalChain } from '../contexts/chain'
 import { formatToFixed } from '../helpers/formatToFixed'
 import { useBetTokenBalance } from './useBetTokenBalance'
 import { useNativeBalance } from './useNativeBalance'
-import { useAAWalletClient, useExtendedAccount } from './useAaConnector'
+import { useAAWalletClients, useExtendedAccount } from './useAaConnector'
 
 
 const wrapAbi = [
@@ -51,7 +51,7 @@ type Props = {
 
 export const useWrapTokens = ({ chainId }: Props = {}) => {
   const account = useExtendedAccount()
-  const aaClient = useAAWalletClient()
+  const { getClientForChain } = useAAWalletClients()
   const wagmiConfig = useConfig()
   const depositTx = useSendTransaction()
   const withdrawTx = useSendTransaction()
@@ -91,6 +91,17 @@ export const useWrapTokens = ({ chainId }: Props = {}) => {
       throw new Error('insufficient chain, please use Gnosis or Base')
     }
 
+
+    let aaClient: Awaited<ReturnType<typeof getClientForChain>>
+
+    if (isAAWallet) {
+      aaClient = await getClientForChain({ id: appChain.id })
+
+      if (!aaClient) {
+        throw new Error('AA wallet client not found for app chain')
+      }
+    }
+
     depositTx.reset()
     setAaDepositTxState({
       isPending: isAAWallet,
@@ -113,7 +124,7 @@ export const useWrapTokens = ({ chainId }: Props = {}) => {
 
     if (isAAWallet) {
       try {
-        hash = await aaClient!.sendTransaction({ ...tx, chain: appChain })
+        hash = await aaClient!.sendTransaction(tx)
 
         setAaDepositTxState({
           data: hash,
@@ -149,6 +160,16 @@ export const useWrapTokens = ({ chainId }: Props = {}) => {
       throw new Error('insufficient chain, please use Gnosis or Base')
     }
 
+    let aaClient: Awaited<ReturnType<typeof getClientForChain>>
+
+    if (isAAWallet) {
+      aaClient = await getClientForChain({ id: appChain.id })
+
+      if (!aaClient) {
+        throw new Error('AA wallet client not found for app chain')
+      }
+    }
+
     withdrawTx.reset()
     setAaWithdrawTxState({
       isPending: isAAWallet,
@@ -171,7 +192,7 @@ export const useWrapTokens = ({ chainId }: Props = {}) => {
 
     if (isAAWallet) {
       try {
-        hash = await aaClient!.sendTransaction({ ...tx, chain: appChain })
+        hash = await aaClient!.sendTransaction(tx)
 
         setAaWithdrawTxState({
           data: hash,

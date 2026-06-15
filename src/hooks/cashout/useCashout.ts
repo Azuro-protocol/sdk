@@ -18,7 +18,7 @@ import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-q
 import { getEventArgsFromTxReceipt } from '../../helpers/getEventArgsFromTxReceipt'
 import { useOptionalChain } from '../../contexts/chain'
 import { type Bet } from '../../global'
-import { useAAWalletClient, useExtendedAccount } from '../useAaConnector'
+import { useAAWalletClients, useExtendedAccount } from '../useAaConnector'
 import { useBetsCache } from '../useBetsCache'
 import { type PrecalculatedCashoutsQueryData } from './usePrecalculatedCashouts'
 import { useBetTokenBalance } from '../useBetTokenBalance'
@@ -94,7 +94,7 @@ export const useCashout: UseCashout = (props) => {
   const queryClient = useQueryClient()
   const account = useExtendedAccount()
   const isAAWallet = Boolean(account.isAAWallet)
-  const aaClient = useAAWalletClient()
+  const { getClientForChain } = useAAWalletClients()
   const walletClient = useWalletClient()
   const wagmiConfig = useConfig()
 
@@ -213,6 +213,16 @@ export const useCashout: UseCashout = (props) => {
         throw new Error('cashout unavailable')
       }
 
+      let aaClient: Awaited<ReturnType<typeof getClientForChain>>
+
+      if (isAAWallet) {
+        aaClient = await getClientForChain({ id: appChain.id })
+
+        if (!aaClient) {
+          throw new Error('AA wallet client not found for app chain')
+        }
+      }
+
       updateCashoutTx({
         data: undefined,
         isPending: true,
@@ -220,8 +230,6 @@ export const useCashout: UseCashout = (props) => {
 
       // switch chain and approve
       if (isAAWallet && aaClient) {
-        await aaClient.switchChain({ id: appChain.id })
-
         if (isApproveRequired) {
           const hash = await aaClient!.sendTransaction({
             to: contracts.azuroBet.address,

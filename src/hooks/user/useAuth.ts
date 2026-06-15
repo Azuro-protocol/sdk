@@ -5,7 +5,7 @@ import { useWalletClient } from 'wagmi'
 
 import { useOptionalChain } from '../../contexts/chain'
 import { clearAuth, getAuthStorageKey, readAuth, type StoredAuth, writeAuth } from '../../helpers/authStorage'
-import { useAAWalletClient, useExtendedAccount } from '../../hooks/useAaConnector'
+import { useAAWalletClients, useExtendedAccount } from '../../hooks/useAaConnector'
 
 
 export type AuthErrorCode =
@@ -72,10 +72,8 @@ export const useAuth = (props: UseAuthProps): UseAuthResult => {
     autoSignIn = false, onSignIn, onSignOut, onError,
   } = props
 
-  const { address, isAAWallet, ready } = useExtendedAccount()
-  const aaClient = useAAWalletClient()
-  const aaClientRef = useRef(aaClient)
-  aaClientRef.current = aaClient
+  const { address, isAAWallet, isReady } = useExtendedAccount()
+  const { getClientForChain } = useAAWalletClients()
 
   const { chain: appChain } = useOptionalChain(chainId)
   const { data: walletClient } = useWalletClient({ chainId: appChain.id })
@@ -182,7 +180,13 @@ export const useAuth = (props: UseAuthProps): UseAuthResult => {
   const signIn = useCallback(async (): Promise<string> => {
     const currentAddress = address
     const currentWalletClient = walletClientRef.current
-    const currentAaClient = aaClientRef.current
+    const resolvedChainId = appChain.id
+
+    let currentAaClient: Awaited<ReturnType<typeof getClientForChain>>
+
+    if (isAAWallet) {
+      currentAaClient = await getClientForChain({ id: resolvedChainId })
+    }
 
     const signingClient = isAAWallet ? currentAaClient : currentWalletClient
 
@@ -202,8 +206,6 @@ export const useAuth = (props: UseAuthProps): UseAuthResult => {
       if (!domain && !uri) {
         throw new AuthError('StorageUnavailable', 'Cannot derive domain/uri outside browser')
       }
-
-      const resolvedChainId = appChain.id
 
       let nonceResult: Awaited<ReturnType<typeof getSiweNonce>>
 
@@ -319,7 +321,7 @@ export const useAuth = (props: UseAuthProps): UseAuthResult => {
 
   // autoSignIn effect — fires once per (address, affiliate) pair
   useEffect(() => {
-    if (!autoSignIn || !ready || !address || token || isLoading || error) {
+    if (!autoSignIn || !isReady || !address || token || isLoading || error) {
       return
     }
 
@@ -333,7 +335,7 @@ export const useAuth = (props: UseAuthProps): UseAuthResult => {
     signIn().catch(() => {
       // error is already set in state; prevent unhandled rejection
     })
-  }, [ autoSignIn, ready, address, affiliate, token, isLoading, error, signIn ])
+  }, [ autoSignIn, isReady, address, affiliate, token, isLoading, error, signIn ])
 
   return {
     token,

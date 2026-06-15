@@ -7,7 +7,7 @@ import { type ChainId, paymasterAbi } from '@azuro-org/toolkit'
 import { useOptionalChain } from '../../contexts/chain'
 import { useBetsCache } from '../useBetsCache'
 import { type Bet } from '../../global'
-import { useExtendedAccount, useAAWalletClient } from '../useAaConnector'
+import { useExtendedAccount, useAAWalletClients } from '../useAaConnector'
 import { useBetTokenBalance } from '../useBetTokenBalance'
 import { useNativeBalance } from '../useNativeBalance'
 
@@ -93,7 +93,7 @@ export const useRedeemBet = ({ chainId }: Props = {}) => {
 
   const redeemTx = useSendTransaction()
   const account = useExtendedAccount()
-  const aaClient = useAAWalletClient()
+  const { getClientForChain } = useAAWalletClients()
 
   const [ aaTxState, setAaTxState ] = useState<AaTxState>({ isPending: false, data: undefined, error: null })
 
@@ -109,6 +109,16 @@ export const useRedeemBet = ({ chainId }: Props = {}) => {
 
   const submit = async (props: SubmitProps) => {
     const { bets } = props
+
+    let aaClient: Awaited<ReturnType<typeof getClientForChain>>
+
+    if (isAAWallet) {
+      aaClient = await getClientForChain({ id: appChain.id })
+
+      if (!aaClient) {
+        throw new Error('AA wallet client not found for app chain')
+      }
+    }
 
     redeemTx.reset()
     setAaTxState({
@@ -180,7 +190,7 @@ export const useRedeemBet = ({ chainId }: Props = {}) => {
 
     if (isAAWallet) {
       try {
-        hash = await aaClient!.sendTransaction({ to, data, chain: appChain })
+        hash = await aaClient!.sendTransaction({ to, data })
 
         setAaTxState({
           data: hash,

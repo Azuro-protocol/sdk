@@ -5,7 +5,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useReducer, useRef } from 'react'
 import {
-  type Address, encodeFunctionData, erc20Abi, type Hex, maxUint256, parseUnits, type TransactionReceipt,
+  type Address, encodeFunctionData, erc20Abi, type Hex, maxUint256, parseUnits, SignTypedDataParameters, type TransactionReceipt,
 } from 'viem'
 import { useConfig, useReadContract, useWaitForTransactionReceipt, useWalletClient, useWriteContract } from 'wagmi'
 import { waitForTransactionReceipt } from 'wagmi/actions'
@@ -15,7 +15,7 @@ import { useOptionalChain } from '../../contexts/chain'
 import { BetType } from '../../global'
 import { formatToFixed } from '../../helpers/formatToFixed'
 import { useBetFee } from '../data/useBetFee'
-import { useAAWalletClient, useExtendedAccount } from '../useAaConnector'
+import { useAAWalletClients, useExtendedAccount } from '../useAaConnector'
 import { useBetTokenBalance } from '../useBetTokenBalance'
 import { useNativeBalance } from '../useNativeBalance'
 
@@ -105,9 +105,7 @@ export const useBet = (props: UseBetProps) => {
   const isFreeBet = Boolean(freebet)
 
   const { address, isReady, isAAWallet } = useExtendedAccount()
-  const aaClient = useAAWalletClient()
-  const aaClientRef = useRef(aaClient)
-  aaClientRef.current = aaClient
+  const { getClientForChain } = useAAWalletClients()
 
   const { chain: appChain, contracts, betToken, graphql } = useOptionalChain(chainId)
   const queryClient = useQueryClient()
@@ -214,7 +212,16 @@ export const useBet = (props: UseBetProps) => {
 
     try {
       const account = address!
-      const aaClient = aaClientRef.current!
+      let aaClient: Awaited<ReturnType<typeof getClientForChain>>
+
+      if (isAAWallet) {
+        aaClient = await getClientForChain({ id: appChain.id })
+
+        if (!aaClient) {
+          throw new Error('AA wallet client not found for app chain')
+        }
+      }
+
       const walletClient = walletClientRef.current!
 
       if (!account) {
@@ -229,10 +236,6 @@ export const useBet = (props: UseBetProps) => {
         throw new Error('Wallet client is not initialized')
       }
 
-      if (isAAWallet && aaClient.chain?.id !== appChain.id) {
-        await aaClientRef.current!.switchChain({ id: appChain.id })
-      }
-
       const fixedAmount = formatToFixed(betAmount, betToken.decimals)
       const rawAmount = parseUnits(fixedAmount, betToken.decimals)
       const expiresAt = Math.floor(Date.now() / 1000) + (deadline || DEFAULT_DEADLINE)
@@ -241,7 +244,7 @@ export const useBet = (props: UseBetProps) => {
       const { conditionId, outcomeId } = selections[0]!
 
       if (isAAWallet && isApproveRequired) {
-        const hash = await aaClient.sendTransaction({
+        const hash = await aaClient!.sendTransaction({
           to: betToken.address!,
           data: encodeFunctionData({
             abi: erc20Abi,
@@ -287,7 +290,8 @@ export const useBet = (props: UseBetProps) => {
         const typedData = getComboBetTypedData(betData)
 
         const signature = isAAWallet
-          ? await aaClient.signTypedData(typedData)
+          // @ts-ignore privy types mismatch?
+          ? await aaClient!.signTypedData(typedData)
           : await walletClient.signTypedData(typedData)
 
 
@@ -313,7 +317,8 @@ export const useBet = (props: UseBetProps) => {
         const typedData = getBetTypedData(betData)
 
         const signature = isAAWallet
-          ? await aaClient.signTypedData(typedData)
+          // @ts-ignore privy types mismatch?
+          ? await aaClient!.signTypedData(typedData)
           : await walletClient.signTypedData(typedData)
 
 
@@ -455,7 +460,7 @@ export const useBet = (props: UseBetProps) => {
 
   return {
     submit,
-    isWalletReadyToSubmit: Boolean(isReady && !isFetchingWalletClient && (isAAWallet ? aaClient : walletClient)),
+    isWalletReadyToSubmit: Boolean(isReady && !isFetchingWalletClient && (isAAWallet || walletClient)),
     approveTx: {
       isPending: approveTx.isPending,
       isProcessing: approveReceipt.isLoading,

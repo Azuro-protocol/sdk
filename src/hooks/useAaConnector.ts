@@ -1,10 +1,14 @@
 import { useContext, createContext, useSyncExternalStore } from 'react'
-//@ts-ignore
-import type { useAccount as useAccountFn, useAAWalletClient as useAAWalletClientFn } from '@azuro-org/sdk-social-aa-connector'
 import { useAccount } from 'wagmi'
+// @ts-ignore to avoid errors in clients without aa-connector
+import type { useAccount as useAccountFn, ExtendedAccountContextValue, useAAWalletClients as useAAWalletClientsFn } from '@azuro-org/sdk-social-aa-connector'
 
 
-const DumbContext = createContext(undefined)
+const DumbContext = createContext<ExtendedAccountContextValue>(null!)
+const DumbContextWalletClients = createContext<ReturnType<typeof useAAWalletClientsFn>>({
+  client: undefined,
+  getClientForChain: async () => undefined,
+})
 
 let ready = false
 let listeners: Function[] = []
@@ -32,21 +36,21 @@ const emitChange = () => {
   }
 }
 
-let useAccountWithAA: typeof useAccountFn = () => useContext(DumbContext) as any
-let _useAAWalletClient: typeof useAAWalletClientFn = () => useContext(DumbContext) as any
+let useAccountWithAA: typeof useAccountFn = () => useContext(DumbContext)
+let _useAAWalletClients: typeof useAAWalletClientsFn = () => useContext(DumbContextWalletClients)
 
 export const useExtendedAccount: typeof useAccountFn = () => {
   const account = useAccount()
   const ready = useSyncExternalStore(readyStore.subscribe, readyStore.getSnapshot, () => false)
   const accountWithAA = useAccountWithAA()
 
-  return accountWithAA || { ...account, isAAWallet: false, ready }
+  return accountWithAA || { ...account, isAAWallet: false, ready, isReady: ready }
 }
 
-export const useAAWalletClient: typeof useAAWalletClientFn = () => {
+export const useAAWalletClients: typeof useAAWalletClientsFn = () => {
   useSyncExternalStore(readyStore.subscribe, readyStore.getSnapshot, () => false)
 
-  return _useAAWalletClient()
+  return _useAAWalletClients()
 }
 
 ;(async () => {
@@ -58,7 +62,7 @@ export const useAAWalletClient: typeof useAAWalletClientFn = () => {
     }
 
     if (typeof pkg.useAAWalletClient === 'function') {
-      _useAAWalletClient = pkg.useAAWalletClient
+      _useAAWalletClients = pkg.useAAWalletClients
     }
 
     readyStore.setReady()
