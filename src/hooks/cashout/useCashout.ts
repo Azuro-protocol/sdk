@@ -262,7 +262,7 @@ export const useCashout: UseCashout = (props) => {
       })
 
       const signature = isAAWallet
-        ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account as any })
+        ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account })
         : await walletClient!.data!.signTypedData(typedData)
 
       if (Date.now() >= approveExpiredAt!) {

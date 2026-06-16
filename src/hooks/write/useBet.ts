@@ -290,8 +290,7 @@ export const useBet = (props: UseBetProps) => {
         const typedData = getComboBetTypedData(betData)
 
         const signature = isAAWallet
-          // @ts-ignore privy types mismatch?
-          ? await aaClient!.signTypedData(typedData)
+          ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account })
           : await walletClient.signTypedData(typedData)
 
 
@@ -317,8 +316,7 @@ export const useBet = (props: UseBetProps) => {
         const typedData = getBetTypedData(betData)
 
         const signature = isAAWallet
-          // @ts-ignore privy types mismatch?
-          ? await aaClient!.signTypedData(typedData)
+          ? await aaClient!.signTypedData({ ...typedData, account: aaClient!.account })
           : await walletClient.signTypedData(typedData)
 
 
