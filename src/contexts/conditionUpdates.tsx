@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef } from 'react'
-import { type ConditionState } from '@azuro-org/toolkit'
+import { type ConditionState, type OutcomeState } from '@azuro-org/toolkit'
 
 import { createQueueAction } from '../helpers/createQueueAction'
 import { conditionWatcher } from '../modules/conditionWatcher'
@@ -35,6 +35,8 @@ export type ConditionData = {
     title: string | null
     currentOdds: string
     turnover: string
+    state: OutcomeState
+    hidden: boolean
   }[]
 }
 
@@ -55,12 +57,16 @@ export type ConditionUpdatedData = {
     title: string | null
     currentOdds: string
     turnover: string
+    state: OutcomeState
+    hidden: boolean
   }[]
 }
 
 export type OutcomeUpdateData = {
   odds: number
   turnover: string
+  state: OutcomeState
+  hidden: boolean
 }
 
 const ConditionUpdatesContext = createContext<ConditionUpdatesContextValue | null>(null)
@@ -192,10 +198,12 @@ export const ConditionUpdatesProvider: React.FC<any> = ({ children }) => {
 
       conditionWatcher.dispatch(conditionId, eventData)
 
-      outcomes.forEach(({ outcomeId, currentOdds, turnover }) => {
+      outcomes.forEach(({ outcomeId, currentOdds, turnover, state: outcomeState, hidden }) => {
         outcomeWatcher.dispatch(`${conditionId}-${outcomeId}`, {
           odds: +currentOdds,
           turnover,
+          state: outcomeState,
+          hidden,
         })
       })
     }

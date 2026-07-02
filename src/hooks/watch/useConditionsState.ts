@@ -94,8 +94,8 @@ export const useConditionsState = ({ conditionIds: _conditionIds, initialStates,
 
   const prevConditionsKeyRef = useRef(conditionsKey)
 
-  if (conditionIds.length && conditionsKey !== prevConditionsKeyRef.current && state !== initialState) {
-    // if conditions are changed, reset the state for the new conditions
+  if (conditionsKey !== prevConditionsKeyRef.current && state !== initialState) {
+    // if conditions are changed (including cleared to empty), reset the state for the new conditions
     setState(initialState)
   }
 

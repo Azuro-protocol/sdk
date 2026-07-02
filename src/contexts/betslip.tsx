@@ -4,6 +4,7 @@ import {
   type Freebet,
 
   ConditionState,
+  OutcomeState,
 } from '@azuro-org/toolkit'
 import { type Address } from 'viem'
 
@@ -11,6 +12,7 @@ import { localStorageKeys } from '../config'
 import { useChain } from './chain'
 import { useOdds } from '../hooks/watch/useOdds'
 import { useConditionsState } from '../hooks/watch/useConditionsState'
+import { useOutcomesState } from '../hooks/watch/useOutcomesState'
 import { useAvailableFreebets } from '../hooks/bonus/useAvailableFreebets'
 import useForceUpdate from '../hooks/helpers/useForceUpdate'
 import { useBetCalculation } from '../hooks/data/useBetCalculation'
@@ -55,6 +57,8 @@ export type DetailedBetslipContextValue = {
   selectedFreebet: Freebet | undefined
   freebets: Freebet[] | undefined | null
   states: Record<string, ConditionState>
+  /** map of `${conditionId}-${outcomeId}` to its current `OutcomeState` */
+  outcomeStates: Record<string, OutcomeState>
   disableReason: BetslipDisableReason | undefined
   changeBetAmount: (value: string) => void
   // changeBatchBetAmount: (item: ChangeBatchBetAmountItem, value: string) => void
@@ -62,6 +66,7 @@ export type DetailedBetslipContextValue = {
   selectFreebet: (value?: Freebet) => void
   // isBatch: boolean
   isStatesFetching: boolean
+  isOutcomeStatesFetching: boolean
   isOddsFetching: boolean
   isFreebetsFetching: boolean
   /** @deprecated use `isBetCalculationFetching` instead */
@@ -115,6 +120,9 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
   const { data: states, isFetching: isStatesFetching } = useConditionsState({
     conditionIds: items.map(({ conditionId }) => conditionId),
   })
+  const { data: outcomeStates, outcomesMap, isFetching: isOutcomeStatesFetching } = useOutcomesState({
+    selections: items,
+  })
   const { data: betCalcData, isFetching: isBetCalculationFetching } = useBetCalculation({
     selections: items,
     account: account?.address,
@@ -162,6 +170,19 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     return Object.values(states).every(state => state === ConditionState.Active)
   }, [ states ])
 
+  const isOutcomesInActiveState = useMemo(() => {
+    return items.every(({ conditionId, outcomeId }) => {
+      const outcome = outcomesMap[`${conditionId}-${outcomeId}`]
+
+      // not yet fetched or prev version of API — don't block the betslip prematurely
+      if (!outcome || !('state' in outcome) || typeof outcome.hidden !== 'boolean') {
+        return true
+      }
+
+      return outcome.state === OutcomeState.Active && !outcome.hidden
+    })
+  }, [ items, outcomesMap ])
+
   const isComboWithDifferentGames = useMemo(() => {
     return !isCombo || checkDifferentGames(items)
   }, [ isCombo, items ])
@@ -188,6 +209,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
 
   const isBetAllowed = (
     isConditionsInActiveState
+    && isOutcomesInActiveState
     && isComboAllowed
     && isFreeBetAllowed
     && isMaxBetBiggerThanZero
@@ -197,7 +219,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
   )
 
   let disableReason = (() => {
-    if (!isConditionsInActiveState) {
+    if (!isConditionsInActiveState || !isOutcomesInActiveState) {
       return BetslipDisableReason.ConditionState
     }
 
@@ -444,6 +466,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     selectedFreebet,
     freebets,
     states,
+    outcomeStates,
     disableReason,
     changeBetAmount,
     // changeBatchBetAmount,
@@ -451,6 +474,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     selectFreebet: setFreebet,
     // isBatch,
     isStatesFetching,
+    isOutcomeStatesFetching,
     isOddsFetching,
     isFreebetsFetching,
     isMaxBetFetching: isBetCalculationFetching,
@@ -466,6 +490,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     selectedFreebet,
     freebets,
     states,
+    outcomeStates,
     disableReason,
     changeBetAmount,
     // changeBatchBetAmount,
@@ -473,6 +498,7 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
     setFreebet,
     // isBatch,
     isStatesFetching,
+    isOutcomeStatesFetching,
     isOddsFetching,
     isFreebetsFetching,
     isBetCalculationFetching,
