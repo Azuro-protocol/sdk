@@ -236,12 +236,13 @@ export const useBets: UseBets = (props) => {
           })
           .sort((a, b) => +(a.game?.startsAt || 0) - +(b.game?.startsAt || 0))
 
-        // a bet with nothing left standing returns the stake. `settledOdds` keeps the original odds
-        // even then, and `calcMinOdds` of an empty list is 0.99 - the combo fee applied to no legs
-        // at all - so neither can be used here
-        let totalOdds = isCanceled || (isCombo && !subBetOdds.length) ? 1
+        // a fully canceled bet returns the stake, nothing more. `settledOdds` keeps the original
+        // odds even then, so it must not be used here - see the note on the `Bet` type.
+        // Likewise an all-void combo leaves `subBetOdds` empty, and `calcMinOdds` returns 0.99 for
+        // an empty array (the combo fee applied to nothing).
+        let totalOdds = isCanceled ? 1
           : isCombo
-            ? +formatToFixed(calcMinOdds({ odds: subBetOdds, slippage: 0 }), 2)
+            ? subBetOdds.length ? +formatToFixed(calcMinOdds({ odds: subBetOdds, slippage: 0 }), 2) : 1
             : settledOdds ? +settledOdds : +odds
 
         const possibleWin = +amount * totalOdds - +betDiff
