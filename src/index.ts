@@ -165,11 +165,6 @@ export {
   type UseActiveMarkets,
 } from './hooks/data/useActiveMarkets'
 export {
-  useResolvedMarkets,
-  type UseResolvedMarketsProps,
-  type UseResolvedMarkets,
-} from './hooks/data/useResolvedMarkets'
-export {
   useGames,
   type UseGamesProps,
   getUseGamesQueryOptions,
