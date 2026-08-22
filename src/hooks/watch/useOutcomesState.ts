@@ -177,7 +177,9 @@ export const useOutcomesState = ({ selections, initialStates, outcomes }: UseOut
         return selectionsList.reduce<OutcomesStateData>((acc, { conditionId, outcomeId, key }) => {
           const fetched = data?.[conditionId]?.outcomes?.[outcomeId]
           const prev = prevValue.statesMap[key]
-          const state = fetched?.state || prevValue.states[key] || OutcomeState.Canceled
+          // the outcome isn't in the feed at all. `Canceled` would be wrong here: it now means
+          // the outcome was voided, which is a settlement with money attached
+          const state = fetched?.state || prevValue.states[key] || OutcomeState.Stopped
           const hidden = fetched?.hidden ?? prev?.hidden ?? false
           // REST odds are strings; coerce. turnover isn't returned by REST — keep last known.
           const odds = +(fetched?.odds ?? prev?.odds ?? 0)

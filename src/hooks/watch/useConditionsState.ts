@@ -161,7 +161,9 @@ export const useConditionsState = ({ conditionIds: _conditionIds, initialStates,
       setState((prevValue) => {
         return conditionIds.reduce<ConditionsStateData>((acc, conditionId) => {
           const hidden = prevValue.statesMap[conditionId]?.hidden ?? false
-          const state = data?.[conditionId]?.state || prevValue.states[conditionId] || ConditionState.Removed
+          // the condition isn't in the feed at all - treat it as not bettable rather than
+          // inventing a settlement state it may not have
+          const state = data?.[conditionId]?.state || prevValue.states[conditionId] || ConditionState.Stopped
 
           acc.states[conditionId] = state
           acc.statesMap[conditionId] = {

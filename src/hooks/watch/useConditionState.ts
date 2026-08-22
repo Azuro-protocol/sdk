@@ -34,7 +34,7 @@ export type UseConditionStateProps = {
  *
  * const { data: state, isLocked, isFetching } = useConditionState({
  *   conditionId: condition.conditionId,
- *   initialState: condition.state, // ConditionState.Active, ConditionState.Stopped, etc.
+ *   initialState: condition.state, // ConditionState.Active or ConditionState.Stopped
  *   isInitiallyHidden: condition.hidden, // boolean, comes from API ConditionDetailedData['hidden']
  * })
  * */
@@ -88,7 +88,9 @@ export const useConditionState = ({ conditionId, initialState, isInitiallyHidden
       const data = await batchFetchConditions([ conditionId ], appChain.id)
 
       setState((prevState) => ({
-        state: data?.[conditionId]?.state || prevState?.state || ConditionState.Removed,
+        // the condition isn't in the feed at all - treat it as not bettable rather than inventing
+        // a settlement state it may not have
+        state: data?.[conditionId]?.state || prevState?.state || ConditionState.Stopped,
         isHidden: prevState?.isHidden,
         isFetching: false,
       }))

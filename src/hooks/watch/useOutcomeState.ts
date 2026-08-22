@@ -99,7 +99,9 @@ export const useOutcomeState = ({ conditionId, outcomeId, initialState, isInitia
       const fetched = data?.[conditionId]?.outcomes?.[outcomeId]
 
       setState((prevState) => ({
-        state: fetched?.state || prevState?.state || OutcomeState.Canceled,
+        // the outcome isn't in the feed at all. `Canceled` would be wrong here: it now means the
+        // outcome was voided, which is a settlement with money attached
+        state: fetched?.state || prevState?.state || OutcomeState.Stopped,
         isHidden: fetched?.hidden ?? prevState?.isHidden,
         // REST odds are strings; coerce. turnover isn't returned by REST — keep last known.
         odds: +(fetched?.odds ?? prevState?.odds ?? 0),
