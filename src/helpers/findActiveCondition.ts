@@ -1,4 +1,4 @@
-import { ConditionState, type GameMarkets } from '@azuro-org/toolkit'
+import { ConditionState, isOutcomeSettled, type GameMarkets, type MarketCondition } from '@azuro-org/toolkit'
 
 
 type Props = {
@@ -8,10 +8,25 @@ type Props = {
   activeMarketKey: string
 }
 
+/**
+ * Resolution is per-outcome, so a condition can keep reporting `ConditionState.Active` after every
+ * one of its outcomes has been won, lost or voided. Such a condition has nothing left to bet on and
+ * must not be picked as the active market.
+ * */
+export const getIsConditionActive = (condition: MarketCondition, states: Record<string, ConditionState>) => {
+  if (states[condition.conditionId] !== ConditionState.Active) {
+    return false
+  }
+
+  const { outcomes } = condition
+
+  return !outcomes?.length || outcomes.some(({ state }) => !isOutcomeSettled(state))
+}
+
 export const findActiveCondition = ({ states, marketsByKey, sortedMarketKeys, activeMarketKey }: Props) => {
-  // try to find condition with Created status in active market
-  let nextConditionIndex = marketsByKey[activeMarketKey!]!.conditions.findIndex(({ conditionId }) => {
-    return states[conditionId] === ConditionState.Active
+  // try to find an active condition in active market
+  let nextConditionIndex = marketsByKey[activeMarketKey!]!.conditions.findIndex((condition) => {
+    return getIsConditionActive(condition, states)
   })
 
   if (nextConditionIndex !== -1) {
@@ -21,12 +36,12 @@ export const findActiveCondition = ({ states, marketsByKey, sortedMarketKeys, ac
     }
   }
   else {
-    // try to find next market and condition with Created status
+    // try to find next market and an active condition in it
     nextConditionIndex = 0
 
     const nextMarketKey = sortedMarketKeys.find(marketKey => {
-      return marketsByKey[marketKey]!.conditions.find(({ conditionId }, index) => {
-        const isMatch = states[conditionId] === ConditionState.Active
+      return marketsByKey[marketKey]!.conditions.find((condition, index) => {
+        const isMatch = getIsConditionActive(condition, states)
 
         if (isMatch) {
           nextConditionIndex = index

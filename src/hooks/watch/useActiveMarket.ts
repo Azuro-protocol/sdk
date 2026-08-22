@@ -2,7 +2,7 @@ import { ConditionState, type GameMarkets } from '@azuro-org/toolkit'
 import { useEffect, useMemo, useState } from 'react'
 
 import { useConditionsState } from './useConditionsState'
-import { findActiveCondition } from '../../helpers/findActiveCondition'
+import { findActiveCondition, getIsConditionActive } from '../../helpers/findActiveCondition'
 
 
 export type UseActiveMarketProps = {
@@ -70,13 +70,12 @@ export const useActiveMarket = ({ markets }: UseActiveMarketProps) => {
       return
     }
 
-    const activeConditionId = marketsByKey[activeMarketKey!]!.conditions[activeConditionIndex]!.conditionId
+    const activeCondition = marketsByKey[activeMarketKey!]!.conditions[activeConditionIndex]!
 
-    const activeStatus = (
-      states[activeConditionId] || ConditionState.Active
-    )
+    // no state yet means the socket hasn't reported on this condition, so keep trusting the feed
+    const hasState = Boolean(states[activeCondition.conditionId])
 
-    if (activeStatus === ConditionState.Active) {
+    if (!hasState || getIsConditionActive(activeCondition, states)) {
       return
     }
 
