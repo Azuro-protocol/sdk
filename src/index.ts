@@ -221,6 +221,14 @@ export {
   type UseBetsSummary,
 } from './hooks/data/useBetsSummary'
 export {
+  useBetsReport,
+  type UseBetsReportProps,
+  type UseBetsReport,
+  getUseBetsReportQueryOptions,
+  type GetUseBetsReportQueryOptionsProps,
+  type UseBetsReportQueryFnData,
+} from './hooks/data/useBetsReport'
+export {
   useBetsSummaryBySelection,
   type UseBetsSummaryBySelectionProps,
   type UseBetsSummaryBySelection,

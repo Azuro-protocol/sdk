@@ -2,10 +2,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { type Address } from 'viem'
 import { type ChainId, type CreateUserFavoriteResult, createUserFavorite } from '@azuro-org/toolkit'
 
+import { AuthError } from 'src/hooks/user/useAuth'
+
 import { useOptionalChain } from '../../contexts/chain'
 import { readAuth } from '../../helpers/authStorage'
 import { useExtendedAccount } from '../useAaConnector'
-import { AuthError } from 'src/hooks/user/useAuth'
 
 
 export type UseCreateUserFavoriteProps = {

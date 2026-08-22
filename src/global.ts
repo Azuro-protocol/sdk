@@ -1,5 +1,7 @@
 import { type Address, type Hex } from 'viem'
-import { type Selection, type GraphBetStatus, type GameData, type BetOrderState } from '@azuro-org/toolkit'
+import {
+  type Selection, type GraphBetStatus, type GameData, type BetOrderState, BetStatusFilter,
+} from '@azuro-org/toolkit'
 import { type UseInfiniteQueryOptions, type DefaultError, type QueryKey, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query'
 
 
@@ -51,13 +53,20 @@ export enum SportHub {
   Esports = 'esports',
 }
 
-export enum BetType {
-  Unredeemed = 'unredeemed',
-  Pending = 'pending',
-  Accepted = 'accepted',
-  Settled = 'settled',
-  CashedOut = 'cashedOut',
-}
+export { BetStatusFilter, BetKind } from '@azuro-org/toolkit'
+
+/**
+ * @deprecated Renamed to `BetStatusFilter` - these are lifecycle statuses, not bet types.
+ * For single/combo use `filter.kind` + `BetKind`. Will be removed in @azuro-org/sdk v9.
+ *
+ * This is an alias of the very same enum object, so `BetType.Accepted === BetStatusFilter.Accepted`
+ * and existing call sites keep working unchanged, at runtime and in the type checker.
+ * */
+export const BetType = BetStatusFilter
+/**
+ * @deprecated Renamed to `BetStatusFilter`. Will be removed in @azuro-org/sdk v9.
+ * */
+export type BetType = BetStatusFilter
 
 export type BetOutcome = {
   selectionName: string
@@ -97,7 +106,20 @@ export type Bet = {
   rejectedErrorCode: string | null
   amount: string
   possibleWin: number
+  /**
+   * Claimable amount: non-null only while there is money left to redeem, and `null` once the bet
+   * has been redeemed or cashed out. Use it to gate a redeem action.
+   *
+   * To display what a bet actually returned - in a history list, or next to an aggregate that
+   * counts settled bets - use `settledPayout` instead, which survives redemption.
+   * */
   payout: number | null
+  /**
+   * Payout as recorded by the protocol, whether or not it has already been claimed. `null` while
+   * the bet is unsettled, and for a cashed out bet it is the notional payout the bet would have
+   * produced, not what the bettor received - read `cashout` for that.
+   * */
+  settledPayout: number | null
   createdAt: number
   resolvedAt: number | null
   redeemedAt?: number | null

@@ -12,7 +12,7 @@ import { waitForTransactionReceipt } from 'wagmi/actions'
 
 import { DEFAULT_DEADLINE } from '../../config'
 import { useOptionalChain } from '../../contexts/chain'
-import { BetType } from '../../global'
+import { isBettorBetsQueryKey } from '../../helpers/betsQueryKeys'
 import { formatToFixed } from '../../helpers/formatToFixed'
 import { useBetFee } from '../data/useBetFee'
 import { useAAWalletClients, useExtendedAccount } from '../useAaConnector'
@@ -344,12 +344,7 @@ export const useBet = (props: UseBetProps) => {
         })
 
         queryClient.invalidateQueries({
-          predicate: ({ queryKey }) => (
-            queryKey[0] === 'bets' &&
-            queryKey[1] === appChain.id &&
-            queryKey[2] === accountLowerCased &&
-            (!queryKey[3] || queryKey[3] === BetType.Accepted || queryKey[3] === BetType.Pending)
-          ),
+          predicate: ({ queryKey }) => isBettorBetsQueryKey(queryKey, appChain.id, accountLowerCased),
         })
 
         onBetOrderCreated?.(createdOrder)
@@ -422,12 +417,7 @@ export const useBet = (props: UseBetProps) => {
       }
 
       queryClient.invalidateQueries({
-        predicate: ({ queryKey }) => (
-          queryKey[0] === 'bets' &&
-          queryKey[1] === appChain.id &&
-          queryKey[2] === accountLowerCased &&
-          (!queryKey[3] || queryKey[3] === BetType.Accepted || queryKey[3] === BetType.Pending)
-        ),
+        predicate: ({ queryKey }) => isBettorBetsQueryKey(queryKey, appChain.id, accountLowerCased),
       })
 
       queryClient.invalidateQueries({

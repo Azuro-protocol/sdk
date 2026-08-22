@@ -196,7 +196,11 @@ export const useBets: UseBets = (props) => {
         // so we should validate it by "win"/"canceled" statuses
         const isRedeemed = Boolean((isWin || isAcceptedBetCanceled) && _isRedeemed)
         // const isFreebet = Boolean(freebetId)
+        // `payout` is deliberately gated on redeemability: it answers "is there money to claim?"
         const payout = !_isRedeemed && isWin ? +_payout! : null
+        // `settledPayout` answers "what did this bet return?" and stays populated after redemption,
+        // which is what historical and aggregate views need
+        const settledPayout = _payout !== null && _payout !== undefined ? +_payout : null
         const betDiff = isFreebet && isFreebetAmountReturnable ? amount : 0 // for freebet we must exclude bonus value from possible win
         const cashout = isCashedOut ? _cashout?.payout : undefined
 
@@ -294,6 +298,7 @@ export const useBets: UseBets = (props) => {
           amount,
           possibleWin,
           payout,
+          settledPayout,
           createdAt,
           resolvedAt: resolvedAt ? +resolvedAt : null,
           redeemedAt,

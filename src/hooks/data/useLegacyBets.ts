@@ -1,15 +1,17 @@
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 import {
-  BetConditionStatus, BetOrderState, BetResult, type ChainId, GameState, GraphBetStatus, Legacy_Bet_OrderBy,
-  LegacyBetsDocument, type LegacyBetsQuery, type LegacyBetsQueryVariables, LegacyGameStatus, LegacyLiveGamesDocument,
-  type LegacyLiveGamesQuery, type LegacyLiveGamesQueryVariables, OrderDirection, SelectionResult,
+  BetConditionStatus, BetOrderState, BetResult, type BetsFilter, BetStatusFilter, type ChainId, GameState,
+  GraphBetStatus, Legacy_Bet_OrderBy, LegacyBetsDocument, type LegacyBetsQuery, type LegacyBetsQueryVariables,
+  LegacyGameStatus, LegacyLiveGamesDocument, type LegacyLiveGamesQuery, type LegacyLiveGamesQueryVariables,
+  normalizeBetsFilter, OrderDirection, SelectionResult, toBetStatusWhere, toSettledBetsWhere,
 } from '@azuro-org/toolkit'
 import { type InfiniteData, useInfiniteQuery, type UseInfiniteQueryResult } from '@tanstack/react-query'
 import { type Address, type Hex } from 'viem'
 
 import { useOptionalChain } from '../../contexts/chain'
-import { type SportHub, type Bet, type BetOutcome, BetType, type InfiniteQueryParameters } from '../../global'
+import { type SportHub, type Bet, type BetOutcome, type InfiniteQueryParameters } from '../../global'
 import { gqlRequest } from '../../helpers/gqlRequest'
+import { betsQueryKeys } from '../../helpers/betsQueryKeys'
 
 
 type UseLegacyBetsResult = {
@@ -18,11 +20,12 @@ type UseLegacyBetsResult = {
 }
 
 export type UseLegacyBetsProps = {
-  filter: {
-    bettor: Address
-    affiliate?: string
-    type?: BetType
-  }
+  /**
+   * Legacy v2 bets are stored in different entities and only support `bettor`, `affiliate` and
+   * `status`. When any of the remaining fields is set, this hook returns no bets at all, so that a
+   * filtered list can never mix in v2 rows that the filter was not actually applied to.
+   * */
+  filter: BetsFilter
   itemsPerPage?: number
   orderBy?: Legacy_Bet_OrderBy
   orderDir?: OrderDirection
@@ -34,7 +37,7 @@ export type UseLegacyBets = (props: UseLegacyBetsProps) => UseInfiniteQueryResul
 
 /**
  * Fetches betting history from legacy Azuro contracts (v2) with infinite scroll pagination.
- * Supports filtering by bet type (Unredeemed, Accepted, Settled, CashedOut).
+ * Supports filtering by lifecycle status (Unredeemed, Accepted, Settled, CashedOut).
  *
  * Use this hook for historical bets placed on legacy contracts. For current bets, use `useBets` instead.
  *
@@ -62,19 +65,31 @@ export const useLegacyBets: UseLegacyBets = (props) => {
 
   const gqlLink = graphql.bets
 
+  const normalizedFilter = normalizeBetsFilter(filter)
+
   return useInfiniteQuery({
-    queryKey: [
-      'legacy-bets',
-      chain.id,
-      filter.bettor,
-      filter.type,
-      filter.affiliate,
+    queryKey: betsQueryKeys.legacyList({
+      chainId: chain.id,
+      filter: normalizedFilter,
       itemsPerPage,
       orderBy,
       orderDir,
-    ],
+    }),
     queryFn: async ({ pageParam }) => {
-      if (filter.type === BetType.Pending) {
+      const { bettor, affiliate, status, kind, createdFrom, createdTo, isFreebet } = normalizedFilter
+
+      // an empty bettor would be dropped from the serialized variables and the query would then
+      // match every bettor's bets, so fail loudly instead of returning someone else's history
+      if (!bettor) {
+        throw new Error('useLegacyBets: "filter.bettor" is required')
+      }
+
+      const isUnsupportedByV2 = kind !== undefined
+        || createdFrom !== undefined
+        || createdTo !== undefined
+        || isFreebet !== undefined
+
+      if (status === BetStatusFilter.Pending || isUnsupportedByV2) {
         return {
           bets: [],
           nextPage: undefined,
@@ -87,30 +102,20 @@ export const useLegacyBets: UseLegacyBets = (props) => {
         orderBy,
         orderDirection: orderDir,
         where: {
-          actor: filter.bettor?.toLowerCase(),
+          actor: bettor,
+          // shared with `useBets` so the two cannot disagree on what a lifecycle preset means
+          ...toBetStatusWhere(status),
         },
       }
 
-      if (filter.type === BetType.Unredeemed) {
-        variables.where.isRedeemable = true
-        variables.where.isCashedOut = false
+      if (affiliate) {
+        variables.where.affiliate = affiliate
       }
 
-      if (filter.type === BetType.Accepted) {
-        variables.where.status = GraphBetStatus.Accepted
-        variables.where.isCashedOut = false
-      }
-
-      if (filter.type === BetType.Settled) {
-        variables.where.status_in = [ GraphBetStatus.Resolved, GraphBetStatus.Canceled ]
-      }
-
-      if (filter.type === BetType.CashedOut) {
-        variables.where.isCashedOut = true
-      }
-
-      if (filter.affiliate) {
-        variables.where.affiliate = filter.affiliate.toLowerCase()
+      // must run last: it distributes every constraint collected above across its branches. Shares
+      // the definition with `useBets` so both hooks agree on what "settled" means.
+      if (status === BetStatusFilter.Settled) {
+        variables.where = toSettledBetsWhere(variables.where)
       }
 
       const { bets: prematchBets, liveBets } = await gqlRequest<LegacyBetsQuery, LegacyBetsQueryVariables>({
@@ -180,7 +185,11 @@ export const useLegacyBets: UseLegacyBets = (props) => {
         const isRedeemed = (isWin || isCanceled) && _isRedeemed
         const isFreebet = Boolean(freebet)
         const freebetId = freebet?.freebetId || null
+        // `payout` is deliberately gated on redeemability: it answers "is there money to claim?"
         const payout = isRedeemable && isWin ? +_payout! : null
+        // `settledPayout` answers "what did this bet return?" and stays populated after redemption,
+        // which is what historical and aggregate views need
+        const settledPayout = _payout !== null && _payout !== undefined ? +_payout : null
         const betDiff = isFreebet ? amount : 0 // for freebet we must exclude bonus value from possible win
         const totalOdds = settledOdds ? +settledOdds : +odds
         const possibleWin = +amount * totalOdds - +betDiff
@@ -295,6 +304,7 @@ export const useLegacyBets: UseLegacyBets = (props) => {
           amount,
           possibleWin,
           payout,
+          settledPayout,
           createdAt: +createdAt,
           resolvedAt: resolvedAt ? +resolvedAt : null,
           cashout,
@@ -324,6 +334,9 @@ export const useLegacyBets: UseLegacyBets = (props) => {
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 60,
+    // See the note in useBets: an absent bettor would match every bettor's bets, so the request
+    // layer rejects it. Stay idle rather than erroring while the wallet is disconnected.
+    enabled: Boolean(filter.bettor),
     ...(query || {}),
   })
 }

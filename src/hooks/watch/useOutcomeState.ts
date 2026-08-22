@@ -80,7 +80,7 @@ export const useOutcomeState = ({ conditionId, outcomeId, initialState, isInitia
         isHidden: data.hidden ?? prevState.isHidden,
         odds: data.odds ?? prevState.odds,
         turnover: data.turnover ?? prevState?.turnover,
-        isFetching: false
+        isFetching: false,
       }))
     })
 

@@ -1,6 +1,10 @@
 import {
   type GameData,
   type ChainId,
+  type BetsFilter,
+  type BetsQueryVariables,
+  type BetsQuery,
+  BetsDocument,
   SelectionKind,
   GraphBetStatus,
   BetResult,
@@ -9,22 +13,20 @@ import {
   GameState,
   getGamesByIds,
   calcMinOdds,
+  normalizeBetsFilter,
+  toGraphBetsWhere,
   BetOrderState,
 } from '@azuro-org/toolkit'
 import { type Hex, type Address } from 'viem'
 import { type InfiniteData, useInfiniteQuery, type UseInfiniteQueryResult } from '@tanstack/react-query'
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 
-import {
-  type BetsQueryVariables,
-  type BetsQuery,
-  BetsDocument,
-} from './bets'
 import { batchFetchConditions } from '../../../helpers/batchFetchConditions'
 import { useOptionalChain } from '../../../contexts/chain'
-import { BetType, type Bet, type BetOutcome, type InfiniteQueryParameters } from '../../../global'
+import { type Bet, type BetOutcome, type InfiniteQueryParameters } from '../../../global'
 import { gqlRequest } from '../../../helpers/gqlRequest'
 import { formatToFixed } from '../../../helpers/formatToFixed'
+import { betsQueryKeys } from '../../../helpers/betsQueryKeys'
 
 
 type UseBetsResult = {
@@ -33,11 +35,7 @@ type UseBetsResult = {
 }
 
 export type UseBetsProps = {
-  filter: {
-    bettor: Address
-    affiliate?: string
-    type?: BetType
-  }
+  filter: BetsFilter
   chainId?: ChainId
   itemsPerPage?: number
   query?: InfiniteQueryParameters<UseBetsResult>
@@ -45,6 +43,24 @@ export type UseBetsProps = {
 
 export type UseBets = (props: UseBetsProps) => UseInfiniteQueryResult<InfiniteData<UseBetsResult>>
 
+/**
+ * Fetches betting history for a specific bettor with infinite scroll pagination.
+ * Filterable by lifecycle status, single/combo kind, creation date range and freebet funding.
+ *
+ * The filter is turned into a subgraph query by the same code `useBetsReport` uses, so a report
+ * built from the same filter describes exactly the bets returned here.
+ *
+ * - Docs: https://gem.azuro.org/hub/apps/sdk/data-hooks/useBets
+ *
+ * @example
+ * import { useBets } from '@azuro-org/sdk'
+ *
+ * const { data, isFetching, hasNextPage, fetchNextPage } = useBets({
+ *   filter: { bettor: '0x...' },
+ * })
+ *
+ * const allBets = data?.pages.flatMap(page => page.bets) || []
+ * */
 export const useBets: UseBets = (props) => {
   const {
     filter,
@@ -57,44 +73,15 @@ export const useBets: UseBets = (props) => {
 
   const gqlLink = graphql.bets
 
+  const normalizedFilter = normalizeBetsFilter(filter)
+
   return useInfiniteQuery({
-    queryKey: [
-      'bets',
-      chain.id,
-      filter.bettor,
-      filter.type,
-      filter.affiliate,
-      itemsPerPage,
-    ],
+    queryKey: betsQueryKeys.list({ chainId: chain.id, filter: normalizedFilter, itemsPerPage }),
     queryFn: async ({ pageParam }) => {
       const variables: BetsQueryVariables = {
         first: itemsPerPage,
         skip: itemsPerPage * (pageParam - 1),
-        where: {
-          actor: filter.bettor?.toLowerCase(),
-        },
-      }
-
-      if (filter.type === BetType.Unredeemed) {
-        variables.where.isRedeemable = true
-        variables.where.isCashedOut = false
-      }
-
-      if (filter.type === BetType.Accepted) {
-        variables.where.status = GraphBetStatus.Accepted
-        variables.where.isCashedOut = false
-      }
-
-      if (filter.type === BetType.Settled) {
-        variables.where.status_in = [ GraphBetStatus.Resolved, GraphBetStatus.Canceled ]
-      }
-
-      if (filter.type === BetType.CashedOut) {
-        variables.where.isCashedOut = true
-      }
-
-      if (filter.affiliate) {
-        variables.where.affiliate = filter.affiliate.toLowerCase()
+        where: toGraphBetsWhere(normalizedFilter),
       }
 
       const { v3Bets } = await gqlRequest<BetsQuery, BetsQueryVariables>({
@@ -164,7 +151,11 @@ export const useBets: UseBets = (props) => {
         // so we should validate it by "win"/"canceled" statuses
         const isRedeemed = (isWin || isCanceled) && _isRedeemed
         const isFreebet = Boolean(freebetId)
+        // `payout` is deliberately gated on redeemability: it answers "is there money to claim?"
         const payout = isRedeemable && isWin ? +_payout! : null
+        // `settledPayout` answers "what did this bet return?" and stays populated after redemption,
+        // which is what historical and aggregate views need
+        const settledPayout = _payout !== null && _payout !== undefined ? +_payout : null
         const betDiff = isFreebet && isFreebetAmountReturnable ? amount : 0 // for freebet we must exclude bonus value from possible win
         const cashout = isCashedOut ? _cashout?.payout : undefined
 
@@ -272,6 +263,7 @@ export const useBets: UseBets = (props) => {
           amount,
           possibleWin,
           payout,
+          settledPayout,
           createdAt: +createdAt,
           resolvedAt: resolvedAt ? +resolvedAt : null,
           cashout,
@@ -298,6 +290,10 @@ export const useBets: UseBets = (props) => {
     getNextPageParam: lastPage => lastPage.nextPage ?? undefined,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
+    // Without a bettor the query would have no `actor` constraint at all, which matches every
+    // bettor's bets rather than none. The request layer rejects that, so stay idle instead of
+    // surfacing an error while the wallet is still disconnected.
+    enabled: Boolean(filter.bettor),
     ...(query || {}),
   })
 }
