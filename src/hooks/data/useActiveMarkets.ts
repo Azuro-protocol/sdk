@@ -9,6 +9,11 @@ export type UseActiveMarketsProps = {
   gameId: string
   chainId?: ChainId
   extended?: boolean
+  /**
+   * Keep conditions and outcomes flagged `hidden` in the result. They are dropped by default, which
+   * is what a running game should show - pass `true` for a finished game.
+   * */
+  includeHidden?: boolean
   query?: QueryParameter<ConditionDetailedData[]>
 }
 
@@ -24,7 +29,7 @@ const select = (conditions: ConditionDetailedData[]) => {
 
 
 /**
- * Get active markets grouped by market type for a specific game.
+ * Get the markets a game currently offers, grouped by market type.
  * Wraps `useActiveConditions` and groups conditions by market using `groupConditionsByMarket`.
  *
  * - Docs: https://gem.azuro.org/hub/apps/sdk/data-hooks/useActiveMarkets
@@ -33,14 +38,18 @@ const select = (conditions: ConditionDetailedData[]) => {
  * import { useActiveMarkets } from '@azuro-org/sdk'
  *
  * const { data: markets, isFetching } = useActiveMarkets({ gameId: '123' })
+ *
+ * // the game is over - show everything, including what was hidden while it ran
+ * const { data: allMarkets } = useActiveMarkets({ gameId: '123', includeHidden: true })
  * */
 export const useActiveMarkets: UseActiveMarkets = (props) => {
-  const { gameId, chainId, extended, query = {} } = props
+  const { gameId, chainId, extended, includeHidden, query = {} } = props
 
   return useActiveConditions({
     gameId,
     chainId,
     extended,
+    includeHidden,
     query: {
       ...query,
       select,
