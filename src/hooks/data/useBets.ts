@@ -3,7 +3,7 @@ import {
   BetConditionStatus, BetResult, BetOrderState, calcMinOdds, type ChainId,
   type GameData, GameState, getGamesByIds, GraphBetStatus, OrderDirection,
   getBetsByBettor, type GetBetsByBettorParams, type GetBetsByBettorResult,
-  SelectionKind, SelectionResult, BetOrderResult,
+  SelectionKind, SelectionResult, OutcomeResult, BetOrderResult,
 } from '@azuro-org/toolkit'
 import { type InfiniteData, useInfiniteQuery, type UseInfiniteQueryResult } from '@tanstack/react-query'
 import { type Address, type Hex } from 'viem'
@@ -226,12 +226,32 @@ export const useBets: UseBets = (props) => {
             // @ts-ignore
             const _customMarketName = outcome?.condition?.title
             const wonOutcomeIds = outcome?.condition?.wonOutcomeIds
+            // per-outcome settlement lives on the condition's outcome list, keyed by outcome id
+            const outcomeResult = outcome?.condition?.outcomes
+              ?.find(item => item.outcomeId === String(outcomeId))?.result
 
             const game = gameByGameId[gameId]!
 
-            const isWin = result ? result === SelectionResult.Won : null
-            const isLose = result ? result === SelectionResult.Lost : null
-            const isCanceled = !result && conditionStatus === BetConditionStatus.Canceled
+            // Resolution is per-outcome now: a single leg can be voided while its condition stays
+            // `Resolved`, so the outcome's own `result` is the authoritative settlement signal.
+            // `selection.result` is the subgraph's newer per-selection signal and is only populated
+            // for data indexed after the fix, so it can't replace either of the other two checks.
+            // Widened to `string` because the generated `SelectionResult` enum has no `Canceled`
+            // member yet even though the subgraph already returns the value.
+            const selectionResult: string | null | undefined = result
+            const isCanceled = outcomeResult === OutcomeResult.Canceled
+              || selectionResult === OutcomeResult.Canceled
+              // legacy fallback: whole-condition cancels, which predate per-outcome results
+              || (!result && conditionStatus === BetConditionStatus.Canceled)
+
+            // won / lost / void / pending must stay mutually exclusive, so a voided leg reports
+            // `false` (settled, no winnings) rather than `null` (still pending).
+            const isWin = isCanceled ? false
+              : outcomeResult ? outcomeResult === OutcomeResult.Won
+                : result ? result === SelectionResult.Won : null
+            const isLose = isCanceled ? false
+              : outcomeResult ? outcomeResult === OutcomeResult.Lost
+                : result ? result === SelectionResult.Lost : null
 
             const isLive = gameState === GameState.Live
 
@@ -274,8 +294,10 @@ export const useBets: UseBets = (props) => {
           })
           .sort((a, b) => +(a.game?.startsAt || 0) - +(b.game?.startsAt || 0))
 
+        // an all-void combo leaves `subBetOdds` empty, and `calcMinOdds` returns 0.99 for an empty
+        // array (the combo fee applied to nothing) - the stake is simply returned, so odds are 1
         let totalOdds = isCombo
-          ? +formatToFixed(calcMinOdds({ odds: subBetOdds, slippage: 0 }), 2)
+          ? subBetOdds.length ? +formatToFixed(calcMinOdds({ odds: subBetOdds, slippage: 0 }), 2) : 1
           : settledOdds ? +settledOdds : +odds
 
         const possibleWin = +amount * totalOdds - +betDiff

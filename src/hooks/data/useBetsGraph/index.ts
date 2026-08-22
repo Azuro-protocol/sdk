@@ -9,6 +9,7 @@ import {
   GraphBetStatus,
   BetResult,
   SelectionResult,
+  OutcomeResult,
   GameState,
   getGamesByIds,
   calcMinOdds,
@@ -179,8 +180,6 @@ export const useBets: UseBets = (props) => {
 
             const game = gameByGameId[gameId]!
 
-            const isWin = result ? result === SelectionResult.Won : null
-            const isLose = result ? result === SelectionResult.Lost : null
             // a leg can be voided on its own while its condition stays `Resolved`, so no single
             // field answers this - `isSelectionCanceled` is the one place that folds the signals
             const isCanceled = isSelectionCanceled({
@@ -188,6 +187,15 @@ export const useBets: UseBets = (props) => {
               outcomeResult,
               conditionStatus,
             })
+
+            // won / lost / void / pending must stay mutually exclusive, so a voided leg reports
+            // `false` (settled, no winnings) rather than `null` (still pending).
+            const isWin = isCanceled ? false
+              : outcomeResult ? outcomeResult === OutcomeResult.Won
+                : result ? result === SelectionResult.Won : null
+            const isLose = isCanceled ? false
+              : outcomeResult ? outcomeResult === OutcomeResult.Lost
+                : result ? result === SelectionResult.Lost : null
 
             const isLive = conditionKind === SelectionKind.Live
 
