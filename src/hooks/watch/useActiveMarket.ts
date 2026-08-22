@@ -1,4 +1,4 @@
-import { ConditionState, type GameMarkets } from '@azuro-org/toolkit'
+import { type ConditionState, type GameMarkets } from '@azuro-org/toolkit'
 import { useEffect, useMemo, useState } from 'react'
 
 import { useConditionsState } from './useConditionsState'
