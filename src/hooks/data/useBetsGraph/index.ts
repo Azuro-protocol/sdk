@@ -259,13 +259,14 @@ export const useBets: UseBets = (props) => {
         const isRecordedPayoutStale = isWin && isCombo && !_isRedeemed && !isCashedOut
 
         const recordedPayout = _payout !== null && _payout !== undefined ? +_payout : null
-        const rebuiltPayout = +amount * totalOdds
+        const actualPayout = isRecordedPayoutStale ? +amount * totalOdds : recordedPayout
 
-        // `payout` is deliberately gated on redeemability: it answers "is there money to claim?"
-        const payout = isRedeemable && isWin ? (isRecordedPayoutStale ? rebuiltPayout : recordedPayout) : null
+        // `payout` is deliberately gated on redeemability: it answers "is there money to claim?".
+        // A canceled bet refunds the stake, so it has money to claim too - same pair as `isRedeemed`.
+        const payout = isRedeemable && (isWin || isCanceled) ? actualPayout : null
         // `settledPayout` answers "what did this bet return?" and stays populated after redemption,
         // which is what historical and aggregate views need
-        const settledPayout = isRecordedPayoutStale ? rebuiltPayout : recordedPayout
+        const settledPayout = actualPayout
 
         const mapStatusToState = (status: GraphBetStatus): BetOrderState => {
           switch (status) {
