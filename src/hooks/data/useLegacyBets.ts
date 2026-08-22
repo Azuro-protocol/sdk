@@ -205,7 +205,6 @@ export const useLegacyBets: UseLegacyBets = (props) => {
               condition: {
                 conditionId,
                 status: conditionStatus,
-                wonOutcomeIds,
               },
             },
           } = selection
@@ -242,7 +241,6 @@ export const useLegacyBets: UseLegacyBets = (props) => {
             coreAddress,
             odds: +odds,
             marketName,
-            wonOutcomeIds: wonOutcomeIds || null,
             game: {
               id: game.id,
               gameId: game.gameId,

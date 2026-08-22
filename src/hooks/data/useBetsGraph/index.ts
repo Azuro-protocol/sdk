@@ -173,7 +173,6 @@ export const useBets: UseBets = (props) => {
                   status: conditionStatus,
                   title: _customMarketName,
                   gameId,
-                  wonOutcomeIds,
                 },
               },
             } = selection
@@ -228,7 +227,6 @@ export const useBets: UseBets = (props) => {
               coreAddress,
               odds: +odds,
               marketName,
-              wonOutcomeIds: wonOutcomeIds || null,
               game,
               isWin,
               isLose,

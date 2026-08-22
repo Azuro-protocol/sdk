@@ -73,7 +73,6 @@ export type BetOutcome = {
   odds: number
   marketName: string
   game: GameData
-  wonOutcomeIds: string[] | null
   isLive: boolean
   isWin: boolean | null
   isLose: boolean | null

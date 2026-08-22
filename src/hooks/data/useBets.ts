@@ -225,7 +225,6 @@ export const useBets: UseBets = (props) => {
             const _customSelectionName = outcome?.title
             // @ts-ignore
             const _customMarketName = outcome?.condition?.title
-            const wonOutcomeIds = outcome?.condition?.wonOutcomeIds
             // per-outcome settlement lives on the condition's outcome list, keyed by outcome id
             const outcomeResult = outcome?.condition?.outcomes
               ?.find(item => item.outcomeId === String(outcomeId))?.result
@@ -284,7 +283,6 @@ export const useBets: UseBets = (props) => {
               coreAddress,
               odds: +selectionOdds,
               marketName,
-              wonOutcomeIds: wonOutcomeIds || null,
               game,
               isWin,
               isLose,
