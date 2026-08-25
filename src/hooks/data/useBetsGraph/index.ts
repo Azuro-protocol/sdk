@@ -249,14 +249,15 @@ export const useBets: UseBets = (props) => {
 
         /**
          * The recorded payout of a won combo with a voided leg is the FULL pre-void payout until the
-         * bet is redeemed: the indexer writes it at settlement and only replaces it with the real
-         * on-chain amount when the bettor claims. Redeemed bets keep reading the recorded value -
-         * by then it is the amount actually paid.
+         * bet is redeemed - it still credits the voided leg as if it had won - so what the surviving
+         * legs are worth is read instead. Redeemed bets keep reading the recorded value: by then it
+         * is the amount actually paid.
          *
          * Gross, like every payout the protocol records: `possibleWin` nets out the stake of a
          * returnable freebet, which is a display rule and does not belong in this figure.
          * */
-        const isRecordedPayoutStale = isWin && isCombo && !_isRedeemed && !isCashedOut
+        const isRecordedPayoutStale = isWin && isCombo && !_isRedeemed
+          && outcomes.some(({ isCanceled }) => isCanceled)
 
         const recordedPayout = _payout !== null && _payout !== undefined ? +_payout : null
         const actualPayout = isRecordedPayoutStale ? +amount * totalOdds : recordedPayout
