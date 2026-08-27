@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react'
-import { OutcomeState } from '@azuro-org/toolkit'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { ConditionState, OutcomeState } from '@azuro-org/toolkit'
 
 import { outcomeWatcher } from '../../modules/outcomeWatcher'
 import { useChain } from '../../contexts/chain'
 import { useConditionUpdates } from '../../contexts/conditionUpdates'
+import { applyOutcomeUpdate, type OutcomeStateData } from '../../helpers/applyOutcomeUpdate'
 import { batchFetchConditions } from '../../helpers/batchFetchConditions'
+import { getShouldRefetchOutcomes } from '../../helpers/getShouldRefetchOutcomes'
+import { latchHidden } from '../../helpers/latchHidden'
 
 
 export type UseOutcomeStateProps = {
@@ -28,13 +31,22 @@ export type UseOutcomeStateProps = {
  * Returns `isHidden` helper to check if the outcome should be hidden from the market's outcome list.
  * Returns the live `odds` and `turnover` for the outcome (from the same `outcomeWatcher` update).
  *
+ * `odds` and `turnover` are taken from every update. `state` and `isHidden` are taken only from updates
+ * whose condition is `Active`: an update for an inactive condition reports every one of its outcomes
+ * as `Stopped`, so a settled outcome would blink back to unsettled each time its condition is
+ * suspended. Such an update instead schedules a re-read from the state endpoint, which is
+ * authoritative for per-outcome state.
+ *
+ * `isHidden` is latched one way: once the outcome has been reported visible it stays visible, so it
+ * doesn't flicker in and out as its condition is suspended and re-priced.
+ *
  * - Docs: https://gem.azuro.org/hub/apps/sdk/watch-hooks/useOutcomeState
  *
  * @example
  * import { useOutcomeState } from '@azuro-org/sdk'
  * import { OutcomeState, type MarketOutcome } from '@azuro-org/toolkit'
  *
- * const { data: state, odds, turnover, isLocked, isHidden, isFetching } = useOutcomeState({
+ * const { state, odds, turnover, isLocked, isHidden, isFetching } = useOutcomeState({
  *   conditionId: outcome.conditionId,
  *   outcomeId: outcome.outcomeId,
  *   initialState: outcome.state, // OutcomeState.Active, OutcomeState.Stopped, etc.
@@ -57,6 +69,53 @@ export const useOutcomeState = ({ conditionId, outcomeId, initialState, isInitia
 
   const isLocked = state !== OutcomeState.Active
 
+  const isUnmountedRef = useRef(false)
+  const prevConditionStateRef = useRef<ConditionState | undefined>(undefined)
+  const isRefetchingRef = useRef(false)
+
+  useEffect(() => {
+    return () => {
+      isUnmountedRef.current = true
+    }
+  }, [])
+
+  const fetchState = useCallback(async () => {
+    const data = await batchFetchConditions([ conditionId ], appChain.id)
+    const fetched = data?.[conditionId]?.outcomes?.[outcomeId]
+
+    if (isUnmountedRef.current) {
+      return
+    }
+
+    setState((prevState) => ({
+      ...prevState,
+      // the outcome isn't in the feed at all. `Canceled` would be wrong here: it now means the
+      // outcome was voided, which is a settlement with money attached
+      state: fetched?.state || prevState?.state || OutcomeState.Stopped,
+      // the state endpoint is authoritative for per-outcome state, but visibility stays latched
+      isHidden: latchHidden(prevState?.isHidden, fetched?.hidden),
+      // REST odds are strings; coerce. turnover isn't returned by REST — keep last known.
+      odds: +(fetched?.odds ?? prevState?.odds ?? 0),
+      isFetching: false,
+    }))
+  }, [ conditionId, outcomeId, appChain.id ])
+
+  const refetchState = useCallback(() => {
+    if (isRefetchingRef.current) {
+      return
+    }
+
+    isRefetchingRef.current = true
+
+    fetchState()
+      .catch(() => {
+        // a failed read leaves the last known values in place; the next update retries
+      })
+      .finally(() => {
+        isRefetchingRef.current = false
+      })
+  }, [ fetchState ])
+
   useEffect(() => {
     if (!isSocketReady || !conditionId) {
       return
@@ -75,40 +134,49 @@ export const useOutcomeState = ({ conditionId, outcomeId, initialState, isInitia
     }
 
     const unsubscribe = outcomeWatcher.subscribe(`${conditionId}-${outcomeId}`, (data) => {
-      setState((prevState) => ({
-        state: data.state ?? prevState.state,
-        isHidden: data.hidden ?? prevState.isHidden,
-        odds: data.odds ?? prevState.odds,
-        turnover: data.turnover ?? prevState?.turnover,
-        isFetching: false,
-      }))
+      const { conditionState } = data
+      const isConditionActive = conditionState === ConditionState.Active
+
+      setState((prevState) => {
+        const prevValue: OutcomeStateData = {
+          odds: prevState.odds,
+          turnover: prevState.turnover,
+          state: prevState.state,
+          hidden: prevState.isHidden,
+        }
+        // there is always a previous value here, so the update always folds into something
+        const nextValue = applyOutcomeUpdate(prevValue, data) ?? prevValue
+
+        return {
+          state: nextValue.state,
+          odds: nextValue.odds,
+          turnover: nextValue.turnover,
+          isHidden: nextValue.hidden,
+          // an inactive condition leaves state and visibility to the re-read below
+          isFetching: isConditionActive ? false : prevState.isFetching,
+        }
+      })
+
+      const prevConditionState = prevConditionStateRef.current
+
+      prevConditionStateRef.current = conditionState
+
+      if (getShouldRefetchOutcomes(prevConditionState, conditionState)) {
+        refetchState()
+      }
     })
 
     return () => {
       unsubscribe()
     }
-  }, [ conditionId, outcomeId ])
+  }, [ conditionId, outcomeId, refetchState ])
 
   useEffect(() => {
     if (initialState || !conditionId || !outcomeId) {
       return
     }
 
-    ;(async () => {
-      const data = await batchFetchConditions([ conditionId ], appChain.id)
-      const fetched = data?.[conditionId]?.outcomes?.[outcomeId]
-
-      setState((prevState) => ({
-        // the outcome isn't in the feed at all. `Canceled` would be wrong here: it now means the
-        // outcome was voided, which is a settlement with money attached
-        state: fetched?.state || prevState?.state || OutcomeState.Stopped,
-        isHidden: fetched?.hidden ?? prevState?.isHidden,
-        // REST odds are strings; coerce. turnover isn't returned by REST — keep last known.
-        odds: +(fetched?.odds ?? prevState?.odds ?? 0),
-        turnover: prevState?.turnover ?? '',
-        isFetching: false,
-      }))
-    })()
+    refetchState()
   }, [ conditionId, outcomeId, appChain.id, initialState ])
 
   return {
