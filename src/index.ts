@@ -149,6 +149,7 @@ export {
 export {
   useActiveConditions,
   type UseActiveConditionsProps,
+  type UseActiveConditionsResult,
   type UseActiveConditions,
 } from './hooks/data/useActiveConditions'
 export {
@@ -162,6 +163,7 @@ export {
 export {
   useActiveMarkets,
   type UseActiveMarketsProps,
+  type UseActiveMarketsResult,
   type UseActiveMarkets,
 } from './hooks/data/useActiveMarkets'
 export {

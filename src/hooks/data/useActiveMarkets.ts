@@ -1,8 +1,9 @@
-import { type UseQueryResult } from '@tanstack/react-query'
-import { type ChainId, type ConditionDetailedData, type GameMarkets, groupConditionsByMarket } from '@azuro-org/toolkit'
+import { useMemo } from 'react'
+import { type ChainId, type GameMarkets, groupConditionsByMarket } from '@azuro-org/toolkit'
 
 import { useActiveConditions } from './useActiveConditions'
-import { type QueryParameter } from '../../global'
+import { type UseConditionsQueryFnData } from './useConditions'
+import { type QueryParameter, type WrapperUseQueryResult } from '../../global'
 
 
 export type UseActiveMarketsProps = {
@@ -11,26 +12,22 @@ export type UseActiveMarketsProps = {
   extended?: boolean
   /**
    * Keep conditions and outcomes flagged `hidden` in the result. They are dropped by default, which
-   * is what a running game should show - pass `true` for a finished game.
+   * is what a running game should show - pass `true` for a game that is over.
    * */
   includeHidden?: boolean
-  query?: QueryParameter<ConditionDetailedData[]>
+  query?: QueryParameter<UseConditionsQueryFnData>
 }
 
-export type UseActiveMarkets = (props: UseActiveMarketsProps) => UseQueryResult<GameMarkets | undefined>
+export type UseActiveMarketsResult = WrapperUseQueryResult<GameMarkets | undefined, UseConditionsQueryFnData>
 
-const select = (conditions: ConditionDetailedData[]) => {
-  if (!conditions?.length) {
-    return undefined
-  }
-
-  return groupConditionsByMarket(conditions)
-}
-
+export type UseActiveMarkets = (props: UseActiveMarketsProps) => UseActiveMarketsResult
 
 /**
  * Get the markets a game currently offers, grouped by market type.
  * Wraps `useActiveConditions` and groups conditions by market using `groupConditionsByMarket`.
+ *
+ * Requires `FeedSocketProvider` and `ConditionUpdatesProvider` (both are included in
+ * `AzuroSDKProvider`) - see `useActiveConditions` for how visibility is decided.
  *
  * - Docs: https://gem.azuro.org/hub/apps/sdk/data-hooks/useActiveMarkets
  *
@@ -43,16 +40,26 @@ const select = (conditions: ConditionDetailedData[]) => {
  * const { data: allMarkets } = useActiveMarkets({ gameId: '123', includeHidden: true })
  * */
 export const useActiveMarkets: UseActiveMarkets = (props) => {
-  const { gameId, chainId, extended, includeHidden, query = {} } = props
+  const { gameId, chainId, extended, includeHidden, query } = props
 
-  return useActiveConditions({
+  const { data: conditions, ...conditionsResult } = useActiveConditions({
     gameId,
     chainId,
     extended,
     includeHidden,
-    query: {
-      ...query,
-      select,
-    },
+    query,
   })
+
+  const data = useMemo(() => {
+    if (!conditions?.length) {
+      return undefined
+    }
+
+    return groupConditionsByMarket(conditions)
+  }, [ conditions ])
+
+  return {
+    ...conditionsResult,
+    data,
+  }
 }
