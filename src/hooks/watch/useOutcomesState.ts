@@ -146,6 +146,10 @@ export const useOutcomesState = ({ selections, initialStates, outcomes }: UseOut
   const refetchingConditionsRef = useRef(new Set<string>())
 
   useEffect(() => {
+    // reset on mount too - refs survive the mount/unmount/mount cycle React does in development
+    isUnmountedRef.current = false
+    refetchingConditionsRef.current.clear()
+
     return () => {
       isUnmountedRef.current = true
       refetchingConditionsRef.current.clear()

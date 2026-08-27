@@ -74,6 +74,10 @@ export const useOutcomeState = ({ conditionId, outcomeId, initialState, isInitia
   const isRefetchingRef = useRef(false)
 
   useEffect(() => {
+    // reset on mount too - refs survive the mount/unmount/mount cycle React does in development
+    isUnmountedRef.current = false
+    isRefetchingRef.current = false
+
     return () => {
       isUnmountedRef.current = true
     }
