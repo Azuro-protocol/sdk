@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { OutcomeState, type MarketOutcome, type Selection } from '@azuro-org/toolkit'
 
-import { useConditionUpdates, type OutcomeUpdateData } from '../../contexts/conditionUpdates'
+import { useConditionUpdates } from '../../contexts/conditionUpdates'
 import { outcomeWatcher } from '../../modules/outcomeWatcher'
 import { batchFetchConditions } from '../../helpers/batchFetchConditions'
 import { useChain } from '../../contexts/chain'
@@ -17,10 +17,23 @@ export type UseOutcomesStateProps = {
   selections?: never
 }
 
+/**
+ * Current known values for an outcome. The wire type `OutcomeUpdateData` also carries the state of
+ * the condition the update arrived on, which says how much of it can be trusted - that is applied
+ * here rather than handed on.
+ * */
+export type OutcomeStateData = {
+  odds: number
+  turnover: string
+  state: OutcomeState
+  /** `undefined` until the feed has reported it */
+  hidden?: boolean
+}
+
 export type OutcomesStateData = {
   states: Record<string, OutcomeState>
   /** map of `${conditionId}-${outcomeId}` to its current odds, turnover, state and hidden flag */
-  statesMap: Record<string, OutcomeUpdateData>
+  statesMap: Record<string, OutcomeStateData>
 }
 
 const getKey = (conditionId: string, outcomeId: string) => `${conditionId}-${outcomeId}`

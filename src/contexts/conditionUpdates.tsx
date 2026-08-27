@@ -17,7 +17,19 @@ export type ConditionUpdatesContextValue = {
 enum Event {
   Subscribe = 'SubscribeConditions',
   Unsubscribe = 'UnsubscribeConditions',
+  Subscribed = 'SubscribedToConditions',
   Update = 'ConditionUpdated',
+}
+
+export type ConditionOutcomeData = {
+  /** a number here, a string in the REST feed */
+  outcomeId: number
+  title: string | null
+  currentOdds: string
+  turnover: string
+  potentialLoss: string
+  state: OutcomeState
+  hidden: boolean
 }
 
 export type ConditionData = {
@@ -26,40 +38,46 @@ export type ConditionData = {
   gameId: string
   maxConditionPotentialLoss: string
   maxOutcomePotentialLoss: string
+  currentConditionPotentialLoss: string
   isPrematchEnabled: boolean
   isLiveEnabled: boolean
   isCashoutEnabled: boolean
   state: ConditionState
-  outcomes: {
-    outcomeId: number
-    title: string | null
-    currentOdds: string
-    turnover: string
-    state: OutcomeState
-    hidden: boolean
-  }[]
+  /** whether the feed is offering this condition right now */
+  hidden: boolean
+  outcomes: ConditionOutcomeData[]
 }
 
-export type SocketData = {
-  event: Event
+export type ConditionUpdatedMessage = {
+  id: string
+  event: Event.Update
   data: ConditionData
 }
+
+/**
+ * Ack for a `SubscribeConditions` call - the server echoes the ids back without validating them.
+ * Nothing reads it; it is typed so it can't be taken for a condition update.
+ * */
+export type SubscribedToConditionsMessage = {
+  id: string
+  event: Event.Subscribed
+  data: {
+    conditionIds: string[]
+  }
+}
+
+export type SocketData = ConditionUpdatedMessage | SubscribedToConditionsMessage
 
 export type ConditionUpdatedData = {
   conditionId: string
   state: ConditionState
+  /** whether the feed is offering this condition right now */
+  hidden: boolean
   gameId: string
   isLiveEnabled: boolean
   isPrematchEnabled: boolean
   isCashoutEnabled: boolean
-  outcomes: {
-    outcomeId: number
-    title: string | null
-    currentOdds: string
-    turnover: string
-    state: OutcomeState
-    hidden: boolean
-  }[]
+  outcomes: ConditionOutcomeData[]
 }
 
 export type OutcomeUpdateData = {
@@ -67,6 +85,14 @@ export type OutcomeUpdateData = {
   turnover: string
   state: OutcomeState
   hidden: boolean
+  /**
+   * State of the condition in the message this update was carried by.
+   *
+   * `odds` and `turnover` are reported for real in every message, but `state` and `hidden` are only
+   * meaningful when this is `ConditionState.Active`: an update for an inactive condition reports
+   * every one of its outcomes as `Stopped`, whatever they had actually settled to.
+   * */
+  conditionState: ConditionState
 }
 
 const ConditionUpdatesContext = createContext<ConditionUpdatesContextValue | null>(null)
@@ -178,17 +204,20 @@ export const ConditionUpdatesProvider: React.FC<any> = ({ children }) => {
     }
 
     const handleMessage = (message: MessageEvent<string>) => {
-      const { event, data }: SocketData = JSON.parse(message.data)
+      const socketData: SocketData = JSON.parse(message.data)
 
-      if (event !== Event.Update) {
+      if (socketData.event !== Event.Update) {
         return
       }
 
-      const { id: conditionId, outcomes, state, isLiveEnabled, isPrematchEnabled, isCashoutEnabled, gameId } = data
+      const {
+        id: conditionId, outcomes, state, hidden, isLiveEnabled, isPrematchEnabled, isCashoutEnabled, gameId,
+      } = socketData.data
 
       const eventData: ConditionUpdatedData = {
-        conditionId: conditionId,
+        conditionId,
         state,
+        hidden,
         gameId,
         isCashoutEnabled,
         isLiveEnabled,
@@ -198,12 +227,13 @@ export const ConditionUpdatesProvider: React.FC<any> = ({ children }) => {
 
       conditionWatcher.dispatch(conditionId, eventData)
 
-      outcomes.forEach(({ outcomeId, currentOdds, turnover, state: outcomeState, hidden }) => {
+      outcomes.forEach(({ outcomeId, currentOdds, turnover, state: outcomeState, hidden: outcomeHidden }) => {
         outcomeWatcher.dispatch(`${conditionId}-${outcomeId}`, {
           odds: +currentOdds,
           turnover,
           state: outcomeState,
-          hidden,
+          hidden: outcomeHidden,
+          conditionState: state,
         })
       })
     }
