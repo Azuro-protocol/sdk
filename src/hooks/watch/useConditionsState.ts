@@ -4,6 +4,7 @@ import { ConditionState, type ConditionDetailedData } from '@azuro-org/toolkit'
 import { useConditionUpdates } from '../../contexts/conditionUpdates'
 import { conditionWatcher } from '../../modules/conditionWatcher'
 import { batchFetchConditions } from '../../helpers/batchFetchConditions'
+import { latchHidden } from '../../helpers/latchHidden'
 import { useChain } from '../../contexts/chain'
 
 
@@ -19,7 +20,8 @@ export type UseConditionsStateProps = {
 
 export type ConditionsStateData = {
   states: Record<string, ConditionState>
-  statesMap: Record<string, { state: ConditionState, hidden: boolean }>
+  /** `hidden` is `undefined` until the feed has reported it */
+  statesMap: Record<string, { state: ConditionState, hidden?: boolean }>
 }
 
 /**
@@ -31,9 +33,11 @@ export type ConditionsStateData = {
  * Returns `conditionsMap` - a map `{ [conditionId]: { state: ConditionState, hidden: boolean } }` of conditions.
  *
  * The `hidden` field indicates whether a condition may be hidden from the game markets list.
- * It starts as `true` for stopped secondary conditions in `ConditionDetailedData`.
- * When a socket update arrives for a hidden condition, it is set back to `false` —
- * meaning the condition is still alive and was only temporarily stopped by the provider.
+ * It starts from what the feed reported at fetch time and is latched one way: an update reporting
+ * `hidden: false` reveals the condition for good, and nothing hides it again. A market that stops
+ * therefore stays in the list, locked, rather than disappearing and coming back as the provider
+ * suspends and re-prices it. An update alone is not enough to reveal a condition - a market the
+ * provider has parked keeps streaming odds for the rest of its life.
  *
  * - Docs: https://gem.azuro.org/hub/apps/sdk/watch-hooks/useConditionsState
  *
@@ -65,7 +69,7 @@ export const useConditionsState = ({ conditionIds: _conditionIds, initialStates,
       return conditions.reduce<{ conditionIds: string[], conditionsKey: string, initialState: ConditionsStateData }>((acc, { conditionId, state, hidden }) => {
         acc.conditionIds.push(conditionId)
         acc.conditionsKey += conditionId
-        acc.initialState.statesMap[conditionId] = { state, hidden: Boolean(hidden) }
+        acc.initialState.statesMap[conditionId] = { state, hidden }
         acc.initialState.states[conditionId] = state
 
         return acc
@@ -78,7 +82,7 @@ export const useConditionsState = ({ conditionIds: _conditionIds, initialStates,
         acc.conditionsKey += conditionId
 
         if (initialStates?.[conditionId]) {
-          acc.initialState.statesMap[conditionId] = { state: initialStates[conditionId], hidden: false }
+          acc.initialState.statesMap[conditionId] = { state: initialStates[conditionId] }
           acc.initialState.states[conditionId] = initialStates[conditionId]
         }
 
@@ -120,7 +124,7 @@ export const useConditionsState = ({ conditionIds: _conditionIds, initialStates,
 
     const unsubscribeList = conditionIds.map((conditionId) => {
       return conditionWatcher.subscribe(conditionId, (data) => {
-        const { state: newState } = data
+        const { state: newState, hidden } = data
 
         setState(prevData => {
           const newStates: ConditionsStateData = {
@@ -132,8 +136,7 @@ export const useConditionsState = ({ conditionIds: _conditionIds, initialStates,
               ...prevData.statesMap,
               [conditionId]: {
                 state: newState,
-                // if condition got an update, then it isn't dead, mark it as visible
-                hidden: false,
+                hidden: latchHidden(prevData.statesMap[conditionId]?.hidden, hidden),
               },
             },
           }
@@ -160,7 +163,9 @@ export const useConditionsState = ({ conditionIds: _conditionIds, initialStates,
 
       setState((prevValue) => {
         return conditionIds.reduce<ConditionsStateData>((acc, conditionId) => {
-          const hidden = prevValue.statesMap[conditionId]?.hidden ?? false
+          // a state refetch can't report visibility - the state endpoint carries no condition-level
+          // `hidden` - so the last known value is carried forward
+          const hidden = prevValue.statesMap[conditionId]?.hidden
           // the condition isn't in the feed at all - treat it as not bettable rather than
           // inventing a settlement state it may not have
           const state = data?.[conditionId]?.state || prevValue.states[conditionId] || ConditionState.Stopped
