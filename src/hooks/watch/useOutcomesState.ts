@@ -7,6 +7,7 @@ import { applyOutcomeUpdate, type OutcomeStateData } from '../../helpers/applyOu
 import { batchFetchConditions } from '../../helpers/batchFetchConditions'
 import { getShouldRefetchOutcomes } from '../../helpers/getShouldRefetchOutcomes'
 import { latchHidden } from '../../helpers/latchHidden'
+import { mergeWatchedStates } from '../../helpers/mergeWatchedStates'
 import { useChain } from '../../contexts/chain'
 
 
@@ -129,21 +130,30 @@ export const useOutcomesState = ({ selections, initialStates, outcomes }: UseOut
   )
 
   const prevSelectionsKeyRef = useRef(selectionsKey)
-
-  if (selectionsKey !== prevSelectionsKeyRef.current && state !== initialState) {
-    // if selections are changed (including cleared to empty), reset the state for the new selections
-    setState(initialState)
-  }
-
-  prevSelectionsKeyRef.current = selectionsKey
-
   const selectionsListRef = useRef(selectionsList)
-
-  selectionsListRef.current = selectionsList
-
   const isUnmountedRef = useRef(false)
   const prevConditionStatesRef = useRef<Record<string, ConditionState>>({})
   const refetchingConditionsRef = useRef(new Set<string>())
+
+  if (selectionsKey !== prevSelectionsKeyRef.current) {
+    // the watched selections changed (including cleared to empty): re-key onto the new set, keeping
+    // what is already known for the outcomes that stayed. A reset would drop every latched reveal
+    // and every settled outcome each time the feed adds a condition to a running game.
+    setState((prevValue) => mergeWatchedStates(prevValue, initialState, selectionsList.map(({ key }) => key)))
+
+    // the re-read trigger is keyed by conditionId - forget the conditions that are no longer
+    // watched, so one that comes back is treated as newly seen and re-read again
+    const watchedConditionIds = new Set(conditionIds)
+
+    Object.keys(prevConditionStatesRef.current).forEach((conditionId) => {
+      if (!watchedConditionIds.has(conditionId)) {
+        delete prevConditionStatesRef.current[conditionId]
+      }
+    })
+  }
+
+  prevSelectionsKeyRef.current = selectionsKey
+  selectionsListRef.current = selectionsList
 
   useEffect(() => {
     // reset on mount too - refs survive the mount/unmount/mount cycle React does in development

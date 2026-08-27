@@ -5,6 +5,7 @@ import { useConditionUpdates } from '../../contexts/conditionUpdates'
 import { conditionWatcher } from '../../modules/conditionWatcher'
 import { batchFetchConditions } from '../../helpers/batchFetchConditions'
 import { latchHidden } from '../../helpers/latchHidden'
+import { mergeWatchedStates } from '../../helpers/mergeWatchedStates'
 import { useChain } from '../../contexts/chain'
 
 
@@ -98,9 +99,11 @@ export const useConditionsState = ({ conditionIds: _conditionIds, initialStates,
 
   const prevConditionsKeyRef = useRef(conditionsKey)
 
-  if (conditionsKey !== prevConditionsKeyRef.current && state !== initialState) {
-    // if conditions are changed (including cleared to empty), reset the state for the new conditions
-    setState(initialState)
+  if (conditionsKey !== prevConditionsKeyRef.current) {
+    // the watched conditions changed (including cleared to empty): re-key onto the new set, keeping
+    // what is already known for the conditions that stayed. A reset would drop every latched reveal
+    // each time the feed adds a condition to a running game.
+    setState((prevValue) => mergeWatchedStates(prevValue, initialState, conditionIds))
   }
 
   prevConditionsKeyRef.current = conditionsKey
