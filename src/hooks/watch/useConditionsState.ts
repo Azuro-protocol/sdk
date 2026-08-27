@@ -30,7 +30,7 @@ export type ConditionsStateData = {
  * Requires `FeedSocketProvider` and `ConditionUpdatesProvider` (both are included in `AzuroSDKProvider`).
  *
  * Returns `data` - a map of condition IDs to their current state.
- * Returns `conditionsMap` - a map `{ [conditionId]: { state: ConditionState, hidden: boolean } }` of conditions.
+ * Returns `conditionsMap` - a map `{ [conditionId]: { state: ConditionState, hidden?: boolean } }` of conditions.
  *
  * The `hidden` field indicates whether a condition may be hidden from the game markets list.
  * It starts from what the feed reported at fetch time and is latched one way: an update reporting
