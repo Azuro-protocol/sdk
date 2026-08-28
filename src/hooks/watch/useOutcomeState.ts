@@ -58,7 +58,7 @@ export const useOutcomeState = ({ conditionId, outcomeId, initialState, isInitia
   const { appChain } = useChain()
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useConditionUpdates()
 
-  const [ { state, isHidden, odds, turnover, isFetching }, setState ] = useState({
+  const getSeedState = () => ({
     state: initialState || OutcomeState.Active,
     isHidden: isInitiallyHidden,
     odds: initialOdds ?? 0,
@@ -67,11 +67,32 @@ export const useOutcomeState = ({ conditionId, outcomeId, initialState, isInitia
     isFetching: !initialState && Boolean(conditionId) && Boolean(outcomeId),
   })
 
+  const [ { state, isHidden, odds, turnover, isFetching }, setState ] = useState(getSeedState)
+
   const isLocked = state !== OutcomeState.Active
 
   const isUnmountedRef = useRef(false)
   const prevConditionStateRef = useRef<ConditionState | undefined>(undefined)
   const isRefetchingRef = useRef(false)
+
+  const outcomeKey = `${conditionId}-${outcomeId}`
+  const outcomeKeyRef = useRef(outcomeKey)
+
+  if (outcomeKey !== outcomeKeyRef.current) {
+    // the hook was pointed at a different outcome. `useState`'s value seeds the mount only, so
+    // without re-seeding here a reused component instance keeps rendering the previous outcome's
+    // state and visibility: the repair read below is skipped whenever an initial state was passed,
+    // and an update whose condition repeats the previous condition's state writes neither field
+    // and asks for no re-read.
+    setState(getSeedState())
+
+    // both guards are keyed to the outcome that has gone - the first message about the new one has
+    // to count as newly seen, and the read in flight for the old one no longer blocks anything
+    prevConditionStateRef.current = undefined
+    isRefetchingRef.current = false
+  }
+
+  outcomeKeyRef.current = outcomeKey
 
   useEffect(() => {
     // reset on mount too - refs survive the mount/unmount/mount cycle React does in development
@@ -87,7 +108,9 @@ export const useOutcomeState = ({ conditionId, outcomeId, initialState, isInitia
     const data = await batchFetchConditions([ conditionId ], appChain.id)
     const fetched = data?.[conditionId]?.outcomes?.[outcomeId]
 
-    if (isUnmountedRef.current) {
+    // the hook may have been pointed at another outcome while the read was in flight - what came
+    // back describes the outcome that has gone
+    if (isUnmountedRef.current || outcomeKeyRef.current !== `${conditionId}-${outcomeId}`) {
       return
     }
 
