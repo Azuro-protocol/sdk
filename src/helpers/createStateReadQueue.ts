@@ -8,8 +8,19 @@ export type StateReadQueue = {
 }
 
 /**
- * Queue reads of per-outcome state from the feed, so that a read asked for while one is in flight is
- * not lost.
+ * How long ids are collected before a read goes out. Matches the window the request itself is
+ * batched over, so collecting them costs no extra round trip.
+ * */
+const COLLECT_DELAY = 50
+
+/**
+ * Queue reads of per-outcome state from the feed, so that ids asked for at the same moment are read
+ * together and a read asked for while one is in flight is not lost.
+ *
+ * Every condition of a game leaves `Active` at once when the game ends, and each one asking for its
+ * own read would fold each answer into the caller's state separately - a copy of the whole state per
+ * condition, on a page that watches every condition a game has. Ids asked for within the collection
+ * window go out as one read and come back as one answer.
  *
  * A read answers for the feed as it was when the read was issued, so one already in flight cannot
  * answer a request made after it started: what prompted the request may have reached the feed after
@@ -20,12 +31,18 @@ export type StateReadQueue = {
  *
  * A rejected read only ends the chain; recovering from it is the caller's business.
  * */
-export const createStateReadQueue = (): StateReadQueue => {
+export const createStateReadQueue = (collectDelay: number = COLLECT_DELAY): StateReadQueue => {
   let pendingIds = new Set<string>()
   let pendingRead: ReadStates | undefined
+  let timer: ReturnType<typeof setTimeout> | undefined
   let isReading = false
 
   const flush = () => {
+    if (timer !== undefined) {
+      clearTimeout(timer)
+      timer = undefined
+    }
+
     if (isReading || !pendingRead) {
       return
     }
@@ -44,8 +61,11 @@ export const createStateReadQueue = (): StateReadQueue => {
       .finally(() => {
         isReading = false
 
-        // whatever was asked for during the read left the ids behind - read them now
-        flush()
+        // whatever was asked for during the read left its ids behind - read them now, without
+        // collecting again: they have been waiting for this read to end
+        if (pendingRead) {
+          flush()
+        }
       })
   }
 
@@ -56,10 +76,17 @@ export const createStateReadQueue = (): StateReadQueue => {
 
     pendingRead = read
 
-    flush()
+    if (timer === undefined) {
+      timer = setTimeout(flush, collectDelay)
+    }
   }
 
   const clear = () => {
+    if (timer !== undefined) {
+      clearTimeout(timer)
+      timer = undefined
+    }
+
     pendingIds = new Set()
     pendingRead = undefined
     isReading = false

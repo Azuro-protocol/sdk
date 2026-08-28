@@ -221,10 +221,11 @@ export const useOutcomesState = ({ selections, initialStates, outcomes }: UseOut
   }, [ appChain.id ])
 
   const refetchConditionOutcomes = useCallback((conditionId: string) => {
-    // the queue re-issues this request when a read already in flight settles, rather than dropping
-    // it: that read was issued before this update and cannot carry what it reports, and nothing
-    // guarantees the condition will report again. `batchFetchConditions` groups concurrent calls
-    // into one request, so several conditions going inactive at once cost a single read.
+    // the queue collects the conditions asked for at the same moment into one read, so a game
+    // whose conditions all leave `Active` together costs one request and one state update rather
+    // than one of each per condition. It also re-issues this request when a read already in flight
+    // settles, rather than dropping it: that read was issued before this update and cannot carry
+    // what it reports, and nothing guarantees the condition will report again.
     readQueueRef.current!.request([ conditionId ], fetchStates)
   }, [ fetchStates ])
 
