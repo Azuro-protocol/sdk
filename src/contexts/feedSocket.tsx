@@ -24,6 +24,8 @@ export const FeedSocketProvider: React.FC<any> = ({ children }) => {
   const isSocketReady = socket?.readyState === WebSocket.OPEN
 
   const prevSocketUrl = useRef(socketUrl)
+  const socketRef = useRef(socket)
+  socketRef.current = socket
   const isConnectedRef = useRef(false)
 
   const connect = () => {
@@ -64,7 +66,7 @@ export const FeedSocketProvider: React.FC<any> = ({ children }) => {
     connect()
 
     return () => {
-      socket?.close(SocketCloseReason.Unmount)
+      socketRef.current?.close(SocketCloseReason.Unmount)
     }
   }, [])
 

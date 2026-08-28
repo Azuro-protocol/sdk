@@ -861,6 +861,8 @@ export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
 
   const isConnectedRef = useRef(false)
   const prevSocketUrl = useRef(socketUrl)
+  const socketRef = useRef(socket)
+  socketRef.current = socket
   const subscribers = useRef<Record<string, number>>({})
 
   const subscribe = useCallback((weights: Record<string, number>) => {
@@ -986,7 +988,9 @@ export const LiveStatisticsSocketProvider: React.FC<any> = ({ children }) => {
     connect()
 
     return () => {
-      socket?.close()
+      // the reason code is load-bearing: `handleClose` reconnects on any code it does not recognise,
+      // and a bare `close()` reports 1005, which would reconnect a second after unmount - forever
+      socketRef.current?.close(SocketCloseReason.Unmount)
     }
   }, [])
 
