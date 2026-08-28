@@ -5,6 +5,7 @@ import { useConditionUpdates } from '../../contexts/conditionUpdates'
 import { outcomeWatcher } from '../../modules/outcomeWatcher'
 import { applyOutcomeUpdate, type OutcomeStateData } from '../../helpers/applyOutcomeUpdate'
 import { batchFetchConditions } from '../../helpers/batchFetchConditions'
+import { createStateReadQueue, type StateReadQueue } from '../../helpers/createStateReadQueue'
 import { getShouldRefetchOutcomes } from '../../helpers/getShouldRefetchOutcomes'
 import { latchHidden } from '../../helpers/latchHidden'
 import { mergeWatchedStates } from '../../helpers/mergeWatchedStates'
@@ -133,7 +134,11 @@ export const useOutcomesState = ({ selections, initialStates, outcomes }: UseOut
   const selectionsListRef = useRef(selectionsList)
   const isUnmountedRef = useRef(false)
   const prevConditionStatesRef = useRef<Record<string, ConditionState>>({})
-  const refetchingConditionsRef = useRef(new Set<string>())
+  const readQueueRef = useRef<StateReadQueue | undefined>(undefined)
+
+  if (!readQueueRef.current) {
+    readQueueRef.current = createStateReadQueue()
+  }
 
   if (selectionsKey !== prevSelectionsKeyRef.current) {
     // the watched selections changed (including cleared to empty): re-key onto the new set, keeping
@@ -158,11 +163,11 @@ export const useOutcomesState = ({ selections, initialStates, outcomes }: UseOut
   useEffect(() => {
     // reset on mount too - refs survive the mount/unmount/mount cycle React does in development
     isUnmountedRef.current = false
-    refetchingConditionsRef.current.clear()
+    readQueueRef.current!.clear()
 
     return () => {
       isUnmountedRef.current = true
-      refetchingConditionsRef.current.clear()
+      readQueueRef.current!.clear()
     }
   }, [])
 
@@ -206,21 +211,11 @@ export const useOutcomesState = ({ selections, initialStates, outcomes }: UseOut
   }, [ appChain.id ])
 
   const refetchConditionOutcomes = useCallback((conditionId: string) => {
-    if (refetchingConditionsRef.current.has(conditionId)) {
-      return
-    }
-
-    refetchingConditionsRef.current.add(conditionId)
-
-    // `batchFetchConditions` groups concurrent calls into one request, so several conditions going
-    // inactive at once cost a single read
-    fetchStates([ conditionId ])
-      .catch(() => {
-        // a failed read leaves the last known values in place; the next update retries
-      })
-      .finally(() => {
-        refetchingConditionsRef.current.delete(conditionId)
-      })
+    // the queue re-issues this request when a read already in flight settles, rather than dropping
+    // it: that read was issued before this update and cannot carry what it reports, and nothing
+    // guarantees the condition will report again. `batchFetchConditions` groups concurrent calls
+    // into one request, so several conditions going inactive at once cost a single read.
+    readQueueRef.current!.request([ conditionId ], fetchStates)
   }, [ fetchStates ])
 
   useEffect(() => {

@@ -6,6 +6,7 @@ import { useChain } from '../../contexts/chain'
 import { useConditionUpdates } from '../../contexts/conditionUpdates'
 import { applyOutcomeUpdate, type OutcomeStateData } from '../../helpers/applyOutcomeUpdate'
 import { batchFetchConditions } from '../../helpers/batchFetchConditions'
+import { createStateReadQueue, type StateReadQueue } from '../../helpers/createStateReadQueue'
 import { getShouldRefetchOutcomes } from '../../helpers/getShouldRefetchOutcomes'
 import { latchHidden } from '../../helpers/latchHidden'
 
@@ -73,7 +74,11 @@ export const useOutcomeState = ({ conditionId, outcomeId, initialState, isInitia
 
   const isUnmountedRef = useRef(false)
   const prevConditionStateRef = useRef<ConditionState | undefined>(undefined)
-  const isRefetchingRef = useRef(false)
+  const readQueueRef = useRef<StateReadQueue | undefined>(undefined)
+
+  if (!readQueueRef.current) {
+    readQueueRef.current = createStateReadQueue()
+  }
 
   const outcomeKey = `${conditionId}-${outcomeId}`
   const outcomeKeyRef = useRef(outcomeKey)
@@ -89,7 +94,7 @@ export const useOutcomeState = ({ conditionId, outcomeId, initialState, isInitia
     // both guards are keyed to the outcome that has gone - the first message about the new one has
     // to count as newly seen, and the read in flight for the old one no longer blocks anything
     prevConditionStateRef.current = undefined
-    isRefetchingRef.current = false
+    readQueueRef.current!.clear()
   }
 
   outcomeKeyRef.current = outcomeKey
@@ -97,10 +102,11 @@ export const useOutcomeState = ({ conditionId, outcomeId, initialState, isInitia
   useEffect(() => {
     // reset on mount too - refs survive the mount/unmount/mount cycle React does in development
     isUnmountedRef.current = false
-    isRefetchingRef.current = false
+    readQueueRef.current!.clear()
 
     return () => {
       isUnmountedRef.current = true
+      readQueueRef.current!.clear()
     }
   }, [])
 
@@ -128,20 +134,11 @@ export const useOutcomeState = ({ conditionId, outcomeId, initialState, isInitia
   }, [ conditionId, outcomeId, appChain.id ])
 
   const refetchState = useCallback(() => {
-    if (isRefetchingRef.current) {
-      return
-    }
-
-    isRefetchingRef.current = true
-
-    fetchState()
-      .catch(() => {
-        // a failed read leaves the last known values in place; the next update retries
-      })
-      .finally(() => {
-        isRefetchingRef.current = false
-      })
-  }, [ fetchState ])
+    // the queue re-issues this request when a read already in flight settles, rather than dropping
+    // it: that read was issued before this update and cannot carry what it reports, and nothing
+    // guarantees the condition will report again
+    readQueueRef.current!.request([ conditionId ], fetchState)
+  }, [ conditionId, fetchState ])
 
   useEffect(() => {
     if (!isSocketReady || !conditionId) {
