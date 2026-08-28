@@ -47,7 +47,9 @@ const getKey = (conditionId: string, outcomeId: string) => `${conditionId}-${out
  *
  * Returns `data` - a map of `${conditionId}-${outcomeId}` keys to their current `OutcomeState`.
  * Returns `outcomesMap` - a map `{ [`${conditionId}-${outcomeId}`]: { odds, turnover, state, hidden } }`
- * holding the live odds/turnover plus state/hidden for each outcome.
+ * holding the live odds/turnover plus state/hidden for each outcome. `state` and `hidden` are absent
+ * until something authoritative has reported them: odds and turnover come with every update, a
+ * per-outcome state does not.
  *
  * `odds` and `turnover` are taken from every update. `state` and `hidden` are taken only from updates
  * whose condition is `Active`: an update for an inactive condition reports every one of its outcomes
