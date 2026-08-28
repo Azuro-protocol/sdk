@@ -1,4 +1,4 @@
-type WatchedStates<State, Entry extends { state: State }> = {
+type WatchedStates<State, Entry extends { state?: State }> = {
   states: Record<string, State>
   statesMap: Record<string, Entry>
 }
@@ -17,8 +17,11 @@ type WatchedStates<State, Entry extends { state: State }> = {
  * seed it from - the caller then reads it from the feed. An id that is no longer watched is dropped,
  * so the maps track the watched set rather than growing for the life of the page. Clearing the
  * watched set to empty needs no special case: everything is dropped by the same rule.
+ *
+ * An entry can hold values that came with no state - odds are real in every update, a state is not -
+ * and it then stays out of the `states` map, which is how the caller knows the state is still owed.
  * */
-export const mergeWatchedStates = <State, Entry extends { state: State }>(
+export const mergeWatchedStates = <State, Entry extends { state?: State }>(
   prevValue: WatchedStates<State, Entry>,
   initialValue: WatchedStates<State, Entry>,
   keys: string[]
@@ -27,7 +30,10 @@ export const mergeWatchedStates = <State, Entry extends { state: State }>(
     const entry = prevValue.statesMap[key] ?? initialValue.statesMap[key]
 
     if (entry) {
-      acc.states[key] = entry.state
+      if (entry.state) {
+        acc.states[key] = entry.state
+      }
+
       acc.statesMap[key] = entry
     }
 

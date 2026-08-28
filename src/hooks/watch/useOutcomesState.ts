@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { OutcomeState, type ConditionState, type MarketOutcome, type Selection } from '@azuro-org/toolkit'
 
+import { MAX_STATE_READ_ATTEMPTS } from '../../config'
 import { useConditionUpdates } from '../../contexts/conditionUpdates'
 import { outcomeWatcher } from '../../modules/outcomeWatcher'
 import { applyOutcomeUpdate, type OutcomeStateData } from '../../helpers/applyOutcomeUpdate'
@@ -26,7 +27,10 @@ export type { OutcomeStateData }
 
 export type OutcomesStateData = {
   states: Record<string, OutcomeState>
-  /** map of `${conditionId}-${outcomeId}` to its current odds, turnover, state and hidden flag */
+  /**
+   * map of `${conditionId}-${outcomeId}` to its current odds, turnover, state and hidden flag.
+   * `state` and `hidden` are absent until something authoritative has reported them
+   * */
   statesMap: Record<string, OutcomeStateData>
 }
 
@@ -125,6 +129,8 @@ export const useOutcomesState = ({ selections, initialStates, outcomes }: UseOut
   }, [ selections, initialStates, outcomes ])
 
   const [ state, setState ] = useState<OutcomesStateData>(initialState)
+  const [ failedStateReads, setFailedStateReads ] = useState(0)
+  const canReadStates = failedStateReads < MAX_STATE_READ_ATTEMPTS
   const shouldFetchStates = useMemo(
     () => selectionsList.some(({ key }) => !state?.states?.[key]),
     [ state, selectionsList ]
@@ -145,6 +151,10 @@ export const useOutcomesState = ({ selections, initialStates, outcomes }: UseOut
     // what is already known for the outcomes that stayed. A reset would drop every latched reveal
     // and every settled outcome each time the feed adds a condition to a running game.
     setState((prevValue) => mergeWatchedStates(prevValue, initialState, selectionsList.map(({ key }) => key)))
+
+    // the ids that failed to read are not the ones being watched now - give the new set its
+    // own attempts
+    setFailedStateReads(0)
 
     // the re-read trigger is keyed by conditionId - forget the conditions that are no longer
     // watched, so one that comes back is treated as newly seen and re-read again
@@ -241,17 +251,13 @@ export const useOutcomesState = ({ selections, initialStates, outcomes }: UseOut
 
         setState(prevData => {
           const nextValue = applyOutcomeUpdate(prevData.statesMap[key], data)
-
-          // nothing trustworthy to write yet - the re-read below fills it in
-          if (!nextValue) {
-            return prevData
-          }
+          const { state } = nextValue
 
           return {
-            states: {
-              ...prevData.states,
-              [key]: nextValue.state,
-            },
+            // an outcome nothing has reported a state for stays out of the state map, so the read
+            // below still knows to fill it in - the odds and turnover of this update are real
+            // either way and are kept
+            states: state ? { ...prevData.states, [key]: state } : prevData.states,
             statesMap: {
               ...prevData.statesMap,
               [key]: nextValue,
@@ -277,18 +283,23 @@ export const useOutcomesState = ({ selections, initialStates, outcomes }: UseOut
   }, [ selectionsKey, refetchConditionOutcomes ])
 
   useEffect(() => {
-    if (!selectionsList.length || !shouldFetchStates) {
+    if (!selectionsList.length || !shouldFetchStates || !canReadStates) {
       return
     }
 
     fetchStates(conditionIds).catch(() => {
-      // a failed read leaves the seeded values in place; the next update retries
+      // a failed read writes nothing, so nothing this effect reads has changed and it would never
+      // run again. Counting the failure gives it another attempt, and past the last one the hook
+      // stops reporting a read it is no longer making.
+      if (!isUnmountedRef.current) {
+        setFailedStateReads((count) => count + 1)
+      }
     })
-  }, [ selectionsKey, shouldFetchStates, fetchStates ])
+  }, [ selectionsKey, shouldFetchStates, fetchStates, failedStateReads ])
 
   return {
     data: state.states,
     outcomesMap: state.statesMap,
-    isFetching: shouldFetchStates,
+    isFetching: shouldFetchStates && canReadStates,
   }
 }

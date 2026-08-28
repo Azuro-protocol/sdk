@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ConditionState, OutcomeState } from '@azuro-org/toolkit'
 
+import { MAX_STATE_READ_ATTEMPTS } from '../../config'
 import { outcomeWatcher } from '../../modules/outcomeWatcher'
 import { useChain } from '../../contexts/chain'
 import { useConditionUpdates } from '../../contexts/conditionUpdates'
@@ -69,6 +70,8 @@ export const useOutcomeState = ({ conditionId, outcomeId, initialState, isInitia
   })
 
   const [ { state, isHidden, odds, turnover, isFetching }, setState ] = useState(getSeedState)
+  const [ failedStateReads, setFailedStateReads ] = useState(0)
+  const canReadStates = failedStateReads < MAX_STATE_READ_ATTEMPTS
 
   const isLocked = state !== OutcomeState.Active
 
@@ -90,6 +93,10 @@ export const useOutcomeState = ({ conditionId, outcomeId, initialState, isInitia
     // and an update whose condition repeats the previous condition's state writes neither field
     // and asks for no re-read.
     setState(getSeedState())
+
+    // the outcome that failed to read is not the one being watched now - give the new one its own
+    // attempts
+    setFailedStateReads(0)
 
     // both guards are keyed to the outcome that has gone - the first message about the new one has
     // to count as newly seen, and the read in flight for the old one no longer blocks anything
@@ -168,11 +175,11 @@ export const useOutcomeState = ({ conditionId, outcomeId, initialState, isInitia
           state: prevState.state,
           hidden: prevState.isHidden,
         }
-        // there is always a previous value here, so the update always folds into something
-        const nextValue = applyOutcomeUpdate(prevValue, data) ?? prevValue
+        const nextValue = applyOutcomeUpdate(prevValue, data)
 
         return {
-          state: nextValue.state,
+          // there is always a previous state here, so an update that reports none keeps it
+          state: nextValue.state ?? prevState.state,
           odds: nextValue.odds,
           turnover: nextValue.turnover,
           isHidden: nextValue.hidden,
@@ -196,12 +203,19 @@ export const useOutcomeState = ({ conditionId, outcomeId, initialState, isInitia
   }, [ conditionId, outcomeId, refetchState ])
 
   useEffect(() => {
-    if (initialState || !conditionId || !outcomeId) {
+    if (initialState || !conditionId || !outcomeId || !canReadStates) {
       return
     }
 
-    refetchState()
-  }, [ conditionId, outcomeId, appChain.id, initialState ])
+    fetchState().catch(() => {
+      // a failed read writes nothing, so nothing this effect reads has changed and it would never
+      // run again. Counting the failure gives it another attempt, and past the last one the hook
+      // stops reporting a read it is no longer making.
+      if (!isUnmountedRef.current) {
+        setFailedStateReads((count) => count + 1)
+      }
+    })
+  }, [ conditionId, outcomeId, appChain.id, initialState, failedStateReads ])
 
   return {
     state,
@@ -209,6 +223,6 @@ export const useOutcomeState = ({ conditionId, outcomeId, initialState, isInitia
     turnover,
     isHidden,
     isLocked,
-    isFetching,
+    isFetching: isFetching && canReadStates,
   }
 }
