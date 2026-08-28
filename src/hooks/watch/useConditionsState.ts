@@ -98,6 +98,7 @@ export const useConditionsState = ({ conditionIds: _conditionIds, initialStates,
   const shouldFetchStates = useMemo(() => conditionIds.some((id) => !state?.states?.[id]), [ state, conditionIds ])
 
   const prevConditionsKeyRef = useRef(conditionsKey)
+  const conditionIdsRef = useRef(conditionIds)
 
   if (conditionsKey !== prevConditionsKeyRef.current) {
     // the watched conditions changed (including cleared to empty): re-key onto the new set, keeping
@@ -107,6 +108,7 @@ export const useConditionsState = ({ conditionIds: _conditionIds, initialStates,
   }
 
   prevConditionsKeyRef.current = conditionsKey
+  conditionIdsRef.current = conditionIds
 
   useEffect(() => {
     if (!isSocketReady || !conditionsKey.length) {
@@ -161,11 +163,22 @@ export const useConditionsState = ({ conditionIds: _conditionIds, initialStates,
       return
     }
 
+    const idsSet = new Set(conditionIds)
+
     ;(async () => {
       const data = await batchFetchConditions(conditionIds, appChain.id)
 
       setState((prevValue) => {
-        return conditionIds.reduce<ConditionsStateData>((acc, conditionId) => {
+        // written against the conditions being watched now, not the ones this read was issued for:
+        // the watched set can change while a read is in flight, and the ids it left behind have
+        // already been pruned from the state. Writing them back would resurrect them, and a
+        // consumer reading the whole map rather than the ids it cares about would see a condition
+        // it no longer watches.
+        return conditionIdsRef.current.reduce<ConditionsStateData>((acc, conditionId) => {
+          if (!idsSet.has(conditionId)) {
+            return acc
+          }
+
           // a state refetch can't report visibility - the state endpoint carries no condition-level
           // `hidden` - so the last known value is carried forward
           const hidden = prevValue.statesMap[conditionId]?.hidden
