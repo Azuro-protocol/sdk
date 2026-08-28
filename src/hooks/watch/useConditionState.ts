@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ConditionState } from '@azuro-org/toolkit'
 
 import { conditionWatcher } from '../../modules/conditionWatcher'
@@ -45,13 +45,27 @@ export const useConditionState = ({ conditionId, initialState, isInitiallyHidden
   const { appChain } = useChain()
   const { isSocketReady, subscribeToUpdates, unsubscribeToUpdates } = useConditionUpdates()
 
-  const [ { state, isHidden, isFetching }, setState ] = useState({
+  const getSeedState = () => ({
     state: initialState || ConditionState.Active,
     isHidden: isInitiallyHidden,
     isFetching: !initialState && Boolean(conditionId),
   })
 
+  const [ { state, isHidden, isFetching }, setState ] = useState(getSeedState)
+
   const isLocked = state !== ConditionState.Active
+
+  const conditionIdRef = useRef(conditionId)
+
+  if (conditionId !== conditionIdRef.current) {
+    // the hook was pointed at a different condition. `useState`'s value seeds the mount only, so a
+    // reused component instance would otherwise carry the previous condition's visibility over -
+    // and visibility is latched, so a reveal earned by the condition that has gone would never be
+    // taken back.
+    setState(getSeedState())
+  }
+
+  conditionIdRef.current = conditionId
 
   useEffect(() => {
     if (!isSocketReady || !conditionId) {
@@ -92,6 +106,12 @@ export const useConditionState = ({ conditionId, initialState, isInitiallyHidden
 
     ;(async () => {
       const data = await batchFetchConditions([ conditionId ], appChain.id)
+
+      // the hook may have been pointed at another condition while the read was in flight - what
+      // came back describes the condition that has gone
+      if (conditionIdRef.current !== conditionId) {
+        return
+      }
 
       setState((prevState) => ({
         // the condition isn't in the feed at all - treat it as not bettable rather than inventing
