@@ -175,11 +175,13 @@ export const BetslipProvider: React.FC<BetslipProviderProps> = (props) => {
       const outcome = outcomesMap[`${conditionId}-${outcomeId}`]
 
       // not yet fetched or prev version of API — don't block the betslip prematurely
-      if (!outcome || !('state' in outcome) || typeof outcome.hidden !== 'boolean') {
+      if (!outcome || !('state' in outcome)) {
         return true
       }
 
-      return outcome.state === OutcomeState.Active && !outcome.hidden
+      // visibility is reported separately from state and may never be reported at all, so only an
+      // outcome the feed has actually called hidden blocks the bet
+      return outcome.state === OutcomeState.Active && outcome.hidden !== true
     })
   }, [ items, outcomesMap ])
 
