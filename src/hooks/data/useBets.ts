@@ -1,6 +1,6 @@
 import { getMarketName, getSelectionName } from '@azuro-org/dictionaries'
 import {
-  BetConditionStatus, BetResult, BetOrderState, calcMinOdds, type ChainId,
+  BetConditionStatus, BetResult, BetOrderState, calcComboOdds, MARGIN_APPLIED_AT, type ChainId,
   type GameData, GameState, getGamesByIds, GraphBetStatus, OrderDirection,
   getBetsByBettor, type GetBetsByBettorParams, type GetBetsByBettorResult,
   SelectionKind, SelectionResult, OutcomeResult, BetOrderResult,
@@ -11,7 +11,6 @@ import { type Address, type Hex } from 'viem'
 import { batchFetchConditions } from '../../helpers/batchFetchConditions'
 import { useOptionalChain } from '../../contexts/chain'
 import { type Bet, type BetOutcome, BetType, type InfiniteQueryParameters } from '../../global'
-import { formatToFixed } from '../../helpers/formatToFixed'
 
 
 type UseBetsResult = {
@@ -180,7 +179,13 @@ export const useBets: UseBets = (props) => {
         const actor = rawBet?.actor || order.bettor
 
         const amount = String(rawBet?.amount || order.amount)
-        const createdAt = Math.floor(Date.parse(order.createdAt) / 1000)
+        // the on-chain moment the bet was placed, which is what decides whether its odds carry the
+        // feed's fee - `order.createdAt` is the order record's own timestamp and can fall on the
+        // other side of `MARGIN_APPLIED_AT` from the block that priced the bet. It is only used as a
+        // fallback, for an order the subgraph has not indexed yet
+        const createdAt = rawBet?.createdBlockTimestamp
+          ? Number(rawBet.createdBlockTimestamp)
+          : Math.floor(Date.parse(order.createdAt) / 1000)
         const redeemedAt = order.redeemedAt ? Math.floor(Date.parse(order.redeemedAt) / 1000) : null
         const _isRedeemed = Boolean(rawBet?.isRedeemed || redeemedAt)
 
@@ -196,11 +201,6 @@ export const useBets: UseBets = (props) => {
         // so we should validate it by "win"/"canceled" statuses
         const isRedeemed = Boolean((isWin || isAcceptedBetCanceled) && _isRedeemed)
         // const isFreebet = Boolean(freebetId)
-        // `payout` is deliberately gated on redeemability: it answers "is there money to claim?"
-        const payout = !_isRedeemed && isWin ? +_payout! : null
-        // `settledPayout` answers "what did this bet return?" and stays populated after redemption,
-        // which is what historical and aggregate views need
-        const settledPayout = _payout !== null && _payout !== undefined ? +_payout : null
         const betDiff = isFreebet && isFreebetAmountReturnable ? amount : 0 // for freebet we must exclude bonus value from possible win
         const cashout = isCashedOut ? _cashout?.payout : undefined
 
@@ -292,13 +292,49 @@ export const useBets: UseBets = (props) => {
           })
           .sort((a, b) => +(a.game?.startsAt || 0) - +(b.game?.startsAt || 0))
 
-        // an all-void combo leaves `subBetOdds` empty, and `calcMinOdds` returns 0.99 for an empty
-        // array (the combo fee applied to nothing) - the stake is simply returned, so odds are 1
-        let totalOdds = isCombo
-          ? subBetOdds.length ? +formatToFixed(calcMinOdds({ odds: subBetOdds, slippage: 0 }), 2) : 1
-          : settledOdds ? +settledOdds : +odds
+        // A combo placed before the feed applied its fee to every outcome was priced as the plain
+        // product of its legs, which is exactly what the indexer records - so both its recorded odds
+        // and its recorded payout are right, until a voided leg has to come out of them.
+        const isPricedAsRecorded = isCombo
+          && createdAt < MARGIN_APPLIED_AT
+          && subBetOdds.length === order.conditions!.length
 
-        const possibleWin = +amount * totalOdds - +betDiff
+        // `calcComboOdds` prices a combo the way the protocol does, by the rules in force when the
+        // bet was placed. It answers 1 for an empty leg list, so an all-void combo returns the stake
+        // rather than 0.99 of it.
+        // a fully canceled bet returns the stake, nothing more - `settledOdds` keeps the odds it was
+        // placed at even then, so it must not be used here
+        let totalOdds = isCanceled ? 1
+          : isCombo && !isPricedAsRecorded
+            ? +calcComboOdds({ odds: subBetOdds, createdAt })
+            : settledOdds ? +settledOdds : +odds
+
+        const rebuiltPayout = +amount * totalOdds
+        const possibleWin = rebuiltPayout - +betDiff
+
+        /**
+         * The recorded payout of an unredeemed won combo is not what the bet is worth. The indexer
+         * writes it at settlement by multiplying the leg odds as it recorded them, and only replaces
+         * it with the real on-chain amount when the bettor claims - so it compounds the feed's fee
+         * once per leg instead of once in total, and it keeps crediting a voided leg as if that leg
+         * had won. Redeemed bets keep reading the recorded value: by then it is the amount actually
+         * paid. A combo whose legs predate the fee is the exception, per `isPricedAsRecorded`, and so
+         * is a cashed-out bet: it was paid at the price the bettor took, so its odds say nothing
+         * about it.
+         * */
+        const isRecordedPayoutStale = isWin && isCombo && !isCashedOut && !_isRedeemed
+          && !isPricedAsRecorded
+
+        const recordedPayout = _payout !== null && _payout !== undefined ? +_payout : null
+        const actualPayout = isRecordedPayoutStale ? rebuiltPayout : recordedPayout
+
+        // `payout` is deliberately gated on redeemability: it answers "is there money to claim?", so
+        // it reads the same gate rather than a second opinion on it. A canceled bet refunds the stake,
+        // so it has money to claim too; a cashed-out one does not, whatever it later resolves to.
+        const payout = isRedeemable ? actualPayout : null
+        // `settledPayout` answers "what did this bet return?" and stays populated after redemption,
+        // which is what historical and aggregate views need
+        const settledPayout = actualPayout
 
         const bet: Bet = {
           orderId,

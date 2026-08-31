@@ -12,7 +12,8 @@ import {
   OutcomeResult,
   GameState,
   getGamesByIds,
-  calcMinOdds,
+  calcComboOdds,
+  MARGIN_APPLIED_AT,
   isSelectionCanceled,
   normalizeBetsFilter,
   toGraphBetsWhere,
@@ -26,7 +27,6 @@ import { batchFetchConditions } from '../../../helpers/batchFetchConditions'
 import { useOptionalChain } from '../../../contexts/chain'
 import { type Bet, type BetOutcome, type InfiniteQueryParameters } from '../../../global'
 import { gqlRequest } from '../../../helpers/gqlRequest'
-import { formatToFixed } from '../../../helpers/formatToFixed'
 import { betsQueryKeys } from '../../../helpers/betsQueryKeys'
 
 
@@ -236,28 +236,40 @@ export const useBets: UseBets = (props) => {
           })
           .sort((a, b) => +(a.game?.startsAt || 0) - +(b.game?.startsAt || 0))
 
+        // A combo placed before the feed applied its fee to every outcome was priced as the plain
+        // product of its legs, which is exactly what the indexer records - so both its recorded odds
+        // and its recorded payout are right, until a voided leg has to come out of them.
+        const isPricedAsRecorded = isCombo
+          && +createdAt < MARGIN_APPLIED_AT
+          && subBetOdds.length === selections.length
+
         // a fully canceled bet returns the stake, nothing more. `settledOdds` keeps the original
         // odds even then, so it must not be used here - see the note on the `Bet` type.
-        // Likewise an all-void combo leaves `subBetOdds` empty, and `calcMinOdds` returns 0.99 for
-        // an empty array (the combo fee applied to nothing).
+        // `calcComboOdds` prices everything else: the indexer's own product of the leg odds is not
+        // how a combo is priced once those legs carry a fee. It answers 1 for an empty leg list, so
+        // an all-void combo returns the stake rather than 0.99 of it.
         let totalOdds = isCanceled ? 1
-          : isCombo
-            ? subBetOdds.length ? +formatToFixed(calcMinOdds({ odds: subBetOdds, slippage: 0 }), 2) : 1
+          : isCombo && !isPricedAsRecorded
+            ? +calcComboOdds({ odds: subBetOdds, createdAt: +createdAt })
             : settledOdds ? +settledOdds : +odds
 
         const possibleWin = +amount * totalOdds - +betDiff
 
         /**
-         * The recorded payout of a won combo with a voided leg is the FULL pre-void payout until the
-         * bet is redeemed - it still credits the voided leg as if it had won - so what the surviving
-         * legs are worth is read instead. Redeemed bets keep reading the recorded value: by then it
-         * is the amount actually paid.
+         * The recorded payout of an unredeemed won combo is not what the bet is worth. The indexer
+         * writes it at settlement by multiplying the leg odds as it recorded them, and only replaces
+         * it with the real on-chain amount when the bettor claims - so it compounds the feed's fee
+         * once per leg instead of once in total, and it keeps crediting a voided leg as if that leg
+         * had won. Redeemed bets keep reading the recorded value: by then it is the amount actually
+         * paid. A combo whose legs predate the fee is the exception, per `isPricedAsRecorded`, and so
+         * is a cashed-out bet: it was paid at the price the bettor took, so its odds say nothing
+         * about it.
          *
          * Gross, like every payout the protocol records: `possibleWin` nets out the stake of a
          * returnable freebet, which is a display rule and does not belong in this figure.
          * */
-        const isRecordedPayoutStale = isWin && isCombo && !_isRedeemed
-          && outcomes.some(({ isCanceled }) => isCanceled)
+        const isRecordedPayoutStale = isWin && isCombo && !isCashedOut && !_isRedeemed
+          && !isPricedAsRecorded
 
         const recordedPayout = _payout !== null && _payout !== undefined ? +_payout : null
         const actualPayout = isRecordedPayoutStale ? +amount * totalOdds : recordedPayout
