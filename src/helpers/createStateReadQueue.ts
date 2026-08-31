@@ -36,6 +36,9 @@ export const createStateReadQueue = (collectDelay: number = COLLECT_DELAY): Stat
   let pendingRead: ReadStates | undefined
   let timer: ReturnType<typeof setTimeout> | undefined
   let isReading = false
+  // bumped by `clear`, so a read abandoned by it cannot report back and hand the queue to a read
+  // that is still running - see the note on `clear`
+  let generation = 0
 
   const flush = () => {
     if (timer !== undefined) {
@@ -49,6 +52,7 @@ export const createStateReadQueue = (collectDelay: number = COLLECT_DELAY): Stat
 
     const conditionIds = [ ...pendingIds ]
     const read = pendingRead
+    const readGeneration = generation
 
     pendingIds = new Set()
     pendingRead = undefined
@@ -59,6 +63,12 @@ export const createStateReadQueue = (collectDelay: number = COLLECT_DELAY): Stat
         // the caller decides what a failed read means for it; the queue only stops chaining
       })
       .finally(() => {
+        // a `clear` since this read went out has already released the queue, and a later read may
+        // be in flight on it. Reporting back now would declare that one finished too
+        if (readGeneration !== generation) {
+          return
+        }
+
         isReading = false
 
         // whatever was asked for during the read left its ids behind - read them now, without
@@ -81,6 +91,12 @@ export const createStateReadQueue = (collectDelay: number = COLLECT_DELAY): Stat
     }
   }
 
+  /**
+   * A read already in flight is abandoned rather than awaited: what asked for it has gone away or is
+   * watching something else, so its answer is no longer wanted. The generation bump is what makes
+   * that safe - without it the abandoned read would still report back on settling and release the
+   * queue, letting a read issued after the clear run alongside another one.
+   * */
   const clear = () => {
     if (timer !== undefined) {
       clearTimeout(timer)
@@ -90,6 +106,7 @@ export const createStateReadQueue = (collectDelay: number = COLLECT_DELAY): Stat
     pendingIds = new Set()
     pendingRead = undefined
     isReading = false
+    generation += 1
   }
 
   return { request, clear }
