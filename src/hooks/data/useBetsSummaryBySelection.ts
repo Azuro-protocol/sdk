@@ -29,7 +29,10 @@ export type UseBetsSummaryBySelection = (props: UseBetsSummaryBySelectionProps) 
 
 /**
  * Get a betting summary by selection (outcome) for a specific game.
- * Returns a map of outcomeId to profit/loss amount. Only enabled for finished games.
+ * Returns a map of `${conditionId}-${outcomeId}` to profit/loss amount. Only enabled for finished games.
+ *
+ * An outcome is addressed by its condition and its id together - an `outcomeId` alone is not unique
+ * across a game, so the same one can belong to more than one condition.
  *
  * - Docs: https://gem.azuro.org/hub/apps/sdk/data-hooks/useBetsSummaryBySelection
  *
@@ -41,7 +44,7 @@ export type UseBetsSummaryBySelection = (props: UseBetsSummaryBySelectionProps) 
  *   gameId: '123',
  *   gameState: GameState.Finished
  * })
- * // data: { '1': '100.5', '2': '-50.25' } - outcomeId -> profit/loss
+ * // data: { '456-1': '100.5', '789-2': '-50.25' } - `${conditionId}-${outcomeId}` -> profit/loss
  * */
 
 const DIVIDER = 18
@@ -96,7 +99,7 @@ export const useBetsSummaryBySelection: UseBetsSummaryBySelection = (props) => {
           }
         }
 
-        const key = outcomeId
+        const key = `${conditionId}-${outcomeId}`
 
         if (!acc[key]) {
           acc[key] = 0n
@@ -130,7 +133,7 @@ export const useBetsSummaryBySelection: UseBetsSummaryBySelection = (props) => {
 
       return acc
     }, {})
-  }, [])
+  }, [ gameId, betToken.decimals ])
 
   const accountLowerCased = account?.toLowerCase()
 
