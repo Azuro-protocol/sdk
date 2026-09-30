@@ -72,8 +72,9 @@ export const useActivatePromoCode = (props: UseActivatePromoCodeProps) => {
       })
     }
     catch (err) {
-      // the hook's error is always a PromoCodeError or an AuthError: a network failure or a response
-      // that can't be read is reported as 'unknown', with the original error as its cause
+      // keeps the hook's error a PromoCodeError or an AuthError: the toolkit already reports a response
+      // that can't be read as 'unknown', and anything else it lets through, such as a network failure,
+      // is reported as 'unknown' here, with the original error as its cause
       if (isPromoCodeError(err)) {
         throw err
       }
@@ -99,9 +100,7 @@ export const useActivatePromoCode = (props: UseActivatePromoCodeProps) => {
       }
       onSuccess?.(data)
     },
-    onError: (err) => {
-      onError?.(err)
-    },
+    onError,
   })
 
   return {
