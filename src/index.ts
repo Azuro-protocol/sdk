@@ -306,6 +306,11 @@ export {
   type GetUseAvailableFreebetsQueryOptionsProps,
   type UseAvailableFreebetsQueryFnData,
 } from './hooks/bonus/useAvailableFreebets'
+export {
+  useActivatePromoCode,
+  type UseActivatePromoCodeProps,
+  type ActivatePromoCodeVariables,
+} from './hooks/bonus/useActivatePromoCode'
 
 /**
  * Wave hooks
