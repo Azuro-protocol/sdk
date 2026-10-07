@@ -152,12 +152,39 @@ export type Bet = {
   isCashedOut: boolean
 }
 
+/**
+ * A wallet's betting totals on one chain, as the bets subgraph keeps them. Amounts are formatted with
+ * the chain's bet token decimals.
+ *
+ * The top-level figures cover bets placed with the wallet's own funds; freebets are counted only in
+ * `freebet`, whose payouts are the bettor's share.
+ * */
 export type BetsSummary = {
+  /** payouts and refunds of settled bets that are not yet redeemed */
   toPayout: string
+  /** stakes of bets that are not settled yet */
   inBets: string
   totalPayout: string
   totalProfit: string
   betsCount: number
   wonBetsCount: number
   lostBetsCount: number
+  canceledBetsCount: number
+  cashedOutBetsCount: number
+  /** what the wallet can redeem now: `toPayout` plus `freebet.toPayout` */
+  withdrawable: string
+  freebet: {
+    betsCount: number
+    wonBetsCount: number
+    lostBetsCount: number
+    canceledBetsCount: number
+    /** stakes of every freebet placed */
+    turnover: string
+    /** stakes of freebets that are not settled yet */
+    inBets: string
+    /** the bettor's share of settled freebets that are not yet redeemed */
+    toPayout: string
+    /** the bettor's share of what redeemed freebets paid out */
+    totalPayout: string
+  }
 }

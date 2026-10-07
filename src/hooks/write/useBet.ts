@@ -12,7 +12,7 @@ import { waitForTransactionReceipt } from 'wagmi/actions'
 
 import { DEFAULT_DEADLINE } from '../../config'
 import { useOptionalChain } from '../../contexts/chain'
-import { isBettorBetsQueryKey } from '../../helpers/betsQueryKeys'
+import { betsQueryKeys, isBettorBetsQueryKey } from '../../helpers/betsQueryKeys'
 import { formatToFixed } from '../../helpers/formatToFixed'
 import { useBetFee } from '../data/useBetFee'
 import { useAAWalletClients, useExtendedAccount } from '../useAaConnector'
@@ -70,6 +70,10 @@ const simpleObjReducer = (state: BetTxState, newState: Partial<BetTxState>) => (
   ...state,
   ...newState,
 })
+
+// the indexer records a new bet a few seconds after its receipt, so a single read right away would
+// miss it: the summary is read now and again over the next half minute
+const SUMMARY_REREAD_AFTER_BET_DELAYS = [ 0, 4000, 10000, 25000 ]
 
 /**
  * Place a bet on outcomes (single or combo bet).
@@ -420,8 +424,10 @@ export const useBet = (props: UseBetProps) => {
         predicate: ({ queryKey }) => isBettorBetsQueryKey(queryKey, appChain.id, accountLowerCased),
       })
 
-      queryClient.invalidateQueries({
-        queryKey: [ 'bets-summary', graphql.bets, accountLowerCased ],
+      const summaryKey = betsQueryKeys.summaryPrefix({ gqlLink: graphql.bets, account })
+
+      SUMMARY_REREAD_AFTER_BET_DELAYS.forEach(delay => {
+        setTimeout(() => queryClient.invalidateQueries({ queryKey: summaryKey }), delay)
       })
 
       onSuccess?.(receipt)
