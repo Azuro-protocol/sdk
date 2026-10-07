@@ -64,9 +64,10 @@ export const useBetsSummaryBySelection: UseBetsSummaryBySelection = (props) => {
 
     const rawSummary = [ ...(prematchBets || []), ...(liveBets || []), ...(v3Bets || []) ].reduce<Record<string, bigint>>((acc, bet) => {
       const { rawAmount: _rawAmount, rawPotentialPayout: _rawPotentialPayout, result, selections, isCashedOut } = bet
+      // a v2 freebet is marked by its `freebet` relation, which stays empty on a v3 bet, and a v3 one by
+      // its `isFreebet` flag. A v2 bet has no returnable flag, so a legacy freebet is valued as returnable
       const { freebet } = bet as GameBetsQuery['bets'][0]
-      // a v2 bet has no returnable flag, so a legacy freebet is valued as returnable
-      const { isFreebetAmountReturnable } = bet as GameBetsQuery['v3Bets'][0]
+      const { isFreebet: isV3Freebet, isFreebetAmountReturnable } = bet as GameBetsQuery['v3Bets'][0]
 
       if (isCashedOut || !result) {
         return acc
@@ -74,7 +75,7 @@ export const useBetsSummaryBySelection: UseBetsSummaryBySelection = (props) => {
 
       const isExpress = selections.length > 1
       const isWin = result === BetResult.Won
-      const isFreebet = Boolean(freebet)
+      const isFreebet = Boolean(freebet) || Boolean(isV3Freebet)
 
       const rawAmount = BigInt(_rawAmount)
       const rawPayout = BigInt(_rawPotentialPayout)

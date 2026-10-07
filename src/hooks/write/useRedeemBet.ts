@@ -237,6 +237,7 @@ export const useRedeemBet = ({ chainId }: Props = {}) => {
         {
           isRedeemed: true,
           isRedeemable: false,
+          payout: null,
         },
         isV2
       )

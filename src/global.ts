@@ -87,6 +87,9 @@ export type BetOutcome = {
  * payout less the stake when the freebet's amount is returnable, the whole payout when it is not, and
  * nothing when the payout is no greater than the stake. A freebet without a returnable flag is valued
  * as returnable. See `calcFreebetBettorShare` in `@azuro-org/toolkit`.
+ *
+ * The share rule and the field notes below describe bets from `useBets`; bets from `useLegacyBets` keep
+ * the v2 figures.
  * */
 export type Bet = {
   /** bettorAddressLowerCase_nonce */

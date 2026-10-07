@@ -4,7 +4,7 @@ import {
   type Selection,
   type ChainId,
 } from '@azuro-org/toolkit'
-import { type QueryKey, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 
 import { useOptionalChain } from '../contexts/chain'
 import { useExtendedAccount } from '../hooks/useAaConnector'
@@ -99,7 +99,6 @@ export const useBetsCache = (chainId?: ChainId) => {
     // the summary rows mirror what the indexer will record for this bet, on the row of its own pool
     // and affiliate; a summary that cannot be patched that way is re-read at once instead
     const summaryFilter = { queryKey: betsQueryKeys.summaryPrefix({ gqlLink: graphql.bets, account: address! }) }
-    const unpatchedSummaryKeys: QueryKey[] = []
 
     queryClient.getQueriesData<BettorsQuery['bettors']>(summaryFilter).forEach(([ queryKey, rows ]) => {
       if (!rows) {
@@ -122,10 +121,6 @@ export const useBetsCache = (chainId?: ChainId) => {
         }
       }
 
-      unpatchedSummaryKeys.push(queryKey)
-    })
-
-    unpatchedSummaryKeys.forEach(queryKey => {
       queryClient.invalidateQueries({ queryKey, exact: true })
     })
 

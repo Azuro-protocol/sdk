@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { formatUnits } from 'viem'
 import { type BettorFragment } from '@azuro-org/toolkit'
 
 import { type PatchBettorRowsProps, patchBettorRows } from './patchBettorRows'
@@ -187,5 +188,21 @@ describe('patchBettorRows', () => {
     })
 
     expect(rows[0]!.rawToPayout).toBe('1000000')
+  })
+
+  it('leaves no dust when the last payout of an 18-decimal row is redeemed and the number rounds down', () => {
+    // 1.5000000000000001 has no exact number, so the cached payout reads 1.5, 100 base units short
+    const rawPayout = 1500000000000000100n
+    const row = makeRow(AFFILIATE, { rawToPayout: String(rawPayout) })
+
+    const { rows } = patchBettorRows({
+      rows: [ row ],
+      account: ACCOUNT,
+      bet: makeBet({ settledPayout: +formatUnits(rawPayout, 18) }),
+      action: 'redeem',
+      decimals: 18,
+    })
+
+    expect(rows[0]!.rawToPayout).toBe('0')
   })
 })

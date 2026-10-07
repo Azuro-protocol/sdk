@@ -12,11 +12,21 @@ export type PatchBettorRowsProps = {
   decimals: number
 }
 
-// `String(1e-7)` is '1e-7', which `parseUnits` rejects, so the number is written out in fixed notation first
+/**
+ * Converts a payout cached as a JS number back to base units, for a debit. `String(1e-7)` is '1e-7',
+ * which `parseUnits` rejects, so the number is written out in fixed notation first.
+ *
+ * A number keeps about 16 significant digits, so at 18 decimals it can come back below the figure the
+ * subgraph holds by up to about one part in 10^16, and redeeming the last payout of a row would leave
+ * that dust behind. The result is rounded up by one part in 10^15, several times that error, so a debit
+ * is never short; it adds nothing below 10^15 base units, which keeps 6-decimal tokens exact. On the last
+ * payout the excess is lost to the floor at zero, and the re-read restores the exact figure either way.
+ * */
 const toBaseUnits = (value: number | null, decimals: number) => {
   const amount = value !== null && Number.isFinite(value) ? value : 0
+  const units = parseUnits(amount.toFixed(decimals), decimals)
 
-  return parseUnits(amount.toFixed(decimals), decimals)
+  return units + units / 10n ** 15n
 }
 
 const debit = (value: string, amount: bigint) => {
