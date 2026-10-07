@@ -9,6 +9,7 @@ import {
   BetResult,
   GameBetsDocument,
   GameState,
+  calcFreebetBettorShare,
 } from '@azuro-org/toolkit'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
@@ -29,7 +30,9 @@ export type UseBetsSummaryBySelection = (props: UseBetsSummaryBySelectionProps) 
 
 /**
  * Get a betting summary by selection (outcome) for a specific game.
- * Returns a map of `${conditionId}-${outcomeId}` to profit/loss amount. Only enabled for finished games.
+ * Returns a map of `${conditionId}-${outcomeId}` to the profit/loss on that selection. Only enabled for
+ * finished games. For a freebet, a win counts the bettor's share of the payout and a loss counts 0, since
+ * the bettor staked none of their own funds.
  *
  * An outcome is addressed by its condition and its id together - an `outcomeId` alone is not unique
  * across a game, so the same one can belong to more than one condition.
@@ -62,6 +65,8 @@ export const useBetsSummaryBySelection: UseBetsSummaryBySelection = (props) => {
     const rawSummary = [ ...(prematchBets || []), ...(liveBets || []), ...(v3Bets || []) ].reduce<Record<string, bigint>>((acc, bet) => {
       const { rawAmount: _rawAmount, rawPotentialPayout: _rawPotentialPayout, result, selections, isCashedOut } = bet
       const { freebet } = bet as GameBetsQuery['bets'][0]
+      // a v2 bet has no returnable flag, so a legacy freebet is valued as returnable
+      const { isFreebetAmountReturnable } = bet as GameBetsQuery['v3Bets'][0]
 
       if (isCashedOut || !result) {
         return acc
@@ -69,10 +74,18 @@ export const useBetsSummaryBySelection: UseBetsSummaryBySelection = (props) => {
 
       const isExpress = selections.length > 1
       const isWin = result === BetResult.Won
+      const isFreebet = Boolean(freebet)
 
       const rawAmount = BigInt(_rawAmount)
-      const rawBetDiff = freebet ? rawAmount : 0n
-      const rawPayout = BigInt(_rawPotentialPayout) - rawBetDiff
+      const rawPayout = BigInt(_rawPotentialPayout)
+      // a won freebet pays the bettor only their share, a lost one costs them nothing
+      const rawFreebetShare = isFreebet && isWin
+        ? calcFreebetBettorShare({
+          payout: rawPayout,
+          amount: rawAmount,
+          isAmountReturnable: isFreebetAmountReturnable,
+        })
+        : 0n
 
       let rawOddsSummary = 0n
 
@@ -111,6 +124,13 @@ export const useBetsSummaryBySelection: UseBetsSummaryBySelection = (props) => {
           const rawOdds = BigInt(_rawOdds)
           const rawSubBetOdds = parseUnits(String(rawOdds - RAW_ONE), DIVIDER)
           const rawPartialOdds = rawSubBetOdds / rawOddsSummary / BigInt(10 ** (DIVIDER - ODDS_DECIMALS))
+
+          if (isFreebet) {
+            acc[key]! += rawFreebetShare * rawPartialOdds / BigInt(10 ** ODDS_DECIMALS)
+
+            return
+          }
+
           const rawSubBetAmount = rawAmount * rawPartialOdds / BigInt(10 ** ODDS_DECIMALS)
 
           if (isWin) {
@@ -119,6 +139,9 @@ export const useBetsSummaryBySelection: UseBetsSummaryBySelection = (props) => {
           else {
             acc[key]! -= rawSubBetAmount
           }
+        }
+        else if (isFreebet) {
+          acc[key]! += rawFreebetShare
         }
         else {
           acc[key]! += isWin ? rawPayout : -rawAmount

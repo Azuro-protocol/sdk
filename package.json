@@ -36,7 +36,8 @@
     "prepublishOnly": "npm run build",
     "------------------  Lint --------------------------------------------------------------------------------": "",
     "lint-fix": "eslint ./src --fix",
-    "lint-ts": "tsc --noEmit"
+    "lint-ts": "tsc --noEmit",
+    "test": "vitest run"
   },
   "peerDependencies": {
     "@azuro-org/dictionaries": "^3.0.28",
@@ -66,7 +67,8 @@
     "rollup-plugin-preserve-directives": "^0.4.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.59.3"
+    "typescript-eslint": "^8.59.3",
+    "vitest": "^4.1.10"
   },
   "dependencies": {
     "@azuro-org/toolkit": "^7.1.0",
