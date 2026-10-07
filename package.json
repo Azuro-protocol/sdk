@@ -1,6 +1,6 @@
 {
   "name": "@azuro-org/sdk",
-  "version": "8.1.0",
+  "version": "8.2.0",
   "description": "One-stop solution for building betting dApps on the Azuro Protocol.",
   "author": "Azuro",
   "type": "module",
@@ -71,7 +71,7 @@
     "vitest": "^4.1.10"
   },
   "dependencies": {
-    "@azuro-org/toolkit": "^7.1.0",
+    "@azuro-org/toolkit": "^7.2.0",
     "graphql-tag": "^2.12.6"
   }
 }
