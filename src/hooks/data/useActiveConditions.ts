@@ -21,7 +21,7 @@ export type UseActiveConditionsProps = {
    * finished and canceled games should pass `true`.
    * */
   includeHidden?: boolean
-  /** To receive new conditions ("5...") that are not in the "dictionaries" package (managed via API only) */
+  /** To also receive extended conditions (see `isExtendedConditionId` in `@azuro-org/toolkit`) that are not in the "dictionaries" package (managed via API only) */
   extended?: boolean
   chainId?: ChainId
   query?: QueryParameter<UseConditionsQueryFnData>

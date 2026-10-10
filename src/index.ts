@@ -115,17 +115,11 @@ export {
 /**
  * Data hooks
  * */
-// temp useBets from graph
 export {
   useBets,
   type UseBetsProps,
   type UseBets,
 } from './hooks/data/useBetsGraph'
-// export {
-//   useBets,
-//   type UseBetsProps,
-//   type UseBets,
-// } from './hooks/data/useBets'
 export {
   useLegacyBets,
   type UseLegacyBetsProps,

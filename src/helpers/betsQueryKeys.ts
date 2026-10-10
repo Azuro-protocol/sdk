@@ -16,6 +16,11 @@ import { type QueryKey } from '@tanstack/react-query'
  *
  * Everything else in the filter lives in slot `[3]` as a normalized, JSON-safe object, which
  * react-query hashes structurally, so key equality does not depend on property order.
+ *
+ * The bettor summary key, `[ 'bets-summary', gqlLink, account, affiliates ]`, is built here too, but
+ * its slot `[1]` is the bets subgraph URL rather than the chain id. That is why `'bets-summary'` is not
+ * one of `betsQueryKeyRoots` and `isBettorBetsQueryKey` does not match it: summaries are matched with
+ * `betsQueryKeys.summaryPrefix` instead.
  * */
 
 export const betsQueryKeyRoots = [ 'bets', 'legacy-bets', 'bets-report' ] as const
@@ -44,6 +49,12 @@ export type BetsReportQueryKeyProps = {
   filter: NormalizedBetsFilter
 }
 
+export type BetsSummaryQueryKeyProps = {
+  gqlLink: string
+  account: string
+  affiliates?: string[]
+}
+
 export const betsQueryKeys = {
   list: ({ chainId, filter, itemsPerPage }: BetsListQueryKeyProps) => {
     const { bettor, filterWithoutBettor } = splitBettor(filter)
@@ -65,6 +76,13 @@ export const betsQueryKeys = {
   /** Prefix matching every report for one bettor on one chain, whatever the rest of the filter is. */
   reportPrefix: ({ chainId, bettor }: { chainId: ChainId, bettor: string }) => (
     [ 'bets-report', chainId, bettor.toLowerCase() ] as const
+  ),
+  summary: ({ gqlLink, account, affiliates }: BetsSummaryQueryKeyProps) => (
+    [ 'bets-summary', gqlLink, account?.toLowerCase(), affiliates?.join('-') ] as const
+  ),
+  /** Prefix matching every summary of one account on one bets subgraph, whatever its affiliate list. */
+  summaryPrefix: ({ gqlLink, account }: Omit<BetsSummaryQueryKeyProps, 'affiliates'>) => (
+    [ 'bets-summary', gqlLink, account.toLowerCase() ] as const
   ),
 }
 

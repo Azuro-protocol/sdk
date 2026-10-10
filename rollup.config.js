@@ -29,6 +29,8 @@ export default {
       tsconfig: './tsconfig.json',
       outDir: 'dist',
       declarationDir: 'dist',
+      // tests are type-checked by `lint-ts`, but are not part of the package
+      exclude: [ '**/*.test.ts' ],
     }),
   ],
   onwarn: (warning, warn) => {

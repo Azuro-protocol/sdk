@@ -79,6 +79,18 @@ export type BetOutcome = {
   isCanceled: boolean
 } & Selection
 
+/**
+ * A v3 bet with its figures as the bets subgraph records them: nothing is re-priced on the client.
+ *
+ * For a freebet, the money figures - `possibleWin`, `payout` and `settledPayout` - are the bettor's
+ * share. The pool pays a freebet's whole payout to the freebet contract, which sends the bettor the
+ * payout less the stake when the freebet's amount is returnable, the whole payout when it is not, and
+ * nothing when the payout is no greater than the stake. A freebet without a returnable flag is valued
+ * as returnable. See `calcFreebetBettorShare` in `@azuro-org/toolkit`.
+ *
+ * The share rule and the field notes below describe bets from `useBets`; bets from `useLegacyBets` keep
+ * the v2 figures.
+ * */
 export type Bet = {
   /** bettorAddressLowerCase_nonce */
   orderId: string
@@ -88,6 +100,10 @@ export type Bet = {
   freebetId: string | null
   isFreebetAmountReturnable: boolean | null
   paymaster: Address | null
+  /**
+   * The odds the subgraph recorded: the settled odds once the bet is settled - a voided leg left out,
+   * exactly 1 for a canceled bet - and the placed odds before that.
+   * */
   totalOdds: number
   coreAddress: Address
   lpAddress: Address
@@ -104,19 +120,26 @@ export type Bet = {
   /** contract error code if bet state is BetState.Rejected */
   rejectedErrorCode: string | null
   amount: string
+  /**
+   * What the bet pays if it wins: the potential payout the subgraph recorded at placement. A canceled
+   * bet reports what it returns instead - the stake, or 0 for a freebet. The bettor's share for a
+   * freebet.
+   * */
   possibleWin: number
   /**
    * Claimable amount: non-null only while there is money left to redeem, and `null` once the bet
-   * has been redeemed or cashed out. Use it to gate a redeem action.
+   * has been redeemed or cashed out. Use it to gate a redeem action. A canceled bet's is its stake,
+   * or 0 for a freebet. The bettor's share for a freebet.
    *
    * To display what a bet actually returned - in a history list, or next to an aggregate that
    * counts settled bets - use `settledPayout` instead, which survives redemption.
    * */
   payout: number | null
   /**
-   * Payout as recorded by the protocol, whether or not it has already been claimed. `null` while
-   * the bet is unsettled, and for a cashed out bet it is the notional payout the bet would have
-   * produced, not what the bettor received - read `cashout` for that.
+   * Payout as recorded by the protocol, whether or not it has already been claimed: 0 for a lost
+   * bet, the stake for a canceled one, and once redeemed, the amount actually paid. `null` while the
+   * bet is unsettled, and for a cashed out bet it is the notional payout the bet would have produced,
+   * not what the bettor received - read `cashout` for that. The bettor's share for a freebet.
    * */
   settledPayout: number | null
   createdAt: number
@@ -132,12 +155,39 @@ export type Bet = {
   isCashedOut: boolean
 }
 
+/**
+ * A wallet's betting totals on one chain, as the bets subgraph keeps them. Amounts are formatted with
+ * the chain's bet token decimals.
+ *
+ * The top-level figures cover bets placed with the wallet's own funds; freebets are counted only in
+ * `freebet`, whose payouts are the bettor's share.
+ * */
 export type BetsSummary = {
+  /** payouts and refunds of settled bets that are not yet redeemed */
   toPayout: string
+  /** stakes of bets that are not settled yet */
   inBets: string
   totalPayout: string
   totalProfit: string
   betsCount: number
   wonBetsCount: number
   lostBetsCount: number
+  canceledBetsCount: number
+  cashedOutBetsCount: number
+  /** what the wallet can redeem now: `toPayout` plus `freebet.toPayout` */
+  withdrawable: string
+  freebet: {
+    betsCount: number
+    wonBetsCount: number
+    lostBetsCount: number
+    canceledBetsCount: number
+    /** stakes of every freebet placed */
+    turnover: string
+    /** stakes of freebets that are not settled yet */
+    inBets: string
+    /** the bettor's share of settled freebets that are not yet redeemed */
+    toPayout: string
+    /** the bettor's share of what redeemed freebets paid out */
+    totalPayout: string
+  }
 }

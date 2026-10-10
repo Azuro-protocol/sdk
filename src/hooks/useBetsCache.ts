@@ -1,4 +1,4 @@
-import { type TransactionReceipt, type Address, parseUnits } from 'viem'
+import { type TransactionReceipt, type Address } from 'viem'
 import {
   type BettorsQuery,
   type Selection,
@@ -10,6 +10,7 @@ import { useOptionalChain } from '../contexts/chain'
 import { useExtendedAccount } from '../hooks/useAaConnector'
 import { type Bet } from '../global'
 import { betsQueryKeys } from '../helpers/betsQueryKeys'
+import { patchBettorRows } from '../helpers/patchBettorRows'
 
 
 export type NewBetProps = {
@@ -24,11 +25,16 @@ export type NewBetProps = {
   receipt: TransactionReceipt
 }
 
+// the indexer records a redeem or a cash-out a few seconds after its receipt, and a re-read before
+// that would bring back the old figures, so the summaries are read again twice: soon, and once more
+// for an indexer that lags
+const SUMMARY_REREAD_DELAYS = [ 5000, 15000 ]
+
 export const useBetsCache = (chainId?: ChainId) => {
   const queryClient = useQueryClient()
   const { address } = useExtendedAccount()
 
-  const { contracts, betToken, graphql, chain } = useOptionalChain(chainId)
+  const { betToken, graphql, chain } = useOptionalChain(chainId)
 
   const updateBetCache = (
     tokenId: string | bigint,
@@ -84,50 +90,42 @@ export const useBetsCache = (chainId?: ChainId) => {
       queryKey: betsQueryKeys.reportPrefix({ chainId: chain.id, bettor: address! }),
     })
 
-    if (!values.isCashedOut && !cachedBet?.payout && !cachedBet?.isCanceled) {
+    const action = values.isCashedOut ? 'cashout' : values.isRedeemed ? 'redeem' : undefined
+
+    if (!action) {
       return
     }
 
-    queryClient.setQueriesData({
-      predicate: ({ queryKey }) => (
-        queryKey[0] === 'bets-summary' &&
-        queryKey[1] === graphql.bets &&
-        String(queryKey[2]).toLowerCase() === address!.toLowerCase()
-      ),
-    }, (oldData: BettorsQuery['bettors']) => {
-      if (!oldData) {
-        return oldData
+    // the summary rows mirror what the indexer will record for this bet, on the row of its own pool
+    // and affiliate; a summary that cannot be patched that way is re-read at once instead
+    const summaryFilter = { queryKey: betsQueryKeys.summaryPrefix({ gqlLink: graphql.bets, account: address! }) }
+
+    queryClient.getQueriesData<BettorsQuery['bettors']>(summaryFilter).forEach(([ queryKey, rows ]) => {
+      if (!rows) {
+        return
       }
 
-      const newData = [ ...oldData ]
-      const bettorIndex = newData.findIndex(({ id }) => id.split('_')[0]?.toLowerCase() === contracts.lp.address.toLowerCase())
+      if (cachedBet) {
+        const { rows: newRows, isMatched } = patchBettorRows({
+          rows,
+          account: address!,
+          bet: cachedBet,
+          action,
+          decimals: betToken.decimals,
+        })
 
-      if (bettorIndex === -1) {
-        return oldData
+        if (isMatched) {
+          queryClient.setQueryData(queryKey, newRows, { updatedAt: Date.now() })
+
+          return
+        }
       }
 
-      const bettor = { ...newData[bettorIndex]! }
+      queryClient.invalidateQueries({ queryKey, exact: true })
+    })
 
-      if (cachedBet!.payout || cachedBet!.isCanceled) {
-        const rawAmount = cachedBet!.isCanceled ? cachedBet!.amount : cachedBet!.payout
-        const rawPayout = parseUnits(String(rawAmount), betToken.decimals)
-        const newRawToPayout = BigInt(bettor.rawToPayout) - rawPayout
-
-        bettor.rawToPayout = String(newRawToPayout)
-      }
-
-      if (values.isCashedOut) {
-        const rawAmount = parseUnits(cachedBet!.amount, betToken.decimals)
-
-        bettor.rawInBets = String(BigInt(bettor.rawInBets) - rawAmount)
-        bettor.betsCount -= 1
-      }
-
-      newData[bettorIndex] = bettor
-
-      return newData
-    }, {
-      updatedAt: Date.now(),
+    SUMMARY_REREAD_DELAYS.forEach(delay => {
+      setTimeout(() => queryClient.invalidateQueries(summaryFilter), delay)
     })
   }
 
