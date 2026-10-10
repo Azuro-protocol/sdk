@@ -14,7 +14,7 @@ export type UseConditionsQueryFnData = ConditionDetailedData[]
 
 export type UseConditionsProps<TData = UseConditionsQueryFnData> = {
   gameId: GetConditionsByGameIdsParams['gameIds']
-  /** To receive new conditions ("5...") that are not in the "dictionaries" package (managed via API only) */
+  /** To also receive extended conditions (see `isExtendedConditionId` in `@azuro-org/toolkit`) that are not in the "dictionaries" package (managed via API only) */
   extended?: boolean
   chainId?: ChainId
   query?: QueryParameterWithSelect<UseConditionsQueryFnData, TData>

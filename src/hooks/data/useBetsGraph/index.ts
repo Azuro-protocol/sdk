@@ -10,6 +10,7 @@ import {
   BetResult,
   SelectionResult,
   getGamesByIds,
+  isExtendedConditionId,
   normalizeBetsFilter,
   toGraphBetsWhere,
   BetOrderState,
@@ -94,7 +95,7 @@ export const useBets: UseBets = (props) => {
         }
       }
 
-      const { gameIds, conditionV5Ids } = v3Bets.reduce((acc, { selections }) => {
+      const { gameIds, extendedConditionIds } = v3Bets.reduce((acc, { selections }) => {
         selections.forEach((selection) => {
           const { outcome: { title: outcomeTitle, condition: { conditionId, title: conditionTitle, gameId } } } = selection
 
@@ -103,20 +104,20 @@ export const useBets: UseBets = (props) => {
 
           acc.gameIds.add(gameId)
 
-          if (conditionId[0] === '5' && (isConditionTitleEmpty || isOutcomeTitleEmpty)) {
-            acc.conditionV5Ids.add(conditionId)
+          if (isExtendedConditionId(conditionId) && (isConditionTitleEmpty || isOutcomeTitleEmpty)) {
+            acc.extendedConditionIds.add(conditionId)
           }
         })
 
         return acc
-      }, { gameIds: new Set<string>(), conditionV5Ids: new Set<string>() })
+      }, { gameIds: new Set<string>(), extendedConditionIds: new Set<string>() })
 
       const [ games, conditionsFeedData ] = await Promise.all([
         getGamesByIds({
           chainId: chain.id,
           gameIds: Array.from(gameIds),
         }),
-        conditionV5Ids.size > 0 ? batchFetchConditions(Array.from(conditionV5Ids), chain.id) : Promise.resolve(null),
+        extendedConditionIds.size > 0 ? batchFetchConditions(Array.from(extendedConditionIds), chain.id) : Promise.resolve(null),
       ])
 
       const gameByGameId = games.reduce((acc, game) => {
@@ -181,7 +182,7 @@ export const useBets: UseBets = (props) => {
 
             const isLive = conditionKind === SelectionKind.Live
 
-            const isConditionV5 = conditionId[0] === '5'
+            const isExtended = isExtendedConditionId(conditionId)
 
             const customSelectionName = _customSelectionName && _customSelectionName !== 'null'
               ? _customSelectionName
@@ -191,11 +192,11 @@ export const useBets: UseBets = (props) => {
               ? _customMarketName
               : conditionsFeedData?.[conditionId]?.title
 
-            const marketName = isConditionV5
+            const marketName = isExtended
               ? customMarketName || 'missed_market_title'
               : customMarketName || getMarketName({ outcomeId })
 
-            const selectionName = isConditionV5
+            const selectionName = isExtended
               ? customSelectionName || 'missed_outcome_title'
               : customSelectionName || getSelectionName({ outcomeId, withPoint: true })
 
